@@ -32,22 +32,6 @@ class Analyzer(object):
         self._pcascores = [None] * len(self.output_extractor.getUnitIds())
         self._maxchannels = [None] * len(self.output_extractor.getUnitIds())
 
-    @property
-    def waveforms(self):
-        return self._waveforms
-
-    @property
-    def templates(self):
-        return self._templates
-
-    @property
-    def pcascores(self):
-        return self._pcascores
-
-    @property
-    def maxchannels(self):
-        return self._maxchannels
-
 
     def getInputExtractor(self):
         '''This function returns the input extractor and allows tu call its methods
@@ -110,7 +94,7 @@ class Analyzer(object):
                     recordings = self.input_extractor.getRawTraces(start_frame, end_frame)
                     fs = self.input_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
-                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, stop_frame)
+                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
 
                     n_pad = [int(cutout_start * fs / 1000), int(cutout_end * fs / 1000)]
 
@@ -150,7 +134,7 @@ class Analyzer(object):
             return waveform_list
 
 
-    def computeUnitTemplate(self, unit_ids=None, start_frame=None, end_frame=None):
+    def getUnitTemplate(self, unit_ids=None, start_frame=None, end_frame=None):
         '''
 
         Parameters
@@ -193,7 +177,7 @@ class Analyzer(object):
             return template_list
 
 
-    def computeMaxChannel(self, unit_ids=None):
+    def getUnitMaxChannel(self, unit_ids=None):
         '''
 
         Parameters
