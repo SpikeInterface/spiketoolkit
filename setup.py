@@ -14,7 +14,7 @@ setup(
     author="Cole Hurwitz, Jeremy Magland, Alessio Paolo Buccino, Matthias Hennig",
     author_email="alessiop.buccino@gmail.com",
     description="Python toolkit for analysis, visualization, and comparison of spike sorting output",
-    url="",
+    url="https://github.com/alejoe91/spiketoolkit",
     packages=find_packages(),
     package_data={},
     install_requires=[

@@ -1,7 +1,7 @@
 import numpy as np
 import spikeinterface as si
+from sklearn.decomposition import PCA
 
-# use InputExtractor and OutputExtractor
 from spikeinterface.InputExtractor import InputExtractor
 from spikeinterface.OutputExtractor import OutputExtractor
 
@@ -32,7 +32,24 @@ class Analyzer(object):
         self._pcascores = [None] * len(self.output_extractor.getUnitIds())
         self._maxchannels = [None] * len(self.output_extractor.getUnitIds())
 
-    def inputExtractor(self):
+    @property
+    def waveforms(self):
+        return self._waveforms
+
+    @property
+    def templates(self):
+        return self._templates
+
+    @property
+    def pcascores(self):
+        return self._pcascores
+
+    @property
+    def maxchannels(self):
+        return self._maxchannels
+
+
+    def getInputExtractor(self):
         '''This function returns the input extractor and allows tu call its methods
 
         Returns
@@ -41,7 +58,7 @@ class Analyzer(object):
         '''
         return self.input_extractor
 
-    def outputExtractor(self):
+    def getOutputExtractor(self):
         '''This function returns the output extractor and allows tu call its methods
 
         Returns
@@ -50,40 +67,43 @@ class Analyzer(object):
         '''
         return self.output_extractor
 
-    def getUnitWaveforms(self, unit_id=None, start_frame=None, stop_frame=None, cutout=[3., 3.]):
-        '''This function returns the spike waveforms from the specified unit_id from t_start and t_stop
+    def getUnitWaveforms(self, unit_ids=None, start_frame=None, stop_frame=None,
+                         cutout_start=3., cutout_end=3.):
+        '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
         Parameters
         ----------
-        unit_id: (int or list)
+        unit_ids: (int or list)
             The unit id or list of unit ids to extract waveforms from
         start_frame: (int)
             The starting frame to extract waveforms
         end_frame: (int)
             The ending frame to extract waveforms
-        cutout: list of 2 floats
-            Time in ms to cut out waveform before (cutout[0]) and after (cutout[1]) the peak.
+        cutout_start: float
+            Time in ms to cut out waveform before the peak
+        cutout_end: float
+            Time in ms to cut out waveform after the peak
 
         Returns
         -------
         waveforms: np.array
-            A 3D array that contains all waveforms between start and end_frame (
-            Dimensions are: (numm_spikes x num_channels x num_spike_frames)
+            A list of 3D arrays that contain all waveforms between start and end_frame
+            Dimensions of each element are: (numm_spikes x num_channels x num_spike_frames)
 
         '''
-        if isinstance(unit_id, int):
-            unit_id = [unit_id]
-        elif unit_id is None:
-            unit_id = self.output_extractor.getUnitIds()
-        elif not isinstance(unit_id, (list, np.array)):
-            raise Exception("Unit_id is not a valid in valid")
+        if isinstance(unit_ids, int):
+            unit_ids = [unit_ids]
+        elif unit_ids is None:
+            unit_ids = self.output_extractor.getUnitIds()
+        elif not isinstance(unit_ids, (list, np.array)):
+            raise Exception("unit_ids is not a valid in valid")
 
         waveform_list = []
-        for idx in unit_id:
+        for idx in unit_ids:
             unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
             if len(unit_ind) == 0:
-                raise Exception("Unit_id is not in valid")
+                raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
                 if self._waveforms[unit_ind] is None:
@@ -92,7 +112,7 @@ class Analyzer(object):
                     times = np.arange(recordings.shape[1])
                     spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, start_frame)
 
-                    n_pad = [int(cutout[0] * fs / 1000), int(cutout[1] * fs / 1000)]
+                    n_pad = [int(cutout_start * fs / 1000), int(cutout_end * fs / 1000)]
 
                     num_channels, num_frames = recordings.shape
                     num_spike_frames = np.sum(n_pad)
@@ -130,24 +150,36 @@ class Analyzer(object):
             return waveform_list
 
 
-    def computeUnitTemplate(self, unit_id=None, start_frame=None, stop_frame=None):
-        if isinstance(unit_id, int):
-            unit_id = [unit_id]
-        elif unit_id is None:
-            unit_id = self.output_extractor.getUnitIds()
-        elif not isinstance(unit_id, (list, np.array)):
-            raise Exception("Unit_id is not a valid in valid")
+    def computeUnitTemplate(self, unit_ids=None, start_frame=None, stop_frame=None):
+        '''
+
+        Parameters
+        ----------
+        unit_ids
+        start_frame
+        stop_frame
+
+        Returns
+        -------
+
+        '''
+        if isinstance(unit_ids, int):
+            unit_ids = [unit_ids]
+        elif unit_ids is None:
+            unit_ids = self.output_extractor.getUnitIds()
+        elif not isinstance(unit_ids, (list, np.array)):
+            raise Exception("unit_ids is not a valid in valid")
 
         template_list = []
-        for idx in unit_id:
+        for idx in unit_ids:
             unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
             if len(unit_ind) == 0:
-                raise Exception("Unit_id is not in valid")
+                raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
             if self._templates[unit_ind] is None:
                 if self._waveforms[unit_ind] is None:
-                    self.getUnitWaveforms(unit_id, start_frame, stop_frame)
+                    self.getUnitWaveforms(unit_ids, start_frame, stop_frame)
                 template = np.mean(self._waveforms[unit_ind], axis = 0)
                 self._templates[unit_ind] = template
                 template_list.append(template)
@@ -161,32 +193,42 @@ class Analyzer(object):
             return template_list
 
 
-    def computeMaxChannel(self, unit_id=None):
-        if isinstance(unit_id, int):
-            unit_id = [unit_id]
-        elif unit_id is None:
-            unit_id = self.output_extractor.getUnitIds()
-        elif not isinstance(unit_id, (list, np.array)):
-            raise Exception("Unit_id is not a valid in valid")
+    def computeMaxChannel(self, unit_ids=None):
+        '''
+
+        Parameters
+        ----------
+        unit_ids
+
+        Returns
+        -------
+
+        '''
+        if isinstance(unit_ids, int):
+            unit_ids = [unit_ids]
+        elif unit_ids is None:
+            unit_ids = self.output_extractor.getUnitIds()
+        elif not isinstance(unit_ids, (list, np.array)):
+            raise Exception("unit_ids is not a valid in valid")
 
         max_list = []
-        for idx in unit_id:
+        for idx in unit_ids:
             unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
             if len(unit_ind) == 0:
-                raise Exception("Unit_id is not in valid")
+                raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
 
             if self._maxchannels[unit_ind] is None:
                 if self._templates[unit_ind] is None:
-                    self.computeUnitTemplate(unit_id)
-                max_chan = np.unravel_index(np.argmax(np.abs(self._templates[unit_ind])),
+                    self.computeUnitTemplate(unit_ids)
+                max_channel = np.unravel_index(np.argmax(np.abs(self._templates[unit_ind])),
                                             self._templates[unit_ind].shape)[0]
-                self._maxchannels[unit_ind] = max_chan
-                max_list.append(max_chan)
+                self._maxchannels[unit_ind] = max_channel
+                max_list.append(max_channel)
             else:
-                max_chan = self._maxchannels[unit_ind]
-                max_list.append(max_chan)
+                max_channel = self._maxchannels[unit_ind]
+                max_list.append(max_channel)
 
         if len(max_list) == 1:
             return max_list[0]
@@ -195,8 +237,16 @@ class Analyzer(object):
 
 
     def computePCAscores(self, n_comp=10):
-        from sklearn.decomposition import PCA
+        '''
 
+        Parameters
+        ----------
+        n_comp
+
+        Returns
+        -------
+
+        '''
         # concatenate all waveforms
         all_waveforms = np.array([])
         nspikes = []
@@ -223,6 +273,6 @@ class Analyzer(object):
             init = nsp + 1
             pca_scores.append(self._pcascores[i_n])
 
-        return pca_scores, var
+        return pca_scores
 
 
