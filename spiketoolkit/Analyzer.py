@@ -67,7 +67,7 @@ class Analyzer(object):
         '''
         return self.output_extractor
 
-    def getUnitWaveforms(self, unit_ids=None, start_frame=None, stop_frame=None,
+    def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
                          cutout_start=3., cutout_end=3.):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
@@ -107,10 +107,10 @@ class Analyzer(object):
             else:
                 unit_ind = unit_ind[0]
                 if self._waveforms[unit_ind] is None:
-                    recordings = self.input_extractor.getRawTraces(start_frame, stop_frame)
+                    recordings = self.input_extractor.getRawTraces(start_frame, end_frame)
                     fs = self.input_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
-                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, start_frame)
+                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, stop_frame)
 
                     n_pad = [int(cutout_start * fs / 1000), int(cutout_end * fs / 1000)]
 
@@ -150,14 +150,14 @@ class Analyzer(object):
             return waveform_list
 
 
-    def computeUnitTemplate(self, unit_ids=None, start_frame=None, stop_frame=None):
+    def computeUnitTemplate(self, unit_ids=None, start_frame=None, end_frame=None):
         '''
 
         Parameters
         ----------
         unit_ids
         start_frame
-        stop_frame
+        end_frame
 
         Returns
         -------
@@ -179,7 +179,7 @@ class Analyzer(object):
                 unit_ind = unit_ind[0]
             if self._templates[unit_ind] is None:
                 if self._waveforms[unit_ind] is None:
-                    self.getUnitWaveforms(unit_ids, start_frame, stop_frame)
+                    self.getUnitWaveforms(unit_ids, start_frame, end_frame)
                 template = np.mean(self._waveforms[unit_ind], axis = 0)
                 self._templates[unit_ind] = template
                 template_list.append(template)
