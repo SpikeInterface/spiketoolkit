@@ -31,6 +31,7 @@ class Analyzer(object):
         self._templates = [None] * len(self.output_extractor.getUnitIds())
         self._pcascores = [None] * len(self.output_extractor.getUnitIds())
         self._maxchannels = [None] * len(self.output_extractor.getUnitIds())
+        self._params = None
 
 
     def getInputExtractor(self):
@@ -52,7 +53,7 @@ class Analyzer(object):
         return self.output_extractor
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
-                         cutout_start=3., cutout_end=3.):
+                         ms_before=3., ms_after=3., max_num_waveforms=np.inf):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
@@ -64,9 +65,9 @@ class Analyzer(object):
             The starting frame to extract waveforms
         end_frame: (int)
             The ending frame to extract waveforms
-        cutout_start: float
+        ms_before: float
             Time in ms to cut out waveform before the peak
-        cutout_end: float
+        ms_after: float
             Time in ms to cut out waveform after the peak
 
         Returns
@@ -83,20 +84,27 @@ class Analyzer(object):
         elif not isinstance(unit_ids, (list, np.array)):
             raise Exception("unit_ids is not a valid in valid")
 
+        params = {'start_frame': start_frame, 'end_frame': end_frame, 'ms_before': ms_before, 'ms_after': ms_after,
+                  'max_num_waveforms': max_num_waveforms}
+
+        if self._params == None:
+            self._params = params
+
         waveform_list = []
         for idx in unit_ids:
-            unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
+            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
-                if self._waveforms[unit_ind] is None:
+                if self._waveforms[unit_ind] is None or self._params != params:
+                    self._params = params
                     recordings = self.input_extractor.getRawTraces(start_frame, end_frame)
                     fs = self.input_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
                     spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
 
-                    n_pad = [int(cutout_start * fs / 1000), int(cutout_end * fs / 1000)]
+                    n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
                     num_channels, num_frames = recordings.shape
                     num_spike_frames = np.sum(n_pad)
@@ -134,7 +142,7 @@ class Analyzer(object):
             return waveform_list
 
 
-    def getUnitTemplate(self, unit_ids=None, start_frame=None, end_frame=None):
+    def getUnitTemplate(self, unit_ids=None, **kwargs):
         '''
 
         Parameters
@@ -156,14 +164,15 @@ class Analyzer(object):
 
         template_list = []
         for idx in unit_ids:
-            unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
+            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
-            if self._templates[unit_ind] is None:
+            if self._templates[unit_ind] is None or self._params != kwargs:
+                self._params.update(kwargs)
                 if self._waveforms[unit_ind] is None:
-                    self.getUnitWaveforms(unit_ids, start_frame, end_frame)
+                    self.getUnitWaveforms(unit_ids, **kwargs)
                 template = np.mean(self._waveforms[unit_ind], axis = 0)
                 self._templates[unit_ind] = template
                 template_list.append(template)
@@ -177,7 +186,7 @@ class Analyzer(object):
             return template_list
 
 
-    def getUnitMaxChannel(self, unit_ids=None):
+    def getUnitMaxChannel(self, unit_ids=None, **kwargs):
         '''
 
         Parameters
@@ -197,15 +206,16 @@ class Analyzer(object):
 
         max_list = []
         for idx in unit_ids:
-            unit_ind = np.where(self.output_extractor.getUnitIds() == idx)[0]
+            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
 
-            if self._maxchannels[unit_ind] is None:
+            if self._maxchannels[unit_ind] is None or self._params != kwargs:
+                self._params.update(kwargs)
                 if self._templates[unit_ind] is None:
-                    self.computeUnitTemplate(unit_ids)
+                    self.getUnitTemplate(unit_ids, **kwargs)
                 max_channel = np.unravel_index(np.argmax(np.abs(self._templates[unit_ind])),
                                             self._templates[unit_ind].shape)[0]
                 self._maxchannels[unit_ind] = max_channel
