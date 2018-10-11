@@ -20,7 +20,9 @@ setup(
     install_requires=[
         'numpy',
         'spikeinterface',
-        'scikit-learn'
+        'scikit-learn',
+        'ml_ms4alg',
+        'spikewidgets'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

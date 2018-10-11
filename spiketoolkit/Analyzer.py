@@ -110,7 +110,7 @@ class Analyzer(object):
                     recordings = self.input_extractor.getRawTraces(start_frame, stop_frame)
                     fs = self.input_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
-                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, start_frame)
+                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, stop_frame)
 
                     n_pad = [int(cutout_start * fs / 1000), int(cutout_end * fs / 1000)]
 
