@@ -9,6 +9,10 @@ import h5py
 from mountainlab_pytools import mdaio
 import numpy as np
 
+# Installation notes for ubuntu:
+# sudo apt install libopenmpi-dev
+# pip install spyking-circus
+
 def spyking_circus(*,
     recording,
     tmpdir, # Temporary working directory
@@ -34,7 +38,7 @@ def spyking_circus(*,
     print('Num. channels = {}, Num. timepoints = {}, duration = {} minutes'.format(num_channels,num_timepoints,duration_minutes))
         
     print('Creating .prb file...')
-    prb_text=self._read_text_file(source_dir+'/template.prb')
+    prb_text=_read_text_file(source_dir+'/template.prb')
     prb_text=prb_text.replace('$num_channels$','{}'.format(num_channels))
     prb_text=prb_text.replace('$radius$','{}'.format(adjacency_radius))
     geom=np.genfromtxt(dataset_dir+'/geom.csv', delimiter=',')
@@ -43,10 +47,10 @@ def spyking_circus(*,
         geom_str+='  {}: [{},{}],\n'.format(m,geom[m,0],geom[m,1]) # todo: handle 3d geom
     geom_str+='}'
     prb_text=prb_text.replace('$geometry$','{}'.format(geom_str))
-    self._write_text_file(dataset_dir+'/geometry.prb',prb_text)
+    _write_text_file(dataset_dir+'/geometry.prb',prb_text)
         
     print('Creating .params file...')
-    txt=self._read_text_file(source_dir+'/template.params')
+    txt=_read_text_file(source_dir+'/template.params')
     txt=txt.replace('$header_size$','{}'.format(HH.header_size))
     txt=txt.replace('$prb_file$',dataset_dir+'/geometry.prb')
     txt=txt.replace('$dtype$',HH.dt)
@@ -61,21 +65,22 @@ def spyking_circus(*,
     else:
         peaks_str='both'
     txt=txt.replace('$peaks$',peaks_str)
-    txt=txt.replace('$whitening_max_elts$','{}'.format(self.whitening_max_elts))
-    txt=txt.replace('$clustering_max_elts$','{}'.format(self.clustering_max_elts))
-    self._write_text_file(dataset_dir+'/raw.params',txt)
+    txt=txt.replace('$whitening_max_elts$','{}'.format(whitening_max_elts))
+    txt=txt.replace('$clustering_max_elts$','{}'.format(clustering_max_elts))
+    _write_text_file(dataset_dir+'/raw.params',txt)
         
     print('Running spyking circus...')
     #num_threads=np.maximum(1,int(os.cpu_count()/2))
-    num_threads=1 # for some reason, using more than 1 thread causes an error
+    num_threads=np.maximum(1,int(os.cpu_count()/2))
+    #num_threads=1 # for some reason, using more than 1 thread causes an error
     cmd='spyking-circus {} -c {} '.format(dataset_dir+'/raw.mda',num_threads)
     print(cmd)
-    retcode=self._run_command_and_print_output(cmd)
+    retcode=_run_command_and_print_output(cmd)
 
     if retcode != 0:
         raise Exception('Spyking circus returned a non-zero exit code')
 
-    result_fname=tmpdir+'/raw/raw.result.hdf5'
+    result_fname=dataset_dir+'/raw/raw.result.hdf5'
     if not os.path.exists(result_fname):
         raise Exception('Result file does not exist: '+result_fname)
     
@@ -115,15 +120,15 @@ def sc_results_to_firings(hdf5_path):
     firings[2,:]=labels
     return firings
 
-def _read_text_file(self,fname):
+def _read_text_file(fname):
     with open(fname) as f:
         return f.read()
     
-def _write_text_file(self,fname,str):
+def _write_text_file(fname,str):
     with open(fname,'w') as f:
         f.write(str)
         
-def _run_command_and_print_output(self,command):
+def _run_command_and_print_output(command):
     with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
         while True:
             output_stdout= process.stdout.readline()
