@@ -1,0 +1,14 @@
+language: python
+os:
+- linux
+python:
+- '3.6'
+install:
+- pip install .
+- pip install pytest
+script: pytest
+deploy:
+  provider: pypi
+  user: alejoe91
+  on:
+    tags: true
