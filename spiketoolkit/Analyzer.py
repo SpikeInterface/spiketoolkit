@@ -2,30 +2,30 @@ import numpy as np
 import spikeinterface as si
 from sklearn.decomposition import PCA
 
-from spikeinterface.InputExtractor import InputExtractor
-from spikeinterface.OutputExtractor import OutputExtractor
+from spikeinterface.RecordingExtractor import RecordingExtractor
+from spikeinterface.SortingExtractor import SortingExtractor
 
 class Analyzer(object):
-    '''A class that handles InputExtractor and OutputExtractor objects and performs
+    '''A class that handles RecordingExtractor and SortingExtractor objects and performs
     standardized analysis and evaluation on spike sorting output.
 
     Attributes:
-        input_extractor (InputExtractor)
-        output_extractor (InputExtractor)
+        input_extractor (RecordingExtractor)
+        output_extractor (RecordingExtractor)
     '''
     def __init__(self, input_extractor, output_extractor):
         '''No need to initalize the parent class with any parameters (unless we
         agree on a standard attribute every spike sorter needs)
         '''
         # to perform comparisons between spike sorters
-        if isinstance(input_extractor, InputExtractor):
+        if isinstance(input_extractor, RecordingExtractor):
             self.input_extractor = input_extractor
         else:
-            raise AttributeError('Input extractor argument should be an InputExtractor object')
-        if isinstance(output_extractor, OutputExtractor):
+            raise AttributeError('Input extractor argument should be an RecordingExtractor object')
+        if isinstance(output_extractor, SortingExtractor):
             self.output_extractor = output_extractor
         else:
-            raise AttributeError('Output extractor argument should be an OutputExtractor object')
+            raise AttributeError('Output extractor argument should be an SortingExtractor object')
 
         self._waveforms = [None] * len(self.output_extractor.getUnitIds())
         self._templates = [None] * len(self.output_extractor.getUnitIds())
@@ -34,7 +34,7 @@ class Analyzer(object):
         self._params = None
 
 
-    def getInputExtractor(self):
+    def getRecordingExtractor(self):
         '''This function returns the input extractor and allows tu call its methods
 
         Returns
@@ -43,7 +43,7 @@ class Analyzer(object):
         '''
         return self.input_extractor
 
-    def getOutputExtractor(self):
+    def getSortingExtractor(self):
         '''This function returns the output extractor and allows tu call its methods
 
         Returns
