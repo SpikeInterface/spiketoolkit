@@ -7,50 +7,51 @@ from spikeinterface.SortingExtractor import SortingExtractor
 
 class Analyzer(object):
     '''A class that handles RecordingExtractor and SortingExtractor objects and performs
-    standardized analysis and evaluation on spike sorting output.
+    standardized analysis and evaluation on spike sorting sorting.
 
     Attributes:
-        input_extractor (RecordingExtractor)
-        output_extractor (RecordingExtractor)
+        recording_extractor (RecordingExtractor)
+        sorting_extractor (RecordingExtractor)
     '''
-    def __init__(self, input_extractor, output_extractor):
+    def __init__(self, recording_extractor, sorting_extractor):
         '''No need to initalize the parent class with any parameters (unless we
         agree on a standard attribute every spike sorter needs)
         '''
         # to perform comparisons between spike sorters
-        if isinstance(input_extractor, RecordingExtractor):
-            self.input_extractor = input_extractor
-        else:
-            raise AttributeError('Input extractor argument should be an RecordingExtractor object')
-        if isinstance(output_extractor, SortingExtractor):
-            self.output_extractor = output_extractor
-        else:
-            raise AttributeError('Output extractor argument should be an SortingExtractor object')
 
-        self._waveforms = [None] * len(self.output_extractor.getUnitIds())
-        self._templates = [None] * len(self.output_extractor.getUnitIds())
-        self._pcascores = [None] * len(self.output_extractor.getUnitIds())
-        self._maxchannels = [None] * len(self.output_extractor.getUnitIds())
-        self._params = None
+        if isinstance(recording_extractor, RecordingExtractor):
+            self.recording_extractor = recording_extractor
+        else:
+            raise AttributeError('Recording extractor argument should be an RecordingExtractor object')
+        if isinstance(sorting_extractor, SortingExtractor):
+            self.sorting_extractor = sorting_extractor
+        else:
+            raise AttributeError('Sorting extractor argument should be an SortingExtractor object')
+
+        self._waveforms = [None] * len(self.sorting_extractor.getUnitIds())
+        self._templates = [None] * len(self.sorting_extractor.getUnitIds())
+        self._pcascores = [None] * len(self.sorting_extractor.getUnitIds())
+        self._maxchannels = [None] * len(self.sorting_extractor.getUnitIds())
+        self._params = {}
 
 
     def getRecordingExtractor(self):
-        '''This function returns the input extractor and allows tu call its methods
+        '''This function returns the recording extractor and allows tu call its methods
 
         Returns
         ----------
-        input_extractor (InputExctractor)
+        recording_extractor (RecordingExctractor)
         '''
-        return self.input_extractor
+        return self.recording_extractor
 
     def getSortingExtractor(self):
-        '''This function returns the output extractor and allows tu call its methods
+        '''This function returns the sorting extractor and allows tu call its methods
 
         Returns
         ----------
-        output_extractor (OutputExctractor)
+        sorting_extractor (SortingExctractor)
         '''
-        return self.output_extractor
+        return self.sorting_extractor
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
                          ms_before=3., ms_after=3., max_num_waveforms=np.inf):
@@ -77,11 +78,11 @@ class Analyzer(object):
             Dimensions of each element are: (numm_spikes x num_channels x num_spike_frames)
 
         '''
-        if isinstance(unit_ids, int):
+        if isinstance(unit_ids, (int, np.integer)):
             unit_ids = [unit_ids]
         elif unit_ids is None:
-            unit_ids = self.output_extractor.getUnitIds()
-        elif not isinstance(unit_ids, (list, np.array)):
+            unit_ids = self.sorting_extractor.getUnitIds()
+        elif not isinstance(unit_ids, (list, np.ndarray)):
             raise Exception("unit_ids is not a valid in valid")
 
         params = {'start_frame': start_frame, 'end_frame': end_frame, 'ms_before': ms_before, 'ms_after': ms_after,
@@ -92,17 +93,17 @@ class Analyzer(object):
 
         waveform_list = []
         for idx in unit_ids:
-            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
+            unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
                 unit_ind = unit_ind[0]
                 if self._waveforms[unit_ind] is None or self._params != params:
                     self._params = params
-                    recordings = self.input_extractor.getRawTraces(start_frame, end_frame)
-                    fs = self.input_extractor.getSamplingFrequency()
+                    recordings = self.recording_extractor.getTraces(start_frame, end_frame)
+                    fs = self.recording_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
-                    spike_times = self.output_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
+                    spike_times = self.sorting_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
 
                     n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
@@ -158,13 +159,13 @@ class Analyzer(object):
         if isinstance(unit_ids, int):
             unit_ids = [unit_ids]
         elif unit_ids is None:
-            unit_ids = self.output_extractor.getUnitIds()
-        elif not isinstance(unit_ids, (list, np.array)):
+            unit_ids = self.sorting_extractor.getUnitIds()
+        elif not isinstance(unit_ids, (list, np.ndarray)):
             raise Exception("unit_ids is not a valid in valid")
 
         template_list = []
         for idx in unit_ids:
-            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
+            unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
@@ -172,7 +173,7 @@ class Analyzer(object):
             if self._templates[unit_ind] is None or self._params != kwargs:
                 self._params.update(kwargs)
                 if self._waveforms[unit_ind] is None:
-                    self.getUnitWaveforms(unit_ids, **kwargs)
+                    self.getUnitWaveforms(unit_ind, **kwargs)
                 template = np.mean(self._waveforms[unit_ind], axis = 0)
                 self._templates[unit_ind] = template
                 template_list.append(template)
@@ -200,13 +201,13 @@ class Analyzer(object):
         if isinstance(unit_ids, int):
             unit_ids = [unit_ids]
         elif unit_ids is None:
-            unit_ids = self.output_extractor.getUnitIds()
+            unit_ids = self.sorting_extractor.getUnitIds()
         elif not isinstance(unit_ids, (list, np.array)):
             raise Exception("unit_ids is not a valid in valid")
 
         max_list = []
         for idx in unit_ids:
-            unit_ind = np.where(np.array(self.output_extractor.getUnitIds()) == idx)[0]
+            unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
             else:
@@ -246,7 +247,7 @@ class Analyzer(object):
         nspikes = []
         for i_w, wf in enumerate(self._waveforms):
             if wf is None:
-                self.getUnitWaveforms(self.output_extractor.getUnitIds()[i_w])
+                self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w])
             nspikes.append(len(wf))
             wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1]*wf.shape[2]))
             if i_w == 0:
