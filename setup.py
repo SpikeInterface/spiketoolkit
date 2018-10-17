@@ -15,8 +15,8 @@ setup(
         'numpy',
         'spikeinterface',
         'scikit-learn',
-        'ml_ms4alg',
-        'spikewidgets'
+        # 'ml_ms4alg',
+        # 'spikewidgets'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",
