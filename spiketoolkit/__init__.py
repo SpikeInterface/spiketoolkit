@@ -1,2 +1,2 @@
-#from .Analyzer import Analyzer
+from .Analyzer import Analyzer
 from . import sorters 
