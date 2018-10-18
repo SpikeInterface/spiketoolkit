@@ -26,7 +26,7 @@ def spyking_circus(*,
     source_dir=os.path.dirname(os.path.realpath(__file__))
     
     dataset_dir=tmpdir+'/sc_dataset'
-    si.MdaRecordingExtractor.writeRecording(recording_extractor=recording,save_path=dataset_dir)
+    si.MdaRecordingExtractor.writeRecording(recording=recording,save_path=dataset_dir)
         
     samplerate=recording.getSamplingFrequency()
 
@@ -36,7 +36,8 @@ def spyking_circus(*,
     num_timepoints=HH.dims[1]
     duration_minutes=num_timepoints/samplerate/60
     print('Num. channels = {}, Num. timepoints = {}, duration = {} minutes'.format(num_channels,num_timepoints,duration_minutes))
-        
+
+    # use savePrbFile instead
     print('Creating .prb file...')
     prb_text=_read_text_file(source_dir+'/template.prb')
     prb_text=prb_text.replace('$num_channels$','{}'.format(num_channels))

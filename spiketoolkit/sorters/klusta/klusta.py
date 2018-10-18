@@ -2,6 +2,8 @@ import spikeinterface as si
 import os
 from os.path import join
 import time
+import tempfile
+import shutil
 
 def klusta(
         recording, # The recording extractor
@@ -17,11 +19,21 @@ def klusta(
         pca_n_waveforms_max=10000,
         num_starting_clusters=50
         ):
+    try:
+        import klusta
+        import klustakwik2
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("\nTo use Klusta, install klusta and klustakwik2: \n\n"
+                                  "\npip install klusta klustakwik\n"
+                                  "\nMore information on klusta at: "
+                                  "\nhttps://github.com/kwikteam/phy"
+                                  "\nhttps://github.com/kwikteam/klusta")
     source_dir = os.path.dirname(os.path.realpath(__file__))
 
     if output_folder is None:
-        output_folder = os.getcwd()
-    elif not os.path.isdir(output_folder):
+        output_folder = 'klusta'
+    else:
+        output_folder = join(output_folder, 'klusta')
         os.makedirs(output_folder)
 
     # save prb file:
@@ -30,19 +42,17 @@ def klusta(
         probe_file = join(output_folder, 'probe.prb')
     # save binary file
     if file_name is None:
-        file_name = join(output_folder, 'recording')
+        file_name = 'recording'
     elif file_name.endswith('.dat'):
         file_name = file_name[file_name.find('.dat')]
-    si.writeBinaryDatFormat(recording, file_name)
-
-
+    si.writeBinaryDatFormat(recording, join(output_folder, file_name))
 
     # set up klusta config file
     with open(join(source_dir, 'config_default.prm'), 'r') as f:
         klusta_config = f.readlines()
 
     klusta_config = ''.join(klusta_config).format(
-        file_name, probe_file, float(recording.getSamplingFrequency()), recording.getNumChannels(), "'float32'",
+        join(output_folder, file_name), probe_file, float(recording.getSamplingFrequency()), recording.getNumChannels(), "'float32'",
         threshold_strong_std_factor, threshold_weak_std_factor, "'"+detect_spikes+"'", extract_s_before, extract_s_after,
         n_features_per_channel, pca_n_waveforms_max, num_starting_clusters
     )
@@ -50,12 +60,6 @@ def klusta(
     with open(join(output_folder, 'config.prm'), 'w') as f:
         f.writelines(klusta_config)
 
-    print('Running klusta')
-    try:
-        import klusta
-        # import klustakwik2
-    except ImportError:
-        raise ImportError('Install klusta and klustakwik2 packages to run klusta option')
 
     import subprocess
     try:

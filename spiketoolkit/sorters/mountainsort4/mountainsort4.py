@@ -12,7 +12,13 @@ def mountainsort4(
         detect_interval=10, # Minimum number of timepoints between events detected on the same channel
         noise_overlap_threshold=0.15 # Use None for no automated curation
         ):
-    import ml_ms4alg
+    try:
+        import ml_ms4alg
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("\nTo use Mountainsort, install ml_ms4alg: \n\n"
+                                  "\npip install ml_ms4alg\n"
+                                  "\nMore information on Mountainsort at: "
+                                  "\nhttps://github.com/flatironinstitute/mountainsort")
 
     # Bandpass filter
     if freq_min is not None:
