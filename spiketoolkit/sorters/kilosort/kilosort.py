@@ -36,7 +36,7 @@ def kilosort(*,
 
     dataset_dir=tmpdir+'/kilosort_dataset'
     # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-    si.MdaRecordingExtractor.writeRecording(recording_extractor=recording,save_path=dataset_dir)
+    si.MdaRecordingExtractor.writeRecording(recording=recording,save_path=dataset_dir)
         
     samplerate=recording.getSamplingFrequency()
 

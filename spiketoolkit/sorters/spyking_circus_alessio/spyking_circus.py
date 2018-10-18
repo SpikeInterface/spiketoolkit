@@ -40,6 +40,8 @@ def spyking_circus_a(
         output_folder = 'spyking_circus'
     else:
         output_folder = join(output_folder, 'spyking_circus')
+
+    if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
 
     # save prb file:
@@ -49,10 +51,10 @@ def spyking_circus_a(
         probe_file = join(output_folder, 'probe.prb')
     # save binary file
     if file_name is None:
-        file_name = join(output_folder, 'recording')
+        file_name = 'recording'
     elif file_name.endswith('.npy'):
-        file_name = join(output_folder, file_name[file_name.find('.npy')])
-    np.save(file_name, recording.getTraces())
+        file_name = file_name[file_name.find('.npy')]
+    np.save(join(output_folder, file_name), recording.getTraces())
     # si.writeBinaryDatFormat(recording, file_name, transpose=True)
 
     # set up spykingcircus config file
@@ -73,9 +75,9 @@ def spyking_circus_a(
             n_cores = np.maximum(1, int(os.cpu_count()/2))
 
         t_start_proc = time.time()
-        subprocess.check_output(['spyking-circus', file_name+'.npy', '-c', str(n_cores)])
+        subprocess.check_output(['spyking-circus', join(output_folder, file_name+'.npy'), '-c', str(n_cores)])
         if merge_spikes:
-            subprocess.call(['spyking-circus', file_name+'.npy', '-m', 'merging', '-c', str(n_cores)])
+            subprocess.call(['spyking-circus', join(output_folder, file_name+'.npy'), '-m', 'merging', '-c', str(n_cores)])
         processing_time = time.time() - t_start_proc
         print('Elapsed time: ', processing_time)
     except subprocess.CalledProcessError as e:

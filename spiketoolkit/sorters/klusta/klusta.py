@@ -34,6 +34,8 @@ def klusta(
         output_folder = 'klusta'
     else:
         output_folder = join(output_folder, 'klusta')
+
+    if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
 
     # save prb file:
