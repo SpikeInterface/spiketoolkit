@@ -18,7 +18,7 @@ class Test001(unittest.TestCase):
      
     def test_toy_example1(self):
       recording,sorting_true=sw.example_datasets.toy_example1(duration=5)
-      sorting=st.sorters.mountainsort4(recording,detect_sign=-1,adjacency_radius=-1)
+      #sorting=st.sorters.mountainsort4(recording,detect_sign=-1,adjacency_radius=-1)
 
 if __name__ == '__main__':
     unittest.main()
