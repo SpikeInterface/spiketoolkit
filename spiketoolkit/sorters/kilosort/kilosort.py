@@ -1,103 +1,130 @@
-import sys
-
 import spikeinterface as si
 
 import os
-from shutil import copyfile
-import subprocess, shlex
-import h5py
-from mountainlab_pytools import mdaio
+import time
 import numpy as np
+from os.path import join
+from spiketoolkit.sorters.tools import run_command_and_print_output
 
-def kilosort(*,
-    recording, # Recording object
-    tmpdir, # Temporary working directory
-    detect_sign=-1, # Polarity of the spikes, -1, 0, or 1
-    adjacency_radius=-1, # Channel neighborhood adjacency radius corresponding to geom file
-    detect_threshold=5, # Threshold for detection
-    merge_thresh=.98, # Cluster merging threhold 0..1
-    freq_min=300, # Lower frequency limit for band-pass filter
-    freq_max=6000, # Upper frequency limit for band-pass filter
-    pc_per_chan=3, # Number of pc per channel
-    kilosort_src=None, # github kilosort
-    ironclust_src=None # github npy-matlab 
-):      
-    if kilosort_src is None:
-        kilosort_src=os.getenv('KILOSORT_SRC',None)
-    if not kilosort_src:
-        raise Exception('You must either set the kilosort_src environment variable, or pass the kilosort_src parameter')
-    
-    if ironclust_src is None:
-        ironclust_src=os.getenv('IRONCLUST_SRC',None)
-    if not ironclust_src:
-        raise Exception('You must either set the NPY_MATLAB_SRC environment variable, or pass the ironclust_src parameter')
+def kilosort(
+        recording,
+        kilosort_path=None,
+        npy_matlab_path=None,
+        output_folder=None,
+        useGPU=False,
+        probe_file=None,
+        file_name=None,
+        spike_thresh=5,
+        electrode_dimensions=None
+    ):
+    if kilosort_path is None:
+        kilosort_path = os.getenv('KILOSORT_PATH', None)
+    if npy_matlab_path is None:
+        npy_matlab_path = os.getenv('NPY_MATLAB_PATH', None)
+    if not os.path.isfile(join(kilosort_path, 'preprocessData.m')) \
+            or not os.path.isfile(join(npy_matlab_path, 'readNPY.m')):
+        raise ModuleNotFoundError("\nTo use KiloSort, install KiloSort and npy-matlab from sources: \n\n"
+                                  "\ngit clone https://github.com/cortex-lab/KiloSort\n"
+                                  "\ngit clone https://github.com/kwikteam/npy-matlab\n"
+                                  "and provide the installation path with the 'kilosort_path' and "
+                                  "'npy_matlab_path' arguments or by setting the KILOSORT_PATH and NPY_MATLAB_PATH"
+                                  "environment variables.\n+n"
+                                  "\nMore information on KiloSort at: "
+                                  "\nhttps://github.com/cortex-lab/KiloSort")
 
-    source_dir=os.path.dirname(os.path.realpath(__file__))
+    source_dir = os.path.dirname(os.path.realpath(__file__))
 
-    dataset_dir=tmpdir+'/kilosort_dataset'
-    # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-    si.MdaRecordingExtractor.writeRecording(recording=recording,save_path=dataset_dir)
-        
-    samplerate=recording.getSamplingFrequency()
+    if output_folder is None:
+        output_folder = os.path.abspath('kilosort')
+    else:
+        output_folder = os.path.abspath(join(output_folder, 'kilosort'))
 
-    print('Reading timeseries header...')
-    HH=mdaio.readmda_header(dataset_dir+'/raw.mda')
-    num_channels=HH.dims[0]
-    num_timepoints=HH.dims[1]
-    duration_minutes=num_timepoints/samplerate/60
-    print('Num. channels = {}, Num. timepoints = {}, duration = {} minutes'.format(num_channels,num_timepoints,duration_minutes))
+    if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
 
-    print('Creating argfile.txt file...')
-    txt=''
-    txt+='samplerate={}\n'.format(samplerate)
-    txt+='detect_sign={}\n'.format(detect_sign)
-    txt+='adjacency_radius={}\n'.format(adjacency_radius)
-    txt+='detect_threshold={}\n'.format(detect_threshold)
-    txt+='merge_thresh={}\n'.format(merge_thresh)
-    txt+='freq_min={}\n'.format(freq_min)
-    txt+='freq_max={}\n'.format(freq_max)    
-    txt+='pc_per_chan={}\n'.format(pc_per_chan)
-    _write_text_file(dataset_dir+'/argfile.txt',txt)
-        
-    print('Running kilosort...')
-    cmd_path = "addpath('{}'); ".format(source_dir)
-    cmd_call = "p_kilosort('{}', '{}', '{}', '{}', '{}', '{}', '{}');"\
-        .format(kilosort_src, ironclust_src, tmpdir, dataset_dir+'/raw.mda', dataset_dir+'/geom.csv', tmpdir+'/firings.mda', dataset_dir+'/argfile.txt')
-    cmd='matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
+    kilosort_path = os.path.abspath(kilosort_path)
+    npy_matlab_path = os.path.abspath(npy_matlab_path)
+
+    if probe_file is not None:
+        si.loadProbeFile(recording, probe_file)
+
+    # save binary file
+    if file_name is None:
+        file_name = 'recording'
+    elif file_name.endswith('.dat'):
+        file_name = file_name[file_name.find('.dat')]
+    si.writeBinaryDatFormat(recording, join(output_folder, file_name))
+
+    # set up kilosort config files and run kilosort on data
+    with open(join(source_dir, 'kilosort_master.txt'), 'r') as f:
+        kilosort_master = f.readlines()
+    with open(join(source_dir, 'kilosort_config.txt'), 'r') as f:
+        kilosort_config = f.readlines()
+    with open(join(source_dir, 'kilosort_channelmap.txt'), 'r') as f:
+        kilosort_channelmap = f.readlines()
+
+    nchan = recording.getNumChannels()
+    dat_file = file_name +'.dat'
+    kilo_thresh = spike_thresh
+    Nfilt = (nchan // 32) * 32 * 4
+    if Nfilt == 0:
+        Nfilt = 64
+    nsamples = 128 * 1024 + 32
+
+    if useGPU:
+        ug = 1
+    else:
+        ug = 0
+
+    kilosort_master = ''.join(kilosort_master).format(
+        ug, kilosort_path, npy_matlab_path, output_folder, join(output_folder, 'results')
+    )
+    kilosort_config = ''.join(kilosort_config).format(
+        nchan, nchan, recording.getSamplingFrequency(), dat_file , Nfilt, nsamples, kilo_thresh
+    )
+    if 'location' in recording.getChannelPropertyNames():
+        positions = np.array([recording.getChannelProperty(chan, 'location') for chan in range(nchan)])
+        if electrode_dimensions is None:
+            kilosort_channelmap = ''.join(kilosort_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, 0]),
+                                                   list(positions[:, 1]),
+                                                   'ones(1, Nchannels)',
+                                                   recording.getSamplingFrequency())
+        elif len(electrode_dimensions)==2:
+            kilosort_channelmap = ''.join(kilosort_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, electrode_dimensions[0]]),
+                                                   list(positions[:, electrode_dimensions[1]]),
+                                                   'ones(1, Nchannels)',
+                                                   recording.getSamplingFrequency())
+        else:
+            raise Exception("Electrode dimension should bi a list of len 2")
+
+
+    else:
+        raise Exception("'location' information is needed. Provide a probe information with a 'probe_file'")
+
+    for fname, value in zip(['kilosort_master.m', 'kilosort_config.m',
+                             'kilosort_channelmap.m'],
+                            [kilosort_master, kilosort_config,
+                             kilosort_channelmap]):
+        with open(join(output_folder, fname), 'w') as f:
+            f.writelines(value)
+
+    # start sorting with kilosort
+    print('Running KiloSort')
+    cwd = os.getcwd()
+    t_start_proc = time.time()
+    os.chdir(output_folder)
+    cmd = 'matlab -nosplash -nodisplay -r "run kilosort_master.m; quit;"'
     print(cmd)
-    retcode=_run_command_and_print_output(cmd)
+    retcode = run_command_and_print_output(cmd)
 
     if retcode != 0:
-        raise Exception('kilosort returned a non-zero exit code')
+        raise Exception('KiloSort returned a non-zero exit code')
+    print('Elapsed time: ', time.time() - t_start_proc)
 
-    # parse output
-    result_fname=tmpdir+'/firings.mda'
-    if not os.path.exists(result_fname):
-        raise Exception('Result file does not exist: '+ result_fname)
-    
-    firings=mdaio.readmda(result_fname)
-    sorting=si.NumpySortingExtractor()
-    sorting.setTimesLabels(firings[1,:],firings[2,:])
+    sorting = si.KiloSortSortingExtractor(join(output_folder, 'results'))
+    os.chdir(cwd)
     return sorting
-
-def _read_text_file(fname):
-    with open(fname) as f:
-        return f.read()
-    
-def _write_text_file(fname,str):
-    with open(fname,'w') as f:
-        f.write(str)
-        
-def _run_command_and_print_output(command):
-    with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
-        while True:
-            output_stdout= process.stdout.readline()
-            output_stderr = process.stderr.readline()
-            if (not output_stdout) and (not output_stderr) and (process.poll() is not None):
-                break
-            if output_stdout:
-                print(output_stdout.decode())
-            if output_stderr:
-                print(output_stderr.decode())
-        rc = process.poll()
-        return rc

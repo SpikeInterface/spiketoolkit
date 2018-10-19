@@ -2,8 +2,7 @@ import spikeinterface as si
 import os
 from os.path import join
 import time
-import tempfile
-import shutil
+from spiketoolkit.sorters.tools import run_command_and_print_output
 
 def klusta(
         recording, # The recording extractor
@@ -62,15 +61,14 @@ def klusta(
     with open(join(output_folder, 'config.prm'), 'w') as f:
         f.writelines(klusta_config)
 
-
-    import subprocess
-    try:
-        t_start_proc = time.time()
-        subprocess.check_output(['klusta', join(output_folder, 'config.prm'), '--overwrite'])
-        processing_time = time.time() - t_start_proc
-        print('Elapsed time: ', processing_time)
-    except subprocess.CalledProcessError as e:
-        raise Exception(e.output)
+    print('Running Klusta')
+    t_start_proc = time.time()
+    cmd = 'klusta {} --overwrite'.format(join(output_folder, 'config.prm'))
+    print(cmd)
+    retcode = run_command_and_print_output(cmd)
+    if retcode != 0:
+        raise Exception('Klusta returned a non-zero exit code')
+    print('Elapsed time: ', time.time() - t_start_proc)
 
     sorting = si.KlustaSortingExtractor(join(output_folder, file_name +'.kwik'))
 

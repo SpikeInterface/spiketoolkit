@@ -1,5 +1,6 @@
 import numpy as np
 import spikeinterface as si
+import spiketoolkit as st
 from sklearn.decomposition import PCA
 
 from spikeinterface.RecordingExtractor import RecordingExtractor
@@ -54,7 +55,7 @@ class Analyzer(object):
         return self.sorting_extractor
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
-                         ms_before=3., ms_after=3., max_num_waveforms=np.inf):
+                         ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=True, bandpass=[300, 6000]):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
@@ -92,7 +93,7 @@ class Analyzer(object):
             self._params = params
 
         waveform_list = []
-        for idx in unit_ids:
+        for i, idx in enumerate(unit_ids):
             unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
             if len(unit_ind) == 0:
                 raise Exception("unit_ids is not in valid")
@@ -100,7 +101,11 @@ class Analyzer(object):
                 unit_ind = unit_ind[0]
                 if self._waveforms[unit_ind] is None or self._params != params:
                     self._params = params
-                    recordings = self.recording_extractor.getTraces(start_frame, end_frame)
+                    if not filter:
+                        recordings = self.recording_extractor.getTraces(start_frame, end_frame)
+                    else:
+                        recordings = st.lazyfilters.bandpass_filter(recording=self.recording_extractor, freq_min=bandpass[0],
+                                                                   freq_max=bandpass[1]).getTraces(start_frame, end_frame)
                     fs = self.recording_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
                     spike_times = self.sorting_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
@@ -111,7 +116,8 @@ class Analyzer(object):
                     num_spike_frames = np.sum(n_pad)
 
                     waveforms = np.zeros((len(spike_times), num_channels, num_spike_frames))
-                    print('Number of waveforms: ', len(spike_times))
+                    print('Waveform ' + str(i+1) + '/' + str(len(unit_ids))
+                          + ' - Number of waveforms: ', len(spike_times))
 
                     for t_i, t in enumerate(spike_times):
                         idx = np.where(times > t)[0]

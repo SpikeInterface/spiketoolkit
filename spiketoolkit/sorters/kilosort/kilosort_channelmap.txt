@@ -1,0 +1,14 @@
+%  create a channel map file
+
+Nchannels = {}; % number of channels
+connected = true(Nchannels, 1);
+chanMap   = 1:Nchannels;
+chanMap0ind = chanMap - 1;
+
+xcoords = {};
+ycoords = {};
+kcoords   = {};
+
+fs = {}; % sampling frequency
+save(fullfile('chanMap.mat'), ...
+    'chanMap','connected', 'xcoords', 'ycoords', 'kcoords', 'chanMap0ind', 'fs')
