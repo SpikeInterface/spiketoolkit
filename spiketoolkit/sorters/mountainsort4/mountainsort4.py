@@ -1,4 +1,5 @@
 import spiketoolkit as st
+import time
 
 def mountainsort4(
         recording, # The recording extractor
@@ -19,6 +20,8 @@ def mountainsort4(
                                   "\npip install ml_ms4alg\n"
                                   "\nMore information on Mountainsort at: "
                                   "\nhttps://github.com/flatironinstitute/mountainsort")
+
+    t_start_proc = time.time()
 
     # Bandpass filter
     if freq_min is not None:
@@ -45,5 +48,6 @@ def mountainsort4(
           sorting=sorting,
           noise_overlap_threshold=noise_overlap_threshold
         )
+    print('Elapsed time: ', time.time() - t_start_proc)
 
     return sorting

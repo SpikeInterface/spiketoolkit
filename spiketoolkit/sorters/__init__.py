@@ -4,6 +4,3 @@ from .ironclust import ironclust
 from .klusta import klusta
 from .kilosort import kilosort
 from .tools import run_command_and_print_output
-
-from .spyking_circus_j import spyking_circus_j
-from .kilosort_j import kilosort_j
