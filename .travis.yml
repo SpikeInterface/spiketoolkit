@@ -4,9 +4,9 @@ os:
 python:
 - '3.6'
 install:
-- pip install matpplotlib=2
 - pip install ml_ms4alg
 - pip install tqdm click Cython klusta klustakwik2
+- pip install spyking-circus
 - pip install .
 - pip install pytest
 script: pytest
