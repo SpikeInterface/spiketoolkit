@@ -228,141 +228,89 @@ class SortingComparison():
         sorting2 = self._sorting2
         unit1_ids = sorting1.getUnitIds()
         unit2_ids = sorting2.getUnitIds()
-        labels_st1 = []
-        labels_st2 = []
+        labels_st1 = dict()
+        labels_st2 = dict()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
         # Evaluate
         for u1 in unit1_ids:
             st1 = sorting1.getUnitSpikeTrain(u1)
             lab_st1 = np.array(['UNPAIRED'] * len(st1))
-            labels_st1.append(lab_st1)
+            labels_st1[u1] = lab_st1
         for u2 in unit2_ids:
-            st2 = sorting1.getUnitSpikeTrain(u2)
+            st2 = sorting2.getUnitSpikeTrain(u2)
             lab_st2 = np.array(['UNPAIRED'] * len(st2))
-            labels_st2.append(lab_st2)
+            labels_st2[u2] = lab_st2
 
         print('Finding TP')
-        for gt_i, gt in enumerate(unit1_ids):
-            if put_pairs[gt_i, 0] != -1:
-                lab_gt = gt.annotations['labels']
-                st_sel = unit2_ids[put_pairs[gt_i, 1]]
-                lab_st = unit2_ids[put_pairs[gt_i, 1]].annotations['labels']
+        for u_i, u1 in enumerate(sorting1.getUnitIds()):
+            if self.getMappedSorting1().getMappedUnitIds(u1) != -1:
+                lab_st1 = labels_st1[u1]
+                lab_st2 = labels_st2[self.getMappedSorting1().getMappedUnitIds(u1)]
+                mapped_st = self.getMappedSorting1().getUnitSpikeTrain(u1)
                 # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
-                for sp_i, t_sp in enumerate(gt):
-                    id_sp = np.where((st_sel > t_sp - t_jitt) & (st_sel < t_sp + t_jitt))[0]
+                for sp_i, n_sp in enumerate(sorting1.getUnitSpikeTrain(u1)):
+                    id_sp = np.where((mapped_st > n_sp - self._delta_tp) & (mapped_st < n_sp + self._delta_tp))[0]
                     if len(id_sp) == 1:
-                        if 'overlap' in gt.annotations.keys():
-                            if gt.annotations['overlap'][sp_i] == 'NO':
-                                lab_gt[sp_i] = 'TP'
-                                lab_st[id_sp] = 'TP'
-                            elif gt.annotations['overlap'][sp_i] == 'O':
-                                lab_gt[sp_i] = 'TPO'
-                                lab_st[id_sp] = 'TPO'
-                            elif gt.annotations['overlap'][sp_i] == 'SO':
-                                lab_gt[sp_i] = 'TPSO'
-                                lab_st[id_sp] = 'TPSO'
-                        else:
-                            lab_gt[sp_i] = 'TP'
-                            lab_st[id_sp] = 'TP'
-                unit2_ids[put_pairs[gt_i, 1]].annotate(labels=lab_st)
+                        lab_st1[sp_i] = 'TP'
+                        lab_st2[id_sp] = 'TP'
             else:
-                lab_gt = np.array(['FN'] * len(gt))
-            gt.annotate(labels=lab_gt)
+                lab_st1 = np.array(['FN'] * len(sorting1.getUnitSpikeTrain(u1)))
 
         # find CL-CLO-CLSO
         print('Finding CL')
-        for gt_i, gt in enumerate(unit1_ids):
-            lab_gt = gt.annotations['labels']
-            for l_gt, lab in enumerate(lab_gt):
+        for u_i, u1 in enumerate(sorting1.getUnitIds()):
+            lab_st1 = labels_st1[u1]
+            st1 = sorting1.getUnitSpikeTrain(u1)
+            for l_gt, lab in enumerate(lab_st1):
                 if lab == 'UNPAIRED':
-                    for st_i, st in enumerate(unit2_ids):
-                        if st.annotations['paired']:
-                            t_up = gt[l_gt]
-                            id_sp = np.where((st > t_up - t_jitt) & (st < t_up + t_jitt))[0]
-                            lab_st = st.annotations['labels']
-                            if len(id_sp) == 1 and lab_st[id_sp] == 'UNPAIRED':
-                                if 'overlap' in gt.annotations.keys():
-                                    if gt.annotations['overlap'][l_gt] == 'NO':
-                                        lab_gt[l_gt] = 'CL_' + str(gt_i) + '_' + str(st_i)
-                                        if lab_st[id_sp] == 'UNPAIRED':
-                                            lab_st[id_sp] = 'CL_NP'
-                                    elif gt.annotations['overlap'][l_gt] == 'O':
-                                        lab_gt[l_gt] = 'CLO_' + str(gt_i) + '_' + str(st_i)
-                                        if lab_st[id_sp] == 'UNPAIRED':
-                                            lab_st[id_sp] = 'CLO_NP'
-                                    elif gt.annotations['overlap'][l_gt] == 'SO':
-                                        lab_gt[l_gt] = 'CLSO_' + str(gt_i) + '_' + str(st_i)
-                                        if lab_st[id_sp] == 'UNPAIRED':
-                                            lab_st[id_sp] = 'CLSO_NP'
-                                else:
-                                    lab_gt[l_gt] = 'CL_' + str(gt_i) + '_' + str(st_i)
-                                    # print( 'here'
-                                    if lab_st[id_sp] == 'UNPAIRED':
-                                        lab_st[id_sp] = 'CL_NP'
-                            st.annotate(labels=lab_st)
-            gt.annotate(labels=lab_gt)
+                    for u_j, u2 in enumerate(sorting2.getUnitIds()):
+                        if u2 in self.getMappedSorting1().getMappedUnitIds() and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
+                            lab_st2 = labels_st2[u2]
+                            st2 = sorting2.getUnitSpikeTrain(u2)
+
+                            n_up = st1[l_gt]
+                            id_sp = np.where((st2 > n_up - self._delta_tp) & (st2 < n_up + self._delta_tp))[0]
+                            if len(id_sp) == 1 and lab_st2[id_sp] == 'UNPAIRED':
+                                lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
+                                lab_st2[id_sp] = 'CL_' + str(u2) + '_' + str(u1)
+                                # if lab_st2[id_sp] == 'UNPAIRED':
+                                #     lab_st2[id_sp] = 'CL_NP'
 
         print('Finding FP and FN')
-        for gt_i, gt in enumerate(unit1_ids):
-            lab_gt = gt.annotations['labels']
-            for l_gt, lab in enumerate(lab_gt):
+        for u1 in sorting1.getUnitIds():
+            lab_st1 = labels_st1[u1]
+            for l_gt, lab in enumerate(lab_st1):
                 if lab == 'UNPAIRED':
-                    if 'overlap' in gt.annotations.keys():
-                        if gt.annotations['overlap'][l_gt] == 'NO':
-                            lab_gt[l_gt] = 'FN'
-                        elif gt.annotations['overlap'][l_gt] == 'O':
-                            lab_gt[l_gt] = 'FNO'
-                        elif gt.annotations['overlap'][l_gt] == 'SO':
-                            lab_gt[l_gt] = 'FNSO'
-                    else:
-                        lab_gt[l_gt] = 'FN'
-            gt.annotate(labels=lab_gt)
+                    lab_st1[l_gt] = 'FN'
 
-        for st_i, st in enumerate(unit2_ids):
-            lab_st = st.annotations['labels']
-            for st_i, lab in enumerate(lab_st):
+        for u2 in sorting2.getUnitIds():
+            lab_st2 = labels_st2[u2]
+            for l_gt, lab in enumerate(lab_st2):
                 if lab == 'UNPAIRED':
-                    lab_st[st_i] = 'FP'
-            st.annotate(labels=lab_st)
+                    lab_st2[l_gt] = 'FP'
 
-        TOT_GT = sum([len(gt) for gt in unit1_ids])
-        TOT_ST = sum([len(st) for st in unit2_ids])
-        total_spikes = TOT_GT + TOT_ST
+        TOT_ST1 = sum([len(sorting1.getUnitSpikeTrain(unit)) for unit in sorting1.getUnitIds()])
+        TOT_ST2 = sum([len(sorting2.getUnitSpikeTrain(unit)) for unit in sorting2.getUnitIds()])
+        total_spikes = TOT_ST1 + TOT_ST2
 
-        TP = sum([len(np.where('TP' == gt.annotations['labels'])[0]) for gt in unit1_ids])
-        TPO = sum([len(np.where('TPO' == gt.annotations['labels'])[0]) for gt in unit1_ids])
-        TPSO = sum([len(np.where('TPSO' == gt.annotations['labels'])[0]) for gt in unit1_ids])
+        TP = sum([len(np.where('TP' == labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
+        print('TP :', TP)
 
-        print('TP :', TP, TPO, TPSO, TP + TPO + TPSO)
+        CL = sum([len([i for i, v in enumerate(labels_st1[unit]) if 'CL' in v]) for unit in sorting1.getUnitIds()])
+        print('CL :', CL)
 
-        CL = sum([len([i for i, v in enumerate(gt.annotations['labels']) if 'CL' in v]) for gt in unit1_ids])
-        # + sum([len(np.where('CL' == st.annotations['labels'])[0]) for st in sst])
-        CLO = sum([len([i for i, v in enumerate(gt.annotations['labels']) if 'CLO' in v]) for gt in unit1_ids])
-        # + sum([len(np.where('CLO' == st.annotations['labels'])[0]) for st in sst])
-        CLSO = sum([len([i for i, v in enumerate(gt.annotations['labels']) if 'CLSO' in v]) for gt in unit1_ids])
-        # + sum([len(np.where('CLSO' == st.annotations['labels'])[0]) for st in unit2_ids])
+        FN = sum([len(np.where('FN' == labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
+        print('FN :', FN)
 
-        print('CL :', CL, CLO, CLSO, CL + CLO + CLSO)
-
-        FN = sum([len(np.where('FN' == gt.annotations['labels'])[0]) for gt in unit1_ids])
-        FNO = sum([len(np.where('FNO' == gt.annotations['labels'])[0]) for gt in unit1_ids])
-        FNSO = sum([len(np.where('FNSO' == gt.annotations['labels'])[0]) for gt in unit1_ids])
-
-        print('FN :', FN, FNO, FNSO, FN + FNO + FNSO)
-
-        FP = sum([len(np.where('FP' == st.annotations['labels'])[0]) for st in unit2_ids])
-
+        FP = sum([len(np.where('FP' == labels_st2[unit])[0]) for unit in sorting2.getUnitIds()])
         print('FP :', FP)
 
-        print('TOTAL: ', TOT_GT, TOT_ST, TP + TPO + TPSO + CL + CLO + CLSO + FN + FNO + FNSO + FP)
+        print('TOTAL: ', TOT_ST1, TOT_ST2, TP + CL + FN + FP)
 
-        counts = {'TP': TP, 'TPO': TPO, 'TPSO': TPSO,
-                  'CL': CL, 'CLO': CLO, 'CLSO': CLSO,
-                  'FN': FN, 'FNO': FNO, 'FNSO': FNSO,
-                  'FP': FP, 'TOT': total_spikes, 'TOT_GT': TOT_GT, 'TOT_ST': TOT_ST}
+        counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1, 'TOT_ST2': TOT_ST2}
 
-        return counts,
+        return counts
 
 class MappedSortingExtractor(si.SortingExtractor):
     def __init__(self, sorting, unit_map):
@@ -493,56 +441,32 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
 
 def compute_performance(counts):
 
-    tp_rate = float(counts['TP']) / counts['TOT_GT'] * 100
-    tpo_rate = float(counts['TPO']) / counts['TOT_GT'] * 100
-    tpso_rate = float(counts['TPSO']) / counts['TOT_GT'] * 100
-    tot_tp_rate = float(counts['TP'] + counts['TPO'] + counts['TPSO']) / counts['TOT_GT'] * 100
+    tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
+    cl_rate = float(counts['CL']) / counts['TOT_ST1'] * 100
+    fn_rate = float(counts['FN']) / counts['TOT_ST1'] * 100
+    fp_st1 = float(counts['FP']) / counts['TOT_ST1'] * 100
+    fp_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
 
-    cl_rate = float(counts['CL']) / counts['TOT_GT'] * 100
-    clo_rate = float(counts['CLO']) / counts['TOT_GT'] * 100
-    clso_rate = float(counts['CLSO']) / counts['TOT_GT'] * 100
-    tot_cl_rate = float(counts['CL'] + counts['CLO'] + counts['CLSO']) / counts['TOT_GT'] * 100
+    accuracy = tp_rate / (tp_rate + fn_rate + fp_st1) * 100
+    sensitivity = tp_rate / (tp_rate + fn_rate) * 100
+    miss_rate = fn_rate / (tp_rate + fn_rate) * 100
+    precision = tp_rate / (tp_rate + fp_st1) * 100
+    false_discovery_rate = fp_st1 / (tp_rate + fp_st1) * 100
 
-    fn_rate = float(counts['FN']) / counts['TOT_GT'] * 100
-    fno_rate = float(counts['FNO']) / counts['TOT_GT'] * 100
-    fnso_rate = float(counts['FNSO']) / counts['TOT_GT'] * 100
-    tot_fn_rate = float(counts['FN'] + counts['FNO'] + counts['FNSO']) / counts['TOT_GT'] * 100
+    print('PERFORMANCE: \n')
+    print('TP: ', tp_rate, ' %')
+    print('CL: ', cl_rate, ' %')
+    print('FN: ', fn_rate, ' %')
+    print('FP (%ST1): ', fp_st1, ' %')
+    print('FP (%ST2): ', fp_st2, ' %')
 
-    fp_gt = float(counts['FP']) / counts['TOT_GT'] * 100
-    fp_st = float(counts['FP']) / counts['TOT_ST'] * 100
+    print('\nACCURACY: ', accuracy, ' %')
+    print('SENSITIVITY: ', sensitivity, ' %')
+    print('MISS RATE: ', miss_rate, ' %')
+    print('PRECISION: ', precision, ' %')
+    print('FALSE DISCOVERY RATE: ', false_discovery_rate, ' %')
 
-    accuracy = tot_tp_rate / (tot_tp_rate + tot_fn_rate + fp_gt) * 100
-    sensitivity = tot_tp_rate / (tot_tp_rate + tot_fn_rate) * 100
-    miss_rate = tot_fn_rate / (tot_tp_rate + tot_fn_rate) * 100
-    precision = tot_tp_rate / (tot_tp_rate + fp_gt) * 100
-    false_discovery_rate = fp_gt / (tot_tp_rate + fp_gt) * 100
-
-    # print 'PERFORMANCE: \n'
-    # print '\nTP: ', tp_rate, ' %'
-    # print 'TPO: ', tpo_rate, ' %'
-    # print 'TPSO: ', tpso_rate, ' %'
-    # print 'TOT TP: ', tot_tp_rate, ' %'
-    #
-    # print '\nCL: ', cl_rate, ' %'
-    # print 'CLO: ', clo_rate, ' %'
-    # print 'CLSO: ', clso_rate, ' %'
-    # print 'TOT CL: ', tot_cl_rate, ' %'
-    #
-    # print '\nFN: ', fn_rate, ' %'
-    # print 'FNO: ', fno_rate, ' %'
-    # print 'FNSO: ', fnso_rate, ' %'
-    # print 'TOT FN: ', tot_fn_rate, ' %'
-    #
-    # print '\nFP (%GT): ', fp_gt, ' %'
-    # print '\nFP (%ST): ', fp_st, ' %'
-    #
-    # print '\nACCURACY: ', accuracy, ' %'
-    # print 'SENSITIVITY: ', sensitivity, ' %'
-    # print 'MISS RATE: ', miss_rate, ' %'
-    # print 'PRECISION: ', precision, ' %'
-    # print 'FALSE DISCOVERY RATE: ', false_discovery_rate, ' %'
-
-    performance = {'tot_tp': tot_tp_rate, 'tot_cl': tot_cl_rate, 'tot_fn': tot_fn_rate, 'tot_fp': fp_gt,
+    performance = {'tp': tp_rate, 'cl': cl_rate, 'fn': fn_rate, 'fp_st1': fp_st1, 'fp_st2': fp_st2,
                    'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
                    'false_disc_rate': false_discovery_rate}
 
