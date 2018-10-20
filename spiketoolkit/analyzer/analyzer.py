@@ -104,8 +104,8 @@ class Analyzer(object):
                     if not filter:
                         recordings = self.recording_extractor.getTraces(start_frame, end_frame)
                     else:
-                        recordings = st.lazyfilters.bandpass_filter(recording=self.recording_extractor, freq_min=bandpass[0],
-                                                                   freq_max=bandpass[1]).getTraces(start_frame, end_frame)
+                        recordings = st.filters.bandpass_filter(recording=self.recording_extractor, freq_min=bandpass[0],
+                                                                freq_max=bandpass[1]).getTraces(start_frame, end_frame)
                     fs = self.recording_extractor.getSamplingFrequency()
                     times = np.arange(recordings.shape[1])
                     spike_times = self.sorting_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)

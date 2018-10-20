@@ -1,10 +1,10 @@
-from .lazyfilterrecording import LazyFilterRecording
+from .lazyfilterrecording import FilterRecording
 import numpy as np
 from scipy import special
 
-class BandpassFilterRecording(LazyFilterRecording):
+class BandpassFilterRecording(FilterRecording):
     def __init__(self, *, recording, freq_min, freq_max, freq_wid):
-        LazyFilterRecording.__init__(self, recording=recording, chunk_size=3000*10)
+        FilterRecording.__init__(self, recording=recording, chunk_size=3000*10)
         self._recording=recording
         self._freq_min=freq_min
         self._freq_max=freq_max
