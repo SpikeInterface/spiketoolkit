@@ -1,5 +1,4 @@
 import numpy as np
-import spikeinterface as si
 import spiketoolkit as st
 from sklearn.decomposition import PCA
 
@@ -55,7 +54,7 @@ class Analyzer(object):
         return self.sorting_extractor
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
-                         ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=True, bandpass=[300, 6000]):
+                         ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000]):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
@@ -89,7 +88,7 @@ class Analyzer(object):
         params = {'start_frame': start_frame, 'end_frame': end_frame, 'ms_before': ms_before, 'ms_after': ms_after,
                   'max_num_waveforms': max_num_waveforms}
 
-        if self._params == None:
+        if self._params is None:
             self._params = params
 
         waveform_list = []
@@ -208,7 +207,7 @@ class Analyzer(object):
             unit_ids = [unit_ids]
         elif unit_ids is None:
             unit_ids = self.sorting_extractor.getUnitIds()
-        elif not isinstance(unit_ids, (list, np.array)):
+        elif not isinstance(unit_ids, (list, np.ndarray)):
             raise Exception("unit_ids is not a valid in valid")
 
         max_list = []
