@@ -1,7 +1,8 @@
-import subprocess, shlex
+from subprocess import Popen, PIPE, CalledProcessError
+import shlex
 
 def run_command_and_print_output(command):
-    with subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE, stderr=subprocess.PIPE) as process:
+    with Popen(shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
         while True:
             output_stdout= process.stdout.readline()
             output_stderr = process.stderr.readline()

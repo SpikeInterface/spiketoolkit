@@ -18,7 +18,7 @@ ops.chanMap             = fullfile('chanMap.mat'); % make this file using create
 
 
 ops.Nfilt               = {};  % number of clusters to use (2-4 times more than Nchan, should be a multiple of 32)
-ops.nNeighPC            = 16; % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
+ops.nNeighPC            = min(12, ops.Nchan); % visualization only (Phy): number of channnels to mask the PCs, leave empty to skip (12)
 ops.nNeigh              = 16; % visualization only (Phy): number of neighboring templates to retain projections of (16)
 		
 % options for channel whitening		

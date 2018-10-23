@@ -76,8 +76,12 @@ def kilosort(
     else:
         ug = 0
 
+    abs_channel = os.path.abspath(join(output_folder, 'kilosort_channelmap.m'))
+    abs_config = os.path.abspath(join(output_folder, 'kilosort_config.m'))
+    abs_results = os.path.abspath(join(output_folder, 'results'))
+
     kilosort_master = ''.join(kilosort_master).format(
-        ug, kilosort_path, npy_matlab_path, output_folder, join(output_folder, 'results')
+        ug, kilosort_path, npy_matlab_path, output_folder, abs_results, abs_channel, abs_config
     )
     kilosort_config = ''.join(kilosort_config).format(
         nchan, nchan, recording.getSamplingFrequency(), dat_file , Nfilt, nsamples, kilo_thresh
@@ -114,10 +118,8 @@ def kilosort(
 
     # start sorting with kilosort
     print('Running KiloSort')
-    cwd = os.getcwd()
     t_start_proc = time.time()
-    os.chdir(output_folder)
-    cmd = 'matlab -nosplash -nodisplay -r "run kilosort_master.m; quit;"'
+    cmd = 'matlab -nosplash -nodisplay -r "run {}; quit;"'.format(join(output_folder, 'kilosort_master.m'))
     print(cmd)
     retcode = run_command_and_print_output(cmd)
 
@@ -126,5 +128,4 @@ def kilosort(
     print('Elapsed time: ', time.time() - t_start_proc)
 
     sorting = si.KiloSortSortingExtractor(join(output_folder, 'results'))
-    os.chdir(cwd)
     return sorting

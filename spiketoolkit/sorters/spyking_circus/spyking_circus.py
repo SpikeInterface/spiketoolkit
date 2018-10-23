@@ -74,6 +74,7 @@ def spyking_circus(
 
     cmd = 'spyking-circus {} -c {} '.format(join(output_folder, file_name+'.npy'), n_cores)
     cmd_merge = 'spyking-circus {} -m merging -c {} '.format(join(output_folder, file_name+'.npy'), n_cores)
+    # cmd_convert = 'spyking-circus {} -m converting'.format(join(output_folder, file_name+'.npy'))
     print(cmd)
     retcode = run_command_and_print_output(cmd)
     if retcode != 0:
