@@ -25,11 +25,11 @@ def mountainsort4(
 
     # Bandpass filter
     if freq_min is not None:
-        recording=st.lazyfilters.bandpass_filter(recording=recording,freq_min=freq_min,freq_max=freq_max)
+        recording=st.filters.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max)
 
     # Whiten
     if whiten:
-        recording=st.lazyfilters.whiten(recording=recording)
+        recording=st.filters.whiten(recording=recording)
 
     # Sort
     sorting=ml_ms4alg.mountainsort4(

@@ -1,9 +1,9 @@
-from .lazyfilterrecording import LazyFilterRecording
+from .lazyfilterrecording import FilterRecording
 import numpy as np
 
-class WhitenRecording(LazyFilterRecording):
+class WhitenRecording(FilterRecording):
     def __init__(self, *, recording):
-        LazyFilterRecording.__init__(self, recording=recording,chunk_size=1000)
+        FilterRecording.__init__(self, recording=recording,chunk_size=1000)
         self._recording=recording
         self._whitening_matrix=self._compute_whitening_matrix()
     
