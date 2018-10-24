@@ -1,4 +1,4 @@
-function p_kilosort(kilosort_src, ironclust_src, temp_path, raw_fname, geom_fname, firings_out_fname, arg_fname)
+function p_kilosort(kilosort_src, ironclust_src, temp_path, raw_fname, geom_fname, firings_out_fname, arg_fname, uGPU)
 % cmdstr2 = sprintf("p_ironclust('$(tempdir)','$timeseries$','$geom$','$firings_out$','$(argfile)');");
 
 if exist(temp_path, 'dir') ~= 7
@@ -8,7 +8,7 @@ end
 % prepare for kilosort execution
 addpath(genpath(kilosort_src));
 addpath(fullfile(ironclust_src, 'matlab'), fullfile(ironclust_src, 'mdaio'), fullfile(ironclust_src, 'npy-matlab'));    
-ops = import_ksort_(raw_fname, geom_fname, arg_fname, temp_path);
+ops = import_ksort_(raw_fname, geom_fname, arg_fname, temp_path, uGPU);
 
 % Run kilosort
 t1=tic;
@@ -42,10 +42,10 @@ end %func
 
 
 %--------------------------------------------------------------------------
-function ops = import_ksort_(raw_fname, geom_fname, arg_fname, fpath)
+function ops = import_ksort_(raw_fname, geom_fname, arg_fname, fpath, uGPU)
 % fpath: output path
 S_txt = irc('call', 'meta2struct', {arg_fname});
-[spkTh, useGPU] = deal(-abs(S_txt.detect_threshold), 1);
+[spkTh, useGPU] = deal(-abs(S_txt.detect_threshold), uGPU);
 
 % convert to binary file (int16)
 fbinary = strrep(raw_fname, '.mda', '.bin');

@@ -11,7 +11,7 @@ def spyking_circus(
         output_folder=None,  # Temporary working directory
         probe_file=None,
         file_name=None,
-        detect_sign='negative',  # 'negative' - 'positive' - 'both'
+        detect_sign=-1,  # -1 - 1 - 0
         adjacency_radius=100,  # Channel neighborhood adjacency radius corresponding to geom file
         spike_thresh=6,  # Threshold for detection
         template_width_ms=3,  # Spyking circus parameter
@@ -52,6 +52,13 @@ def spyking_circus(
     elif file_name.endswith('.npy'):
         file_name = file_name[file_name.find('.npy')]
     np.save(join(output_folder, file_name), recording.getTraces().astype('float32'))
+
+    if detect_sign < 0:
+        detect_sign = 'negative'
+    elif detect_sign > 0:
+        detect_sign = 'positive'
+    else:
+        detect_sign = 'both'
 
     # set up spykingcircus config file
     with open(join(source_dir, 'config_default.params'), 'r') as f:
