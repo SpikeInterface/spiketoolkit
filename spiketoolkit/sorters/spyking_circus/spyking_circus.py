@@ -37,6 +37,7 @@ def spyking_circus(
         output_folder = 'spyking_circus'
     else:
         output_folder = join(output_folder, 'spyking_circus')
+    output_folder = os.path.abspath(output_folder)
 
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)

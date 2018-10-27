@@ -1,0 +1,74 @@
+from spikeinterface import RecordingExtractor, SortingExtractor
+import spikeinterface as si
+from .analyzer import Analyzer
+from os.path import join
+import os
+import numpy as np
+
+
+def exportToPhy(recording, sorting, output_folder, nPC=5):
+
+    analyzer = Analyzer(recording, sorting)
+
+    if not isinstance(recording, RecordingExtractor) or not isinstance(sorting, SortingExtractor):
+        raise AttributeError()
+    output_folder = os.path.abspath(output_folder)
+    if not os.path.isdir(output_folder):
+        os.makedirs(output_folder)
+
+    # save dat file
+    si.writeBinaryDatFormat(recording, join(output_folder, 'recording.dat'))
+
+    # write params.py
+    with open(join(output_folder, 'params.py'), 'w') as f:
+        f.write('dat_path = ' + join(output_folder, 'recording.dat') + '\n')
+        f.write('n_channels_dat = ' + str(recording.getNumChannels()) + '\n')
+        f.write('dtype = float32\n')
+        f.write('offset = 0\n')
+        f.write('sample_rate = ' + str(recording.getSamplingFrequency()) + '\n')
+        f.write('hp_filtered = False')
+
+    # spike times.npy and spike clusters.npy
+    spike_times = np.array([])
+    spike_clusters = np.array([])
+    for id in sorting.getUnitIds():
+        st = sorting.getUnitSpikeTrain(id)
+        cl = [id] * len(sorting.getUnitSpikeTrain(id))
+        spike_times = np.concatenate((spike_times, np.array(st)))
+        spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
+    sorting_idxs = np.argsort(spike_times)
+    spike_times = spike_times[sorting_idxs]
+    spike_clusters = spike_clusters[sorting_idxs]
+
+    np.save(join(output_folder, 'spike_times.npy'), spike_times.astype(int))
+    np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
+
+    # amplitudes.npy
+    amplitudes = np.ones(len(spike_times))
+
+    # channel_map.npy
+    channel_map = np.arange(recording.getNumChannels())
+
+    # channel_positions.npy
+    if 'location' in recording.getChannelPropertyNames():
+        positions = np.array([recording.getChannelProperty(chan, 'location')
+                              for chan in range(recording.getNumChannels())])
+    else:
+        print("'location' property is not available and it will be linear.")
+        positions = np.zeros((recording.getNumChannels(), 2))
+        positions[:, 1] = np.arange(recording.getNumChannels())
+
+    # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
+
+    # pc_feature_ind.npy - [nTemplates, nPCFeatures] uint32
+
+    # similar_templates.npy - [nTemplates, nTemplates] single
+
+    # spike_templates.npy - [nSpikes, ] uint32
+
+    # whitening_mat.npy - [nChannels, nChannels] double
+
+    # whitening_mat_inv.npy - [nChannels, nChannels] double
+
+    np.save(join(output_folder, 'spike_times.npy'), spike_times.astype(int))
+    np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))

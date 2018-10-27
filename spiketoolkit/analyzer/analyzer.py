@@ -264,7 +264,6 @@ class Analyzer(object):
         pca = PCA(n_components=n_comp, whiten=True)
         pca.fit_transform(all_waveforms.T)
         scores = pca.transform(all_waveforms.T)
-        var = pca.explained_variance_ratio_
 
         init = 0
         pca_scores = []
