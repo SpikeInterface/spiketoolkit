@@ -14,7 +14,7 @@ def kilosort(
         useGPU=False,
         probe_file=None,
         file_name=None,
-        spike_thresh=5,
+        spike_thresh=4,
         electrode_dimensions=None
     ):
     if kilosort_path is None:
@@ -66,10 +66,10 @@ def kilosort(
     nchan = recording.getNumChannels()
     dat_file = file_name +'.dat'
     kilo_thresh = spike_thresh
-    Nfilt = (nchan // 32) * 32 * 4
+    Nfilt = (nchan // 32) * 32 * 8
     if Nfilt == 0:
-        Nfilt = 64
-    nsamples = 128 * 1024 + 32
+        Nfilt = nchan * 8
+    nsamples = 128 * 1024 + 64
 
     if useGPU:
         ug = 1

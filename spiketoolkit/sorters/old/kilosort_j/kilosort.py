@@ -20,7 +20,8 @@ def kilosort_j(*,
     freq_max=6000, # Upper frequency limit for band-pass filter
     pc_per_chan=3, # Number of pc per channel
     kilosort_src=None, # github kilosort
-    ironclust_src=None # github npy-matlab 
+    ironclust_src=None, # github npy-matlab
+    useGPU=True
 ):      
     if kilosort_src is None:
         kilosort_src=os.getenv('KILOSORT_SRC',None)
@@ -31,6 +32,11 @@ def kilosort_j(*,
         ironclust_src=os.getenv('IRONCLUST_SRC',None)
     if not ironclust_src:
         raise Exception('You must either set the NPY_MATLAB_SRC environment variable, or pass the ironclust_src parameter')
+
+    if useGPU:
+        useGPU = 1
+    else:
+        useGPU = 0
 
     source_dir=os.path.dirname(os.path.realpath(__file__))
 
@@ -61,8 +67,9 @@ def kilosort_j(*,
         
     print('Running kilosort...')
     cmd_path = "addpath('{}'); ".format(source_dir)
-    cmd_call = "p_kilosort('{}', '{}', '{}', '{}', '{}', '{}', '{}');"\
-        .format(kilosort_src, ironclust_src, tmpdir, dataset_dir+'/raw.mda', dataset_dir+'/geom.csv', tmpdir+'/firings.mda', dataset_dir+'/argfile.txt')
+    cmd_call = "p_kilosort('{}', '{}', '{}', '{}', '{}', '{}', '{}', {});"\
+        .format(kilosort_src, ironclust_src, tmpdir, dataset_dir+'/raw.mda', dataset_dir+'/geom.csv',
+                tmpdir+'/firings.mda', dataset_dir+'/argfile.txt', useGPU)
     cmd='matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
     retcode=_run_command_and_print_output(cmd)
