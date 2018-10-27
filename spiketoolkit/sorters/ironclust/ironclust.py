@@ -1,7 +1,6 @@
 import spikeinterface as si
 
 import os
-from mountainlab_pytools import mdaio
 from spiketoolkit.sorters.tools import run_command_and_print_output
 
 def ironclust(*,
@@ -16,7 +15,12 @@ def ironclust(*,
     pc_per_chan=3, # Number of pc per channel
     prm_template_name, # Name of the template file
     ironclust_src=None
-):      
+):
+    try:
+        from mountainlab_pytools import mdaio
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("\nTo use IronClust, install mountainlab_pytools: \n\n"
+                                  "\npip install mountainlab_pytools\n")
     if ironclust_src is None:
         ironclust_src=os.getenv('IRONCLUST_SRC',None)
     if not ironclust_src:
