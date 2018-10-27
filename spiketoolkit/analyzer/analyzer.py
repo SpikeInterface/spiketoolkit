@@ -54,7 +54,8 @@ class Analyzer(object):
         return self.sorting_extractor
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
-                         ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000]):
+                         ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
+                         verbose=False):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
@@ -92,16 +93,12 @@ class Analyzer(object):
             self._params = params
 
         waveform_list = []
-        for i, idx in enumerate(unit_ids):
-            # unit_ind = self.sorting_extractor.getUnitIds().index(idx)
-            # if len(unit_ind) == 0:
+        for i, unit_ind in enumerate(unit_ids):
             try:
-                unit_ind = self.sorting_extractor.getUnitIds().index(idx)
+                unit_idx = self.sorting_extractor.getUnitIds().index(unit_ind)
             except:
                 raise Exception("unit_ids is not in valid")
-            # else:
-            #     unit_ind = unit_ind[0]
-            if self._waveforms[unit_ind] is None or self._params != params:
+            if self._waveforms[unit_idx] is None or self._params != params:
                 self._params = params
                 if not filter:
                     recordings = self.recording_extractor.getTraces(start_frame, end_frame)
@@ -118,8 +115,9 @@ class Analyzer(object):
                 num_spike_frames = np.sum(n_pad)
 
                 waveforms = np.zeros((len(spike_times), num_channels, num_spike_frames))
-                print('Waveform ' + str(i+1) + '/' + str(len(unit_ids))
-                      + ' - Number of waveforms: ', len(spike_times))
+                if verbose:
+                    print('Waveform ' + str(i+1) + '/' + str(len(unit_ids))
+                          + ' - Number of waveforms: ', len(spike_times))
 
                 for t_i, t in enumerate(spike_times):
                     idx = np.where(times > t)[0]
@@ -140,7 +138,7 @@ class Analyzer(object):
                             wf = recordings[:, idx - n_pad[0]:]
                             wf = np.pad(wf, ((0, 0), (0, idx + n_pad[1] - num_frames)), 'constant')
                         waveforms[t_i] = wf
-                self._waveforms[unit_ind] = waveforms
+                self._waveforms[unit_idx] = waveforms
                 waveform_list.append(waveforms)
             else:
                 waveform_list.append(self._waveforms[unit_ind])
@@ -254,7 +252,6 @@ class Analyzer(object):
         all_waveforms = np.array([])
         nspikes = []
         for i_w, wf in enumerate(self._waveforms):
-            print(self.sorting_extractor.getUnitIds()[i_w])
             if wf is None:
                 wf = self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w])
             if elec:
@@ -267,7 +264,6 @@ class Analyzer(object):
                 all_waveforms = wf_reshaped
             else:
                 all_waveforms = np.concatenate((all_waveforms, wf_reshaped))
-        print(all_waveforms.shape)
         print("Fitting PCA of %d dimensions" % n_comp)
 
         pca = PCA(n_components=n_comp, whiten=True)
