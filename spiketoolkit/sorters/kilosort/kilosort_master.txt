@@ -6,9 +6,8 @@ useGPU = {};
 addpath(genpath('{}'));
 addpath(genpath('{}'));
 
-% set file and output paths
+% set file path
 fpath = '{}';
-output = '{}';
 
 % create channel map file
 run(fullfile('{}'));
@@ -28,12 +27,11 @@ catch
 end
 
 % save python results file for Phy
-mkdir(output)
-rezToPhy(rez, fullfile(output));
+rezToPhy(rez, fullfile(fpath));
 
 elapsed_time = toc;
-fid = fopen(fullfile(output, 'time.txt'), 'w');
+fid = fopen(fullfile(fpath, 'time.txt'), 'w');
 fprintf(fid, '%f', elapsed_time);
-fclose(fid)
+fclose(fid);
 
 

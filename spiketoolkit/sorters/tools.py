@@ -1,4 +1,4 @@
-from subprocess import Popen, PIPE, CalledProcessError
+from subprocess import Popen, PIPE, CalledProcessError, call
 import shlex
 
 def run_command_and_print_output(command):
@@ -14,3 +14,9 @@ def run_command_and_print_output(command):
                 print(output_stderr.decode())
         rc = process.poll()
         return rc
+
+def call_command(command):
+    try:
+        call(shlex.split(command))
+    except subprocess.CalledProcessError as e:
+        raise Exception(e.output)

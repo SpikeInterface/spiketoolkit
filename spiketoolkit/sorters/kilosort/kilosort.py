@@ -4,7 +4,7 @@ import os
 import time
 import numpy as np
 from os.path import join
-from spiketoolkit.sorters.tools import run_command_and_print_output
+from spiketoolkit.sorters.tools import run_command_and_print_output, call_command
 
 def kilosort(
         recording,
@@ -53,7 +53,7 @@ def kilosort(
         file_name = 'recording'
     elif file_name.endswith('.dat'):
         file_name = file_name[file_name.find('.dat')]
-    si.writeBinaryDatFormat(recording, join(output_folder, file_name))
+    si.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
 
     # set up kilosort config files and run kilosort on data
     with open(join(source_dir, 'kilosort_master.txt'), 'r') as f:
@@ -78,10 +78,9 @@ def kilosort(
 
     abs_channel = os.path.abspath(join(output_folder, 'kilosort_channelmap.m'))
     abs_config = os.path.abspath(join(output_folder, 'kilosort_config.m'))
-    abs_results = os.path.abspath(join(output_folder, 'results'))
 
     kilosort_master = ''.join(kilosort_master).format(
-        ug, kilosort_path, npy_matlab_path, output_folder, abs_results, abs_channel, abs_config
+        ug, kilosort_path, npy_matlab_path, output_folder, abs_channel, abs_config
     )
     kilosort_config = ''.join(kilosort_config).format(
         nchan, nchan, recording.getSamplingFrequency(), dat_file , Nfilt, nsamples, kilo_thresh
@@ -121,11 +120,11 @@ def kilosort(
     t_start_proc = time.time()
     cmd = 'matlab -nosplash -nodisplay -r "run {}; quit;"'.format(join(output_folder, 'kilosort_master.m'))
     print(cmd)
-    retcode = run_command_and_print_output(cmd)
-
-    if retcode != 0:
-        raise Exception('KiloSort returned a non-zero exit code')
+    call_command(cmd)
+    # retcode = run_command_and_print_output(cmd)
+    # if retcode != 0:
+    #     raise Exception('KiloSort returned a non-zero exit code')
     print('Elapsed time: ', time.time() - t_start_proc)
 
-    sorting = si.KiloSortSortingExtractor(join(output_folder, 'results'))
+    sorting = si.KiloSortSortingExtractor(join(output_folder))
     return sorting
