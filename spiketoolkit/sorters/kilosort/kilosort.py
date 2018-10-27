@@ -4,7 +4,7 @@ import os
 import time
 import numpy as np
 from os.path import join
-from spiketoolkit.sorters.tools import run_command_and_print_output
+from spiketoolkit.sorters.tools import run_command_and_print_output, call_command
 
 def kilosort(
         recording,
@@ -14,7 +14,7 @@ def kilosort(
         useGPU=False,
         probe_file=None,
         file_name=None,
-        spike_thresh=5,
+        spike_thresh=4,
         electrode_dimensions=None
     ):
     if kilosort_path is None:
@@ -53,7 +53,7 @@ def kilosort(
         file_name = 'recording'
     elif file_name.endswith('.dat'):
         file_name = file_name[file_name.find('.dat')]
-    si.writeBinaryDatFormat(recording, join(output_folder, file_name))
+    si.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
 
     # set up kilosort config files and run kilosort on data
     with open(join(source_dir, 'kilosort_master.txt'), 'r') as f:
@@ -66,18 +66,21 @@ def kilosort(
     nchan = recording.getNumChannels()
     dat_file = file_name +'.dat'
     kilo_thresh = spike_thresh
-    Nfilt = (nchan // 32) * 32 * 4
+    Nfilt = (nchan // 32) * 32 * 8
     if Nfilt == 0:
-        Nfilt = 64
-    nsamples = 128 * 1024 + 32
+        Nfilt = nchan * 8
+    nsamples = 128 * 1024 + 64
 
     if useGPU:
         ug = 1
     else:
         ug = 0
 
+    abs_channel = os.path.abspath(join(output_folder, 'kilosort_channelmap.m'))
+    abs_config = os.path.abspath(join(output_folder, 'kilosort_config.m'))
+
     kilosort_master = ''.join(kilosort_master).format(
-        ug, kilosort_path, npy_matlab_path, output_folder, join(output_folder, 'results')
+        ug, kilosort_path, npy_matlab_path, output_folder, abs_channel, abs_config
     )
     kilosort_config = ''.join(kilosort_config).format(
         nchan, nchan, recording.getSamplingFrequency(), dat_file , Nfilt, nsamples, kilo_thresh
@@ -114,17 +117,14 @@ def kilosort(
 
     # start sorting with kilosort
     print('Running KiloSort')
-    cwd = os.getcwd()
     t_start_proc = time.time()
-    os.chdir(output_folder)
-    cmd = 'matlab -nosplash -nodisplay -r "run kilosort_master.m; quit;"'
+    cmd = 'matlab -nosplash -nodisplay -r "run {}; quit;"'.format(join(output_folder, 'kilosort_master.m'))
     print(cmd)
-    retcode = run_command_and_print_output(cmd)
-
-    if retcode != 0:
-        raise Exception('KiloSort returned a non-zero exit code')
+    call_command(cmd)
+    # retcode = run_command_and_print_output(cmd)
+    # if retcode != 0:
+    #     raise Exception('KiloSort returned a non-zero exit code')
     print('Elapsed time: ', time.time() - t_start_proc)
 
-    sorting = si.KiloSortSortingExtractor(join(output_folder, 'results'))
-    os.chdir(cwd)
+    sorting = si.KiloSortSortingExtractor(join(output_folder))
     return sorting
