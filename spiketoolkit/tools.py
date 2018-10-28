@@ -7,7 +7,7 @@ import os
 import numpy as np
 
 
-def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False):
+def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None):
 
     analyzer = Analyzer(recording, sorting)
 
@@ -50,12 +50,12 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         else:
             pc_features = np.vstack((pc_features, np.array(pc)))
     sorting_idxs = np.argsort(spike_times)
-    spike_times = spike_times[sorting_idxs]
-    spike_clusters = spike_clusters[sorting_idxs]
+    spike_times = spike_times[sorting_idxs, np.newaxis]
+    spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
     pc_features = pc_features[sorting_idxs, :nPCchan, :]
 
     # amplitudes.npy
-    amplitudes = np.ones(len(spike_times))
+    amplitudes = np.ones((len(spike_times), 1))
 
     # channel_map.npy
     channel_map = np.array(recording.getChannelIds())
@@ -64,6 +64,8 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     if 'location' in recording.getChannelPropertyNames():
         positions = np.array([recording.getChannelProperty(chan, 'location')
                               for chan in range(recording.getNumChannels())])
+        if electrode_dimensions is not None:
+            positions = positions[:, electrode_dimensions]
     else:
         print("'location' property is not available and it will be linear.")
         positions = np.zeros((recording.getNumChannels(), 2))
@@ -80,7 +82,8 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     templates = np.array(templates).swapaxes(1,2)
 
     # template_ind.npy
-    template_ind = np.tile(np.arange(recording.getNumChannels()), (len(sorting.getUnitIds()), 1))
+    templates_ind = np.tile(np.arange(recording.getNumChannels()), (len(sorting.getUnitIds()), 1))
+
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
@@ -91,12 +94,12 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
 
     np.save(join(output_folder, 'amplitudes.npy'), amplitudes)
     np.save(join(output_folder, 'spike_times.npy'), spike_times.astype(int))
-    np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
+    # np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
     np.save(join(output_folder, 'spike_templates.npy'), spike_templates.astype(int))
     np.save(join(output_folder, 'pc_features.npy'), pc_features)
     np.save(join(output_folder, 'pc_feature_ind.npy'), pc_feature_ind.astype(int))
     np.save(join(output_folder, 'templates.npy'), templates)
-    np.save(join(output_folder, 'template_ind.npy'), template_ind.astype(int))
+    np.save(join(output_folder, 'templates_ind.npy'), templates_ind.astype(int))
     np.save(join(output_folder, 'similar_templates.npy'), similar_templates)
     np.save(join(output_folder, 'channel_map.npy'), channel_map.astype(int))
     np.save(join(output_folder, 'channel_positions.npy'), positions)
