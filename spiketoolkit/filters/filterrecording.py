@@ -10,7 +10,10 @@ class FilterRecording(si.RecordingExtractor):
         self._filtered_chunks=dict()
         self.getNumChannels=recording.getNumChannels
         self.copyChannelProperties(recording)
-        
+
+    def getChannelIds(self):
+        return list(range(self._recording.getNumChannels()))
+
     def getNumChannels(self):
         return self._recording.getNumChannels()
     

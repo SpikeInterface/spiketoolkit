@@ -41,7 +41,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     pc_features = np.array([])
     for i_u, id in enumerate(sorting.getUnitIds()):
         st = sorting.getUnitSpikeTrain(id)
-        cl = [id] * len(sorting.getUnitSpikeTrain(id))
+        cl = [i_u] * len(sorting.getUnitSpikeTrain(id))
         pc = pc_scores[i_u]
         spike_times = np.concatenate((spike_times, np.array(st)))
         spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
@@ -105,13 +105,42 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     np.save(join(output_folder, 'channel_positions.npy'), positions)
     np.save(join(output_folder, 'whitening_mat.npy'), whitening_mat)
     np.save(join(output_folder, 'whitening_mat_inv.npy'), whitening_mat_inv)
-    # np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
-    # np.save(join(output_folder, 'spike_times.npy'), spike_times.astype(int))
-    # np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
-    # np.save(join(output_folder, 'spike_times.npy'), spike_times.astype(int))
-    # np.save(join(output_folder, 'spike_clusters.npy'), spike_clusters.astype(int))
     print('Saved phy format to: ', output_folder)
     print('Run:\n\nphy template-gui ', join(output_folder, 'params.py'))
+
+
+def _computeTemplateSNR(template, channel_noise_levels):
+    channel_snrs = []
+    for ch in range(template.shape[0]):
+        channel_snrs.append((np.max(template[ch, :]) - np.min(template[ch, :])) / channel_noise_levels[ch])
+    return np.max(channel_snrs)
+
+
+def _computeChannelNoiseLevels(recording):
+    M = recording.getNumChannels()
+    X = recording.getTraces(start_frame=0, end_frame=np.minimum(1000, recording.getNumFrames()))
+    ret = []
+    for ch in range(M):
+        noise_level = np.std(X[ch, :])
+        ret.append(noise_level)
+    return ret
+
+
+def computeUnitSNR(*, recording, sorting, unit_ids=None, **kwargs):
+    analyzer = Analyzer(recording, sorting)
+    if unit_ids is None:
+        unit_ids = sorting.getUnitIds()
+    channel_noise_levels = _computeChannelNoiseLevels(recording=recording)
+    if unit_ids is not None:
+        templates = analyzer.getUnitTemplate(unit_ids=unit_ids, **kwargs)
+    else:
+        templates = analyzer.getUnitTemplate(**kwargs)
+    ret = []
+    for template in templates:
+        snr = _computeTemplateSNR(template, channel_noise_levels)
+        ret.append(snr)
+    return ret
+
 
 def _computeTemplatesSimilarity(templates):
     similarity = np.zeros((len(templates), len(templates)))
