@@ -8,11 +8,10 @@ class FilterRecording(si.RecordingExtractor):
         self._recording=recording
         self._chunk_size=chunk_size
         self._filtered_chunks=dict()
-        self.getNumChannels=recording.getNumChannels
         self.copyChannelProperties(recording)
         
-    def getNumChannels(self):
-        return self._recording.getNumChannels()
+    def getChannelIds(self):
+        return self._recording.getChannelIds()
     
     def getNumFrames(self):
         return self._recording.getNumFrames()
@@ -26,7 +25,7 @@ class FilterRecording(si.RecordingExtractor):
         if end_frame is None:
             end_frame=self.getNumFrames()
         if channel_ids is None:
-            channel_ids=list(range(self.getNumChannels()))
+            channel_ids=self.getChannelIds()
         ich1=int(start_frame/self._chunk_size)
         ich2=int((end_frame-1)/self._chunk_size)
         filtered_chunk_list=[]
