@@ -28,10 +28,10 @@ class Analyzer(object):
         else:
             raise AttributeError('Sorting extractor argument should be an SortingExtractor object')
 
-        self._waveforms = [None] * len(self.sorting_extractor.getUnitIds())
-        self._templates = [None] * len(self.sorting_extractor.getUnitIds())
-        self._pcascores = [None] * len(self.sorting_extractor.getUnitIds())
-        self._maxchannels = [None] * len(self.sorting_extractor.getUnitIds())
+        self._waveforms = {}
+        self._templates = {}
+        self._pcascores = {}
+        self._maxchannels = {}
         self._params = {}
 
 
@@ -94,11 +94,9 @@ class Analyzer(object):
 
         waveform_list = []
         for i, unit_ind in enumerate(unit_ids):
-            try:
-                unit_idx = self.sorting_extractor.getUnitIds().index(unit_ind)
-            except:
+            if unit_ind not in self.sorting_extractor.getUnitIds():
                 raise Exception("unit_ids is not in valid")
-            if self._waveforms[unit_idx] is None or self._params != params:
+            if unit_ind not in self._waveforms.keys() or self._params != params:
                 self._params = params
                 if not filter:
                     recordings = self.recording_extractor.getTraces(start_frame, end_frame)
@@ -108,6 +106,9 @@ class Analyzer(object):
                 fs = self.recording_extractor.getSamplingFrequency()
                 times = np.arange(recordings.shape[1])
                 spike_times = self.sorting_extractor.getUnitSpikeTrain(unit_ind, start_frame, end_frame)
+
+                if len(spike_times) > max_num_waveforms:
+                    spike_times = spike_times[np.random.permutation(len(spike_times))[:max_num_waveforms]]
 
                 n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
@@ -125,20 +126,15 @@ class Analyzer(object):
                         idx = idx[0]
                         # find single waveforms crossing thresholds
                         if idx - n_pad[0] > 0 and idx + n_pad[1] < num_frames:
-                            t_spike = times[idx - n_pad[0]:idx + n_pad[1]]
                             wf = recordings[:, idx - n_pad[0]:idx + n_pad[1]]
                         elif idx - n_pad[0] < 0:
-                            t_spike = times[:idx + n_pad[1]]
-                            t_spike = np.pad(t_spike, (np.abs(idx - n_pad[0]), 0), 'constant')
                             wf = recordings[:, :idx + n_pad[1]]
                             wf = np.pad(wf, ((0, 0), (np.abs(idx - n_pad[0]), 0)), 'constant')
                         elif idx + n_pad[1] > num_frames:
-                            t_spike = times[idx - n_pad[0]:]
-                            t_spike = np.pad(t_spike, (0, idx + n_pad[1] - num_frames), 'constant')
                             wf = recordings[:, idx - n_pad[0]:]
                             wf = np.pad(wf, ((0, 0), (0, idx + n_pad[1] - num_frames)), 'constant')
                         waveforms[t_i] = wf
-                self._waveforms[unit_idx] = waveforms
+                self._waveforms[unit_ind] = waveforms
                 waveform_list.append(waveforms)
             else:
                 waveform_list.append(self._waveforms[unit_ind])
@@ -162,7 +158,7 @@ class Analyzer(object):
         -------
 
         '''
-        if isinstance(unit_ids, int):
+        if isinstance(unit_ids, (int, np.integer)):
             unit_ids = [unit_ids]
         elif unit_ids is None:
             unit_ids = self.sorting_extractor.getUnitIds()
@@ -170,15 +166,12 @@ class Analyzer(object):
             raise Exception("unit_ids is not a valid in valid")
 
         template_list = []
-        for idx in unit_ids:
-            unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
-            if len(unit_ind) == 0:
+        for i, unit_ind in enumerate(unit_ids):
+            if unit_ind not in self.sorting_extractor.getUnitIds():
                 raise Exception("unit_ids is not in valid")
-            else:
-                unit_ind = unit_ind[0]
-            if self._templates[unit_ind] is None or self._params != kwargs:
+            if unit_ind not in self._templates.keys() or self._params != kwargs:
                 self._params.update(kwargs)
-                if self._waveforms[unit_ind] is None:
+                if unit_ind not in self._waveforms.keys():
                     self.getUnitWaveforms(unit_ind, **kwargs)
                 template = np.mean(self._waveforms[unit_ind], axis = 0)
                 self._templates[unit_ind] = template
@@ -204,7 +197,7 @@ class Analyzer(object):
         -------
 
         '''
-        if isinstance(unit_ids, int):
+        if isinstance(unit_ids, (int, np.integer)):
             unit_ids = [unit_ids]
         elif unit_ids is None:
             unit_ids = self.sorting_extractor.getUnitIds()
@@ -212,19 +205,15 @@ class Analyzer(object):
             raise Exception("unit_ids is not a valid in valid")
 
         max_list = []
-        for idx in unit_ids:
-            unit_ind = np.where(np.array(self.sorting_extractor.getUnitIds()) == idx)[0]
-            if len(unit_ind) == 0:
+        for i, unit_ind in enumerate(unit_ids):
+            if unit_ind not in self.sorting_extractor.getUnitIds():
                 raise Exception("unit_ids is not in valid")
-            else:
-                unit_ind = unit_ind[0]
-
-            if self._maxchannels[unit_ind] is None or self._params != kwargs:
+            if unit_ind not in self._maxchannels.keys() is None or self._params != kwargs:
                 self._params.update(kwargs)
-                if self._templates[unit_ind] is None:
-                    self.getUnitTemplate(unit_ids, **kwargs)
-                max_channel = np.unravel_index(np.argmax(np.abs(self._templates[unit_ind])),
-                                            self._templates[unit_ind].shape)[0]
+                if unit_ind not in self._templates.keys():
+                    self.getUnitTemplate(unit_ind, **kwargs)
+                max_channel = np.unravel_index(np.argmax(np.abs(self._templates[i])),
+                                            self._templates[i].shape)[0]
                 self._maxchannels[unit_ind] = max_channel
                 max_list.append(max_channel)
             else:
