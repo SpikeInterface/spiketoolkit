@@ -9,6 +9,7 @@ install:
 #- pip install spyking-circus
 - pip install .
 - pip install pytest
+- pip install mountainlab_pytools kbucket
 script: pytest
 deploy:
   provider: pypi
