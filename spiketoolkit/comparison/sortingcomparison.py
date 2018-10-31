@@ -145,7 +145,6 @@ class SortingComparison():
                     ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
                 else:
                     ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
-                    # ,   bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
         ax.axhline(int(N1 - 1) + 0.5, color='black')
         ax.axvline(int(N2 - 1) + 0.5, color='black')
@@ -378,16 +377,18 @@ class SortingComparison():
         
         conf_matrix = np.zeros((N1 + 1, N2 + 1), dtype=int)
         idxs_matched = np.where(np.array(self.getMappedSorting1().getMappedUnitIds()) != -1)
+        if len(idxs_matched) > 0:
+            idxs_matched = idxs_matched[0]
         idxs_unmatched = np.where(np.array(self.getMappedSorting1().getMappedUnitIds()) == -1)
+        if len(idxs_unmatched) > 0:
+            idxs_unmatched = idxs_unmatched[0]
         unit_map_matched = np.array(self.getMappedSorting1().getMappedUnitIds())[idxs_matched]
-
 
         st1_idxs = np.append(np.array(sorting1.getUnitIds())[idxs_matched],
                              np.array(sorting1.getUnitIds())[idxs_unmatched])
         st2_matched = unit_map_matched
         st2_unmatched = []
 
-        print('Matched units:')
         for u_i, u1 in enumerate(np.array(sorting1.getUnitIds())[idxs_matched]):
             lab_st1 = self._labels_st1[u1]
             tp = len(np.where('TP' == lab_st1)[0])
