@@ -12,7 +12,7 @@ class FilterRecording(si.RecordingExtractor):
         
     def getChannelIds(self):
         return self._recording.getChannelIds()
-    
+
     def getNumFrames(self):
         return self._recording.getNumFrames()
     

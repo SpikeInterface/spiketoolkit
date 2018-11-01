@@ -1,4 +1,4 @@
-from .lazyfilterrecording import FilterRecording
+from .filterrecording import FilterRecording
 import numpy as np
 from scipy import special
 

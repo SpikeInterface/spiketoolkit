@@ -6,15 +6,14 @@ useGPU = {};
 addpath(genpath('{}'));
 addpath(genpath('{}'));
 
-% set file and ouptu paths
+% set file path
 fpath = '{}';
-output = '{}';
 
 % create channel map file
-run(fullfile('kilosort_channelmap.m'));
+run(fullfile('{}'));
 
 % Run the configuration file, it builds the structure of options (ops)
-run(fullfile('kilosort_config.m'))
+run(fullfile('{}'))
 
 % This part runs the normal Kilosort processing on the simulated data
 [rez, DATA, uproj] = preprocessData(ops); % preprocess data and extract spikes for initialization
@@ -28,12 +27,11 @@ catch
 end
 
 % save python results file for Phy
-mkdir(output)
-rezToPhy(rez, fullfile(output));
+rezToPhy(rez, fullfile(fpath));
 
 elapsed_time = toc;
-fid = fopen(fullfile(output, 'time.txt'), 'w');
+fid = fopen(fullfile(fpath, 'time.txt'), 'w');
 fprintf(fid, '%f', elapsed_time);
-fclose(fid)
+fclose(fid);
 
 

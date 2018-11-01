@@ -1,7 +1,7 @@
 import spikeinterface as si
 
 import os
-from mountainlab_pytools import mdaio
+from os.path import join
 from spiketoolkit.sorters.tools import run_command_and_print_output
 
 def ironclust(*,
@@ -15,12 +15,22 @@ def ironclust(*,
     freq_max=6000, # Upper frequency limit for band-pass filter
     pc_per_chan=3, # Number of pc per channel
     prm_template_name, # Name of the template file
-    ironclust_src=None
-):      
-    if ironclust_src is None:
-        ironclust_src=os.getenv('IRONCLUST_SRC',None)
-    if not ironclust_src:
-        raise Exception('You must either set the IRONCLUST_SRC environment variable, or pass the ironclust_src parameter')
+    ironclust_path=None
+):
+    try:
+        from mountainlab_pytools import mdaio
+    except ModuleNotFoundError:
+        raise ModuleNotFoundError("\nTo use IronClust, install mountainlab_pytools: \n\n"
+                                  "\npip install mountainlab_pytools\n"
+                                  "and clone the repo:\n"
+                                  "git clone https://github.com/jamesjun/ironclust")
+    if ironclust_path is None:
+        ironclust_path=os.getenv('IRONCLUST_PATH',None)
+    if not ironclust_path:
+        raise Exception('You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
+    if not os.path.isfile(join(ironclust_path, 'p_ironclust.m')):
+        raise ModuleNotFoundError("\nTo use IronClust clone the repo:\n\n"
+                                  "git clone https://github.com/jamesjun/ironclust")
     source_dir=os.path.dirname(os.path.realpath(__file__))
 
     dataset_dir=tmpdir+'/ironclust_dataset'
@@ -50,7 +60,7 @@ def ironclust(*,
     _write_text_file(dataset_dir+'/argfile.txt',txt)
         
     print('Running IronClust...')
-    cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(ironclust_src, ironclust_src, ironclust_src)
+    cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(ironclust_path, ironclust_path, ironclust_path)
     #"p_ironclust('$(tempdir)','$timeseries$','$geom$','$prm$','$firings_true$','$firings_out$','$(argfile)');"
     cmd_call = "p_ironclust('{}', '{}', '{}', '', '', '{}', '{}');"\
         .format(tmpdir, dataset_dir+'/raw.mda', dataset_dir+'/geom.csv', tmpdir+'/firings.mda', dataset_dir+'/argfile.txt')
