@@ -1,0 +1,5 @@
+include spiketoolkit/sorters/kilosort/kilosort_channelmap.txt
+include spiketoolkit/sorters/kilosort/kilosort_config.txt
+include spiketoolkit/sorters/kilosort/kilosort_master.txt
+include spiketoolkit/sorters/klusta/config_default.prm
+include spiketoolkit/sorters/spyking_circus/config_default.params
