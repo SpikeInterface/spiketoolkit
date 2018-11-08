@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 import spikeinterface as si
 import numpy as np
 
-class LazyFilterRecording(si.RecordingExtractor):
+class FilterRecording(si.RecordingExtractor):
     def __init__(self, *, recording,chunk_size=10000):
         si.RecordingExtractor.__init__(self)
         self._recording=recording
