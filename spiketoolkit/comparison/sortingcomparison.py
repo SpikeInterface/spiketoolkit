@@ -3,9 +3,11 @@ import spikeinterface as si
 from scipy.optimize import linear_sum_assignment
 
 class SortingComparison():
-    def __init__(self, sorting1, sorting2, delta_tp=10, minimum_accuracy=0.5):
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
+        self.sorting1_name = sorting1_name
+        self.sorting2_name = sorting2_name
         self._delta_tp = delta_tp
         self._min_accuracy = minimum_accuracy
         self._do_matching()
