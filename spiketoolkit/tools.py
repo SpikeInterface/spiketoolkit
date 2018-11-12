@@ -33,6 +33,9 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         f.write('hp_filtered = False')
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
+    if nPC > recording.getNumChannels():
+        nPC = recording.getNumChannels()
+        print("Changed number of PC to number of channels: ", nPC)
     pc_scores = analyzer.computePCAscores(n_comp=nPC, elec=True)
 
     # spike times.npy and spike clusters.npy

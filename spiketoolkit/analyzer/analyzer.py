@@ -240,7 +240,7 @@ class Analyzer(object):
         # concatenate all waveforms
         all_waveforms = np.array([])
         nspikes = []
-        for i_w, wf in enumerate(self._waveforms):
+        for i_w, wf in enumerate(self.getUnitWaveforms()):
             if wf is None:
                 wf = self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w])
             if elec:
@@ -253,7 +253,7 @@ class Analyzer(object):
                 all_waveforms = wf_reshaped
             else:
                 all_waveforms = np.concatenate((all_waveforms, wf_reshaped))
-        print("Fitting PCA of %d dimensions" % n_comp)
+        print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, len(all_waveforms)))
 
         pca = PCA(n_components=n_comp, whiten=True)
         pca.fit_transform(all_waveforms)
