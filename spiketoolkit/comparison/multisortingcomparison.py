@@ -72,20 +72,52 @@ class MultiSortingComparison():
                 if len(self._new_units.keys()) == 0:
                     self._new_units[unit_id] = {'matched_number': matched_num,
                                                 'avg_agreement': avg_agr,
-                                                'sorting_idx': sorting_idxs}
+                                                'sorter_unit_ids': sorting_idxs}
                     self._spiketrains.append(self.sorting_comparisons[s_i][0].getSorting1().getUnitSpikeTrain(unit))
                     unit_id += 1
                 else:
                     matched_already = False
                     for n_u, n_val in self._new_units.items():
-                        if n_val['sorting_idx'][s_i] == unit:
+                        if n_val['sorter_unit_ids'][s_i] == unit:
                             matched_already = True
                     if not matched_already:
                         self._new_units[unit_id] = {'matched_number': matched_num,
                                                     'avg_agreement': avg_agr,
-                                                    'sorting_idx': sorting_idxs}
+                                                    'sorter_unit_ids': sorting_idxs}
                         self._spiketrains.append(self.sorting_comparisons[s_i][0].getSorting1().getUnitSpikeTrain(unit))
                         unit_id += 1
+
+    def plotAgreement(self, minimum_matching=0):
+        import matplotlib.pylab as plt
+        sorted_name_list = sorted(self._name_list)
+        sorting_agr = AgreementSortingExtractor(self, minimum_matching)
+        unit_ids = sorting_agr.getUnitIds()
+        agreement_matrix = np.zeros((len(unit_ids), len(sorted_name_list)))
+
+        for u_i, unit in enumerate(unit_ids):
+            for s_i, sorter in enumerate(sorted_name_list):
+                assigned_unit = sorting_agr.getUnitProperty(unit, 'sorter_unit_ids')[sorter]
+                if assigned_unit == -1:
+                    agreement_matrix[u_i, s_i] = np.nan
+                else:
+                    agreement_matrix[u_i, s_i] = sorting_agr.getUnitProperty(unit, 'avg_agreement')
+
+        fig, ax = plt.subplots()
+        # Using matshow here just because it sets the ticks up nicely. imshow is faster.
+        ax.matshow(agreement_matrix, cmap='Greens')
+
+        # Major ticks
+        ax.set_xticks(np.arange(0, len(sorted_name_list)))
+        ax.set_yticks(np.arange(0, len(unit_ids)))
+        ax.xaxis.tick_bottom()
+        # Labels for major ticks
+        ax.set_xticklabels(sorted_name_list, fontsize=12)
+        ax.set_yticklabels(unit_ids, fontsize=12)
+
+        ax.set_xlabel('Sorters', fontsize=15)
+        ax.set_ylabel('Units', fontsize=20)
+
+        return ax
 
 class AgreementSortingExtractor(si.SortingExtractor):
     def __init__(self, multisortingcomparison, min_agreement=0):
@@ -103,7 +135,7 @@ class AgreementSortingExtractor(si.SortingExtractor):
             self.setUnitProperty(unit_id=unit, property_name='avg_agreement',
                                  value=self._msc._new_units[unit]['avg_agreement'])
             self.setUnitProperty(unit_id=unit, property_name='sorter_unit_ids',
-                                 value=self._msc._new_units[unit]['sorting_idx'])
+                                 value=self._msc._new_units[unit]['sorter_unit_ids'])
 
     def getUnitIds(self, unit_ids=None):
         if unit_ids is None:

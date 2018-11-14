@@ -160,11 +160,17 @@ class SortingComparison():
         ax.set_yticklabels(np.append(st1_idxs, 'FP'), fontsize=12)
 
         if xlabel == None:
-            ax.set_xlabel('Sorting 2', fontsize=15)
+            if self.sorting2_name is None:
+                ax.set_xlabel('Sorting 2', fontsize=15)
+            else:
+                ax.set_xlabel(self.sorting2_name, fontsize=15)
         else:
             ax.set_xlabel(xlabel, fontsize=20)
         if ylabel == None:
-            ax.set_ylabel('Sorting 1', fontsize=15)
+            if self.sorting1_name is None:
+                ax.set_ylabel('Sorting 1', fontsize=15)
+            else:
+                ax.set_ylabel(self.sorting1_name, fontsize=15)
         else:
             ax.set_ylabel(ylabel, fontsize=20)
 
