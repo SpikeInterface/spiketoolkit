@@ -7,7 +7,7 @@ class FilterRecording(si.RecordingExtractor):
         si.RecordingExtractor.__init__(self)
         self._recording=recording
         self._chunk_size=chunk_size
-        self._filtered_chunks=dict()
+        self._filtered_chunk_cache=FilteredChunkCache()
         self.copyChannelProperties(recording)
         
     def getChannelIds(self):
@@ -48,9 +48,35 @@ class FilterRecording(si.RecordingExtractor):
     
     def _get_filtered_chunk(self, ind):
         code=str(ind)
-        if code not in self._filtered_chunks:
+        chunk0=self._filtered_chunk_cache.get(code)
+        if chunk0 is not None:
+            return chunk0
+        else:
             start0=ind*self._chunk_size
             end0=(ind+1)*self._chunk_size
-            self._filtered_chunks[code]=self.filterChunk(start_frame=start0,end_frame=end0)
-        return self._filtered_chunks[code]
+            chunk1=self.filterChunk(start_frame=start0,end_frame=end0)
+            self._filtered_chunk_cache.add(code,chunk1)
+            return chunk1
     
+class FilteredChunkCache():
+    def __init__(self):
+        self._chunks_by_code=dict()
+        self._codes=[]
+        self._total_size=0
+        self._max_size=1024*1024*100
+    def add(self,code,chunk):
+        self._chunks_by_code[code]=chunk
+        self._codes.append(code)
+        self._total_size=self._total_size+chunk.size
+        if self._total_size>self._max_size:
+            ii=0
+            while (ii<len(self._codes)) and (self._total_size>self._max_size/2):
+                self._total_size=self._total_size-self._chunks_by_code[self._codes[ii]].size
+                del self._chunks_by_code[self._codes[ii]]
+                ii=ii+1
+            self._codes=self._codes[ii:]
+    def get(self,code):
+        if code in self._chunks_by_code:
+            return self._chunks_by_code[code]
+        else:
+            return None
