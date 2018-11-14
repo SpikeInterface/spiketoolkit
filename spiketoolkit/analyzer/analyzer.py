@@ -226,7 +226,7 @@ class Analyzer(object):
             return max_list
 
 
-    def computePCAscores(self, n_comp=3, elec=False):
+    def computePCAscores(self, n_comp=3, elec=False, max_num_waveforms=np.inf):
         '''
 
         Parameters
@@ -272,4 +272,17 @@ class Analyzer(object):
 
         return np.array(pca_scores)
 
+
+    def _get_random_spike_waveforms(self, *, unit, max_num, channels, snippet_len):
+        st=self.sorting_extractor.getUnitSpikeTrain(unit_id=unit)
+        num_events=len(st)
+        if num_events>max_num:
+            event_indices=np.random.choice(range(num_events),size=max_num,replace=False)
+        else:
+            event_indices=range(num_events)
+
+        spikes=self.recording_extractor.getSnippets(reference_frames=st[event_indices].astype(int),
+                                                    snippet_len=snippet_len, channel_ids=channels)
+        spikes=np.dstack(tuple(spikes))
+        return spikes
 

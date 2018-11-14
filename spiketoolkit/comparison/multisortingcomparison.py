@@ -28,11 +28,13 @@ class MultiSortingComparison():
             comparison_ = []
             for j in range(len(self._sorting_list)):
                 if i != j:
+                    print("Comparing: ",  self._name_list[i], " and ", self._name_list[j])
                     comparison_.append(SortingComparison(self._sorting_list[i], self._sorting_list[j],
                                                          sorting1_name=self._name_list[i],
                                                          sorting2_name=self._name_list[j],
                                                          delta_tp=self._delta_tp,
-                                                         minimum_accuracy=self._min_accuracy))
+                                                         minimum_accuracy=self._min_accuracy,
+                                                         verbose=True))
             self.sorting_comparisons[self._name_list[i]] = comparison_
 
         agreement = {}
@@ -41,39 +43,38 @@ class MultiSortingComparison():
             units = sort_comp[0].getSorting1().getUnitIds()
             for unit in units:
                 matched_list = {}
-                matched_agreement = []
+                matched_agreement = {}
                 for sc in sort_comp:
                     matched_list[sc.sorting2_name] = sc.getMappedSorting1().getMappedUnitIds(unit)
-                    matched_agreement.append(sc.getAgreementFraction(unit,
+                    matched_agreement[sc.sorting2_name] = (sc.getAgreementFraction(unit,
                                                                      sc.getMappedSorting1().getMappedUnitIds(unit)))
                 unit_agreement[unit] = {'units': matched_list, 'score': matched_agreement}
             agreement[s_i] = unit_agreement
-
         self.agreement = agreement
-
         # find units in agreement
-        new_unit_ids = []
-        unit_avg_agreement = []
-        mathced_in = []
         unit_id = 0
         self._new_units = {}
-        self._spiketrains = []
         for s_i, agr in agreement.items():
+            # TODO: this is not correct. The same unit can be found later on with a highest score. A better approach would be to store the score of matching unit and then add
+            # TODO: the ones with highest score first
             for unit in agr.keys():
                 unit_assignments = list(agr[unit]['units'].values())
+                unit_scores = list(agr[unit]['score'].values())
+                matched_num = len(np.where(np.array(unit_assignments) != -1)[0]) + 1
                 idxs = np.where(np.array(unit_assignments) != -1)
                 if len(idxs[0]) != 0:
-                    avg_agr = np.mean(np.array(agr[unit]['score'])[idxs])
+                    avg_agr = np.mean(np.array(unit_scores)[idxs])
                 else:
                     avg_agr = 0
-                matched_num = len(np.where(np.array(unit_assignments) != -1)[0]) + 1
+                # add self unit and score
                 sorting_idxs = agr[unit]['units']
                 sorting_idxs[s_i] = unit
+                score = agr[unit]['score']
+                score[s_i] = 1
                 if len(self._new_units.keys()) == 0:
                     self._new_units[unit_id] = {'matched_number': matched_num,
                                                 'avg_agreement': avg_agr,
                                                 'sorter_unit_ids': sorting_idxs}
-                    self._spiketrains.append(self.sorting_comparisons[s_i][0].getSorting1().getUnitSpikeTrain(unit))
                     unit_id += 1
                 else:
                     matched_already = False
@@ -84,8 +85,36 @@ class MultiSortingComparison():
                         self._new_units[unit_id] = {'matched_number': matched_num,
                                                     'avg_agreement': avg_agr,
                                                     'sorter_unit_ids': sorting_idxs}
-                        self._spiketrains.append(self.sorting_comparisons[s_i][0].getSorting1().getUnitSpikeTrain(unit))
-                        unit_id += 1
+                    unit_id += 1
+                    
+        self._spiketrains = []
+        # extract best spike trains
+        # for each unit look for the same unit in the agreement of all sorters
+        # rank agreement scores
+        # extract tp spikes from coparison with largest agreement
+
+        # # return only TP among best match, if any
+        # if self._msc._new_units[unt_id]['matched_number'] == 1:
+        #     self._sorting_list[self._name_list.index(s_i)].getUnitSpikeTrain(unit))
+        # elif matched_num == 2:
+        #     idxs = np.where(np.array(list(sorting_idxs.values())) != -1)
+        #     sorters = np.array(list(sorting_idxs.keys()))[idxs]
+        #     comp = self.sorting_comparisons[s_i]
+        #     selected_comparison = []
+        #     for sc in comp:
+        #         print(sorters, [sc.sorting1_name, sc.sorting2_name])
+        #         if sorters[0] in [sc.sorting1_name, sc.sorting2_name] \
+        #                 and sorters[1] in [sc.sorting1_name, sc.sorting2_name]:
+        #             selected_comparison = sc
+        #     tp_idxs = np.where(np.array(selected_comparison.getLabels1(unit)) == 'TP')
+        #     print(len(selected_comparison.getLabels1(unit)), len(tp_idxs[0]))
+        #     st_tp = list(np.array(selected_comparison.getSorting1().getUnitSpikeTrain(unit))[tp_idxs])
+        #     self._spiketrains.append(st_tp)
+        # else:
+        # # find best match
+        #
+        # if self._msc._new_units[unit_id]['matched_number'] == 1:
+        #     return self._msc._spiketrains[self.getUnitIds().index(unit_id)]
 
     def plotAgreement(self, minimum_matching=0):
         import matplotlib.pylab as plt
@@ -146,4 +175,3 @@ class AgreementSortingExtractor(si.SortingExtractor):
     def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
         if unit_id not in self.getUnitIds():
             raise Exception("Unit id is invalid")
-        return self._msc._spiketrains[self.getUnitIds().item(unit_id)]

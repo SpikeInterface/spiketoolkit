@@ -3,14 +3,19 @@ import spikeinterface as si
 from scipy.optimize import linear_sum_assignment
 
 class SortingComparison():
-    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5):
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
+                 verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
         self._delta_tp = delta_tp
         self._min_accuracy = minimum_accuracy
+        if verbose:
+            print("Matching...")
         self._do_matching()
+        if verbose:
+            print("Counting...")
         self._do_counting(verbose=False)
     
     def getSorting1(self):
@@ -18,6 +23,18 @@ class SortingComparison():
     
     def getSorting2(self):
         return self._sorting2
+
+    def getLabels1(self, unit_id):
+        if unit_id in  self._sorting1.getUnitIds():
+            return self._labels_st1[unit_id]
+        else:
+            raise Exception("Unit_id is not a valid unit")
+
+    def getLabels2(self, unit_id):
+        if unit_id in  self._sorting1.getUnitIds():
+            return self._labels_st1[unit_id]
+        else:
+            raise Exception("Unit_id is not a valid unit")
     
     def getMappedSorting1(self):
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
@@ -320,7 +337,8 @@ class SortingComparison():
             for l_gt, lab in enumerate(lab_st1):
                 if lab == 'UNPAIRED':
                     for u_j, u2 in enumerate(sorting2.getUnitIds()):
-                        if u2 in self.getMappedSorting1().getMappedUnitIds() and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
+                        if u2 in self.getMappedSorting1().getMappedUnitIds() \
+                                and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
                             lab_st2 = self._labels_st2[u2]
                             st2 = sorting2.getUnitSpikeTrain(u2)
 
