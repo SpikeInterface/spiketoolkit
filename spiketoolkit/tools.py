@@ -8,7 +8,7 @@ import numpy as np
 
 
 def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
-                max_num_waveforms=1000):
+                max_num_waveforms=np.inf):
 
     analyzer = Analyzer(recording, sorting)
 

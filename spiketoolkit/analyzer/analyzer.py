@@ -55,7 +55,7 @@ class Analyzer(object):
 
     def getUnitWaveforms(self, unit_ids=None, start_frame=None, end_frame=None,
                          ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
-                         verbose=False):
+                         verbose=True):
         '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
         in the form of a numpy array of spike waveforms.
 
@@ -120,20 +120,26 @@ class Analyzer(object):
                     print('Waveform ' + str(i+1) + '/' + str(len(unit_ids))
                           + ' - Number of waveforms: ', len(spike_times))
 
-                for t_i, t in enumerate(spike_times):
-                    idx = np.where(times > t)[0]
-                    if len(idx) != 0:
-                        idx = idx[0]
-                        # find single waveforms crossing thresholds
-                        if idx - n_pad[0] > 0 and idx + n_pad[1] < num_frames:
-                            wf = recordings[:, idx - n_pad[0]:idx + n_pad[1]]
-                        elif idx - n_pad[0] < 0:
-                            wf = recordings[:, :idx + n_pad[1]]
-                            wf = np.pad(wf, ((0, 0), (np.abs(idx - n_pad[0]), 0)), 'constant')
-                        elif idx + n_pad[1] > num_frames:
-                            wf = recordings[:, idx - n_pad[0]:]
-                            wf = np.pad(wf, ((0, 0), (0, idx + n_pad[1] - num_frames)), 'constant')
-                        waveforms[t_i] = wf
+                waveforms = self._get_random_spike_waveforms(unit=unit_ind,
+                                                             max_num=max_num_waveforms,
+                                                             snippet_len=n_pad)
+                waveforms = waveforms.swapaxes(0,2)
+                waveforms = waveforms.swapaxes(1,2)
+
+                # for t_i, t in enumerate(spike_times):
+                #     idx = np.where(times > t)[0]
+                #     if len(idx) != 0:
+                #         idx = idx[0]
+                #         # find single waveforms crossing thresholds
+                #         if idx - n_pad[0] > 0 and idx + n_pad[1] < num_frames:
+                #             wf = recordings[:, idx - n_pad[0]:idx + n_pad[1]]
+                #         elif idx - n_pad[0] < 0:
+                #             wf = recordings[:, :idx + n_pad[1]]
+                #             wf = np.pad(wf, ((0, 0), (np.abs(idx - n_pad[0]), 0)), 'constant')
+                #         elif idx + n_pad[1] > num_frames:
+                #             wf = recordings[:, idx - n_pad[0]:]
+                #             wf = np.pad(wf, ((0, 0), (0, idx + n_pad[1] - num_frames)), 'constant')
+                #         waveforms[t_i] = wf
                 self._waveforms[unit_ind] = waveforms
                 waveform_list.append(waveforms)
             else:
@@ -242,7 +248,7 @@ class Analyzer(object):
         nspikes = []
         for i_w, wf in enumerate(self.getUnitWaveforms()):
             if wf is None:
-                wf = self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w])
+                wf = self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w], verbose=True)
             if elec:
                 wf_reshaped = wf.reshape((wf.shape[0]*wf.shape[1], wf.shape[2]))
                 nspikes.append(len(wf)*self.recording_extractor.getNumChannels())
@@ -273,7 +279,7 @@ class Analyzer(object):
         return np.array(pca_scores)
 
 
-    def _get_random_spike_waveforms(self, *, unit, max_num, channels, snippet_len):
+    def _get_random_spike_waveforms(self, *, unit, max_num, snippet_len, channels=None):
         st=self.sorting_extractor.getUnitSpikeTrain(unit_id=unit)
         num_events=len(st)
         if num_events>max_num:

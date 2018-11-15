@@ -2,6 +2,7 @@ import numpy as np
 import spikeinterface as si
 from scipy.optimize import linear_sum_assignment
 from .sortingcomparison import SortingComparison
+import networkx as nx
 
 class MultiSortingComparison():
     def __init__(self, sorting_list, name_list=None, delta_tp=10, minimum_accuracy=0.5):
@@ -37,84 +38,79 @@ class MultiSortingComparison():
                                                          verbose=True))
             self.sorting_comparisons[self._name_list[i]] = comparison_
 
+        # create graph
         agreement = {}
-        for s_i, sort_comp in self.sorting_comparisons.items():
+        graph = nx.Graph()
+        for sort_name, sort_comp in self.sorting_comparisons.items():
             unit_agreement = {}
             units = sort_comp[0].getSorting1().getUnitIds()
             for unit in units:
                 matched_list = {}
                 matched_agreement = {}
                 for sc in sort_comp:
-                    matched_list[sc.sorting2_name] = sc.getMappedSorting1().getMappedUnitIds(unit)
-                    matched_agreement[sc.sorting2_name] = (sc.getAgreementFraction(unit,
-                                                                     sc.getMappedSorting1().getMappedUnitIds(unit)))
-                unit_agreement[unit] = {'units': matched_list, 'score': matched_agreement}
-            agreement[s_i] = unit_agreement
-        self.agreement = agreement
-        # find units in agreement
-        unit_id = 0
-        self._new_units = {}
-        for s_i, agr in agreement.items():
-            # TODO: this is not correct. The same unit can be found later on with a highest score. A better approach would be to store the score of matching unit and then add
-            # TODO: the ones with highest score first
-            for unit in agr.keys():
-                unit_assignments = list(agr[unit]['units'].values())
-                unit_scores = list(agr[unit]['score'].values())
-                matched_num = len(np.where(np.array(unit_assignments) != -1)[0]) + 1
-                idxs = np.where(np.array(unit_assignments) != -1)
-                if len(idxs[0]) != 0:
-                    avg_agr = np.mean(np.array(unit_scores)[idxs])
-                else:
-                    avg_agr = 0
-                # add self unit and score
-                sorting_idxs = agr[unit]['units']
-                sorting_idxs[s_i] = unit
-                score = agr[unit]['score']
-                score[s_i] = 1
-                if len(self._new_units.keys()) == 0:
-                    self._new_units[unit_id] = {'matched_number': matched_num,
-                                                'avg_agreement': avg_agr,
-                                                'sorter_unit_ids': sorting_idxs}
-                    unit_id += 1
-                else:
-                    matched_already = False
-                    for n_u, n_val in self._new_units.items():
-                        if n_val['sorter_unit_ids'][s_i] == unit:
-                            matched_already = True
-                    if not matched_already:
-                        self._new_units[unit_id] = {'matched_number': matched_num,
-                                                    'avg_agreement': avg_agr,
-                                                    'sorter_unit_ids': sorting_idxs}
-                    unit_id += 1
-                    
-        self._spiketrains = []
-        # extract best spike trains
-        # for each unit look for the same unit in the agreement of all sorters
-        # rank agreement scores
-        # extract tp spikes from coparison with largest agreement
+                    mapped_unit = sc.getMappedSorting1().getMappedUnitIds(unit)
+                    mapped_agr = sc.getAgreementFraction(unit, sc.getMappedSorting1().getMappedUnitIds(unit))
+                    matched_list[sc.sorting2_name] = mapped_unit
+                    matched_agreement[sc.sorting2_name] = mapped_agr
 
-        # # return only TP among best match, if any
-        # if self._msc._new_units[unt_id]['matched_number'] == 1:
-        #     self._sorting_list[self._name_list.index(s_i)].getUnitSpikeTrain(unit))
-        # elif matched_num == 2:
-        #     idxs = np.where(np.array(list(sorting_idxs.values())) != -1)
-        #     sorters = np.array(list(sorting_idxs.keys()))[idxs]
-        #     comp = self.sorting_comparisons[s_i]
-        #     selected_comparison = []
-        #     for sc in comp:
-        #         print(sorters, [sc.sorting1_name, sc.sorting2_name])
-        #         if sorters[0] in [sc.sorting1_name, sc.sorting2_name] \
-        #                 and sorters[1] in [sc.sorting1_name, sc.sorting2_name]:
-        #             selected_comparison = sc
-        #     tp_idxs = np.where(np.array(selected_comparison.getLabels1(unit)) == 'TP')
-        #     print(len(selected_comparison.getLabels1(unit)), len(tp_idxs[0]))
-        #     st_tp = list(np.array(selected_comparison.getSorting1().getUnitSpikeTrain(unit))[tp_idxs])
-        #     self._spiketrains.append(st_tp)
-        # else:
-        # # find best match
-        #
-        # if self._msc._new_units[unit_id]['matched_number'] == 1:
-        #     return self._msc._spiketrains[self.getUnitIds().index(unit_id)]
+                    node1_name = sort_name + '_' + str(unit)
+                    graph.add_node(node1_name)
+                    if mapped_unit != -1:
+                        node2_name = sc.sorting2_name + '_' + str(mapped_unit)
+                        if node2_name not in graph:
+                            graph.add_node(node2_name)
+                        graph.add_edge(node1_name, node2_name,
+                                       weight=mapped_agr)
+                unit_agreement[unit] = {'units': matched_list, 'score': matched_agreement}
+            agreement[sort_name] = unit_agreement
+        self.agreement = agreement
+        self.graph = graph
+
+        self._new_units = {}
+        self._spiketrains = []
+        unit_id = 0
+        for n in self.graph.nodes():
+            print(n)
+            edges = graph.edges(n, data=True)
+            sorter, unit = (str(n)).split('_')
+            unit = int(unit)
+            if len(edges) == 0:
+                print("NO EDGES (forever alone): ", n)
+                matched_num = 1
+                avg_agr = 0
+                sorting_idxs = {sorter: unit}
+                self._new_units[unit_id] = {'matched_number': matched_num,
+                                         'avg_agreement': avg_agr,
+                                         'sorter_unit_ids': sorting_idxs}
+                self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].getUnitSpikeTrain(unit))
+                unit_id += 1
+            else:
+                # find max weight
+                # check if other nodes have edges
+                matched_num = len(edges) + 1
+                avg_agr = np.mean([d['weight'] for u, v, d in edges])
+                max_edge = list(edges)[np.argmax([d['weight'] for u, v, d in edges])]
+                n1, n2, d = max_edge
+                print(" MAX EDGE: ", n1, n2, d['weight'])
+                sorter1, unit1 = n1.split('_')
+                sorter2, unit2 = n2.split('_')
+                unit1 = int(unit1)
+                unit2 = int(unit2)
+                sp1 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
+                sp2 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
+                lab1, lab2 = SortingComparison.compareSpikeTrains(sp1, sp2)
+                tp_idx1 = np.where(np.array(lab1) == 'TP')
+                tp_idx2 = np.where(np.array(lab2) == 'TP')
+                assert len(tp_idx1) == len(tp_idx2)
+                sp_tp1 = list(np.array(sp1)[tp_idx1])
+                sp_tp2 = list(np.array(sp2)[tp_idx2])
+                assert np.all(sp_tp1 == sp_tp2)
+                sorting_idxs = {sorter1: unit1, sorter2: unit2}
+                self._new_units[unit_id] = {'matched_number': matched_num,
+                                         'avg_agreement': avg_agr,
+                                         'sorter_unit_ids': sorting_idxs}
+                self._spiketrains.append(sp_tp1)
+                unit_id += 1
 
     def plotAgreement(self, minimum_matching=0):
         import matplotlib.pylab as plt
@@ -124,12 +120,12 @@ class MultiSortingComparison():
         agreement_matrix = np.zeros((len(unit_ids), len(sorted_name_list)))
 
         for u_i, unit in enumerate(unit_ids):
-            for s_i, sorter in enumerate(sorted_name_list):
+            for sort_name, sorter in enumerate(sorted_name_list):
                 assigned_unit = sorting_agr.getUnitProperty(unit, 'sorter_unit_ids')[sorter]
                 if assigned_unit == -1:
-                    agreement_matrix[u_i, s_i] = np.nan
+                    agreement_matrix[u_i, sort_name] = np.nan
                 else:
-                    agreement_matrix[u_i, s_i] = sorting_agr.getUnitProperty(unit, 'avg_agreement')
+                    agreement_matrix[u_i, sort_name] = sorting_agr.getUnitProperty(unit, 'avg_agreement')
 
         fig, ax = plt.subplots()
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.
@@ -175,3 +171,4 @@ class AgreementSortingExtractor(si.SortingExtractor):
     def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
         if unit_id not in self.getUnitIds():
             raise Exception("Unit id is invalid")
+        return self._msc._spiketrains(self.getUnitIds().index(unit_id))

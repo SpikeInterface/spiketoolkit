@@ -292,7 +292,7 @@ class SortingComparison():
                 # self._unit_map21[u2] = k1
                 # k1 = k1+1
                 self._unit_map21[u2] = -1
-                
+
     def _do_counting(self, verbose=False):
         sorting1 = self._sorting1
         sorting2 = self._sorting2
@@ -448,6 +448,33 @@ class SortingComparison():
         st2_idxs = np.append(st2_matched, st2_unmatched)
 
         return st1_idxs, st2_idxs
+
+    @staticmethod
+    def compareSpikeTrains(spiketrain1, spiketrain2, delta_tp=10, verbose=False):
+        lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
+        lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
+
+        if verbose:
+            print('Finding TP')
+        # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
+        for sp_i, n_sp in enumerate(spiketrain1):
+            id_sp = np.where((spiketrain2 > n_sp - delta_tp) & (spiketrain2 < n_sp + delta_tp))[0]
+            if len(id_sp) == 1:
+                lab_st1[sp_i] = 'TP'
+                lab_st2[id_sp] = 'TP'
+
+        if verbose:
+            print('Finding FP and FN')
+        for l_gt, lab in enumerate(lab_st1):
+            if lab == 'UNPAIRED':
+                lab_st1[l_gt] = 'FN'
+
+        for l_gt, lab in enumerate(lab_st2):
+            if lab == 'UNPAIRED':
+                lab_st2[l_gt] = 'FP'
+
+        return lab_st1, lab_st2
+
 
 
 
