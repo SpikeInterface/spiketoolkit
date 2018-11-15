@@ -4,7 +4,7 @@ from scipy.optimize import linear_sum_assignment
 
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
-                 verbose=False):
+                 count=False, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
@@ -14,9 +14,12 @@ class SortingComparison():
         if verbose:
             print("Matching...")
         self._do_matching()
-        if verbose:
-            print("Counting...")
-        self._do_counting(verbose=False)
+
+        self._counts = None
+        if count:
+            if verbose:
+                print("Counting...")
+            self._do_counting(verbose=False)
     
     def getSorting1(self):
         return self._sorting1
@@ -144,8 +147,15 @@ class SortingComparison():
             return 0
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
 
+    def computeCounts(self):
+        if self._counts is None:
+            self._do_counting(verbose=False)
+
     def plotConfusionMatrix(self, xlabel=None, ylabel=None):
         import matplotlib.pylab as plt
+
+        if self._counts is None:
+            self._do_counting(verbose=False)
 
         sorting1 = self._sorting1
         sorting2 = self._sorting2

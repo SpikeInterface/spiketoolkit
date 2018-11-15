@@ -15,7 +15,8 @@ setup(
     install_requires=[
         'numpy',
         'spikeinterface',
-        'scikit-learn'
+        'scikit-learn',
+        'networkx'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

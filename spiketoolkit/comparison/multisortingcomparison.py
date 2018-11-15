@@ -59,23 +59,22 @@ class MultiSortingComparison():
                         node2_name = sc.sorting2_name + '_' + str(mapped_unit)
                         if node2_name not in graph:
                             graph.add_node(node2_name)
-                        graph.add_edge(node1_name, node2_name,
-                                       weight=mapped_agr)
+                            print('Adding edge: ', node1_name, node2_name)
+                            graph.add_edge(node1_name, node2_name, weight=mapped_agr)
                 unit_agreement[unit] = {'units': matched_list, 'score': matched_agreement}
             agreement[sort_name] = unit_agreement
         self.agreement = agreement
-        self.graph = graph
+        self.graph = graph.to_undirected()
 
         self._new_units = {}
         self._spiketrains = []
+        added_nodes = []
         unit_id = 0
         for n in self.graph.nodes():
-            print(n)
             edges = graph.edges(n, data=True)
             sorter, unit = (str(n)).split('_')
             unit = int(unit)
             if len(edges) == 0:
-                print("NO EDGES (forever alone): ", n)
                 matched_num = 1
                 avg_agr = 0
                 sorting_idxs = {sorter: unit}
@@ -84,33 +83,49 @@ class MultiSortingComparison():
                                          'sorter_unit_ids': sorting_idxs}
                 self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].getUnitSpikeTrain(unit))
                 unit_id += 1
+                # print("ADDING NODE (no match): ", n)
+                added_nodes.append(str(n))
             else:
-                # find max weight
-                # check if other nodes have edges
-                matched_num = len(edges) + 1
-                avg_agr = np.mean([d['weight'] for u, v, d in edges])
-                max_edge = list(edges)[np.argmax([d['weight'] for u, v, d in edges])]
+                # check if other nodes have edges (we should also check edges of
+                all_edges = list(edges)
+                for e in edges:
+                    n1, n2, d = e
+                    new_edge = self.graph.edges(n2, data=True)
+                    if len(new_edge) > 0:
+                        for e_n in new_edge:
+                            e_n1, e_n2, d = e_n
+                            if sorted([e_n1, e_n2]) not in [sorted([u, v]) for u, v, _ in all_edges]:
+                                all_edges.append(e_n)
+                matched_num = len(all_edges) + 1
+                avg_agr = np.mean([d['weight'] for u, v, d in all_edges])
+                max_edge = list(all_edges)[np.argmax([d['weight'] for u, v, d in all_edges])]
                 n1, n2, d = max_edge
-                print(" MAX EDGE: ", n1, n2, d['weight'])
-                sorter1, unit1 = n1.split('_')
-                sorter2, unit2 = n2.split('_')
-                unit1 = int(unit1)
-                unit2 = int(unit2)
-                sp1 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
-                sp2 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
-                lab1, lab2 = SortingComparison.compareSpikeTrains(sp1, sp2)
-                tp_idx1 = np.where(np.array(lab1) == 'TP')
-                tp_idx2 = np.where(np.array(lab2) == 'TP')
-                assert len(tp_idx1) == len(tp_idx2)
-                sp_tp1 = list(np.array(sp1)[tp_idx1])
-                sp_tp2 = list(np.array(sp2)[tp_idx2])
-                assert np.all(sp_tp1 == sp_tp2)
-                sorting_idxs = {sorter1: unit1, sorter2: unit2}
-                self._new_units[unit_id] = {'matched_number': matched_num,
-                                         'avg_agreement': avg_agr,
-                                         'sorter_unit_ids': sorting_idxs}
-                self._spiketrains.append(sp_tp1)
-                unit_id += 1
+
+                if n1 not in added_nodes and n2 not in added_nodes:
+                    sorter1, unit1 = n1.split('_')
+                    sorter2, unit2 = n2.split('_')
+                    unit1 = int(unit1)
+                    unit2 = int(unit2)
+                    sp1 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
+                    sp2 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
+                    lab1, lab2 = SortingComparison.compareSpikeTrains(sp1, sp2)
+                    tp_idx1 = np.where(np.array(lab1) == 'TP')
+                    tp_idx2 = np.where(np.array(lab2) == 'TP')
+                    assert len(tp_idx1) == len(tp_idx2)
+                    sp_tp1 = list(np.array(sp1)[tp_idx1])
+                    sp_tp2 = list(np.array(sp2)[tp_idx2])
+                    assert np.all(sp_tp1 == sp_tp2)
+                    sorting_idxs = {sorter1: unit1, sorter2: unit2}
+                    self._new_units[unit_id] = {'matched_number': matched_num,
+                                                'avg_agreement': avg_agr,
+                                                'sorter_unit_ids': sorting_idxs}
+                    self._spiketrains.append(sp_tp1)
+                    unit_id += 1
+                    # print("ADDING NODES: ", n, n1, n2, d['weight'])
+                    added_nodes.append(str(n))
+                    added_nodes.append(str(n1))
+                    added_nodes.append(str(n2))
+        self.added_nodes = added_nodes
 
     def plotAgreement(self, minimum_matching=0):
         import matplotlib.pylab as plt
@@ -171,4 +186,4 @@ class AgreementSortingExtractor(si.SortingExtractor):
     def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
         if unit_id not in self.getUnitIds():
             raise Exception("Unit id is invalid")
-        return self._msc._spiketrains(self.getUnitIds().index(unit_id))
+        return np.array(self._msc._spiketrains[self.getUnitIds().index(unit_id)])
