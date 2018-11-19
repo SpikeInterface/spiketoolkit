@@ -3,8 +3,8 @@ import time
 
 def mountainsort4(
         recording, # The recording extractor
-        detect_sign, # Use -1, 0, or 1, depending on the sign of the spikes in the recording
-        adjacency_radius, # Use -1 to include all channels in every neighborhood
+        detect_sign=-1, # Use -1, 0, or 1, depending on the sign of the spikes in the recording
+        adjacency_radius=-1, # Use -1 to include all channels in every neighborhood
         freq_min=300, # Use None for no bandpass filtering
         freq_max=6000,
         whiten=True, # Whether to do channel whitening as part of preprocessing

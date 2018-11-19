@@ -2,8 +2,8 @@ import numpy as np
 import spiketoolkit as st
 from sklearn.decomposition import PCA
 
-from spikeinterface.RecordingExtractor import RecordingExtractor
-from spikeinterface.SortingExtractor import SortingExtractor
+from spikeextractors.RecordingExtractor import RecordingExtractor
+from spikeextractors.SortingExtractor import SortingExtractor
 
 class Analyzer(object):
     '''A class that handles RecordingExtractor and SortingExtractor objects and performs

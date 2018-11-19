@@ -1,4 +1,4 @@
-import spikeinterface as si
+import spikeextractors as se
 
 import os
 from os.path import join
@@ -35,7 +35,7 @@ def ironclust(*,
 
     dataset_dir=tmpdir+'/ironclust_dataset'
     # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-    si.MdaRecordingExtractor.writeRecording(recording=recording,save_path=dataset_dir)
+    se.MdaRecordingExtractor.writeRecording(recording=recording,save_path=dataset_dir)
         
     samplerate=recording.getSamplingFrequency()
 
@@ -77,7 +77,7 @@ def ironclust(*,
         raise Exception('Result file does not exist: '+ result_fname)
     
     firings=mdaio.readmda(result_fname)
-    sorting=si.NumpySortingExtractor()
+    sorting=se.NumpySortingExtractor()
     sorting.setTimesLabels(firings[1,:],firings[2,:])
     return sorting
 

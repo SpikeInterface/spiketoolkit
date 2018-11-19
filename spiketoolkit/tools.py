@@ -1,5 +1,4 @@
-from spikeinterface import RecordingExtractor, SortingExtractor
-import spikeinterface as si
+import spikeextractors as se
 from .analyzer import Analyzer
 from .filters import bandpass_filter, whiten
 from os.path import join
@@ -12,7 +11,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
 
     analyzer = Analyzer(recording, sorting)
 
-    if not isinstance(recording, RecordingExtractor) or not isinstance(sorting, SortingExtractor):
+    if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     output_folder = os.path.abspath(output_folder)
     if not os.path.isdir(output_folder):
@@ -22,7 +21,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         recording = bandpass_filter(recording, freq_min=300, freq_max=6000)
 
     # save dat file
-    si.writeBinaryDatFormat(recording, join(output_folder, 'recording.dat'), dtype='int16')
+    se.writeBinaryDatFormat(recording, join(output_folder, 'recording.dat'), dtype='int16')
 
     # write params.py
     with open(join(output_folder, 'params.py'), 'w') as f:

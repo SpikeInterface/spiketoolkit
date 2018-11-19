@@ -1,4 +1,4 @@
-import spikeinterface as si
+import spikeextractors as se
 
 import os
 import time
@@ -46,14 +46,14 @@ def kilosort(
     npy_matlab_path = os.path.abspath(npy_matlab_path)
 
     if probe_file is not None:
-        si.loadProbeFile(recording, probe_file)
+        se.loadProbeFile(recording, probe_file)
 
     # save binary file
     if file_name is None:
         file_name = 'recording'
     elif file_name.endswith('.dat'):
         file_name = file_name[file_name.find('.dat')]
-    si.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
+    se.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
 
     # set up kilosort config files and run kilosort on data
     with open(join(source_dir, 'kilosort_master.txt'), 'r') as f:
@@ -126,5 +126,5 @@ def kilosort(
     #     raise Exception('KiloSort returned a non-zero exit code')
     print('Elapsed time: ', time.time() - t_start_proc)
 
-    sorting = si.KiloSortSortingExtractor(join(output_folder))
+    sorting = se.KiloSortSortingExtractor(join(output_folder))
     return sorting

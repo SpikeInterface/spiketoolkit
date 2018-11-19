@@ -1,4 +1,4 @@
-import spikeinterface as si
+import spikeextractors as se
 
 import os
 import time
@@ -44,7 +44,7 @@ def spyking_circus(
 
     # save prb file:
     if probe_file is None:
-        si.saveProbeFile(recording, join(output_folder, 'probe.prb'), format='spyking_circus', radius=adjacency_radius,
+        se.saveProbeFile(recording, join(output_folder, 'probe.prb'), format='spyking_circus', radius=adjacency_radius,
                          dimensions=electrode_dimensions)
         probe_file = join(output_folder, 'probe.prb')
     # save binary file
@@ -93,6 +93,6 @@ def spyking_circus(
         raise Exception('Spyking circus merging returned a non-zero exit code')
     processing_time = time.time() - t_start_proc
     print('Elapsed time: ', processing_time)
-    sorting = si.SpykingCircusSortingExtractor(join(output_folder, file_name))
+    sorting = se.SpykingCircusSortingExtractor(join(output_folder, file_name))
 
     return sorting

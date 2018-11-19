@@ -1,10 +1,10 @@
 from abc import ABC, abstractmethod
-import spikeinterface as si
+import spikeextractors as se
 import numpy as np
 
-class FilterRecording(si.RecordingExtractor):
+class FilterRecording(se.RecordingExtractor):
     def __init__(self, *, recording,chunk_size=10000):
-        si.RecordingExtractor.__init__(self)
+        se.RecordingExtractor.__init__(self)
         self._recording=recording
         self._chunk_size=chunk_size
         self._filtered_chunk_cache=FilteredChunkCache()
