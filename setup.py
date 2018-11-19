@@ -11,10 +11,12 @@ setup(
     url="https://github.com/alejoe91/spiketoolkit",
     packages=find_packages(),
     package_data={},
+    include_package_data=True,
     install_requires=[
         'numpy',
         'spikeinterface',
-        'scikit-learn'
+        'scikit-learn',
+        'networkx'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",

@@ -3,19 +3,41 @@ import spikeinterface as si
 from scipy.optimize import linear_sum_assignment
 
 class SortingComparison():
-    def __init__(self, sorting1, sorting2, delta_tp=10, minimum_accuracy=0.5):
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
+                 count=False, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
+        self.sorting1_name = sorting1_name
+        self.sorting2_name = sorting2_name
         self._delta_tp = delta_tp
         self._min_accuracy = minimum_accuracy
+        if verbose:
+            print("Matching...")
         self._do_matching()
-        self._do_counting(verbose=False)
+
+        self._counts = None
+        if count:
+            if verbose:
+                print("Counting...")
+            self._do_counting(verbose=False)
     
     def getSorting1(self):
         return self._sorting1
     
     def getSorting2(self):
         return self._sorting2
+
+    def getLabels1(self, unit_id):
+        if unit_id in  self._sorting1.getUnitIds():
+            return self._labels_st1[unit_id]
+        else:
+            raise Exception("Unit_id is not a valid unit")
+
+    def getLabels2(self, unit_id):
+        if unit_id in  self._sorting1.getUnitIds():
+            return self._labels_st1[unit_id]
+        else:
+            raise Exception("Unit_id is not a valid unit")
     
     def getMappedSorting1(self):
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
@@ -125,8 +147,15 @@ class SortingComparison():
             return 0
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
 
+    def computeCounts(self):
+        if self._counts is None:
+            self._do_counting(verbose=False)
+
     def plotConfusionMatrix(self, xlabel=None, ylabel=None):
         import matplotlib.pylab as plt
+
+        if self._counts is None:
+            self._do_counting(verbose=False)
 
         sorting1 = self._sorting1
         sorting2 = self._sorting2
@@ -158,11 +187,17 @@ class SortingComparison():
         ax.set_yticklabels(np.append(st1_idxs, 'FP'), fontsize=12)
 
         if xlabel == None:
-            ax.set_xlabel('Sorting 2', fontsize=15)
+            if self.sorting2_name is None:
+                ax.set_xlabel('Sorting 2', fontsize=15)
+            else:
+                ax.set_xlabel(self.sorting2_name, fontsize=15)
         else:
             ax.set_xlabel(xlabel, fontsize=20)
         if ylabel == None:
-            ax.set_ylabel('Sorting 1', fontsize=15)
+            if self.sorting1_name is None:
+                ax.set_ylabel('Sorting 1', fontsize=15)
+            else:
+                ax.set_ylabel(self.sorting1_name, fontsize=15)
         else:
             ax.set_ylabel(ylabel, fontsize=20)
 
@@ -267,7 +302,7 @@ class SortingComparison():
                 # self._unit_map21[u2] = k1
                 # k1 = k1+1
                 self._unit_map21[u2] = -1
-                
+
     def _do_counting(self, verbose=False):
         sorting1 = self._sorting1
         sorting2 = self._sorting2
@@ -312,7 +347,8 @@ class SortingComparison():
             for l_gt, lab in enumerate(lab_st1):
                 if lab == 'UNPAIRED':
                     for u_j, u2 in enumerate(sorting2.getUnitIds()):
-                        if u2 in self.getMappedSorting1().getMappedUnitIds() and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
+                        if u2 in self.getMappedSorting1().getMappedUnitIds() \
+                                and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
                             lab_st2 = self._labels_st2[u2]
                             st2 = sorting2.getUnitSpikeTrain(u2)
 
@@ -422,6 +458,33 @@ class SortingComparison():
         st2_idxs = np.append(st2_matched, st2_unmatched)
 
         return st1_idxs, st2_idxs
+
+    @staticmethod
+    def compareSpikeTrains(spiketrain1, spiketrain2, delta_tp=10, verbose=False):
+        lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
+        lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
+
+        if verbose:
+            print('Finding TP')
+        # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
+        for sp_i, n_sp in enumerate(spiketrain1):
+            id_sp = np.where((spiketrain2 > n_sp - delta_tp) & (spiketrain2 < n_sp + delta_tp))[0]
+            if len(id_sp) == 1:
+                lab_st1[sp_i] = 'TP'
+                lab_st2[id_sp] = 'TP'
+
+        if verbose:
+            print('Finding FP and FN')
+        for l_gt, lab in enumerate(lab_st1):
+            if lab == 'UNPAIRED':
+                lab_st1[l_gt] = 'FN'
+
+        for l_gt, lab in enumerate(lab_st2):
+            if lab == 'UNPAIRED':
+                lab_st2[l_gt] = 'FP'
+
+        return lab_st1, lab_st2
+
 
 
 

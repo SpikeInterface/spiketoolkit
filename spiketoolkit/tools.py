@@ -7,7 +7,8 @@ import os
 import numpy as np
 
 
-def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None):
+def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
+                max_num_waveforms=np.inf):
 
     analyzer = Analyzer(recording, sorting)
 
@@ -33,7 +34,10 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         f.write('hp_filtered = False')
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
-    pc_scores = analyzer.computePCAscores(n_comp=nPC, elec=True)
+    if nPC > recording.getNumChannels():
+        nPC = recording.getNumChannels()
+        print("Changed number of PC to number of channels: ", nPC)
+    pc_scores = analyzer.computePCAscores(n_comp=nPC, elec=True, max_num_waveforms=max_num_waveforms)
 
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
