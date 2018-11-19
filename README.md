@@ -1,4 +1,4 @@
-
+[![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit)
 
 Alpha Development
 Version 0.1.7
@@ -95,10 +95,6 @@ agreement_sorting = multi_comparison.getAgreementSorting(minimum_match=3)
 To experiment with RecordingExtractors and SortingExtractors in a pre-installed environment, we have provided a [Collaborative environment](https://gist.github.com/magland/e43542fe2dfe856fd04903b9ff1f8e4e). If you click on the link and then click on "Open in Collab", you can run the notebook and try out the features of and tools for SpikeInterface.
 <br/>
 
-## Tools that use RecordingExtractors and SortingExtractors
-
-- [spiketoolkit](https://github.com/alejoe91/spiketoolkit) - A repository containing tools that utilize functions from the extractors. It also contains spike sorting algorithm wrappers that output sorting extractors post-sorting allowing for standardized evaluation and quality control. Maintained by Alessio Paolo Buccino.
-- [spikewidgets](https://github.com/magland/spikewidgets) - A repository containing graphical widgets that utilize functions from the extractors to plot and visualize both the raw and sorted extracellular data. Maintained by Jeremy Magland.
 
 ### Authors
 
