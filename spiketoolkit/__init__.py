@@ -5,4 +5,4 @@ from . import comparison
 
 from .tools import exportToPhy, computeUnitSNR
 
-__version__ = '0.1.6'
+__version__ = '0.1.7'
