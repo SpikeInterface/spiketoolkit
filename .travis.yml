@@ -6,7 +6,7 @@ python:
 install:
 - pip install .
 - pip install pytest
-- pip install mountainlab_pytools kbucket
+- pip install ml_ms4alg spikewidgets
 script: pytest
 deploy:
   provider: pypi
