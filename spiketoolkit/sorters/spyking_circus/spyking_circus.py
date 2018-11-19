@@ -6,6 +6,7 @@ import numpy as np
 from os.path import join
 from spiketoolkit.sorters.tools import run_command_and_print_output
 
+
 def spyking_circus(
         recording,
         output_folder=None,  # Temporary working directory
@@ -21,7 +22,7 @@ def spyking_circus(
         electrode_dimensions=None,
         whitening_max_elts=1000,  # I believe it relates to subsampling and affects compute time
         clustering_max_elts=10000,  # I believe it relates to subsampling and affects compute time
-    ):
+):
     try:
         import circus
     except ModuleNotFoundError:
@@ -78,10 +79,10 @@ def spyking_circus(
     print('Running spyking circus...')
     t_start_proc = time.time()
     if n_cores is None:
-        n_cores = np.maximum(1, int(os.cpu_count()/2))
+        n_cores = np.maximum(1, int(os.cpu_count() / 2))
 
-    cmd = 'spyking-circus {} -c {} '.format(join(output_folder, file_name+'.npy'), n_cores)
-    cmd_merge = 'spyking-circus {} -m merging -c {} '.format(join(output_folder, file_name+'.npy'), n_cores)
+    cmd = 'spyking-circus {} -c {} '.format(join(output_folder, file_name + '.npy'), n_cores)
+    cmd_merge = 'spyking-circus {} -m merging -c {} '.format(join(output_folder, file_name + '.npy'), n_cores)
     # cmd_convert = 'spyking-circus {} -m converting'.format(join(output_folder, file_name+'.npy'))
     print(cmd)
     retcode = run_command_and_print_output(cmd)
