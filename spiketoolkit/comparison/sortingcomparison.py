@@ -1,5 +1,5 @@
 import numpy as np
-import spikeinterface as si
+import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 
 class SortingComparison():
@@ -488,9 +488,9 @@ class SortingComparison():
 
 
 
-class MappedSortingExtractor(si.SortingExtractor):
+class MappedSortingExtractor(se.SortingExtractor):
     def __init__(self, sorting, unit_map):
-        si.SortingExtractor.__init__(self)
+        se.SortingExtractor.__init__(self)
         self._sorting = sorting
         self._unit_map = unit_map
         self._unit_ids = list(self._unit_map.keys())

@@ -1,12 +1,12 @@
 import numpy as np
-import spikeinterface as si
+import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 from .sortingcomparison import SortingComparison
 import networkx as nx
 
 class MultiSortingComparison():
     def __init__(self, sorting_list, name_list=None, delta_tp=10, minimum_accuracy=0.5):
-        if len(sorting_list) > 1 and np.all(isinstance(s, si.SortingExtractor) for s in sorting_list):
+        if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
             self._name_list = name_list
@@ -159,9 +159,9 @@ class MultiSortingComparison():
 
         return ax
 
-class AgreementSortingExtractor(si.SortingExtractor):
+class AgreementSortingExtractor(se.SortingExtractor):
     def __init__(self, multisortingcomparison, min_agreement=0):
-        si.SortingExtractor.__init__(self)
+        se.SortingExtractor.__init__(self)
         self._msc = multisortingcomparison
         if min_agreement == 0:
             self._unit_ids = list(self._msc._new_units.keys())

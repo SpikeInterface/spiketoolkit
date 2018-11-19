@@ -1,10 +1,10 @@
-import spikeinterface as si
-
+import spikeextractors as se
 import os
 import time
 import numpy as np
 from os.path import join
 from spiketoolkit.sorters.tools import run_command_and_print_output, call_command
+
 
 def kilosort(
         recording,
@@ -16,7 +16,7 @@ def kilosort(
         file_name=None,
         spike_thresh=4,
         electrode_dimensions=None
-    ):
+):
     if kilosort_path is None:
         kilosort_path = os.getenv('KILOSORT_PATH', None)
     if npy_matlab_path is None:
@@ -46,14 +46,14 @@ def kilosort(
     npy_matlab_path = os.path.abspath(npy_matlab_path)
 
     if probe_file is not None:
-        si.loadProbeFile(recording, probe_file)
+        se.loadProbeFile(recording, probe_file)
 
     # save binary file
     if file_name is None:
         file_name = 'recording'
     elif file_name.endswith('.dat'):
         file_name = file_name[file_name.find('.dat')]
-    si.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
+    se.writeBinaryDatFormat(recording, join(output_folder, file_name), dtype='int16')
 
     # set up kilosort config files and run kilosort on data
     with open(join(source_dir, 'kilosort_master.txt'), 'r') as f:
@@ -64,7 +64,7 @@ def kilosort(
         kilosort_channelmap = f.readlines()
 
     nchan = recording.getNumChannels()
-    dat_file = file_name +'.dat'
+    dat_file = file_name + '.dat'
     kilo_thresh = spike_thresh
     Nfilt = (nchan // 32) * 32 * 8
     if Nfilt == 0:
@@ -83,7 +83,7 @@ def kilosort(
         ug, kilosort_path, npy_matlab_path, output_folder, abs_channel, abs_config
     )
     kilosort_config = ''.join(kilosort_config).format(
-        nchan, nchan, recording.getSamplingFrequency(), dat_file , Nfilt, nsamples, kilo_thresh
+        nchan, nchan, recording.getSamplingFrequency(), dat_file, Nfilt, nsamples, kilo_thresh
     )
     if 'location' in recording.getChannelPropertyNames():
         positions = np.array([recording.getChannelProperty(chan, 'location') for chan in range(nchan)])
@@ -94,7 +94,7 @@ def kilosort(
                                                    list(positions[:, 1]),
                                                    'ones(1, Nchannels)',
                                                    recording.getSamplingFrequency())
-        elif len(electrode_dimensions)==2:
+        elif len(electrode_dimensions) == 2:
             kilosort_channelmap = ''.join(kilosort_channelmap
                                           ).format(nchan,
                                                    list(positions[:, electrode_dimensions[0]]),
@@ -126,5 +126,5 @@ def kilosort(
     #     raise Exception('KiloSort returned a non-zero exit code')
     print('Elapsed time: ', time.time() - t_start_proc)
 
-    sorting = si.KiloSortSortingExtractor(join(output_folder))
+    sorting = se.KiloSortSortingExtractor(join(output_folder))
     return sorting
