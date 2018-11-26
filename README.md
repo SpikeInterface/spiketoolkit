@@ -6,9 +6,10 @@ Version 0.1.7
 
 # SpikeToolkit
 
-SpikeToolkit is a module that enables to run several spike sorting algoithms, curate, evaluate, and compare their outputs.
+SpikeToolkit is a module that enables users to run, curate, evaluate, and compare outputs from popular spike sorting algoithms.
 
-It is interfaced with SpikeExtractors objects, and the spike sorting pipeline easy and standardized among different software packages. 
+Its tools and functions are built using [spikeextractors](https://github.com/SpikeInterface/spikeextractors) objects, allowing for straightforward, standardized spike sorting with different software packages. 
+
 <br/>
 <br/>
 ## Getting Started 
@@ -31,11 +32,11 @@ SpikeInterface allows the user to extract data from either raw or spike sorted d
 
 **Run spike sorting algorithms**
 
-To run spike sorting algorithm, a `RecordingExtractor` object needs to be inetantiated using the `spikeextracor` package
+To run spike sorting algorithm, a `RecordingExtractor` object needs to be instantiated using the `spikeextractors` package
 
-In this [example](https://github.com/colehurwitz31/spikeinterface/blob/master/examples/run_all_sorters.ipynb) from the examples repo, we show how to use run several of the implemented spike sorters.
+In this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo, we show how to run several spike sorters on a toy dataset.
 
-Each spike sorter must be installed separately and if not installed, an Error message with the installation procedure is shown. This is a list of currently available spike sorters:
+Each spike sorter must be installed separately. If one of the spike sorters is not installed, an error message detailing the installation procedure is given. Below is a list spike sorters we have made compatible with SpikeInterface:
 
 - [Mountainsort](https://github.com/flatironinstitute/mountainsort)
 - [SpyKING circus](https://github.com/spyking-circus/spyking-circus)
@@ -57,17 +58,20 @@ sorting_SC = st.sorters.spyking_circus(recording)
 sorting_KS = st.sorters.kilosort(recording, kilosort_path='pat-to-kilosort-matlab-installation')
 ```
 
-Other parameters are exposed using arguments. In order to find out which parameters are available, you can run in ipython:
+Other parameters are exposed using arguments. In order to find out which parameters are available, you can these commands in ipython:
+
 ```python
 st.sorters.mountainsort?
 st.sorters.spyking_circus?
 st.sorters.kilosort?
 ```
 
-**Curate spike sorting output**
+**Curating spike sorting outputs**
 
-Manual curation of spike sorting output is reccommended to at least visually checking spike waveforms, correlograms, and clustering. 
-With SpikeToolit you can export any sorting output using the  [phy](https://github.com/kwikteam/phy) template-gui, manually curate the data, and reimport the curated sorting output using SpikeExtractors.
+Manual curation of spike sorting outputs is recommended for all algorithms. This includes visually inspecting the spike waveforms, correlograms, and clusters of each unit found in the recording.
+
+With SpikeToolit you can export any sorting output to the  [phy](https://github.com/kwikteam/phy) template-gui, manually curate the data, and re-import the curated sorting output:
+
 ```python
 # esport Mountainsort output to phy
 st.exportToPhy(sorting_MS)
@@ -78,12 +82,16 @@ sorting_MS_curated = se.PhysortingExtractors('path-to-created-phy-folder')
 
 **Compare sorting outputs**
 
-SpikeToolkit is designed to make spike sorting comparison and evaluation easy and straightforward. Using the `sorting_MS`, `sorting_SC`, and `sorting_SC` output from the previous section one can run pairwise comparisons by:
+SpikeToolkit is designed to make spike sorting comparison and evaluation easy and straightforward. Using the `sorting_MS`, `sorting_SC`, and `sorting_SC` output from the previous section, one can run pairwise comparisons:
+
 ```python
 comparison_MS_SC = st.comparison.SortingComparison(sorting_MS, sorting_SC)
 ```
-The `SortingComparison` class finds best matching unit based on the fraction of matching spikes. Units that are not matched are assigned to -1.
-Alternatively, one can find units in agreement with multiple psike sorters:
+
+The `SortingComparison` class finds best matching units based on the fraction of matched spikes. Units that are not matched to any other unit are assigned to -1.
+
+Alternatively, one can run a multi-sorting comparison that finds units in agreement amongst multiple spike sorters:
+
 ```python
 multi_comparison = st.comparison.MultiSortingComparison([sorting_MS, sorting_SC, sorting_KS])
 # extract units shared among all 3 spike sorting outputs
@@ -92,7 +100,7 @@ agreement_sorting = multi_comparison.getAgreementSorting(minimum_match=3)
 
 ## Interactive Example
 
-To experiment with RecordingExtractors and SortingExtractors in a pre-installed environment, we have provided a [Collaborative environment](https://gist.github.com/magland/e43542fe2dfe856fd04903b9ff1f8e4e). If you click on the link and then click on "Open in Collab", you can run the notebook and try out the features of and tools for SpikeInterface.
+To experiment with RecordingExtractors, SortingExtractors, and their associated tools, in a pre-installed environment, we have provided a [Collaborative environment](https://gist.github.com/magland/e43542fe2dfe856fd04903b9ff1f8e4e). If you click on the link and then click on "Open in Collab", you can run the notebook and try out the features of and tools for SpikeInterface.
 <br/>
 
 
