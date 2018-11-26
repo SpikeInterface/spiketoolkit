@@ -6,7 +6,7 @@ Version 0.1.7
 
 # SpikeToolkit
 
-SpikeToolkit is a module that was designed for simple running, curating, evaluation, and comparison of popular spike sorting algoithms.
+SpikeToolkit is a module that was designed to make running, curating, evaluating, and comparing popular spike sorting algorithms as simple as possible.
 
 Its tools and functions are built using [spikeextractors](https://github.com/SpikeInterface/spikeextractors) objects, allowing for straightforward, standardized spike sorting with different software packages. 
 
