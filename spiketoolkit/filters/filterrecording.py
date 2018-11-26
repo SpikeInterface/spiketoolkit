@@ -39,7 +39,8 @@ class FilterRecording(se.RecordingExtractor):
                 end0=end_frame-ich*self._chunk_size
             else:
                 end0=self._chunk_size
-            filtered_chunk_list.append(filtered_chunk0[channel_ids,start0:end0])
+            chan_idx = [self.getChannelIds().index(chan) for chan in channel_ids]
+            filtered_chunk_list.append(filtered_chunk0[chan_idx,start0:end0])
         return np.concatenate(filtered_chunk_list,axis=1)
     
     @abstractmethod

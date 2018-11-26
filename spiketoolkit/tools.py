@@ -1,14 +1,127 @@
 import spikeextractors as se
 from .analyzer import Analyzer
 from .filters import bandpass_filter, whiten
+from .sorters import *
 from os.path import join
 import os
 import numpy as np
+import threading
+import time
+import tempfile
+import shutil
+
+exitFlag = 0
+
+
+class sortingThread(threading.Thread):
+    def __init__(self, threadID, recording, spikesorter, **kwargs):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.recording = recording
+        self.sorter = spikesorter
+        self.kwargs = kwargs
+    def run(self):
+        print('Sorting ' + str(self.threadID) + ' with ' + self.sorter)
+        if self.sorter == 'klusta':
+            sorting = klusta(recording=self.recording, **self.kwargs)
+        elif self.sorter == 'mountainsort' or self.sorter == 'mountainsort4':
+            sorting = mountainsort4(recording=self.recording, **self.kwargs)
+        elif self.sorter == 'kilosort':
+            sorting = kilosort(recording=self.recording, **self.kwargs)
+        elif self.sorter == 'spyking-circus' or self.sorter == 'spyking_circus':
+            sorting = spyking_circus(recording=self.recording, **self.kwargs)
+        elif self.sorter == 'ironclust':
+            sorting = ironclust(recording=self.recording, **self.kwargs)
+        else:
+            raise ValueError("Spike sorter not supported")
+        self.sorting = sorting
+
+
+def parallelSpikeSorting(recording_list, spikesorter, **kwargs):
+    '''
+
+    Parameters
+    ----------
+    recording_list
+    spikesorter
+
+    Returns
+    -------
+
+    '''
+    if len(recording_list) > 1:
+        if not isinstance(recording_list[0], se.RecordingExtractor):
+            raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
+        t_start = time.time()
+        sorting_list = []
+        tmpdir_list  =[]
+        threads = []
+        for i, recording in enumerate(recording_list):
+            tmpdir = tempfile.mkdtemp()
+            tmpdir_list.append(tmpdir)
+            if 'mountain' not in spikesorter:
+                threads.append(sortingThread(i, recording, spikesorter, output_folder=tmpdir, **kwargs))
+            else:
+                threads.append(sortingThread(i, recording, spikesorter, **kwargs))
+
+        for t in threads:
+            t.start()
+        for t in threads:
+            t.join()
+        for t in threads:
+            sorting_list.append(t.sorting)
+        for tmp in tmpdir_list:
+            shutil.rmtree(tmp)
+        t_processing = time.time() - t_start
+        print('Total parallel processing time: ', t_processing)
+    else:
+        raise ValueError("'recording_list' must have mor ethan 1 element")
+    return sorting_list
+
+
+def spikeSortByGroup(recording, spikesorter, **kwargs):
+    '''
+
+    Parameters
+    ----------
+    recording
+    sorter
+    kwargs
+
+    Returns
+    -------
+
+    '''
+    recording_list = se.getSubExtractorsByProperty(recording, 'group')
+    sorting_list = parallelSpikeSorting(recording_list, spikesorter, **kwargs)
+    # add group property
+    for i, sorting in enumerate(sorting_list):
+        group = recording_list[i].getChannelProperty(recording_list[i].getChannelIds()[0], 'group')
+        for unit in sorting.getUnitIds():
+            sorting.setUnitProperty(unit, 'group', group)
+    # reassemble the sorting outputs
+    multi_sorting = se.MultiSortingExtractor(sortings=sorting_list)
+    return multi_sorting
+
+
+def computeUnitSNR(*, recording, sorting, unit_ids=None, **kwargs):
+    analyzer = Analyzer(recording, sorting)
+    if unit_ids is None:
+        unit_ids = sorting.getUnitIds()
+    channel_noise_levels = _computeChannelNoiseLevels(recording=recording)
+    if unit_ids is not None:
+        templates = analyzer.getUnitTemplate(unit_ids=unit_ids, **kwargs)
+    else:
+        templates = analyzer.getUnitTemplate(**kwargs)
+    ret = []
+    for template in templates:
+        snr = _computeTemplateSNR(template, channel_noise_levels)
+        ret.append(snr)
+    return ret
 
 
 def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
                 max_num_waveforms=np.inf):
-
     analyzer = Analyzer(recording, sorting)
 
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
@@ -25,7 +138,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
 
     # write params.py
     with open(join(output_folder, 'params.py'), 'w') as f:
-        f.write("dat_path ="  + "'" + join(output_folder, 'recording.dat') +"'" + '\n')
+        f.write("dat_path =" + "'" + join(output_folder, 'recording.dat') + "'" + '\n')
         f.write('n_channels_dat = ' + str(recording.getNumChannels()) + '\n')
         f.write("dtype = 'int16'\n")
         f.write('offset = 0\n')
@@ -75,18 +188,17 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         positions[:, 1] = np.arange(recording.getNumChannels())
 
     # pc_feature_ind.npy - [nTemplates, nPCFeatures] uint32
-    pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.getUnitIds()),1))
+    pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.getUnitIds()), 1))
 
     # similar_templates.npy - [nTemplates, nTemplates] single
     templates = analyzer.getUnitTemplate()
     similar_templates = _computeTemplatesSimilarity(templates)
 
     # templates.npy
-    templates = np.array(templates).swapaxes(1,2)
+    templates = np.array(templates).swapaxes(1, 2)
 
     # template_ind.npy
     templates_ind = np.tile(np.arange(recording.getNumChannels()), (len(sorting.getUnitIds()), 1))
-
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
@@ -129,22 +241,6 @@ def _computeChannelNoiseLevels(recording):
     return ret
 
 
-def computeUnitSNR(*, recording, sorting, unit_ids=None, **kwargs):
-    analyzer = Analyzer(recording, sorting)
-    if unit_ids is None:
-        unit_ids = sorting.getUnitIds()
-    channel_noise_levels = _computeChannelNoiseLevels(recording=recording)
-    if unit_ids is not None:
-        templates = analyzer.getUnitTemplate(unit_ids=unit_ids, **kwargs)
-    else:
-        templates = analyzer.getUnitTemplate(**kwargs)
-    ret = []
-    for template in templates:
-        snr = _computeTemplateSNR(template, channel_noise_levels)
-        ret.append(snr)
-    return ret
-
-
 def _computeTemplatesSimilarity(templates):
     similarity = np.zeros((len(templates), len(templates)))
     for i, t_i in enumerate(templates):
@@ -152,12 +248,12 @@ def _computeTemplatesSimilarity(templates):
             t_i_lin = t_i.reshape(t_i.shape[0] * t_i.shape[1])
             t_j_lin = t_j.reshape(t_j.shape[0] * t_j.shape[1])
             a = np.corrcoef(t_i_lin, t_j_lin)
-            similarity[i, j] = np.abs(a[0,1])
+            similarity[i, j] = np.abs(a[0, 1])
     return similarity
+
 
 def _computeWhiteningAndInverse(recording):
     white_recording = whiten(recording)
     wh_mat = white_recording._whitening_matrix
     wh_mat_inv = np.linalg.inv(wh_mat)
     return wh_mat, wh_mat_inv
-

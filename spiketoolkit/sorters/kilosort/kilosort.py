@@ -86,7 +86,7 @@ def kilosort(
         nchan, nchan, recording.getSamplingFrequency(), dat_file, Nfilt, nsamples, kilo_thresh
     )
     if 'location' in recording.getChannelPropertyNames():
-        positions = np.array([recording.getChannelProperty(chan, 'location') for chan in range(nchan)])
+        positions = np.array([recording.getChannelProperty(chan, 'location') for chan in recording.getChannelIds()])
         if electrode_dimensions is None:
             kilosort_channelmap = ''.join(kilosort_channelmap
                                           ).format(nchan,
