@@ -12,6 +12,7 @@ Its tools and functions are built using [spikeextractors](https://github.com/Spi
 
 <br/>
 <br/>
+
 ## Getting Started 
 
 To get started with SpikeToolkit, you can install it with pip:
