@@ -5,6 +5,7 @@ from sklearn.decomposition import PCA
 from spikeextractors.RecordingExtractor import RecordingExtractor
 from spikeextractors.SortingExtractor import SortingExtractor
 
+
 class Analyzer(object):
     '''A class that handles RecordingExtractor and SortingExtractor objects and performs
     standardized analysis and evaluation on spike sorting sorting.
@@ -13,6 +14,7 @@ class Analyzer(object):
         recording_extractor (RecordingExtractor)
         sorting_extractor (RecordingExtractor)
     '''
+
     def __init__(self, recording_extractor, sorting_extractor):
         '''No need to initalize the parent class with any parameters (unless we
         agree on a standard attribute every spike sorter needs)
@@ -33,7 +35,6 @@ class Analyzer(object):
         self._pcascores = {}
         self._maxchannels = {}
         self._params = {}
-
 
     def getRecordingExtractor(self):
         '''This function returns the recording extractor and allows tu call its methods
@@ -117,14 +118,14 @@ class Analyzer(object):
 
                 waveforms = np.zeros((len(spike_times), num_channels, num_spike_frames))
                 if verbose:
-                    print('Waveform ' + str(i+1) + '/' + str(len(unit_ids))
+                    print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids))
                           + ' - Number of waveforms: ', len(spike_times))
 
                 waveforms = self._get_random_spike_waveforms(unit=unit_ind,
                                                              max_num=max_num_waveforms,
                                                              snippet_len=n_pad)
-                waveforms = waveforms.swapaxes(0,2)
-                waveforms = waveforms.swapaxes(1,2)
+                waveforms = waveforms.swapaxes(0, 2)
+                waveforms = waveforms.swapaxes(1, 2)
 
                 # for t_i, t in enumerate(spike_times):
                 #     idx = np.where(times > t)[0]
@@ -149,7 +150,6 @@ class Analyzer(object):
             return waveform_list[0]
         else:
             return waveform_list
-
 
     def getUnitTemplate(self, unit_ids=None, **kwargs):
         '''
@@ -179,7 +179,7 @@ class Analyzer(object):
                 self._params.update(kwargs)
                 if unit_ind not in self._waveforms.keys():
                     self.getUnitWaveforms(unit_ind, **kwargs)
-                template = np.mean(self._waveforms[unit_ind], axis = 0)
+                template = np.mean(self._waveforms[unit_ind], axis=0)
                 self._templates[unit_ind] = template
                 template_list.append(template)
             else:
@@ -190,7 +190,6 @@ class Analyzer(object):
             return template_list[0]
         else:
             return template_list
-
 
     def getUnitMaxChannel(self, unit_ids=None, **kwargs):
         '''
@@ -219,7 +218,7 @@ class Analyzer(object):
                 if unit_ind not in self._templates.keys():
                     self.getUnitTemplate(unit_ind, **kwargs)
                 max_channel = np.unravel_index(np.argmax(np.abs(self._templates[i])),
-                                            self._templates[i].shape)[0]
+                                               self._templates[i].shape)[0]
                 self._maxchannels[unit_ind] = max_channel
                 max_list.append(max_channel)
             else:
@@ -230,7 +229,6 @@ class Analyzer(object):
             return max_list[0]
         else:
             return max_list
-
 
     def computePCAscores(self, n_comp=3, elec=False, max_num_waveforms=np.inf):
         '''
@@ -250,8 +248,8 @@ class Analyzer(object):
             if wf is None:
                 wf = self.getUnitWaveforms(self.sorting_extractor.getUnitIds()[i_w], verbose=True)
             if elec:
-                wf_reshaped = wf.reshape((wf.shape[0]*wf.shape[1], wf.shape[2]))
-                nspikes.append(len(wf)*self.recording_extractor.getNumChannels())
+                wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
+                nspikes.append(len(wf) * self.recording_extractor.getNumChannels())
             else:
                 wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
                 nspikes.append(len(wf))
@@ -268,27 +266,25 @@ class Analyzer(object):
         init = 0
         pca_scores = []
         for i_n, nsp in enumerate(nspikes):
-            pcascores = scores[init : init + nsp, :]
+            pcascores = scores[init: init + nsp, :]
             init = nsp + 1
             if elec:
-                pca_scores.append(pcascores.reshape(nsp//self.recording_extractor.getNumChannels(),
+                pca_scores.append(pcascores.reshape(nsp // self.recording_extractor.getNumChannels(),
                                                     self.recording_extractor.getNumChannels(), n_comp))
             else:
                 pca_scores.append(pcascores)
 
         return np.array(pca_scores)
 
-
     def _get_random_spike_waveforms(self, *, unit, max_num, snippet_len, channels=None):
-        st=self.sorting_extractor.getUnitSpikeTrain(unit_id=unit)
-        num_events=len(st)
-        if num_events>max_num:
-            event_indices=np.random.choice(range(num_events),size=max_num,replace=False)
+        st = self.sorting_extractor.getUnitSpikeTrain(unit_id=unit)
+        num_events = len(st)
+        if num_events > max_num:
+            event_indices = np.random.choice(range(num_events), size=max_num, replace=False)
         else:
-            event_indices=range(num_events)
+            event_indices = range(num_events)
 
-        spikes=self.recording_extractor.getSnippets(reference_frames=st[event_indices].astype(int),
-                                                    snippet_len=snippet_len, channel_ids=channels)
-        spikes=np.dstack(tuple(spikes))
+        spikes = self.recording_extractor.getSnippets(reference_frames=st[event_indices].astype(int),
+                                                      snippet_len=snippet_len, channel_ids=channels)
+        spikes = np.dstack(tuple(spikes))
         return spikes
-

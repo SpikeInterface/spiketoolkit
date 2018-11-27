@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-pkg_name="spiketoolkit"
+pkg_name = "spiketoolkit"
 
 setup(
     name=pkg_name,

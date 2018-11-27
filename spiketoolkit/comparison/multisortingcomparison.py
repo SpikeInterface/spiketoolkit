@@ -4,6 +4,7 @@ from scipy.optimize import linear_sum_assignment
 from .sortingcomparison import SortingComparison
 import networkx as nx
 
+
 class MultiSortingComparison():
     def __init__(self, sorting_list, name_list=None, delta_tp=10, minimum_accuracy=0.5):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
@@ -29,7 +30,7 @@ class MultiSortingComparison():
             comparison_ = []
             for j in range(len(self._sorting_list)):
                 if i != j:
-                    print("Comparing: ",  self._name_list[i], " and ", self._name_list[j])
+                    print("Comparing: ", self._name_list[i], " and ", self._name_list[j])
                     comparison_.append(SortingComparison(self._sorting_list[i], self._sorting_list[j],
                                                          sorting1_name=self._name_list[i],
                                                          sorting2_name=self._name_list[j],
@@ -79,8 +80,8 @@ class MultiSortingComparison():
                 avg_agr = 0
                 sorting_idxs = {sorter: unit}
                 self._new_units[unit_id] = {'matched_number': matched_num,
-                                         'avg_agreement': avg_agr,
-                                         'sorter_unit_ids': sorting_idxs}
+                                            'avg_agreement': avg_agr,
+                                            'sorter_unit_ids': sorting_idxs}
                 self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].getUnitSpikeTrain(unit))
                 unit_id += 1
                 # print("ADDING NODE (no match): ", n)
@@ -158,6 +159,7 @@ class MultiSortingComparison():
         ax.set_ylabel('Units', fontsize=20)
 
         return ax
+
 
 class AgreementSortingExtractor(se.SortingExtractor):
     def __init__(self, multisortingcomparison, min_agreement=0):

@@ -5,9 +5,9 @@ from os.path import join
 from spiketoolkit.sorters.tools import run_command_and_print_output
 
 
-def ironclust(*,
-              recording,  # Recording object
-              tmpdir,  # Temporary working directory
+def ironclust(recording,  # Recording object
+              prm_template_name,  # Name of the template file
+              output_folder=None,  # Temporary working directory
               detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
               adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
               detect_threshold=5,  # Threshold for detection
@@ -15,7 +15,6 @@ def ironclust(*,
               freq_min=300,  # Lower frequency limit for band-pass filter
               freq_max=6000,  # Upper frequency limit for band-pass filter
               pc_per_chan=3,  # Number of pc per channel
-              prm_template_name,  # Name of the template file
               ironclust_path=None
               ):
     try:
@@ -35,7 +34,7 @@ def ironclust(*,
                                   "git clone https://github.com/jamesjun/ironclust")
     source_dir = os.path.dirname(os.path.realpath(__file__))
 
-    dataset_dir = tmpdir + '/ironclust_dataset'
+    dataset_dir = output_folder + '/ironclust_dataset'
     # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
     se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
 
@@ -66,7 +65,7 @@ def ironclust(*,
     cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(ironclust_path, ironclust_path, ironclust_path)
     # "p_ironclust('$(tempdir)','$timeseries$','$geom$','$prm$','$firings_true$','$firings_out$','$(argfile)');"
     cmd_call = "p_ironclust('{}', '{}', '{}', '', '', '{}', '{}');" \
-        .format(tmpdir, dataset_dir + '/raw.mda', dataset_dir + '/geom.csv', tmpdir + '/firings.mda',
+        .format(output_folder, dataset_dir + '/raw.mda', dataset_dir + '/geom.csv', output_folder + '/firings.mda',
                 dataset_dir + '/argfile.txt')
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
@@ -76,7 +75,7 @@ def ironclust(*,
         raise Exception('IronClust returned a non-zero exit code')
 
     # parse output
-    result_fname = tmpdir + '/firings.mda'
+    result_fname = output_folder + '/firings.mda'
     if not os.path.exists(result_fname):
         raise Exception('Result file does not exist: ' + result_fname)
 

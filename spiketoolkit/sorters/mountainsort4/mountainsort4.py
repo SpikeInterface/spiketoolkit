@@ -4,6 +4,7 @@ import time
 
 def mountainsort4(
         recording,  # The recording extractor
+        output_folder=None,
         detect_sign=-1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         adjacency_radius=-1,  # Use -1 to include all channels in every neighborhood
         freq_min=300,  # Use None for no bandpass filtering

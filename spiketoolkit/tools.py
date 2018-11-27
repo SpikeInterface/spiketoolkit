@@ -20,6 +20,7 @@ class sortingThread(threading.Thread):
         self.recording = recording
         self.sorter = spikesorter
         self.kwargs = kwargs
+
     def run(self):
         print('Sorting ' + str(self.threadID) + ' with ' + self.sorter)
         if self.sorter == 'klusta':
@@ -54,7 +55,7 @@ def parallelSpikeSorting(recording_list, spikesorter, **kwargs):
             raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
         t_start = time.time()
         sorting_list = []
-        tmpdir_list  =[]
+        tmpdir_list = []
         threads = []
         for i, recording in enumerate(recording_list):
             tmpdir = tempfile.mkdtemp()
