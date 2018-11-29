@@ -55,7 +55,7 @@ recording = se.OpenEphysRecordingExtractor('path-to-open-ephys-folder')
 # run spike sorters (with default parameters)
 sorting_MS = st.sorters.mountainsort4(recording)
 sorting_SC = st.sorters.spyking_circus(recording)
-sorting_KS = st.sorters.kilosort(recording, kilosort_path='pat-to-kilosort-matlab-installation')
+sorting_KS = st.sorters.kilosort(recording, kilosort_path='path-to-kilosort-matlab-installation')
 ```
 
 Other parameters are exposed using arguments. In order to find out which parameters are available, you can these commands in ipython:
