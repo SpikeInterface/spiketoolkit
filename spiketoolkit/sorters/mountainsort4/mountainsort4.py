@@ -1,8 +1,44 @@
 import spiketoolkit as st
+from ..tools import _spikeSortByProperty
 import time
 
 
 def mountainsort4(
+        recording,  # The recording extractor
+        output_folder=None,
+        by_property=None,
+        detect_sign=-1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
+        adjacency_radius=-1,  # Use -1 to include all channels in every neighborhood
+        freq_min=300,  # Use None for no bandpass filtering
+        freq_max=6000,
+        whiten=True,  # Whether to do channel whitening as part of preprocessing
+        clip_size=50,
+        detect_threshold=3,
+        detect_interval=10,  # Minimum number of timepoints between events detected on the same channel
+        noise_overlap_threshold=0.15  # Use None for no automated curation
+):
+    t_start_proc = time.time()
+    if by_property is None:
+        sorting = _mountainsort4(recording, output_folder, detect_sign, adjacency_radius, freq_min, freq_max,
+                                 whiten, clip_size, detect_threshold, detect_interval, noise_overlap_threshold)
+    else:
+        if by_property in recording.getChannelPropertyNames():
+            sorting = _spikeSortByProperty(recording, 'mountainsort', by_property, output_folder=output_folder,
+                                           detect_sign=detect_sign, adjacency_radius=adjacency_radius,
+                                           freq_min=freq_min, freq_max=freq_max, whiten=whiten, clip_size=clip_size,
+                                           detect_threshold=detect_threshold, detect_interval=detect_interval,
+                                           noise_overlap_threshold=noise_overlap_threshold)
+        else:
+            print("Property not available! Running normal spike sorting")
+            sorting = _mountainsort4(recording, output_folder, detect_sign, adjacency_radius, freq_min, freq_max,
+                                     whiten, clip_size, detect_threshold, detect_interval, noise_overlap_threshold)
+
+    print('Elapsed time: ', time.time() - t_start_proc)
+
+    return sorting
+
+
+def _mountainsort4(
         recording,  # The recording extractor
         output_folder=None,
         detect_sign=-1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
@@ -22,16 +58,13 @@ def mountainsort4(
                                   "\npip install ml_ms4alg\n"
                                   "\nMore information on Mountainsort at: "
                                   "\nhttps://github.com/flatironinstitute/mountainsort")
-
-    t_start_proc = time.time()
-
     # Bandpass filter
     if freq_min is not None:
-        recording = st.filters.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max)
+        recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max)
 
     # Whiten
     if whiten:
-        recording = st.filters.whiten(recording=recording)
+        recording = st.preprocessing.whiten(recording=recording)
 
     # Sort
     sorting = ml_ms4alg.mountainsort4(
@@ -50,6 +83,5 @@ def mountainsort4(
             sorting=sorting,
             noise_overlap_threshold=noise_overlap_threshold
         )
-    print('Elapsed time: ', time.time() - t_start_proc)
 
     return sorting

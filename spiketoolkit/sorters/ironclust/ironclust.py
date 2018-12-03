@@ -2,11 +2,12 @@ import spikeextractors as se
 
 import os
 from os.path import join
-from spiketoolkit.sorters.tools import run_command_and_print_output
+from ..tools import _run_command_and_print_output, _spikeSortByProperty
 
 
 def ironclust(recording,  # Recording object
               prm_template_name,  # Name of the template file
+              by_property=None,
               output_folder=None,  # Temporary working directory
               detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
               adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
@@ -16,7 +17,40 @@ def ironclust(recording,  # Recording object
               freq_max=6000,  # Upper frequency limit for band-pass filter
               pc_per_chan=3,  # Number of pc per channel
               ironclust_path=None
-              ):
+):
+    t_start_proc = time.time()
+    if by_property is None:
+        sorting = _ironclust(recording, prm_template_name, output_folder, detect_sign, adjacency_radius,
+                             detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
+    else:
+        if by_property in recording.getChannelPropertyNames():
+            sorting = _spikeSortByProperty(recording, 'ironclust', by_property, prm_template_name=prm_template_name,
+                                           output_folder=output_folder, detect_sign=detect_sign,
+                                           adjacency_radius=adjacency_radius, detect_threshold=detect_threshold,
+                                           merge_thresh=merge_thresh, freq_min=freq_min, freq_max=freq_max,
+                                           pc_per_chan=pc_per_chan, ironclust_path=ironclust_path)
+        else:
+            print("Property not available! Running normal spike sorting")
+            sorting = _ironclust(recording, prm_template_name, output_folder, detect_sign, adjacency_radius,
+                                 detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
+
+    print('Elapsed time: ', time.time() - t_start_proc)
+
+    return sorting
+
+
+def _ironclust(recording,  # Recording object
+               prm_template_name,  # Name of the template file
+               output_folder=None,  # Temporary working directory
+               detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
+               adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
+               detect_threshold=5,  # Threshold for detection
+               merge_thresh=.98,  # Cluster merging threhold 0..1
+               freq_min=300,  # Lower frequency limit for band-pass filter
+               freq_max=6000,  # Upper frequency limit for band-pass filter
+               pc_per_chan=3,  # Number of pc per channel
+               ironclust_path=None
+               ):
     try:
         from mountainlab_pytools import mdaio
     except ModuleNotFoundError:

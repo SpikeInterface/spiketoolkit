@@ -16,6 +16,7 @@ setup(
         'numpy',
         'spikeextractors',
         'scikit-learn',
+        'scipy'
         'networkx'
     ],
     classifiers=(

@@ -1,7 +1,6 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 
-
 class CommonReferenceRecording(RecordingExtractor):
     def __init__(self, recording, reference='median', groups=None):
         '''
@@ -62,3 +61,9 @@ class CommonReferenceRecording(RecordingExtractor):
                                                                                start_frame=start_frame,
                                                                                end_frame=end_frame),
                                                      axis=0, keepdims=True) for split_group in self._groups]))
+
+
+def common_reference(recording, reference='median', groups=None):
+    return CommonReferenceRecording(
+        recording=recording, reference=reference, groups=groups
+    )

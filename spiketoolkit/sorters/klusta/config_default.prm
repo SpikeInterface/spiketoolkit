@@ -11,7 +11,7 @@ traces = dict(
 )
 
 spikedetekt = dict(
-	chunk_size_seconds=1,
+	chunk_size_seconds=3,
 	chunk_overlap_seconds=.015,
 
 	n_excerpts=50,

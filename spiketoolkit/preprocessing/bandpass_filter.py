@@ -1,7 +1,6 @@
 from .filterrecording import FilterRecording
 import numpy as np
-from scipy import special
-
+from scipy import special, signal
 
 class BandpassFilterRecording(FilterRecording):
     def __init__(self, *, recording, freq_min, freq_max, freq_wid):
@@ -77,10 +76,10 @@ class BandpassFilterRecording(FilterRecording):
         return ret
 
 
-def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000):
+def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, resample=None):
     return BandpassFilterRecording(
         recording=recording,
         freq_min=freq_min,
         freq_max=freq_max,
-        freq_wid=freq_wid
+        freq_wid=freq_wid,
     )

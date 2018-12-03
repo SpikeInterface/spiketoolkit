@@ -3,24 +3,77 @@ import os
 import time
 import numpy as np
 from os.path import join
-from spiketoolkit.sorters.tools import run_command_and_print_output, call_command
+from ..tools import _run_command_and_print_output, _call_command, _spikeSortByProperty
 
 
 def kilosort(
         recording,
+        output_folder=None,
+        by_property=None,
         kilosort_path=None,
         npy_matlab_path=None,
-        output_folder=None,
         useGPU=False,
         probe_file=None,
         file_name=None,
-        spike_thresh=4,
+        detect_threshold=4,
         electrode_dimensions=None
 ):
-    if kilosort_path is None:
-        kilosort_path = os.getenv('KILOSORT_PATH', None)
-    if npy_matlab_path is None:
-        npy_matlab_path = os.getenv('NPY_MATLAB_PATH', None)
+    '''
+
+    Parameters
+    ----------
+    recording
+    output_folder
+    by_property
+    kilosort_path
+    npy_matlab_path
+    useGPU
+    probe_file
+    file_name
+    detect_threshold
+    electrode_dimensions
+
+    Returns
+    -------
+
+    '''
+    print(kilosort_path)
+    t_start_proc = time.time()
+    if by_property is None:
+        sorting = _kilosort(recording, output_folder, kilosort_path, npy_matlab_path, useGPU, probe_file, file_name,
+                            detect_threshold, electrode_dimensions)
+    else:
+        if by_property in recording.getChannelPropertyNames():
+            sorting = _spikeSortByProperty(recording, 'kilosort', by_property, output_folder=output_folder,
+                                           kilosort_path=kilosort_path, npy_matlab_path=npy_matlab_path,
+                                           useGPU=useGPU, probe_file=probe_file, file_name=file_name,
+                                           detect_threshold=detect_threshold,
+                                           electrode_dimensions=electrode_dimensions)
+        else:
+            print("Property not available! Running normal spike sorting")
+            sorting = _kilosort(recording, output_folder, kilosort_path, npy_matlab_path, useGPU, probe_file, file_name,
+                                detect_threshold, electrode_dimensions)
+
+    print('Elapsed time: ', time.time() - t_start_proc)
+
+    return sorting
+
+
+def _kilosort(
+        recording,
+        output_folder=None,
+        kilosort_path=None,
+        npy_matlab_path=None,
+        useGPU=False,
+        probe_file=None,
+        file_name=None,
+        detect_threshold=4,
+        electrode_dimensions=None
+):
+    if kilosort_path is None or kilosort_path=='None':
+        kilosort_path = os.getenv('KILOSORT_PATH')
+    if npy_matlab_path is None or npy_matlab_path=='None':
+        npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
     if not os.path.isfile(join(kilosort_path, 'preprocessData.m')) \
             or not os.path.isfile(join(npy_matlab_path, 'readNPY.m')):
         raise ModuleNotFoundError("\nTo use KiloSort, install KiloSort and npy-matlab from sources: \n\n"
@@ -33,11 +86,11 @@ def kilosort(
                                   "\nhttps://github.com/cortex-lab/KiloSort")
 
     source_dir = os.path.dirname(os.path.realpath(__file__))
-
+    print(output_folder)
     if output_folder is None:
-        output_folder = os.path.abspath('kilosort')
+        output_folder = os.path.abspath('./kilosort')
     else:
-        output_folder = os.path.abspath(join(output_folder, 'kilosort'))
+        output_folder = os.path.abspath(output_folder)
 
     if not os.path.isdir(output_folder):
         os.makedirs(output_folder)
@@ -64,8 +117,8 @@ def kilosort(
         kilosort_channelmap = f.readlines()
 
     nchan = recording.getNumChannels()
-    dat_file = file_name + '.dat'
-    kilo_thresh = spike_thresh
+    dat_file = os.path.abspath(join(output_folder, file_name + '.dat'))
+    kilo_thresh = detect_threshold
     Nfilt = (nchan // 32) * 32 * 8
     if Nfilt == 0:
         Nfilt = nchan * 8
@@ -117,14 +170,12 @@ def kilosort(
 
     # start sorting with kilosort
     print('Running KiloSort')
-    t_start_proc = time.time()
     cmd = 'matlab -nosplash -nodisplay -r "run {}; quit;"'.format(join(output_folder, 'kilosort_master.m'))
     print(cmd)
-    call_command(cmd)
+    _call_command(cmd)
     # retcode = run_command_and_print_output(cmd)
     # if retcode != 0:
     #     raise Exception('KiloSort returned a non-zero exit code')
-    print('Elapsed time: ', time.time() - t_start_proc)
 
     sorting = se.KiloSortSortingExtractor(join(output_folder))
     return sorting
