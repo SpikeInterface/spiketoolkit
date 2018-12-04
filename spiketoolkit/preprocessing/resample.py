@@ -7,6 +7,7 @@ class ResampledRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate
+        self.copyChannelProperties(recording)
 
     def getSamplingFrequency(self):
         return self._resample_rate

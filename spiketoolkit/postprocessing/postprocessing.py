@@ -79,7 +79,9 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, start_frame=None, end_fr
                     features[ind] = waveforms[i]
             else:
                 features = waveforms
+            #TODO fix this
             sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
+            loaded_feat = sorting.getUnitSpikeFeatures(unit_id, 'waveforms')
         # print('append feats: ', time.time() - ts_)
         waveform_list.append(waveforms)
         # print('append wf: ', time.time() - ts_)

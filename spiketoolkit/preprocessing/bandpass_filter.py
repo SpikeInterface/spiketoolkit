@@ -9,6 +9,7 @@ class BandpassFilterRecording(FilterRecording):
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
+        self.copyChannelProperties(recording)
 
     def filterChunk(self, *, start_frame, end_frame):
         padding = 3000

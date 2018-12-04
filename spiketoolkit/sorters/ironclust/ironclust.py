@@ -3,10 +3,11 @@ import spikeextractors as se
 import os
 from os.path import join
 from ..tools import _run_command_and_print_output, _spikeSortByProperty
+import time
 
 
 def ironclust(recording,  # Recording object
-              prm_template_name,  # Name of the template file
+              prm_template_name=None,  # Name of the template file
               by_property=None,
               output_folder=None,  # Temporary working directory
               detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
@@ -68,7 +69,16 @@ def _ironclust(recording,  # Recording object
                                   "git clone https://github.com/jamesjun/ironclust")
     source_dir = os.path.dirname(os.path.realpath(__file__))
 
-    dataset_dir = output_folder + '/ironclust_dataset'
+    if output_folder is None:
+        dataset_dir = './ironclust_dataset'
+        output_folder = '.'
+    else:
+        dataset_dir = join(output_folder, 'ironclust_dataset')
+        if not os.path.isdir(dataset_dir):
+            os.makedirs(dataset_dir)
+    dataset_dir = os.path.abspath(dataset_dir)
+    output_folder = os.path.abspath(output_folder)
+
     # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
     se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
 
@@ -103,7 +113,7 @@ def _ironclust(recording,  # Recording object
                 dataset_dir + '/argfile.txt')
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
-    retcode = run_command_and_print_output(cmd)
+    retcode = _run_command_and_print_output(cmd)
 
     if retcode != 0:
         raise Exception('IronClust returned a non-zero exit code')

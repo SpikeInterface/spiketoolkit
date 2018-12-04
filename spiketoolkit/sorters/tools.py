@@ -4,15 +4,19 @@ import tempfile
 import shutil
 import threading
 import spikeextractors as se
+import os
+from copy import copy
 
 
 class sortingThread(threading.Thread):
-    def __init__(self, threadID, recording, spikesorter, **kwargs):
+    def __init__(self, threadID, recording, spikesorter, output_folder=None, **kwargs):
         threading.Thread.__init__(self)
         self.threadID = threadID
         self.recording = recording
         self.sorter = spikesorter
         self.kwargs = kwargs
+        self.kwargs['output_folder'] = output_folder
+        print("Thread: ", self.kwargs['output_folder'])
 
     def run(self):
         from .mountainsort4 import mountainsort4
@@ -70,6 +74,7 @@ def _parallelSpikeSorting(recording_list, spikesorter, **kwargs):
     -------
 
     '''
+    output_folder = copy(kwargs['output_folder'])
     if len(recording_list) > 1:
         if not isinstance(recording_list[0], se.RecordingExtractor):
             raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
@@ -77,14 +82,19 @@ def _parallelSpikeSorting(recording_list, spikesorter, **kwargs):
         tmpdir_list = []
         threads = []
         for i, recording in enumerate(recording_list):
+            kwargs_copy = copy(kwargs)
             tmpdir = tempfile.mkdtemp()
             tmpdir_list.append(tmpdir)
-            if kwargs['output_folder'] is None:
-                kwargs['output_folder']=os.path.abspath('.' + tmpdir)
-                threads.append(sortingThread(i, recording, spikesorter, **kwargs))
+            if output_folder is None:
+                tmpdir = os.path.abspath('.' + tmpdir)
+                # avoid passing output_folder twice
+                if 'output_folder' in kwargs_copy.keys():
+                    del kwargs_copy['output_folder']
+                threads.append(sortingThread(threadID=i, recording=recording, spikesorter=spikesorter,
+                                             output_folder=tmpdir, **kwargs_copy))
             else:
-                threads.append(sortingThread(i, recording, spikesorter, **kwargs))
-
+                kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + str(i)
+                threads.append(sortingThread(i, recording, spikesorter, **kwargs_copy))
         for t in threads:
             t.start()
         for t in threads:

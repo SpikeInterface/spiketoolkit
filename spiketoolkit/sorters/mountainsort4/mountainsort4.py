@@ -66,6 +66,11 @@ def _mountainsort4(
     if whiten:
         recording = st.preprocessing.whiten(recording=recording)
 
+    # Check location
+    if 'location' not in recording.getChannelPropertyNames():
+        for i, chan in enumerate(recording.getChannelIds()):
+            recording.setChannelProperty(chan, 'location', [0, i])
+
     # Sort
     sorting = ml_ms4alg.mountainsort4(
         recording=recording,
