@@ -7,6 +7,7 @@ def mountainsort4(
         recording,  # The recording extractor
         output_folder=None,
         by_property=None,
+        parallel=False,
         detect_sign=-1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         adjacency_radius=-1,  # Use -1 to include all channels in every neighborhood
         freq_min=300,  # Use None for no bandpass filtering
@@ -23,7 +24,7 @@ def mountainsort4(
                                  whiten, clip_size, detect_threshold, detect_interval, noise_overlap_threshold)
     else:
         if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'mountainsort', by_property, output_folder=output_folder,
+            sorting = _spikeSortByProperty(recording, 'mountainsort', by_property, parallel, output_folder=output_folder,
                                            detect_sign=detect_sign, adjacency_radius=adjacency_radius,
                                            freq_min=freq_min, freq_max=freq_max, whiten=whiten, clip_size=clip_size,
                                            detect_threshold=detect_threshold, detect_interval=detect_interval,

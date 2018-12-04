@@ -62,7 +62,7 @@ def _call_command(command):
         raise Exception(e.output)
 
 
-def _parallelSpikeSorting(recording_list, spikesorter, **kwargs):
+def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
     '''
 
     Parameters
@@ -93,12 +93,15 @@ def _parallelSpikeSorting(recording_list, spikesorter, **kwargs):
                 threads.append(sortingThread(threadID=i, recording=recording, spikesorter=spikesorter,
                                              output_folder=tmpdir, **kwargs_copy))
             else:
-                kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + str(i)
+                kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + '_' + str(i)
                 threads.append(sortingThread(i, recording, spikesorter, **kwargs_copy))
         for t in threads:
             t.start()
-        for t in threads:
-            t.join()
+            if not parallel:
+                t.join()
+        if parallel:
+            for t in threads:
+                t.join()
         for t in threads:
             sorting_list.append(t.sorting)
         for tmp in tmpdir_list:
@@ -108,7 +111,7 @@ def _parallelSpikeSorting(recording_list, spikesorter, **kwargs):
     return sorting_list
 
 
-def _spikeSortByProperty(recording, spikesorter, property, **kwargs):
+def _spikeSortByProperty(recording, spikesorter, property, parallel, **kwargs):
     '''
 
     Parameters
@@ -122,7 +125,7 @@ def _spikeSortByProperty(recording, spikesorter, property, **kwargs):
 
     '''
     recording_list = se.getSubExtractorsByProperty(recording, property)
-    sorting_list = _parallelSpikeSorting(recording_list, spikesorter, **kwargs)
+    sorting_list = _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs)
     # add group property
     for i, sorting in enumerate(sorting_list):
         group = recording_list[i].getChannelProperty(recording_list[i].getChannelIds()[0], 'group')

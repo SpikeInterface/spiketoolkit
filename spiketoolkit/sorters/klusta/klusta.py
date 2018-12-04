@@ -9,6 +9,7 @@ def klusta(
         recording,  # The recording extractor
         output_folder=None,
         by_property=None,
+        parallel=False,
         probe_file=None,
         file_name=None,
         threshold_strong_std_factor=5,
@@ -49,7 +50,8 @@ def klusta(
                           n_features_per_channel, pca_n_waveforms_max, num_starting_clusters)
     else:
         if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'klusta', by_property, output_folder=output_folder,
+            sorting = _spikeSortByProperty(recording, 'klusta', by_property, parallel,
+                                           output_folder=output_folder,
                                            probe_file=probe_file, file_name=file_name,
                                            threshold_strong_std_factor=threshold_strong_std_factor,
                                            threshold_weak_std_factor=threshold_weak_std_factor,

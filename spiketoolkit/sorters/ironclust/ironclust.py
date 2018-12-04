@@ -9,6 +9,7 @@ import time
 def ironclust(recording,  # Recording object
               prm_template_name=None,  # Name of the template file
               by_property=None,
+              parallel=False,
               output_folder=None,  # Temporary working directory
               detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
               adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
@@ -25,7 +26,8 @@ def ironclust(recording,  # Recording object
                              detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
     else:
         if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'ironclust', by_property, prm_template_name=prm_template_name,
+            sorting = _spikeSortByProperty(recording, 'ironclust', by_property, parallel,
+                                           prm_template_name=prm_template_name,
                                            output_folder=output_folder, detect_sign=detect_sign,
                                            adjacency_radius=adjacency_radius, detect_threshold=detect_threshold,
                                            merge_thresh=merge_thresh, freq_min=freq_min, freq_max=freq_max,

@@ -11,6 +11,7 @@ def spyking_circus(
         recording,
         output_folder=None,  # Temporary working directory
         by_property=None,
+        parallel=False,
         probe_file=None,
         file_name=None,
         detect_sign=-1,  # -1 - 1 - 0
@@ -55,7 +56,8 @@ def spyking_circus(
                                   electrode_dimensions, whitening_max_elts, clustering_max_elts)
     else:
         if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'spyking-circus', by_property, output_folder=output_folder,
+            sorting = _spikeSortByProperty(recording, 'spyking-circus', by_property, parallel,
+                                           output_folder=output_folder,
                                            probe_file=probe_file, file_name=file_name, detect_sign=detect_sign,
                                            adjacency_radius=adjacency_radius, detect_threshold=detect_threshold,
                                            template_width_ms=template_width_ms, filter=filter,

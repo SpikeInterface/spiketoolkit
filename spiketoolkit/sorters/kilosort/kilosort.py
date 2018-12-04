@@ -10,6 +10,7 @@ def kilosort(
         recording,
         output_folder=None,
         by_property=None,
+        parallel=False,
         kilosort_path=None,
         npy_matlab_path=None,
         useGPU=False,
@@ -44,7 +45,7 @@ def kilosort(
                             detect_threshold, electrode_dimensions)
     else:
         if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'kilosort', by_property, output_folder=output_folder,
+            sorting = _spikeSortByProperty(recording, 'kilosort', by_property, parallel, output_folder=output_folder,
                                            kilosort_path=kilosort_path, npy_matlab_path=npy_matlab_path,
                                            useGPU=useGPU, probe_file=probe_file, file_name=file_name,
                                            detect_threshold=detect_threshold,
