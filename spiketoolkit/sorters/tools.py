@@ -5,7 +5,8 @@ import shutil
 import threading
 import spikeextractors as se
 from pathlib import Path
-import os
+import platform
+import sys
 from copy import copy
 
 
@@ -42,7 +43,8 @@ class sortingThread(threading.Thread):
 
 
 def _run_command_and_print_output(command):
-    with Popen(shlex.split(command), stdout=PIPE, stderr=PIPE) as process:
+    command_list = shlex.split(command, posix="win" not in sys.platform)
+    with Popen(command_list, stdout=PIPE, stderr=PIPE) as process:
         while True:
             output_stdout = process.stdout.readline()
             output_stderr = process.stderr.readline()
@@ -57,8 +59,9 @@ def _run_command_and_print_output(command):
 
 
 def _call_command(command):
+    command_list = shlex.split(command, posix="win" not in sys.platform)
     try:
-        call(shlex.split(command))
+        call(command_list)
     except CalledProcessError as e:
         raise Exception(e.output)
 

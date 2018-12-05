@@ -1,6 +1,6 @@
 
-experiment_name = '{}'
-prb_file = '{}'
+experiment_name = r"{}"
+prb_file = r"{}"
 
 traces = dict(
 	raw_data_files=[experiment_name + '.dat'],
