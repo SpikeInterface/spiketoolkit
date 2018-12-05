@@ -1,9 +1,8 @@
 import spikeextractors as se
-
 import os
 import time
 import numpy as np
-from os.path import join
+from pathlib import Path
 from ..tools import _run_command_and_print_output, _spikeSortByProperty
 
 
@@ -101,28 +100,25 @@ def _spyking_circus(
                                   "\nsudo apt install libopenmpi-dev"
                                   "\nMore information on Spyking-Circus at: "
                                   "\nhttps://spyking-circus.readthedocs.io/en/latest/")
-    source_dir = os.path.dirname(os.path.realpath(__file__))
-
+    source_dir = Path(__file__).parent
     if output_folder is None:
-        output_folder = './spyking_circus'
-    output_folder = os.path.abspath(output_folder)
-
-    if not os.path.isdir(output_folder):
-        os.makedirs(output_folder)
-
-    print('Merge spikes: ', merge_spikes)
+        output_folder = Path('spyking_circus')
+    else:
+        output_folder = Path(output_folder)
+    if not output_folder.is_dir():
+        output_folder.mkdir()
 
     # save prb file:
     if probe_file is None:
-        se.saveProbeFile(recording, join(output_folder, 'probe.prb'), format='spyking_circus', radius=adjacency_radius,
+        probe_file = output_folder / 'probe.prb'
+        se.saveProbeFile(recording, probe_file, format='spyking_circus', radius=adjacency_radius,
                          dimensions=electrode_dimensions)
-        probe_file = join(output_folder, 'probe.prb')
     # save binary file
     if file_name is None:
-        file_name = 'recording'
-    elif file_name.endswith('.npy'):
-        file_name = file_name[file_name.find('.npy')]
-    np.save(join(output_folder, file_name), recording.getTraces().astype('float32'))
+        file_name = Path('recording')
+    elif file_name.suffix == '.npy':
+        file_name = file_name.stem
+    np.save(output_folder / file_name, recording.getTraces().astype('float32'))
 
     if detect_sign < 0:
         detect_sign = 'negative'
@@ -132,7 +128,7 @@ def _spyking_circus(
         detect_sign = 'both'
 
     # set up spykingcircus config file
-    with open(join(source_dir, 'config_default.params'), 'r') as f:
+    with (source_dir / 'config_default.params').open('r') as f:
         circus_config = f.readlines()
     if merge_spikes:
         auto = 1e-5
@@ -142,15 +138,15 @@ def _spyking_circus(
         float(recording.getSamplingFrequency()), probe_file, template_width_ms, detect_threshold, detect_sign, filter,
         whitening_max_elts, clustering_max_elts, auto
     )
-    with open(join(output_folder, file_name + '.params'), 'w') as f:
+    with (output_folder / (file_name.name + '.params')).open('w') as f:
         f.writelines(circus_config)
 
     print('Running spyking circus...')
     if n_cores is None:
         n_cores = np.maximum(1, int(os.cpu_count() / 2))
 
-    cmd = 'spyking-circus {} -c {} '.format(join(output_folder, file_name + '.npy'), n_cores)
-    cmd_merge = 'spyking-circus {} -m merging -c {} '.format(join(output_folder, file_name + '.npy'), n_cores)
+    cmd = 'spyking-circus {} -c {} '.format(output_folder / (file_name.name + '.npy'), n_cores)
+    cmd_merge = 'spyking-circus {} -m merging -c {} '.format(output_folder / (file_name.name + '.npy'), n_cores)
     # cmd_convert = 'spyking-circus {} -m converting'.format(join(output_folder, file_name+'.npy'))
     print(cmd)
     retcode = _run_command_and_print_output(cmd)
@@ -161,6 +157,6 @@ def _spyking_circus(
         retcode = _run_command_and_print_output(cmd_merge)
         if retcode != 0:
             raise Exception('Spyking circus merging returned a non-zero exit code')
-    sorting = se.SpykingCircusSortingExtractor(join(output_folder, file_name))
+    sorting = se.SpykingCircusSortingExtractor(output_folder / file_name)
 
     return sorting

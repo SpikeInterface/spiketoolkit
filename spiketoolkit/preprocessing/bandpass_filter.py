@@ -1,6 +1,6 @@
 from .filterrecording import FilterRecording
 import numpy as np
-from scipy import special, signal
+from scipy import special
 
 class BandpassFilterRecording(FilterRecording):
     def __init__(self, *, recording, freq_min, freq_max, freq_wid):

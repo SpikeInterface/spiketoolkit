@@ -1,6 +1,5 @@
 import spikeextractors as se
-import os
-from os.path import join
+from pathlib import Path
 import time
 from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty
 
@@ -94,25 +93,24 @@ def _klusta(
                                   "\nMore information on klusta at: "
                                   "\nhttps://github.com/kwikteam/phy"
                                   "\nhttps://github.com/kwikteam/klusta")
-    source_dir = os.path.dirname(os.path.realpath(__file__))
-
+    source_dir = Path(__file__).parent
     if output_folder is None:
-        output_folder = './klusta'
-    output_folder = os.path.abspath(output_folder)
-
-    if not os.path.isdir(output_folder):
-        os.makedirs(output_folder)
+        output_folder = Path('klusta')
+    else:
+        output_folder = Path(output_folder)
+    if not output_folder.is_dir():
+        output_folder.mkdir()
 
     # save prb file:
     if probe_file is None:
-        se.saveProbeFile(recording, join(output_folder, 'probe.prb'), format='klusta')
-        probe_file = join(output_folder, 'probe.prb')
+        probe_file = output_folder / 'probe.prb'
+        se.saveProbeFile(recording, probe_file, format='klusta')
     # save binary file
     if file_name is None:
-        file_name = 'recording'
-    elif file_name.endswith('.dat'):
-        file_name = file_name[file_name.find('.dat')]
-    se.writeBinaryDatFormat(recording, join(output_folder, file_name))
+        file_name = Path('recording')
+    elif file_name.suffix == '.dat':
+        file_name = file_name.stem
+    se.writeBinaryDatFormat(recording, output_folder / file_name)
 
     if detect_sign < 0:
         detect_sign = 'negative'
@@ -122,27 +120,27 @@ def _klusta(
         detect_sign = 'both'
 
     # set up klusta config file
-    with open(join(source_dir, 'config_default.prm'), 'r') as f:
+    with (source_dir / 'config_default.prm').open('r') as f:
         klusta_config = f.readlines()
 
     klusta_config = ''.join(klusta_config).format(
-        join(output_folder, file_name), probe_file, float(recording.getSamplingFrequency()), recording.getNumChannels(),
+        output_folder / file_name, probe_file, float(recording.getSamplingFrequency()), recording.getNumChannels(),
         "'float32'",
         threshold_strong_std_factor, threshold_weak_std_factor, "'" + detect_sign + "'", extract_s_before,
         extract_s_after,
         n_features_per_channel, pca_n_waveforms_max, num_starting_clusters
     )
 
-    with open(join(output_folder, 'config.prm'), 'w') as f:
+    with (output_folder /'config.prm').open('w') as f:
         f.writelines(klusta_config)
 
     print('Running Klusta')
-    cmd = 'klusta {} --overwrite'.format(join(output_folder, 'config.prm'))
+    cmd = 'klusta {} --overwrite'.format(output_folder /'config.prm')
     print(cmd)
     retcode = _run_command_and_print_output(cmd)
     if retcode != 0:
         raise Exception('Klusta returned a non-zero exit code')
 
-    sorting = se.KlustaSortingExtractor(join(output_folder, file_name + '.kwik'))
+    sorting = se.KlustaSortingExtractor(output_folder / (file_name.name + '.kwik'))
 
     return sorting

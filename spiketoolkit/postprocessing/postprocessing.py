@@ -2,9 +2,6 @@ import numpy as np
 import spiketoolkit as st
 import spikeextractors as se
 from sklearn.decomposition import PCA
-
-from spikeextractors import RecordingExtractor
-from spikeextractors import SortingExtractor
 import time
 
 

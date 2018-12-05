@@ -4,6 +4,7 @@ import tempfile
 import shutil
 import threading
 import spikeextractors as se
+from pathlib import Path
 import os
 from copy import copy
 
@@ -58,7 +59,7 @@ def _run_command_and_print_output(command):
 def _call_command(command):
     try:
         call(shlex.split(command))
-    except subprocess.CalledProcessError as e:
+    except CalledProcessError as e:
         raise Exception(e.output)
 
 
@@ -75,39 +76,38 @@ def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
 
     '''
     output_folder = copy(kwargs['output_folder'])
-    if len(recording_list) > 1:
-        if not isinstance(recording_list[0], se.RecordingExtractor):
-            raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
-        sorting_list = []
-        tmpdir_list = []
-        threads = []
-        for i, recording in enumerate(recording_list):
-            kwargs_copy = copy(kwargs)
-            tmpdir = tempfile.mkdtemp()
-            tmpdir_list.append(tmpdir)
-            if output_folder is None:
-                tmpdir = os.path.abspath('.' + tmpdir)
-                # avoid passing output_folder twice
-                if 'output_folder' in kwargs_copy.keys():
-                    del kwargs_copy['output_folder']
-                threads.append(sortingThread(threadID=i, recording=recording, spikesorter=spikesorter,
-                                             output_folder=tmpdir, **kwargs_copy))
-            else:
-                kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + '_' + str(i)
-                threads.append(sortingThread(i, recording, spikesorter, **kwargs_copy))
+    if len(recording_list) == 1:
+        print("Only 1 property found!")
+    if not isinstance(recording_list[0], se.RecordingExtractor):
+        raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
+    sorting_list = []
+    tmpdir_list = []
+    threads = []
+    for i, recording in enumerate(recording_list):
+        kwargs_copy = copy(kwargs)
+        tmpdir = tempfile.mkdtemp()
+        tmpdir_list.append(tmpdir)
+        if output_folder is None:
+            tmpdir = Path(tmpdir).absolute()
+            # avoid passing output_folder twice
+            if 'output_folder' in kwargs_copy.keys():
+                del kwargs_copy['output_folder']
+            threads.append(sortingThread(threadID=i, recording=recording, spikesorter=spikesorter,
+                                         output_folder=tmpdir, **kwargs_copy))
+        else:
+            kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + '_' + str(i)
+            threads.append(sortingThread(i, recording, spikesorter, **kwargs_copy))
+    for t in threads:
+        t.start()
+        if not parallel:
+            t.join()
+    if parallel:
         for t in threads:
-            t.start()
-            if not parallel:
-                t.join()
-        if parallel:
-            for t in threads:
-                t.join()
-        for t in threads:
-            sorting_list.append(t.sorting)
-        for tmp in tmpdir_list:
-            shutil.rmtree(tmp)
-    else:
-        raise ValueError("'recording_list' must have more than 1 element")
+            t.join()
+    for t in threads:
+        sorting_list.append(t.sorting)
+    for tmp in tmpdir_list:
+        shutil.rmtree(tmp)
     return sorting_list
 
 
