@@ -11,6 +11,7 @@ def klusta(
         parallel=False,
         probe_file=None,
         file_name=None,
+        adjacency_radius=None,
         threshold_strong_std_factor=5,
         threshold_weak_std_factor=2,
         detect_sign=-1,
@@ -44,7 +45,7 @@ def klusta(
     '''
     t_start_proc = time.time()
     if by_property is None:
-        sorting = _klusta(recording, output_folder, probe_file, file_name, threshold_strong_std_factor,
+        sorting = _klusta(recording, output_folder, probe_file, file_name, adjacency_radius, threshold_strong_std_factor,
                           threshold_weak_std_factor, detect_sign, extract_s_before, extract_s_after,
                           n_features_per_channel, pca_n_waveforms_max, num_starting_clusters)
     else:
@@ -52,6 +53,7 @@ def klusta(
             sorting = _spikeSortByProperty(recording, 'klusta', by_property, parallel,
                                            output_folder=output_folder,
                                            probe_file=probe_file, file_name=file_name,
+                                           adjacency_radius=adjacency_radius,
                                            threshold_strong_std_factor=threshold_strong_std_factor,
                                            threshold_weak_std_factor=threshold_weak_std_factor,
                                            detect_sign=detect_sign, extract_s_before=extract_s_before,
@@ -61,7 +63,8 @@ def klusta(
                                            num_starting_clusters=num_starting_clusters)
         else:
             print("Property not available! Running normal spike sorting")
-            sorting = _klusta(recording, output_folder, probe_file, file_name, threshold_strong_std_factor,
+            sorting = _klusta(recording, output_folder, probe_file, file_name, adjacency_radius,
+                              threshold_strong_std_factor,
                               threshold_weak_std_factor, detect_sign, extract_s_before, extract_s_after,
                               n_features_per_channel, pca_n_waveforms_max, num_starting_clusters)
 
@@ -75,6 +78,7 @@ def _klusta(
         output_folder=None,
         probe_file=None,
         file_name=None,
+        adjacency_radius=None,
         threshold_strong_std_factor=5,
         threshold_weak_std_factor=2,
         detect_sign=-1,
@@ -105,6 +109,7 @@ def _klusta(
     if probe_file is None:
         probe_file = output_folder / 'probe.prb'
         se.saveProbeFile(recording, probe_file, format='klusta')
+
     # save binary file
     if file_name is None:
         file_name = Path('recording')
