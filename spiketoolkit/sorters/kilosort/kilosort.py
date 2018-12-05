@@ -73,9 +73,15 @@ def _kilosort(
         electrode_dimensions=None
 ):
     if kilosort_path is None or kilosort_path=='None':
-        kilosort_path = Path(os.getenv('KILOSORT_PATH'))
+        klp = os.getenv('KILOSORT_PATH')
+        if klp.startswith('"'):
+            klp = klp[1:-1]
+        kilosort_path = Path(klp)
     if npy_matlab_path is None or npy_matlab_path=='None':
-        npy_matlab_path = Path(os.getenv('NPY_MATLAB_PATH'))
+        npp = os.getenv('NPY_MATLAB_PATH')
+        if npp.startswith('"'):
+            npp = npp[1:-1]
+        npy_matlab_path = Path(npp)
     if not (kilosort_path / 'preprocessData.m').is_file() \
             or not (npy_matlab_path / 'npy-matlab' / 'readNPY.m').is_file():
         raise ModuleNotFoundError("\nTo use KiloSort, install KiloSort and npy-matlab from sources: \n\n"

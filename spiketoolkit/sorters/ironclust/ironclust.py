@@ -61,7 +61,10 @@ def _ironclust(recording,  # Recording object
                                   "and clone the repo:\n"
                                   "git clone https://github.com/jamesjun/ironclust")
     if ironclust_path is None:
-        ironclust_path = Path(os.getenv('IRONCLUST_PATH', None))
+        icp = os.getenv('IRONCLUST_PATH', None)
+        if icp.startswith('"'):
+            icp = icp[1:-1]
+        ironclust_path = Path(icp)
     if not ironclust_path:
         raise Exception(
             'You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
