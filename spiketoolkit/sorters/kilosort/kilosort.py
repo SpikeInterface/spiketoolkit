@@ -1,10 +1,11 @@
 import spikeextractors as se
-import os
+import os, sys
 import time
 import numpy as np
 from pathlib import Path
 from os.path import join
-from ..tools import _run_command_and_print_output, _call_command, _spikeSortByProperty
+from ..tools import _run_command_and_print_output, _run_command_and_print_output_split,\
+    _call_command, _call_command_split, _spikeSortByProperty
 
 
 def kilosort(
@@ -39,7 +40,6 @@ def kilosort(
     -------
 
     '''
-    print(kilosort_path)
     t_start_proc = time.time()
     if by_property is None:
         sorting = _kilosort(recording, output_folder, kilosort_path, npy_matlab_path, useGPU, probe_file, file_name,
@@ -99,6 +99,7 @@ def _kilosort(
         output_folder = Path(output_folder)
     if not output_folder.is_dir():
         output_folder.mkdir()
+    output_folder = output_folder.absolute()
 
     # save binary file
     if file_name is None:
@@ -174,12 +175,16 @@ def _kilosort(
 
     # start sorting with kilosort
     print('Running KiloSort')
-    cmd = 'matlab -nosplash -nodisplay -r "run {}; quit;"'.format(output_folder / 'kilosort_master.m')
+    cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
     print(cmd)
-    _call_command(cmd)
-    # retcode = run_command_and_print_output(cmd)
-    # if retcode != 0:
-    #     raise Exception('KiloSort returned a non-zero exit code')
-
+    if sys.platform == "win":
+        cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
+                    '-r','run {}; quit;'.format(output_folder / 'kilosort_master.m')]
+    else:
+        cmd_list = ['matlab', '-nosplash', '-nodisplay',
+                    '-r', 'run {}; quit;'.format(output_folder / 'kilosort_master.m')]
+    retcode = _run_command_and_print_output_split(cmd_list)
+    if retcode != 0:
+        raise Exception('KiloSort returned a non-zero exit code')
     sorting = se.KiloSortSortingExtractor(output_folder)
     return sorting
