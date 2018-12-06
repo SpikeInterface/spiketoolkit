@@ -184,7 +184,7 @@ def _kilosort(
         cmd_list = ['matlab', '-nosplash', '-nodisplay',
                     '-r', 'run {}; quit;'.format(output_folder / 'kilosort_master.m')]
     retcode = _run_command_and_print_output_split(cmd_list)
-    if retcode != 0:
-        raise Exception('KiloSort returned a non-zero exit code')
+    if not (output_folder / 'spike_times.npy').is_file():
+        raise Exception('KiloSort did not run successfully')
     sorting = se.KiloSortSortingExtractor(output_folder)
     return sorting

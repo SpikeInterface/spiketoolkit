@@ -143,8 +143,8 @@ def _klusta(
     cmd = 'klusta {} --overwrite'.format(output_folder /'config.prm')
     print(cmd)
     retcode = _run_command_and_print_output(cmd)
-    if retcode != 0:
-        raise Exception('Klusta returned a non-zero exit code')
+    if not (output_folder / (file_name.name + '.kwik')).is_file():
+        raise Exception('Klusta did not run successfully')
 
     sorting = se.KlustaSortingExtractor(output_folder / (file_name.name + '.kwik'))
 
