@@ -101,15 +101,15 @@ def _kilosort(
         output_folder.mkdir()
     output_folder = output_folder.absolute()
 
+    if probe_file is not None:
+        recording = se.loadProbeFile(recording, probe_file)
+
     # save binary file
     if file_name is None:
         file_name = Path('recording')
     elif file_name.suffix == '.dat':
         file_name = file_name.stem
     se.writeBinaryDatFormat(recording, output_folder / file_name, dtype='int16')
-
-    if probe_file is not None:
-        se.loadProbeFile(recording, probe_file)
 
     # set up kilosort config files and run kilosort on data
     with (source_dir / 'kilosort_master.txt').open('r') as f:
@@ -175,7 +175,7 @@ def _kilosort(
 
     # start sorting with kilosort
     print('Running KiloSort')
-    cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
+    cmd = "matlab -nosplash -nodisplay -nodesktop -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
     print(cmd)
     if sys.platform == "win":
         cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
@@ -183,7 +183,8 @@ def _kilosort(
     else:
         cmd_list = ['matlab', '-nosplash', '-nodisplay',
                     '-r', 'run {}; quit;'.format(output_folder / 'kilosort_master.m')]
-    retcode = _run_command_and_print_output_split(cmd_list)
+    # retcode = _run_command_and_print_output_split(cmd_list)
+    _call_command_split(cmd_list)
     if not (output_folder / 'spike_times.npy').is_file():
         raise Exception('KiloSort did not run successfully')
     sorting = se.KiloSortSortingExtractor(output_folder)

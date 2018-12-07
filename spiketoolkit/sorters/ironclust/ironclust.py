@@ -1,7 +1,7 @@
 import spikeextractors as se
 import os
 from pathlib import Path
-from ..tools import _run_command_and_print_output, _spikeSortByProperty
+from ..tools import _run_command_and_print_output, _spikeSortByProperty, _call_command, _call_command_split
 import time
 
 
@@ -117,11 +117,13 @@ def _ironclust(recording,  # Recording object
         .format(output_folder, dataset_dir / 'raw.mda', dataset_dir / 'geom.csv', output_folder / 'firings.mda',
                 dataset_dir / 'argfile.txt')
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
+    cmd_list = ['matlab', '-nosplash', '-nodisplay', '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
     print(cmd)
-    retcode = _run_command_and_print_output(cmd)
-
-    if retcode != 0:
-        raise Exception('IronClust returned a non-zero exit code')
+    # retcode = _run_command_and_print_output(cmd)
+    # 
+    # if retcode != 0:
+    #     raise Exception('IronClust returned a non-zero exit code')
+    _call_command_split(cmd_list)
 
     # parse output
     result_fname = output_folder / 'firings.mda'
