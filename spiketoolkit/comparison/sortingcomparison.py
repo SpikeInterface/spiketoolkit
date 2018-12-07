@@ -280,7 +280,10 @@ class SortingComparison():
         [inds1, inds2] = linear_sum_assignment(-scores)
         inds1 = list(inds1)
         inds2 = list(inds2)
-        k2 = np.max(unit2_ids) + 1
+        if len(unit2_ids)>0:
+            k2 = np.max(unit2_ids) + 1
+        else:
+            k2 = 1
         for i1, u1 in enumerate(unit1_ids):
             if i1 in inds1:
                 aa = inds1.index(i1)
@@ -294,7 +297,10 @@ class SortingComparison():
                 # self._unit_map12[u1] = k2
                 # k2 = k2+1
                 self._unit_map12[u1] = -1
-        k1 = np.max(unit1_ids) + 1
+        if len(unit1_ids)>0:
+            k1 = np.max(unit1_ids) + 1
+        else:
+            k1 = 1
         for i2, u2 in enumerate(unit2_ids):
             if i2 in inds2:
                 aa = inds2.index(i2)
