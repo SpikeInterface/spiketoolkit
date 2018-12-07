@@ -1,8 +1,7 @@
-from . import analyzer
-from . import sorters 
-from . import filters
+from . import postprocessing
+from . import sorters
+from . import preprocessing
 from . import comparison
-
-from .tools import exportToPhy, computeUnitSNR
+from . import validation
 
 __version__ = '0.1.7'

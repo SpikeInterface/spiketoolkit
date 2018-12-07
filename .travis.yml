@@ -1,12 +1,12 @@
 language: python
 os:
-- linux
+  - linux
 python:
-- '3.6'
+  - '3.6'
 install:
-- pip install .
-- pip install pytest
-- pip install ml_ms4alg #spikewidgets
+  - pip install .
+  - pip install pytest
+  - pip install ml_ms4alg #spikewidgets
 script: pytest
 deploy:
   provider: pypi

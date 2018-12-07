@@ -2,6 +2,7 @@ import numpy as np
 import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 
+
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
                  count=False, verbose=False):
@@ -20,32 +21,32 @@ class SortingComparison():
             if verbose:
                 print("Counting...")
             self._do_counting(verbose=False)
-    
+
     def getSorting1(self):
         return self._sorting1
-    
+
     def getSorting2(self):
         return self._sorting2
 
     def getLabels1(self, unit_id):
-        if unit_id in  self._sorting1.getUnitIds():
+        if unit_id in self._sorting1.getUnitIds():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
 
     def getLabels2(self, unit_id):
-        if unit_id in  self._sorting1.getUnitIds():
+        if unit_id in self._sorting1.getUnitIds():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
-    
+
     def getMappedSorting1(self):
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
-        
+
     def getMappedSorting2(self):
         return MappedSortingExtractor(self._sorting1, self._unit_map21)
-    
-    def getMatchingEventCount(self,  unit1,  unit2):
+
+    def getMatchingEventCount(self, unit1, unit2):
         if (unit1 is not None) and (unit2 is not None):
             if unit1 != -1:
                 a = self._matching_event_counts_12[unit1]
@@ -57,8 +58,8 @@ class SortingComparison():
                 return 0
         else:
             raise Exception('getMatchingEventCount: unit1 and unit2 must not be None.')
-            
-    def _compute_agreement_score(self, num_matches,  num1,  num2):
+
+    def _compute_agreement_score(self, num_matches, num1, num2):
         denom = num1 + num2 - num_matches
         if denom == 0:
             return 0
@@ -68,27 +69,27 @@ class SortingComparison():
         if denom == 0:
             return 0
         return float(numer) / denom
-        
+
     def getBestUnitMatch1(self, unit1):
         if unit1 in self._best_match_units_12:
             return self._best_match_units_12[unit1]
         else:
             return None
-        
+
     def getBestUnitMatch2(self, unit2):
         if unit2 in self._best_match_units_21:
             return self._best_match_units_21[unit2]
         else:
             return None
-        
+
     def getMatchingUnitList1(self, unit1):
         a = self._matching_event_counts_12[unit1]
         return list(a.keys())
-        
+
     def getMatchingUnitList2(self, unit2):
         a = self._matching_event_counts_21[unit2]
         return list(a.keys())
-        
+
     def getAgreementFraction(self, unit1=None, unit2=None):
         if (unit1 is not None) and (unit2 is None):
             if unit1 != -1:
@@ -114,7 +115,7 @@ class SortingComparison():
         else:
             return 0
         return self._compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
-        
+
     def getFalsePositiveFraction(self, unit1, unit2=None):
         if unit1 is None:
             raise Exception('getFalsePositiveFraction: unit1 must not be None')
@@ -122,7 +123,7 @@ class SortingComparison():
             unit2 = self.getBestUnitMatch1(unit1)
             if unit2 is None or unit2 == -1:
                 return 0
-            
+
         if unit1 != -1 and unit2 != -1:
             a = self._matching_event_counts_12[unit1]
             if unit2 not in a:
@@ -130,7 +131,7 @@ class SortingComparison():
         else:
             return 0
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
-    
+
     def getFalseNegativeFraction(self, unit1, unit2=None):
         if unit1 is None:
             raise Exception('getFalsePositiveFraction: unit1 must not be None')
@@ -138,7 +139,7 @@ class SortingComparison():
             unit2 = self.getBestUnitMatch1(unit1)
             if unit2 is None:
                 return 0
-            
+
         if unit1 != -1 and unit2 != -1:
             a = self._matching_event_counts_12[unit1]
             if unit2 not in a:
@@ -203,7 +204,6 @@ class SortingComparison():
 
         return ax
 
-    
     def _do_matching(self):
         self._event_counts_1 = dict()
         self._event_counts_2 = dict()
@@ -220,7 +220,7 @@ class SortingComparison():
         unit2_ids = sorting2.getUnitIds()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
-        
+
         # Compute events counts
         event_counts1 = np.zeros((N1)).astype(np.int64)
         for i1, u1 in enumerate(unit1_ids):
@@ -232,7 +232,7 @@ class SortingComparison():
             times2 = sorting2.getUnitSpikeTrain(u2)
             event_counts2[i2] = len(times2)
             self._event_counts_2[u2] = len(times2)
-            
+
         # Compute matching events
         matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
         scores = np.zeros((N1, N2))
@@ -240,10 +240,10 @@ class SortingComparison():
             times1 = sorting1.getUnitSpikeTrain(u1)
             for i2, u2 in enumerate(unit2_ids):
                 times2 = sorting2.getUnitSpikeTrain(u2)
-                num_matches = count_matching_events(times1,  times2,  delta=self._delta_tp)
+                num_matches = count_matching_events(times1, times2, delta=self._delta_tp)
                 matching_event_counts[i1, i2] = num_matches
                 scores[i1, i2] = self._compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2])
-        
+
         # Find best matches for spiketrains 1
         for i1, u1 in enumerate(unit1_ids):
             scores0 = scores[i1, :]
@@ -275,13 +275,13 @@ class SortingComparison():
                     self._best_match_units_21[u2] = -1
             else:
                 self._best_match_units_21[u2] = -1
-        
+
         # Assign best matches
         [inds1, inds2] = linear_sum_assignment(-scores)
         inds1 = list(inds1)
         inds2 = list(inds2)
         k2 = np.max(unit2_ids) + 1
-        for i1,  u1 in enumerate(unit1_ids):
+        for i1, u1 in enumerate(unit1_ids):
             if i1 in inds1:
                 aa = inds1.index(i1)
                 i2 = inds2[aa]
@@ -294,8 +294,8 @@ class SortingComparison():
                 # self._unit_map12[u1] = k2
                 # k2 = k2+1
                 self._unit_map12[u1] = -1
-        k1 = np.max(unit1_ids)+1
-        for i2,  u2 in enumerate(unit2_ids):
+        k1 = np.max(unit1_ids) + 1
+        for i2, u2 in enumerate(unit2_ids):
             if i2 in inds2:
                 aa = inds2.index(i2)
                 i1 = inds1[aa]
@@ -384,10 +384,12 @@ class SortingComparison():
         TOT_ST2 = sum([len(sorting2.getUnitSpikeTrain(unit)) for unit in sorting2.getUnitIds()])
         total_spikes = TOT_ST1 + TOT_ST2
         TP = sum([len(np.where('TP' == self._labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
-        CL = sum([len([i for i, v in enumerate(self._labels_st1[unit]) if 'CL' in v]) for unit in sorting1.getUnitIds()])
+        CL = sum(
+            [len([i for i, v in enumerate(self._labels_st1[unit]) if 'CL' in v]) for unit in sorting1.getUnitIds()])
         FN = sum([len(np.where('FN' == self._labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
         FP = sum([len(np.where('FP' == self._labels_st2[unit])[0]) for unit in sorting2.getUnitIds()])
-        self.counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1, 'TOT_ST2': TOT_ST2}
+        self.counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1,
+                       'TOT_ST2': TOT_ST2}
 
         if verbose:
             print('TP :', TP)
@@ -416,7 +418,7 @@ class SortingComparison():
         unit2_ids = sorting2.getUnitIds()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
-        
+
         conf_matrix = np.zeros((N1 + 1, N2 + 1), dtype=int)
         idxs_matched = np.where(np.array(self.getMappedSorting1().getMappedUnitIds()) != -1)
         if len(idxs_matched) > 0:
@@ -492,15 +494,13 @@ class SortingComparison():
         return lab_st1, lab_st2
 
 
-
-
 class MappedSortingExtractor(se.SortingExtractor):
     def __init__(self, sorting, unit_map):
         se.SortingExtractor.__init__(self)
         self._sorting = sorting
         self._unit_map = unit_map
         self._unit_ids = list(self._unit_map.keys())
-        
+
     def getUnitIds(self, unit_ids=None):
         if unit_ids is None:
             return self._unit_ids
@@ -514,7 +514,7 @@ class MappedSortingExtractor(se.SortingExtractor):
             return self._unit_map[unit_ids]
         else:
             return list([self._unit_map[u] for u in self._unit_ids if u in unit_ids])
-    
+
     def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
         unit2 = self._unit_map[unit_id]
         if unit2 != -1:
@@ -523,10 +523,10 @@ class MappedSortingExtractor(se.SortingExtractor):
             print(unit_id, " is not matched!")
             return None
 
-    
+
 def count_matching_events(times1, times2, delta=10):
     times_concat = np.concatenate((times1, times2))
-    membership = np.concatenate((np.ones(times1.shape)*1, np.ones(times2.shape)*2))
+    membership = np.concatenate((np.ones(times1.shape) * 1, np.ones(times2.shape) * 2))
     indices = times_concat.argsort()
     times_concat_sorted = times_concat[indices]
     membership_sorted = membership[indices]
@@ -551,7 +551,7 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
     -------
 
     '''
-    conf_matrix = np.zeros((len(gtst)+1, len(sst)+1), dtype=int)
+    conf_matrix = np.zeros((len(gtst) + 1, len(sst) + 1), dtype=int)
     idxs_pairs_clean = np.where(pairs != -1)
     idxs_pairs_dirty = np.where(pairs == -1)
     pairs_clean = pairs[idxs_pairs_clean]
@@ -565,7 +565,7 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
     for gt_i, gt in enumerate(gtst_clean):
         if gt.annotations['paired']:
             tp = len(np.where('TP' == gt.annotations['labels'])[0])
-            conf_matrix[gt_i, gt_i] =  int(tp)
+            conf_matrix[gt_i, gt_i] = int(tp)
             for st_i, st in enumerate(sst):
                 cl_str = str(gt_i) + '_' + str(st_i)
                 cl = len([i for i, v in enumerate(gt.annotations['labels']) if 'CL' in v and cl_str in v])
@@ -576,7 +576,7 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
         conf_matrix[gt_i, -1] = int(fn)
     for gt_i, gt in enumerate(gtst_extra):
         fn = len(np.where('FN' == gt.annotations['labels'])[0])
-        conf_matrix[gt_i+len(gtst_clean), -1] = int(fn)
+        conf_matrix[gt_i + len(gtst_clean), -1] = int(fn)
     for st_i, st in enumerate(sst):
         fp = len(np.where('FP' == st.annotations['labels'])[0])
         st_p = np.where(st_i == pairs_clean)[0]
@@ -593,14 +593,14 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
 
         for (i, j), z in np.ndenumerate(conf_matrix):
             if z != 0:
-                if z > np.max(conf_matrix)/2.:
+                if z > np.max(conf_matrix) / 2.:
                     ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
                 else:
                     ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
                     # ,   bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
-        ax.axhline(int(len(gtst)-1)+0.5, color='black')
-        ax.axvline(int(len(sst)-1)+0.5, color='black')
+        ax.axhline(int(len(gtst) - 1) + 0.5, color='black')
+        ax.axvline(int(len(sst) - 1) + 0.5, color='black')
 
         # Major ticks
         ax.set_xticks(np.arange(0, len(sst) + 1))
@@ -610,19 +610,19 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
         ax.set_xticklabels(np.append(np.append(sst_idxs, sst_extra).astype(int), 'FN'), fontsize=12)
         ax.set_yticklabels(np.append(gtst_idxs, 'FP'), fontsize=12)
 
-        if xlabel==None:
+        if xlabel == None:
             ax.set_xlabel('Sorted spike trains', fontsize=15)
         else:
             ax.set_xlabel(xlabel, fontsize=20)
-        if ylabel==None:
+        if ylabel == None:
             ax.set_ylabel('Ground truth spike trains', fontsize=15)
         else:
             ax.set_ylabel(ylabel, fontsize=20)
 
     return conf_matrix, ax
 
-def compute_performance(SC):
 
+def compute_performance(SC):
     counts = SC.counts
 
     tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
