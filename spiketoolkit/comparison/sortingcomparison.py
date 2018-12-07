@@ -248,12 +248,15 @@ class SortingComparison():
         for i1, u1 in enumerate(unit1_ids):
             scores0 = scores[i1, :]
             self._matching_event_counts_12[u1] = dict()
-            if np.max(scores0) > 0:
-                inds0 = np.where(scores0 > 0)[0]
-                for i2 in inds0:
-                    self._matching_event_counts_12[u1][unit2_ids[i2]] = matching_event_counts[i1, i2]
-                i2_best = np.argmax(scores0)
-                self._best_match_units_12[u1] = unit2_ids[i2_best]
+            if scores0:
+                if np.max(scores0) > 0:
+                    inds0 = np.where(scores0 > 0)[0]
+                    for i2 in inds0:
+                        self._matching_event_counts_12[u1][unit2_ids[i2]] = matching_event_counts[i1, i2]
+                    i2_best = np.argmax(scores0)
+                    self._best_match_units_12[u1] = unit2_ids[i2_best]
+                else:
+                    self._best_match_units_12[u1] = -1
             else:
                 self._best_match_units_12[u1] = -1
 
@@ -261,12 +264,15 @@ class SortingComparison():
         for i2, u2 in enumerate(unit2_ids):
             scores0 = scores[:, i2]
             self._matching_event_counts_21[u2] = dict()
-            if np.max(scores0) > 0:
-                inds0 = np.where(scores0 > 0)[0]
-                for i1 in inds0:
-                    self._matching_event_counts_21[u2][unit1_ids[i1]] = matching_event_counts[i1, i2]
-                i1_best = np.argmax(scores0)
-                self._best_match_units_21[u2] = unit1_ids[i1_best]
+            if scores0:
+                if np.max(scores0) > 0:
+                    inds0 = np.where(scores0 > 0)[0]
+                    for i1 in inds0:
+                        self._matching_event_counts_21[u2][unit1_ids[i1]] = matching_event_counts[i1, i2]
+                    i1_best = np.argmax(scores0)
+                    self._best_match_units_21[u2] = unit1_ids[i1_best]
+                else:
+                    self._best_match_units_21[u2] = -1
             else:
                 self._best_match_units_21[u2] = -1
         
