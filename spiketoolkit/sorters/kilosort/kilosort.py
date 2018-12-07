@@ -82,8 +82,8 @@ def _kilosort(
         if npp.startswith('"'):
             npp = npp[1:-1]
         npy_matlab_path = Path(npp)
-    if not (kilosort_path / 'preprocessData.m').is_file() \
-            or not (npy_matlab_path / 'npy-matlab' / 'readNPY.m').is_file():
+    if not (Path(kilosort_path) / 'preprocessData.m').is_file() \
+            or not (Path(npy_matlab_path) / 'npy-matlab' / 'readNPY.m').is_file():
         raise ModuleNotFoundError("\nTo use KiloSort, install KiloSort and npy-matlab from sources: \n\n"
                                   "\ngit clone https://github.com/cortex-lab/KiloSort\n"
                                   "\ngit clone https://github.com/kwikteam/npy-matlab\n"
@@ -101,15 +101,16 @@ def _kilosort(
         output_folder.mkdir()
     output_folder = output_folder.absolute()
 
+
+    if probe_file is not None:
+        recording = se.loadProbeFile(recording, probe_file)
+
     # save binary file
     if file_name is None:
         file_name = Path('recording')
     elif file_name.suffix == '.dat':
         file_name = file_name.stem
     se.writeBinaryDatFormat(recording, output_folder / file_name, dtype='int16')
-
-    if probe_file is not None:
-        se.loadProbeFile(recording, probe_file)
 
     # set up kilosort config files and run kilosort on data
     with (source_dir / 'kilosort_master.txt').open('r') as f:

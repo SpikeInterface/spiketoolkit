@@ -1,7 +1,7 @@
 import spikeextractors as se
 from pathlib import Path
 import time
-from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty
+from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty, _call_command
 
 
 def klusta(
@@ -108,7 +108,7 @@ def _klusta(
     # save prb file:
     if probe_file is None:
         probe_file = output_folder / 'probe.prb'
-        se.saveProbeFile(recording, probe_file, format='klusta')
+        se.saveProbeFile(recording, probe_file, format='klusta', radius=adjacency_radius)
 
     # save binary file
     if file_name is None:
@@ -142,7 +142,7 @@ def _klusta(
     print('Running Klusta')
     cmd = 'klusta {} --overwrite'.format(output_folder /'config.prm')
     print(cmd)
-    retcode = _run_command_and_print_output(cmd)
+    _call_command(cmd)
     if not (output_folder / (file_name.name + '.kwik')).is_file():
         raise Exception('Klusta did not run successfully')
 

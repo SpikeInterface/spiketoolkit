@@ -1,7 +1,7 @@
 import spikeextractors as se
 import os
 from pathlib import Path
-from ..tools import _run_command_and_print_output, _spikeSortByProperty
+from ..tools import _run_command_and_print_output, _spikeSortByProperty, _call_command_split
 import time
 
 
@@ -35,7 +35,6 @@ def ironclust(recording,  # Recording object
             print("Property not available! Running normal spike sorting")
             sorting = _ironclust(recording, prm_template_name, output_folder, detect_sign, adjacency_radius,
                                  detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
-
     print('Elapsed time: ', time.time() - t_start_proc)
 
     return sorting
@@ -68,7 +67,7 @@ def _ironclust(recording,  # Recording object
     if not ironclust_path:
         raise Exception(
             'You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
-    if not (ironclust_path / 'p_ironclust.m').is_file():
+    if not (Path(ironclust_path) / 'p_ironclust.m').is_file():
         raise ModuleNotFoundError("\nTo use IronClust clone the repo:\n\n"
                                   "git clone https://github.com/jamesjun/ironclust")
     if output_folder is None:
@@ -118,10 +117,8 @@ def _ironclust(recording,  # Recording object
                 dataset_dir / 'argfile.txt')
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
-    retcode = _run_command_and_print_output(cmd)
-
-    if retcode != 0:
-        raise Exception('IronClust returned a non-zero exit code')
+    cmd_list = ['matlab', '-nosplash', '-nodisplay', '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
+    _call_command_split(cmd_list)
 
     # parse output
     result_fname = output_folder / 'firings.mda'
