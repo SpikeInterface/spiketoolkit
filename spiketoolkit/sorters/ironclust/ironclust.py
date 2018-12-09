@@ -67,7 +67,7 @@ def _ironclust(recording,  # Recording object
     if not ironclust_path:
         raise Exception(
             'You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
-    if not (Path(ironclust_path) / 'p_ironclust.m').is_file():
+    if not (Path(ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
         raise ModuleNotFoundError("\nTo use IronClust clone the repo:\n\n"
                                   "git clone https://github.com/jamesjun/ironclust")
     if output_folder is None:
