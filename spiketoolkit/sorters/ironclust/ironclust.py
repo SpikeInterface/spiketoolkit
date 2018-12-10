@@ -130,7 +130,7 @@ def _ironclust(recording,  # Recording object
     # parse output
     result_fname = output_folder / 'firings.mda'
     if not result_fname.exists():
-        raise Exception('Result file does not exist: ' + result_fname)
+        raise Exception('Result file does not exist: ' + str(result_fname))
 
     firings = mdaio.readmda(str(result_fname))
     sorting = se.NumpySortingExtractor()
