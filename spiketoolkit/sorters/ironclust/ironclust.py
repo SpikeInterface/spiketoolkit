@@ -1,5 +1,5 @@
 import spikeextractors as se
-import os
+import os, sys
 from pathlib import Path
 from ..tools import _run_command_and_print_output, _spikeSortByProperty, _call_command_split
 import time
@@ -118,7 +118,7 @@ def _ironclust(recording,  # Recording object
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
     print(cmd)
-    if sys.platform == "win":
+    if "win" in sys.platform:
         cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
                     '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
     else:

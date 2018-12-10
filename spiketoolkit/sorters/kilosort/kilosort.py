@@ -178,7 +178,7 @@ def _kilosort(
     print('Running KiloSort')
     cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
     print(cmd)
-    if sys.platform == "win":
+    if "win" in sys.platform:
         cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
                     '-r','run {}; quit;'.format(output_folder / 'kilosort_master.m')]
     else:
