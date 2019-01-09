@@ -123,7 +123,7 @@ def _ironclust(recording,  # Recording object
                     '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
     else:
         cmd_list = ['matlab', '-nosplash', '-nodisplay',
-                    '-r', '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
+                    '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
 
     _call_command_split(cmd_list)
 
