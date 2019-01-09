@@ -117,13 +117,12 @@ def _ironclust(recording,  # Recording object
                 dataset_dir / 'argfile.txt')
     cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
     print(cmd)
-    print(cmd)
     if "win" in sys.platform:
         cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
                     '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
     else:
         cmd_list = ['matlab', '-nosplash', '-nodisplay',
-                    '-r', '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
+                    '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
 
     _call_command_split(cmd_list)
 

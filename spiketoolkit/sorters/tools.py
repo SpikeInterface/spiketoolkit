@@ -7,6 +7,7 @@ import spikeextractors as se
 from pathlib import Path
 import platform
 import sys
+import os
 from copy import copy
 
 
@@ -108,7 +109,8 @@ def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
     threads = []
     for i, recording in enumerate(recording_list):
         kwargs_copy = copy(kwargs)
-        tmpdir = tempfile.mkdtemp()
+        tmpdir = Path(tempfile.mkdtemp(dir=os.getcwd()))
+        print(tmpdir)
         tmpdir_list.append(tmpdir)
         if output_folder is None:
             tmpdir = Path(tmpdir).absolute()
@@ -130,7 +132,7 @@ def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
     for t in threads:
         sorting_list.append(t.sorting)
     for tmp in tmpdir_list:
-        shutil.rmtree(tmp)
+        shutil.rmtree(str(tmp))
     return sorting_list
 
 
