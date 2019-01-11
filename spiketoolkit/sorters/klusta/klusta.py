@@ -149,3 +149,16 @@ def _klusta(
     sorting = se.KlustaSortingExtractor(output_folder / (file_name.name + '.kwik'))
 
     return sorting
+
+
+def klusta_default_params():
+    return {'adjacency_radius': None,
+            'threshold_strong_std_factor': 5,
+            'threshold_weak_std_factor': 2,
+            'detect_sign': -1,
+            'extract_s_before': 16,
+            'extract_s_after': 32,
+            'n_features_per_channel': 3,
+            'pca_n_waveforms_max': 10000,
+            'num_starting_clusters': 50,
+            'parallel': True}

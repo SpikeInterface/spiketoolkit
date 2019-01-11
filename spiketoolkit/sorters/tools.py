@@ -58,6 +58,7 @@ def _run_command_and_print_output(command):
         rc = process.poll()
         return rc
 
+
 def _run_command_and_print_output_split(command_list):
     with Popen(command_list, stdout=PIPE, stderr=PIPE) as process:
         while True:
@@ -79,6 +80,7 @@ def _call_command(command):
         call(command_list)
     except CalledProcessError as e:
         raise Exception(e.output)
+
 
 def _call_command_split(command_list):
     try:
@@ -130,7 +132,10 @@ def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
         for t in threads:
             t.join()
     for t in threads:
-        sorting_list.append(t.sorting)
+        try:
+            sorting_list.append(t.sorting)
+        except AttributeError:
+            pass
     for tmp in tmpdir_list:
         shutil.rmtree(str(tmp))
     return sorting_list
@@ -154,8 +159,10 @@ def _spikeSortByProperty(recording, spikesorter, property, parallel, **kwargs):
     # add group property
     for i, sorting in enumerate(sorting_list):
         group = recording_list[i].getChannelProperty(recording_list[i].getChannelIds()[0], 'group')
-        for unit in sorting.getUnitIds():
-            sorting.setUnitProperty(unit, 'group', group)
+        if sorting is not None:
+            for unit in sorting.getUnitIds():
+                sorting.setUnitProperty(unit, 'group', group)
     # reassemble the sorting outputs
+    sorting_list = [sort for sort in sorting_list if sort is not None]
     multi_sorting = se.MultiSortingExtractor(sortings=sorting_list)
     return multi_sorting

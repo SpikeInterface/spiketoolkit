@@ -189,3 +189,9 @@ def _kilosort(
         raise Exception('KiloSort did not run successfully')
     sorting = se.KiloSortSortingExtractor(output_folder)
     return sorting
+
+
+def kilosort_default_params():
+    return {'useGPU': False,
+            'detect_threshold': 4,
+            'parallel': True}

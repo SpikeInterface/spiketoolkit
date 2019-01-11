@@ -1,1 +1,1 @@
-from .klusta import klusta
+from .klusta import klusta, klusta_default_params

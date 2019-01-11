@@ -160,3 +160,18 @@ def _spyking_circus(
     sorting = se.SpykingCircusSortingExtractor(output_folder / file_name)
 
     return sorting
+
+
+def spyking_circus_default_params():
+    return {'detect_sign': -1,  # -1 - 1 - 0
+            'adjacency_radius': 100,  # Channel neighborhood adjacency radius corresponding to geom file
+            'detect_threshold': 6,  # Threshold for detection
+            'template_width_ms': 3,  # Spyking circus parameter
+            'filter': True,
+            'merge_spikes': True,
+            'n_cores': None,
+            'electrode_dimensions': None,
+            'whitening_max_elts': 1000,  # I believe it relates to subsampling and affects compute time
+            'clustering_max_elts': 10000,  # I believe it relates to subsampling and affects compute time
+            'parallel': True
+            }

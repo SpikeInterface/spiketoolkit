@@ -1,1 +1,1 @@
-from .mountainsort4 import mountainsort4
+from .mountainsort4 import mountainsort4, mountainsort4_default_params

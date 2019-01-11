@@ -1,1 +1,1 @@
-from .spyking_circus import spyking_circus
+from .spyking_circus import spyking_circus, spyking_circus_default_params

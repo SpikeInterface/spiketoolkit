@@ -20,7 +20,7 @@ def mountainsort4(
 ):
     t_start_proc = time.time()
     if by_property is None:
-        sorting = _mountainsort4(recording, output_folder, detect_sign, adjacency_radius, freq_min, freq_max,
+        sorting = _mountainsort4(recording, detect_sign, adjacency_radius, freq_min, freq_max,
                                  whiten, clip_size, detect_threshold, detect_interval, noise_overlap_threshold)
     else:
         if by_property in recording.getChannelPropertyNames():
@@ -31,7 +31,7 @@ def mountainsort4(
                                            noise_overlap_threshold=noise_overlap_threshold)
         else:
             print("Property not available! Running normal spike sorting")
-            sorting = _mountainsort4(recording, output_folder, detect_sign, adjacency_radius, freq_min, freq_max,
+            sorting = _mountainsort4(recording, detect_sign, adjacency_radius, freq_min, freq_max,
                                      whiten, clip_size, detect_threshold, detect_interval, noise_overlap_threshold)
 
     print('Elapsed time: ', time.time() - t_start_proc)
@@ -41,7 +41,6 @@ def mountainsort4(
 
 def _mountainsort4(
         recording,  # The recording extractor
-        output_folder=None,
         detect_sign=-1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         adjacency_radius=-1,  # Use -1 to include all channels in every neighborhood
         freq_min=300,  # Use None for no bandpass filtering
@@ -91,3 +90,17 @@ def _mountainsort4(
         )
 
     return sorting
+
+
+def mountainsort4_default_params():
+    return {'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
+            'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
+            'freq_min': 300,  # Use None for no bandpass filtering
+            'freq_max': 6000,
+            'whiten': True,  # Whether to do channel whitening as part of preprocessing
+            'clip_size': 50,
+            'detect_threshold': 3,
+            'detect_interval': 10,  # Minimum number of timepoints between events detected on the same channel
+            'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
+            'parallel': True
+            }

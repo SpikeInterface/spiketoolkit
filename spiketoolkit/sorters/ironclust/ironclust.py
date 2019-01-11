@@ -41,7 +41,7 @@ def ironclust(recording,  # Recording object
 
 
 def _ironclust(recording,  # Recording object
-               prm_template_name,  # Name of the template file
+               prm_template_name=None,  # Name of the template file
                output_folder=None,  # Temporary working directory
                detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
                adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
@@ -129,13 +129,28 @@ def _ironclust(recording,  # Recording object
     # parse output
     result_fname = output_folder / 'firings.mda'
     if not result_fname.exists():
-        raise Exception('Result file does not exist: ' + str(result_fname))
-
-    firings = mdaio.readmda(str(result_fname))
-    sorting = se.NumpySortingExtractor()
-    sorting.setTimesLabels(firings[1, :], firings[2, :])
+        print('Result file does not exist: ' + str(result_fname))
+        sorting = None
+    else:
+        firings = mdaio.readmda(str(result_fname))
+        sorting = se.NumpySortingExtractor()
+        sorting.setTimesLabels(firings[1, :], firings[2, :])
     return sorting
+
 
 def _write_text_file(fname, str):
     with fname.open('w') as f:
         f.write(str)
+
+
+def ironclust_default_params():
+    return {'prm_template_name': None,  # Name of the template file
+            'detect_sign': -1,  # Polarity of the spikes, -1, 0, or 1
+            'adjacency_radius': -1,  # Channel neighborhood adjacency radius corresponding to geom file
+            'detect_threshold': 5,  # Threshold for detection
+            'merge_thresh': .98,  # Cluster merging threhold 0..1
+            'freq_min': 300,  # Lower frequency limit for band-pass filter
+            'freq_max': 6000,  # Upper frequency limit for band-pass filter
+            'pc_per_chan': 3,  # Number of pc per channel
+            'parallel': True}
+

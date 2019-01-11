@@ -42,55 +42,62 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, by_property=None, start_
     if by_property is not None:
         if not by_property in sorting.getUnitPropertyNames() \
                 or by_property not in recording.getChannelPropertyNames():
-            raise ValueError("'by_property' should be aproperty of recording and sorting extractors")
+            raise ValueError("'by_property' should be a property of recording and sorting extractors")
 
         else:
             print("Waveforms by property: ", by_property)
-            rec_list = se.getSubExtractorsByProperty(recording, by_property)
-            sort_list = se.getSubExtractorsByProperty(sorting, by_property)
-            assert len(rec_list) == len(sort_list)
+            rec_list, rec_props = se.getSubExtractorsByProperty(recording, by_property, return_property_list=True)
+            sort_list, sort_props = se.getSubExtractorsByProperty(sorting, by_property, return_property_list=True)
+            if len(rec_props) != len(sort_props):
+                print('Different' + by_property + ' numbers: using largest number of ' + by_property)
+                if len(rec_props) > len(sort_props):
+                    for i_r, rec in enumerate(rec_props):
+                        if rec not in sort_props:
+                            print('Inserting None for property ', rec)
+                            sort_list.insert(i_r, None)
+                else:
+                    for i_s, sort in enumerate(sort_props):
+                        if sort not in rec_props:
+                            rec_list.insert(i_s, None)
+            else:
+                assert len(rec_list) == len(sort_list)
 
             # TODO make this in parallel
             for i_list, (rec, sort) in enumerate(zip(rec_list, sort_list)):
                 for i, unit_id in enumerate(unit_ids):
                     # ts_ = time.time()
-                    if unit_id in sort.getUnitIds():
-                        if not filter:
-                            recordings = rec.getTraces(start_frame, end_frame)
-                        else:
-                            recordings = st.filters.bandpass_filter(recording=rec, freq_min=bandpass[0],
-                                                                    freq_max=bandpass[1]).getTraces(start_frame, end_frame)
-                        # print('check filter: ', time.time() - ts_)
-
-                        fs = rec.getSamplingFrequency()
-                        n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
-
-                        if verbose:
-                            print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
-                        ts = time.time()
-                        waveforms, indices = _get_random_spike_waveforms(recording=rec,
-                                                                         sorting=sort,
-                                                                         unit=unit_id,
-                                                                         max_num=max_num_waveforms,
-                                                                         snippet_len=n_pad)
-                        # print('extract wf: ', time.time() - ts_)
-                        waveforms = waveforms.swapaxes(0, 2)
-                        waveforms = waveforms.swapaxes(1, 2)
-                        # print('swap wf: ', time.time() - ts_)
-                        if save_as_features:
-                            if len(indices) < len(sort.getUnitSpikeTrain(unit_id)):
-                                if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
-                                    features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
-                                else:
-                                    features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'waveforms'))
-                                for i, ind in enumerate(indices):
-                                    features[ind] = waveforms[i]
+                    if sort is not None and rec is not None:
+                        if unit_id in sort.getUnitIds():
+                            if not filter:
+                                recordings = rec.getTraces(start_frame, end_frame)
                             else:
-                                features = waveforms
-                            sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
-                        # print('append feats: ', time.time() - ts_)
-                        waveform_list.append(waveforms)
-                        # print('append wf: ', time.time() - ts_)
+                                recordings = st.filters.bandpass_filter(recording=rec, freq_min=bandpass[0],
+                                                                        freq_max=bandpass[1]).getTraces(start_frame, end_frame)
+
+                            fs = rec.getSamplingFrequency()
+                            n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
+
+                            if verbose:
+                                print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
+                            waveforms, indices = _get_random_spike_waveforms(recording=rec,
+                                                                             sorting=sort,
+                                                                             unit=unit_id,
+                                                                             max_num=max_num_waveforms,
+                                                                             snippet_len=n_pad)
+                            waveforms = waveforms.swapaxes(0, 2)
+                            waveforms = waveforms.swapaxes(1, 2)
+                            if save_as_features:
+                                if len(indices) < len(sort.getUnitSpikeTrain(unit_id)):
+                                    if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
+                                        features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
+                                    else:
+                                        features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'waveforms'))
+                                    for i, ind in enumerate(indices):
+                                        features[ind] = waveforms[i]
+                                else:
+                                    features = waveforms
+                                sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
+                            waveform_list.append(waveforms)
     else:
         # TODO make this in parallel
         for i, unit_id in enumerate(unit_ids):
