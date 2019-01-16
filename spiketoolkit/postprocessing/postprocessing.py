@@ -6,7 +6,7 @@ import time
 
 
 def getUnitWaveforms(recording, sorting, unit_ids=None, by_property=None, start_frame=None, end_frame=None,
-                     ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
+                     ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
                      save_as_features=True, verbose=False):
     '''This function returns the spike waveforms from the specified unit_ids from t_start and t_stop
     in the form of a numpy array of spike waveforms.
@@ -37,6 +37,9 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, by_property=None, start_
         unit_ids = sorting.getUnitIds()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
+
+    if dtype is None:
+        dtype = np.float32
 
     waveform_list = []
     if by_property is not None:
@@ -86,6 +89,8 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, by_property=None, start_
                                                                              snippet_len=n_pad)
                             waveforms = waveforms.swapaxes(0, 2)
                             waveforms = waveforms.swapaxes(1, 2)
+                            waveforms = waveforms.astype(dtype)
+
                             if save_as_features:
                                 if len(indices) < len(sort.getUnitSpikeTrain(unit_id)):
                                     if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
@@ -126,6 +131,7 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, by_property=None, start_
             # print('extract wf: ', time.time() - ts_)
             waveforms = waveforms.swapaxes(0, 2)
             waveforms = waveforms.swapaxes(1, 2)
+            waveforms = waveforms.astype(dtype)
             # print('swap wf: ', time.time() - ts_)
             if save_as_features:
                 if len(indices) < len(sorting.getUnitSpikeTrain(unit_id)):

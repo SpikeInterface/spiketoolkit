@@ -24,7 +24,7 @@ class BandpassFilterRecording(FilterRecording):
         # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16    
         T = N / samplerate  # total time
         df = 1 / T  # frequency grid
-        relwid = 3.0;  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
+        relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
 
         k_inds = np.arange(0, N)
         k_inds = np.where(k_inds <= (N + 1) / 2, k_inds, k_inds - N)
@@ -45,10 +45,6 @@ class BandpassFilterRecording(FilterRecording):
         samplerate = self._recording.getSamplingFrequency()
         M = chunk.shape[0]
         chunk2 = chunk
-        # Subtract off the mean of each channel unless we are doing only a low-pass filter
-        # if self._freq_min!=0:
-        #    for m in range(M):
-        #        chunk2[m,:]=chunk2[m,:]-np.mean(chunk2[m,:])
         # Do the actual filtering with a DFT with real input
         chunk_fft = np.fft.rfft(chunk2)
         kernel = self._create_filter_kernel(
