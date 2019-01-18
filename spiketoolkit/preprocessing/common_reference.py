@@ -43,24 +43,40 @@ class CommonReferenceRecording(RecordingExtractor):
                        - np.median(self._recording.getTraces(channel_ids=channel_ids, start_frame=start_frame,
                                                              end_frame=end_frame), axis=0, keepdims=True)
             else:
+                new_groups = []
+                for g in self._groups:
+                    new_chans =[]
+                    for chan in g:
+                        if chan in self._recording.getChannelIds():
+                            new_chans.append(chan)
+                    new_groups.append(new_chans)
+                print('Common median in groups: ', new_groups)
                 return np.vstack(np.array([self._recording.getTraces(channel_ids=split_group,
                                                                      start_frame=start_frame, end_frame=end_frame)
                                            - np.median(self._recording.getTraces(channel_ids=split_group,
                                                                                  start_frame=start_frame,
                                                                                  end_frame=end_frame),
-                                                       axis=0, keepdims=True) for split_group in self._groups]))
+                                                       axis=0, keepdims=True) for split_group in new_groups]))
         elif self._ref == 'average':
             if self._groups is None:
                 return self._recording.getTraces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
                        - np.mean(self._recording.getTraces(channel_ids=channel_ids, start_frame=start_frame,
                                                            end_frame=end_frame), axis=0, keepdims=True)
             else:
+                new_groups = []
+                for g in self._groups:
+                    new_chans = []
+                    for chan in g:
+                        if chan in self._recording.getChannelIds():
+                            new_chans.append(chan)
+                    new_groups.append(new_chans)
+                print('Common average in groups: ', new_groups)
                 return np.vstack(np.array([self._recording.getTraces(channel_ids=split_group,
                                                                      start_frame=start_frame, end_frame=end_frame)
                                            - np.mean(self._recording.getTraces(channel_ids=split_group,
                                                                                start_frame=start_frame,
                                                                                end_frame=end_frame),
-                                                     axis=0, keepdims=True) for split_group in self._groups]))
+                                                     axis=0, keepdims=True) for split_group in new_groups]))
 
 
 def common_reference(recording, reference='median', groups=None):

@@ -118,7 +118,7 @@ def _spyking_circus(
         file_name = Path('recording')
     elif file_name.suffix == '.npy':
         file_name = file_name.stem
-    np.save(output_folder / file_name, recording.getTraces().astype('float32'))
+    np.save(str(output_folder / file_name), recording.getTraces().astype('float32'))
 
     if detect_sign < 0:
         detect_sign = 'negative'

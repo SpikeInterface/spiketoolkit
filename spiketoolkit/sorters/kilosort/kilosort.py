@@ -135,8 +135,8 @@ def _kilosort(
 
     abs_channel = (output_folder / 'kilosort_channelmap.m').absolute()
     abs_config = (output_folder / 'kilosort_config.m').absolute()
-    kilosort_path = kilosort_path.absolute()
-    npy_matlab_path = npy_matlab_path.absolute() / 'npy-matlab'
+    kilosort_path = Path(kilosort_path).absolute()
+    npy_matlab_path = Path(npy_matlab_path).absolute() / 'npy-matlab'
 
     kilosort_master = ''.join(kilosort_master).format(
         ug, kilosort_path, npy_matlab_path, output_folder, abs_channel, abs_config
