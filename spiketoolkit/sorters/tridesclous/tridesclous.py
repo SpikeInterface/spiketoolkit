@@ -83,7 +83,7 @@ tridesclous_default_params = {
             'chunksize' : 1024,
             'lostfront_chunksize' : 128,
             'signalpreprocessor_engine' : 'numpy',
-            'common_ref_removal':True,
+            'common_ref_removal':False,
         },
         'peak_detector' : {
             'peakdetector_engine' : 'numpy',
