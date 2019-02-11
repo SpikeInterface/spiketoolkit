@@ -31,7 +31,7 @@ def tridesclous(
     # save binary file
     raw_filename = output_folder / 'raw_signals.raw'
     with open(raw_filename, mode='wb') as f:
-        f.write(recording.getTraces().astype('float32').tobytes())
+        f.write(recording.getTraces().T.astype('float32').tobytes())
     
     # tdc job is done in a subfolder
     tdc_dirname = output_folder / 'tdc'
