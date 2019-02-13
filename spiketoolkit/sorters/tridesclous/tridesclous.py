@@ -14,6 +14,7 @@ def tridesclous(
         import tridesclous as tdc
     except ModuleNotFoundError:
         raise ModuleNotFoundError("tridesclous is not installed")
+    
 
     output_folder = Path(output_folder)
     
@@ -30,10 +31,10 @@ def tridesclous(
     
     # save binary file
     raw_filename = output_folder / 'raw_signals.raw'
-    traces = recording.getTraces().T
+    traces = recording.getTraces()
     dtype = traces.dtype
     with open(raw_filename, mode='wb') as f:
-        f.write(traces.tobytes())
+        f.write(traces.T.tobytes())
     
     # tdc job is done in a subfolder
     #~ tdc_dirname = output_folder / 'tdc'
@@ -42,13 +43,26 @@ def tridesclous(
     dataio = tdc.DataIO(dirname=tdc_dirname)
     #~ print(recording.getSamplingFrequency())
     #~ print(recording.getChannelIds())
+    nb_chan = recording.getNumChannels()
     
     dataio.set_data_source(type='RawData', filenames=[raw_filename], dtype=dtype.str,
                                     sample_rate=recording.getSamplingFrequency(),
-                                    total_channel=len(recording.getChannelIds()))
+                                    total_channel=nb_chan)
     dataio.set_probe_file(probe_file)
     if debug:
         print(dataio)
+    
+    # check params and OpenCL when many channels
+    use_sparse_template = False
+    use_opencl_with_sparse = False
+    if nb_chan >64: # this limit depend on the platform of course
+        if tdc.cltools.HAVE_PYOPENCL:
+            # force opencl
+            params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+            use_sparse_template = True
+            use_opencl_with_sparse = True
+        else:
+            print('OpenCL is not available processing will be slow, try install it')
     
     # make catalogue
     # TODO check which channel_group
@@ -62,10 +76,9 @@ def tridesclous(
     initial_catalogue = dataio.load_catalogue(chan_grp=0)
     peeler = tdc.Peeler(dataio)
     peeler.change_params(catalogue=initial_catalogue,
-                        )
-                        #~ use_sparse_template=True,
-                        #~ sparse_threshold_mad=1.5,
-                        #~ use_opencl_with_sparse=True,)
+                        use_sparse_template=use_sparse_template,
+                        sparse_threshold_mad=1.5,
+                        use_opencl_with_sparse=use_opencl_with_sparse,)
     peeler.run(duration=None, progressbar=True)
     
     sorting = se.TridesclousSortingExtractor(tdc_dirname)
