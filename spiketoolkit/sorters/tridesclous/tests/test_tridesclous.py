@@ -9,13 +9,13 @@ def test_tdc():
     
     params = st.sorters.tridesclous_default_params
     sorting_tdc = st.sorters.tridesclous(recording=recording, 
-            output_folder='test_tdc_workdir', debug=True, **params)
+            output_folder='test_tdc_workdir', debug=False, **params)
     
     print(sorting_tdc)
     print(sorting_tdc.getUnitIds())
     for unit_id in sorting_tdc.getUnitIds():
-        print('unit #', unit_id)
-        print(sorting_tdc.getUnitSpikeTrain(unit_id))
+        print('unit #', unit_id, 'nb', len(sorting_tdc.getUnitSpikeTrain(unit_id)))
+        #~ print(sorting_tdc.getUnitSpikeTrain(unit_id))
     
     
     

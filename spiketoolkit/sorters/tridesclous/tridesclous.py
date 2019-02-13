@@ -30,17 +30,20 @@ def tridesclous(
     
     # save binary file
     raw_filename = output_folder / 'raw_signals.raw'
+    traces = recording.getTraces().T
+    dtype = traces.dtype
     with open(raw_filename, mode='wb') as f:
-        f.write(recording.getTraces().T.astype('float32').tobytes())
+        f.write(traces.tobytes())
     
     # tdc job is done in a subfolder
-    tdc_dirname = output_folder / 'tdc'
+    #~ tdc_dirname = output_folder / 'tdc'
+    tdc_dirname = output_folder
     # initialize source and probe file
     dataio = tdc.DataIO(dirname=tdc_dirname)
-    print(recording.getSamplingFrequency())
-    print(recording.getChannelIds())
+    #~ print(recording.getSamplingFrequency())
+    #~ print(recording.getChannelIds())
     
-    dataio.set_data_source(type='RawData', filenames=[raw_filename], dtype='float32',
+    dataio.set_data_source(type='RawData', filenames=[raw_filename], dtype=dtype.str,
                                     sample_rate=recording.getSamplingFrequency(),
                                     total_channel=len(recording.getChannelIds()))
     dataio.set_probe_file(probe_file)
