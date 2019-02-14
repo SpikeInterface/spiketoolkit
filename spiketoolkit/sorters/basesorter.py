@@ -32,6 +32,10 @@ class BaseSorter:
     def __init__(self, recording=None, output_folder=None, debug=False,
                                     by_property=None, parallel=False):
         
+        
+        assert self.installed, """This sorter {} is not installed.
+        Please install it with:  \n{} """.format(self.sortername, self.installation_mesg)
+        
         if output_folder is None:
             output_folder = sorter_name
         
