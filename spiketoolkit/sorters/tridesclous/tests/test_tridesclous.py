@@ -1,6 +1,5 @@
 import spikeextractors as se
 import spiketoolkit as st
-import spikewidgets as sw
 
 def test_tdc():
     recording, sorting = se.example_datasets.toy_example1(num_channels=4, duration=30)
