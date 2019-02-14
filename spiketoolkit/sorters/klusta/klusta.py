@@ -30,7 +30,7 @@ class KlustaSorter(BaseSorter):
     num_starting_clusters
     """
     
-    sortername = 'klusta'
+    sorter_name = 'klusta'
     installed = HAVE_KLUSTA
     SortingExtractor_Class = se.KlustaSortingExtractor
     
@@ -51,7 +51,6 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-    To use Klusta, install klusta and klustakwik2:
        >>> pip install klusta klustakwik
     
     More information on klusta at:
@@ -60,10 +59,8 @@ class KlustaSorter(BaseSorter):
     """
     
     
-    def __init__(self, recording=None, output_folder=None,
-                                    by_property=None, parallel=False):
-        BaseSorter.__init__(self, recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel)
+    def __init__(self, **kargs):
+        BaseSorter.__init__(self, **kargs)
 
     def set_params(self, **params):
         self.params = params
@@ -87,29 +84,29 @@ class KlustaSorter(BaseSorter):
             self.file_name = p['file_name'].stem
         se.writeBinaryDatFormat(self.recording, self.output_folder / p['file_name'])
 
-    if p['detect_sign'] < 0:
-        detect_sign = 'negative'
-    elif p['detect_sign'] > 0:
-        detect_sign = 'positive'
-    else:
-        detect_sign = 'both'
+        if p['detect_sign'] < 0:
+            detect_sign = 'negative'
+        elif p['detect_sign'] > 0:
+            detect_sign = 'positive'
+        else:
+            detect_sign = 'both'
 
-    # set up klusta config file
-    with (source_dir / 'config_default.prm').open('r') as f:
-        klusta_config = f.readlines()
-    
-    
-    # Note: should use format with dict approach here
-    klusta_config = ''.join(klusta_config).format(
-        self.output_folder / self.file_name, p['probe_file'], float(self.recording.getSamplingFrequency()),
-        self.recording.getNumChannels(), "'float32'",
-        p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + p['detect_sign'] + "'", 
-        p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
-        p['pca_n_waveforms_max'], p['num_starting_clusters']
-    )
+        # set up klusta config file
+        with (source_dir / 'config_default.prm').open('r') as f:
+            klusta_config = f.readlines()
+        
+        
+        # Note: should use format with dict approach here
+        klusta_config = ''.join(klusta_config).format(
+            self.output_folder / self.file_name, p['probe_file'], float(self.recording.getSamplingFrequency()),
+            self.recording.getNumChannels(), "'float32'",
+            p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + p['detect_sign'] + "'", 
+            p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
+            p['pca_n_waveforms_max'], p['num_starting_clusters']
+        )
 
-    with (self.output_folder /'config.prm').open('w') as f:
-        f.writelines(klusta_config)
+        with (self.output_folder /'config.prm').open('w') as f:
+            f.writelines(klusta_config)
 
     def _run(self):
         
@@ -129,9 +126,11 @@ def run_klusta(
         output_folder=None,
         by_property=None,
         parallel=False,
+        debug=False,
         **params):
     
-    sorter = KlustaSorter()
+    sorter = KlustaSorter(recording=recording, output_folder=output_folder,
+                                    by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()

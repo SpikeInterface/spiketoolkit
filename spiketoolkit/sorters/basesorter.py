@@ -23,7 +23,7 @@ from pathlib import Path
 
 class BaseSorter:
     
-    sortername = '' # convinience for reporting
+    sorter_name = '' # convinience for reporting
     installed = False # check at class level if isntalled or not
     SortingExtractor_Class = None # convinience to get the extractor
     _default_params = {}
@@ -34,21 +34,21 @@ class BaseSorter:
         
         
         assert self.installed, """This sorter {} is not installed.
-        Please install it with:  \n{} """.format(self.sortername, self.installation_mesg)
+        Please install it with:  \n{} """.format(self.sorter_name, self.installation_mesg)
         
         if output_folder is None:
-            output_folder = sorter_name
+            output_folder = 'test_' + self.sorter_name
         
-        self.output_folder = Path(sorter_name)
+        self.output_folder = Path(output_folder)
         self.recording = recording
         self.debug = debug
         self.by_property = by_property
         self.parallel = parallel
 
         if not self.output_folder.is_dir():
-            output_folder.mkdir()
+            self.output_folder.mkdir()
     
-    
+    @classmethod
     def default_params(self):
         return copy.deepcopy(self._default_params)
     
@@ -60,10 +60,10 @@ class BaseSorter:
         
         
         
-        if by_property is None:
+        if self.by_property is None:
             run_by_property = False
         else:
-            if by_property in recording.getChannelPropertyNames():
+            if self.by_property in recording.getChannelPropertyNames():
                 run_by_property = True
             else:
                 run_by_property = False
@@ -77,7 +77,7 @@ class BaseSorter:
             self._run()
             t1 = time.perf_counter()
         
-        if debug:
+        if self.debug:
             print('run time {:.0.2f}s'.frmat(t1-t0))
         
         return t1 - t0
@@ -92,7 +92,7 @@ class BaseSorter:
     
     def get_result(self):
         sorting = self.SortingExtractor_Class(self.output_folder)
-        return
+        return sorting
     
     
     # new idea
@@ -105,10 +105,10 @@ class BaseSorter:
 
 # generic laucnher via function approach
 def run_sorter_engine(SorterClass, recording, output_folder=None,
-        by_property=None, parallel=False, **params):
+        by_property=None, parallel=False, debug=False, **params):
     
     sorter = SorterClass(recording=recording, output_folder=output_folder, 
-                                    by_property=by_property, parallel=parallel)
+                                    by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()

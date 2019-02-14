@@ -1,4 +1,6 @@
 from pathlib import Path
+import os
+import shutil
 
 from spiketoolkit.sorters.basesorter import BaseSorter
 from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty, _call_command
@@ -18,11 +20,11 @@ class TridesclousSorter(BaseSorter):
     Everyone should test it.
     """
     
-    sortername = 'tridesclous'
+    sorter_name = 'tridesclous'
     installed = HAVE_TDC
     SortingExtractor_Class = se.TridesclousSortingExtractor
     
-    _default_params = _tridesclous_default_params
+    _default_params = None # later
     
     installation_mesg = """
        >>> pip install tridesclous
@@ -32,10 +34,8 @@ class TridesclousSorter(BaseSorter):
       * https://tridesclous.readthedocs.io
     """
     
-    def __init__(self, recording=None, output_folder=None,
-                                    by_property=None, parallel=False):
-        BaseSorter.__init__(self, recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel)
+    def __init__(self, **kargs):
+        BaseSorter.__init__(self, **kargs)
 
     def set_params(self, **params):
         self.params = params
@@ -50,6 +50,7 @@ class TridesclousSorter(BaseSorter):
 
         # save prb file:
         probe_file = self.output_folder / 'probe.prb'
+        print('probe_file', probe_file)
         se.saveProbeFile(self.recording, probe_file, format='spyking_circus')
         
         # save binary file
@@ -60,7 +61,7 @@ class TridesclousSorter(BaseSorter):
             f.write(traces.T.tobytes())
         
         # initialize source and probe file
-        self.tdc_dataio = tdc.DataIO(dirname=output_folder)
+        self.tdc_dataio = tdc.DataIO(dirname=self.output_folder)
         nb_chan = self.recording.getNumChannels()
         
         self.tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
@@ -88,7 +89,7 @@ class TridesclousSorter(BaseSorter):
         # make catalogue
         # TODO check which channel_group
         cc = tdc.CatalogueConstructor(dataio=self.tdc_dataio, chan_grp=0)
-        tdc.apply_all_catalogue_steps(cc, verbose=debug, **self.params)
+        tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **self.params)
         if self.debug:
             print(cc)
         cc.make_catalogue_for_peeler()
@@ -108,9 +109,11 @@ def run_tridesclous(
         output_folder=None,
         by_property=None,
         parallel=False,
+        debug=False,
         **params):
-    
-    sorter = TridesclousSorter()
+    print('rec', recording)
+    sorter = TridesclousSorter(recording=recording, output_folder=output_folder,
+                                    by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()
@@ -119,7 +122,7 @@ def run_tridesclous(
 
 
 
-_tridesclous_default_params = {
+TridesclousSorter._default_params = {
     'fullchain_kargs':{
         'duration' : 300.,
         'preprocessor' : {
