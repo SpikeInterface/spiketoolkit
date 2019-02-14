@@ -1,7 +1,90 @@
+"""
+I need help here because:
+  * there is no spikeextractor in spikeextractor module
+  * there is no output_folder
+
+Reading the code do not make evident if there is a persistency on disk.
+
+"""
 import spiketoolkit as st
 from ..tools import _spikeSortByProperty
 import time
 
+from spiketoolkit.sorters.basesorter import BaseSorter
+import spikeextractors as se
+
+try:
+    import ml_ms4alg
+    HAVE_MS4 = True
+except ModuleNotFoundError:
+    HAVE_MS4 = False
+
+
+class Mountainsort4Sorter(BaseSorter):
+    """
+    Mountainsort
+    """
+    
+    sorter_name = 'mountainsort4'
+    installed = HAVE_MS4
+    
+    SortingExtractor_Class = None # there is not extractor !!!!!!!!!!!!!!!!!!!!!!!!
+    
+    _default_params = {
+        'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
+        'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
+        'freq_min': 300,  # Use None for no bandpass filtering
+        'freq_max': 6000,
+        'whiten': True,  # Whether to do channel whitening as part of preprocessing
+        'clip_size': 50,
+        'detect_threshold': 3,
+        'detect_interval': 10,  # Minimum number of timepoints between events detected on the same channel
+        'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
+        'parallel': True
+    }
+    
+    installation_mesg = """
+       >>> pip install tridesclous
+    
+    More information on klusta at:
+      * https://github.com/tridesclous/tridesclous
+      * https://tridesclous.readthedocs.io
+    """
+    
+    def __init__(self, **kargs):
+        BaseSorter.__init__(self, **kargs)
+
+    def set_params(self, **params):
+        self.params = params
+    
+    def _setup_recording(self):
+        pass
+        # Not done
+    
+    def _run(self):
+        pass
+        # Not done
+
+
+def run_mountainsort4(
+        recording,
+        output_folder=None,
+        by_property=None,
+        parallel=False,
+        debug=False,
+        **params):
+    sorter = Mountainsort4Sorter(recording=recording, output_folder=output_folder,
+                                    by_property=by_property, parallel=parallel, debug=debug)
+    sorter.set_params(**params)
+    sorter.run()
+    sortingextractor = sorter.get_result()
+    
+    return sortingextractor
+
+
+#####################################
+## OLD IMPLEMENTAtion ABOVE
+#####################################
 
 def mountainsort4(
         recording,  # The recording extractor

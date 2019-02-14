@@ -3,7 +3,6 @@ import os
 import shutil
 
 from spiketoolkit.sorters.basesorter import BaseSorter
-from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty, _call_command
 import spikeextractors as se
 
 try:
@@ -111,7 +110,6 @@ def run_tridesclous(
         parallel=False,
         debug=False,
         **params):
-    print('rec', recording)
     sorter = TridesclousSorter(recording=recording, output_folder=output_folder,
                                     by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
