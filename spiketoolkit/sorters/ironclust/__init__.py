@@ -1,1 +1,1 @@
-from .ironclust import ironclust, ironclust_default_params
+from .ironclust import IronclustSorter, run_ironclust

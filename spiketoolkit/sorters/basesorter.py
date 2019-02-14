@@ -91,6 +91,8 @@ class BaseSorter:
         raise(NotImplemenetdError)
     
     def get_result(self):
+        # general case that do not work always
+        # sometime (klusta, ironclust) need to be over written
         sorting = self.SortingExtractor_Class(self.output_folder)
         return sorting
     

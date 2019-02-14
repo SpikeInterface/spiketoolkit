@@ -119,6 +119,11 @@ class KlustaSorter(BaseSorter):
         if not (self.output_folder / (self.file_name.name + '.kwik')).is_file():
             raise Exception('Klusta did not run successfully')
 
+    def get_result(self):
+        # overwrite the SorterBase.get_result
+        sorting = se.KlustaSortingExtractor(output_folder / (self.file_name.name + '.kwik'))
+        return sorting
+
 
 # this behave like the old klusta(...)
 def run_klusta(
