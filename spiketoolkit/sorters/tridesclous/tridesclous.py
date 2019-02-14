@@ -1,95 +1,125 @@
-
-import os, shutil
 from pathlib import Path
+
+from spiketoolkit.sorters.basesorter import BaseSorter
+from spiketoolkit.sorters.tools import _run_command_and_print_output, _spikeSortByProperty, _call_command
 import spikeextractors as se
 
-def tridesclous(
-        recording,  # The recording extractor
+try:
+    import tridesclous as tdc
+    HAVE_TDC = True
+except ModuleNotFoundError:
+    HAVE_TDC = False
+
+
+class TridesclousSorter(BaseSorter):
+    """
+    tridesclous is one of the more convinient, fast and elegant
+    spike sorter.
+    Everyone should test it.
+    """
+    
+    sortername = 'tridesclous'
+    installed = HAVE_TDC
+    SortingExtractor_Class = se.TridesclousSortingExtractor
+    
+    _default_params = _tridesclous_default_params
+    
+    installation_mesg = """
+       >>> pip install tridesclous
+    
+    More information on klusta at:
+      * https://github.com/tridesclous/tridesclous
+      * https://tridesclous.readthedocs.io
+    """
+    
+    def __init__(self, recording=None, output_folder=None,
+                                    by_property=None, parallel=False):
+        BaseSorter.__init__(self, recording=recording, output_folder=output_folder,
+                                    by_property=by_property, parallel=parallel)
+
+    def set_params(self, **params):
+        self.params = params
+    
+    
+    def _setup_recording(self):
+        # reset the output folder
+        if os.path.exists(self.output_folder):
+            shutil.rmtree(self.output_folder)
+        
+        os.makedirs(self.output_folder)
+
+        # save prb file:
+        probe_file = self.output_folder / 'probe.prb'
+        se.saveProbeFile(self.recording, probe_file, format='spyking_circus')
+        
+        # save binary file
+        raw_filename = self.output_folder / 'raw_signals.raw'
+        traces = self.recording.getTraces()
+        dtype = traces.dtype
+        with open(raw_filename, mode='wb') as f:
+            f.write(traces.T.tobytes())
+        
+        # initialize source and probe file
+        self.tdc_dataio = tdc.DataIO(dirname=output_folder)
+        nb_chan = self.recording.getNumChannels()
+        
+        self.tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
+                        dtype=dtype.str, sample_rate=self.recording.getSamplingFrequency(),
+                                        total_channel=nb_chan)
+        self.tdc_dataio.set_probe_file(probe_file)
+        if self.debug:
+            print(self.tdc_dataio)        
+        
+    def _run(self):
+        nb_chan = self.recording.getNumChannels()
+    
+        # check params and OpenCL when many channels
+        use_sparse_template = False
+        use_opencl_with_sparse = False
+        if nb_chan >64: # this limit depend on the platform of course
+            if tdc.cltools.HAVE_PYOPENCL:
+                # force opencl
+                self.params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+                use_sparse_template = True
+                use_opencl_with_sparse = True
+            else:
+                print('OpenCL is not available processing will be slow, try install it')
+        
+        # make catalogue
+        # TODO check which channel_group
+        cc = tdc.CatalogueConstructor(dataio=self.tdc_dataio, chan_grp=0)
+        tdc.apply_all_catalogue_steps(cc, verbose=debug, **self.params)
+        if self.debug:
+            print(cc)
+        cc.make_catalogue_for_peeler()
+        
+        # apply Peeler (template matching)
+        initial_catalogue = self.tdc_dataio.load_catalogue(chan_grp=0)
+        peeler = tdc.Peeler(self.tdc_dataio)
+        peeler.change_params(catalogue=initial_catalogue,
+                            use_sparse_template=use_sparse_template,
+                            sparse_threshold_mad=1.5,
+                            use_opencl_with_sparse=use_opencl_with_sparse,)
+        peeler.run(duration=None, progressbar=True)
+
+
+def run_tridesclous(
+        recording,
         output_folder=None,
-        debug=True,
-        **params
-        ):
-
-    try:
-        import tridesclous as tdc
-    except ModuleNotFoundError:
-        raise ModuleNotFoundError("tridesclous is not installed")
+        by_property=None,
+        parallel=False,
+        **params):
     
-
-    output_folder = Path(output_folder)
+    sorter = TridesclousSorter()
+    sorter.set_params(**params)
+    sorter.run()
+    sortingextractor = sorter.get_result()
     
-    # reset the output folder
-    if os.path.exists(output_folder):
-        shutil.rmtree(output_folder)
-    
-    os.makedirs(output_folder)
-    
-
-    # save prb file:
-    probe_file = output_folder / 'probe.prb'
-    se.saveProbeFile(recording, probe_file, format='spyking_circus')
-    
-    # save binary file
-    raw_filename = output_folder / 'raw_signals.raw'
-    traces = recording.getTraces()
-    dtype = traces.dtype
-    with open(raw_filename, mode='wb') as f:
-        f.write(traces.T.tobytes())
-    
-    # tdc job is done in a subfolder
-    #~ tdc_dirname = output_folder / 'tdc'
-    tdc_dirname = output_folder
-    # initialize source and probe file
-    dataio = tdc.DataIO(dirname=tdc_dirname)
-    #~ print(recording.getSamplingFrequency())
-    #~ print(recording.getChannelIds())
-    nb_chan = recording.getNumChannels()
-    
-    dataio.set_data_source(type='RawData', filenames=[raw_filename], dtype=dtype.str,
-                                    sample_rate=recording.getSamplingFrequency(),
-                                    total_channel=nb_chan)
-    dataio.set_probe_file(probe_file)
-    if debug:
-        print(dataio)
-    
-    # check params and OpenCL when many channels
-    use_sparse_template = False
-    use_opencl_with_sparse = False
-    if nb_chan >64: # this limit depend on the platform of course
-        if tdc.cltools.HAVE_PYOPENCL:
-            # force opencl
-            params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
-            use_sparse_template = True
-            use_opencl_with_sparse = True
-        else:
-            print('OpenCL is not available processing will be slow, try install it')
-    
-    # make catalogue
-    # TODO check which channel_group
-    cc = tdc.CatalogueConstructor(dataio=dataio, chan_grp=0)
-    tdc.apply_all_catalogue_steps(cc, verbose=debug, **params)
-    if debug:
-        print(cc)
-    cc.make_catalogue_for_peeler()
-    
-    # apply Peeler (template matching)
-    initial_catalogue = dataio.load_catalogue(chan_grp=0)
-    peeler = tdc.Peeler(dataio)
-    peeler.change_params(catalogue=initial_catalogue,
-                        use_sparse_template=use_sparse_template,
-                        sparse_threshold_mad=1.5,
-                        use_opencl_with_sparse=use_opencl_with_sparse,)
-    peeler.run(duration=None, progressbar=True)
-    
-    sorting = se.TridesclousSortingExtractor(tdc_dirname)
-    return sorting
-    
-    
+    return sortingextractor
 
 
 
-
-tridesclous_default_params = {
+_tridesclous_default_params = {
     'fullchain_kargs':{
         'duration' : 300.,
         'preprocessor' : {

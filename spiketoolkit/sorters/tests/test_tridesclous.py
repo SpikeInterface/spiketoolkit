@@ -1,8 +1,9 @@
-import spikeextractors as se
-import spiketoolkit as st
+import pytest
+from spiketoolkit.sorters import TridesclousSorter, run_tridesclous
 
+@pytest.skipif(not TridesclousSorter.installed)
 def test_tdc():
-    recording, sorting = se.example_datasets.toy_example1(num_channels=4, duration=30)
+    recording, sorting_gt = se.example_datasets.toy_example1(num_channels=4, duration=30)
     print(recording)
     print(sorting)
     
@@ -14,7 +15,6 @@ def test_tdc():
     print(sorting_tdc.getUnitIds())
     for unit_id in sorting_tdc.getUnitIds():
         print('unit #', unit_id, 'nb', len(sorting_tdc.getUnitSpikeTrain(unit_id)))
-        #~ print(sorting_tdc.getUnitSpikeTrain(unit_id))
     
     
     

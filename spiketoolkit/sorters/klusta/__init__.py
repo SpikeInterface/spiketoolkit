@@ -1,1 +1,1 @@
-from .klusta import klusta, klusta_default_params
+from .klusta import KlustaSorter, run_klusta

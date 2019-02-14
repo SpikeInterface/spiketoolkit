@@ -1,1 +1,1 @@
-from .tridesclous import tridesclous, tridesclous_default_params
+from .tridesclous import TridesclousSorter, run_tridesclous
