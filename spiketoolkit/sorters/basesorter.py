@@ -54,7 +54,7 @@ class BaseSorter:
     
     def set_params(self):
         # need subclass
-        raise(NotImplemenetdError)
+        raise(NotImplementedError)
     
     def run(self):
         
@@ -84,11 +84,11 @@ class BaseSorter:
         
     def _setup_recording(self):
         # need subclass
-        raise(NotImplemenetdError)
+        raise(NotImplementedError)
 
     def _run(self):
         # need subclass
-        raise(NotImplemenetdError)
+        raise(NotImplementedError)
     
     def get_result(self):
         # general case that do not work always
