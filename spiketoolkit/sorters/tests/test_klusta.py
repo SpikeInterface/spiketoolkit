@@ -9,7 +9,7 @@ def test_klusta():
     print(recording)
     print(sorting_gt)
     
-    params =KlustaSorter.default_params()
+    params = KlustaSorter.default_params()
     sorting_K = run_klusta(recording, output_folder='test_klusta', **params)
     
     print(sorting_K)
