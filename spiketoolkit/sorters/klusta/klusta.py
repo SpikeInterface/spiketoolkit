@@ -51,7 +51,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install klusta klustakwik
+       >>> pip install klusta klustakwik2
     
     More information on klusta at:
       * https://github.com/kwikteam/phy"
@@ -74,15 +74,18 @@ class KlustaSorter(BaseSorter):
         
         # save prb file:
         if p['probe_file'] is None:
-            p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='klusta', radius=p['padjacency_radius'])
+            p['probe_file'] = self.output_folder / 'probe.prb'
+            se.saveProbeFile(self.recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
         # save binary file
         if p['file_name'] is None:
             self.file_name = Path('recording')
         elif file_name.suffix == '.dat':
             self.file_name = p['file_name'].stem
-        se.writeBinaryDatFormat(self.recording, self.output_folder / p['file_name'])
+        p['file_name'] = self.file_name
+        print('self.output_folder', self.output_folder)
+        print('file_name', p['file_name'])
+        se.writeBinaryDatFormat(self.recording, self.output_folder / self.file_name)
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -100,7 +103,7 @@ class KlustaSorter(BaseSorter):
         klusta_config = ''.join(klusta_config).format(
             self.output_folder / self.file_name, p['probe_file'], float(self.recording.getSamplingFrequency()),
             self.recording.getNumChannels(), "'float32'",
-            p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + p['detect_sign'] + "'", 
+            p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']
         )
