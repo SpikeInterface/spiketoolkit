@@ -83,8 +83,6 @@ class KlustaSorter(BaseSorter):
         elif file_name.suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
-        print('self.output_folder', self.output_folder)
-        print('file_name', p['file_name'])
         se.writeBinaryDatFormat(self.recording, self.output_folder / self.file_name)
 
         if p['detect_sign'] < 0:

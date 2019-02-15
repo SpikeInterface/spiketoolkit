@@ -39,7 +39,7 @@ class BaseSorter:
         if output_folder is None:
             output_folder = 'test_' + self.sorter_name
         
-        self.output_folder = Path(output_folder)
+        self.output_folder = Path(output_folder).absolute()
         self.recording = recording
         self.debug = debug
         self.by_property = by_property
