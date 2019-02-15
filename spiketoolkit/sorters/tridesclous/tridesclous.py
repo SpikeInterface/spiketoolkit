@@ -26,7 +26,7 @@ class TridesclousSorter(BaseSorter):
     _default_params = None # later
     
     installation_mesg = """
-       >>> pip install tridesclous
+       >>> pip install https://github.com/tridesclous/tridesclous/archive/master.zip
     
     More information on klusta at:
       * https://github.com/tridesclous/tridesclous
