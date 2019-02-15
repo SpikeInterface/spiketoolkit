@@ -5,10 +5,19 @@ from ..tools import  _call_command_split
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 
-try:
-    from mountainlab_pytools import mdaio
-    HAVE_IRONCLUST = True
-except ModuleNotFoundError:
+ironclust_path = os.getenv('IRONCLUST_PATH')
+if ironclust_path is not None and ironclust_path.startswith('"'):
+    ironclust_path = ironclust_path[1:-1]
+    ironclust_path = Path(ironclust_path).absolut()
+
+if (ironclust_path is not None):
+    try:
+        from mountainlab_pytools import mdaio
+
+        HAVE_IRONCLUST = True
+    except ModuleNotFoundError:
+        HAVE_IRONCLUST = True
+else:
     HAVE_IRONCLUST = False
 
 
@@ -30,14 +39,20 @@ class IronclustSorter(BaseSorter):
         'freq_min': 300,  # Lower frequency limit for band-pass filter
         'freq_max': 6000,  # Upper frequency limit for band-pass filter
         'pc_per_chan': 3,  # Number of pc per channel
-        'parallel': True
+        'parallel': True,
+        'ironclust_path': None
     }
 
-    installation_mesg = """
-       >>> pip install mountainlab_pytools
+    installation_mesg = """\nTo use Ironclust run:\n
+        >>> pip install mountainlab_pytools kbucket\n
 
-    and clone the repo:
-        >>>git clone https://github.com/jamesjun/ironclust
+    and clone the repo:\n
+        >>> git clone https://github.com/jamesjun/ironclust\n
+    and provide the installation path with the 'ironclust_path' argument or
+    by setting the IRONCLUST_PATH environment variable.\n\n
+    
+    More information on KiloSort at:
+        https://github.com/jamesjun/ironclust
     """
     
     def __init__(self, **kargs):
@@ -60,20 +75,18 @@ class IronclustSorter(BaseSorter):
             raise Exception(
                 'You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
         if not (Path( self.ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
-            raise ModuleNotFoundError("\nTo use IronClust clone the repo:\n\n"
-                                      "git clone https://github.com/jamesjun/ironclust")
-        
+            raise ModuleNotFoundError(IronclustSorter.installation_mesg)
         
         dataset_dir = self.output_folder / 'ironclust_dataset'
         if not dataset_dir.is_dir():
             dataset_dir.mkdir()
 
         self.output_folder = self.output_folder.absolute()
-        self.dataset_dir = self.dataset_dir.absolute()
+        self.dataset_dir = dataset_dir.absolute()
 
         # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-        se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
-        samplerate = recording.getSamplingFrequency()
+        se.MdaRecordingExtractor.writeRecording(recording=self.recording, save_path=self.dataset_dir)
+        samplerate = self.recording.getSamplingFrequency()
 
         if self.debug:
             print('Reading timeseries header...')
@@ -133,6 +146,11 @@ class IronclustSorter(BaseSorter):
         sorting = se.NumpySortingExtractor()
         sorting.setTimesLabels(firings[1, :], firings[2, :])
         return sorting
+
+
+def _write_text_file(fname, str):
+    with fname.open('w') as f:
+        f.write(str)
 
 
 def run_ironclust(

@@ -122,7 +122,7 @@ class KlustaSorter(BaseSorter):
 
     def get_result(self):
         # overwrite the SorterBase.get_result
-        sorting = se.KlustaSortingExtractor(output_folder / (self.file_name.name + '.kwik'))
+        sorting = se.KlustaSortingExtractor(self.output_folder / (self.file_name.name + '.kwik'))
         return sorting
 
 
