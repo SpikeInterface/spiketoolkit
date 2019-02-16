@@ -1,22 +1,14 @@
 from pathlib import Path
 import os
+import sys
 
 from ..tools import  _call_command_split
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 
-ironclust_path = os.getenv('IRONCLUST_PATH')
-if ironclust_path is not None and ironclust_path.startswith('"'):
-    ironclust_path = ironclust_path[1:-1]
-    ironclust_path = Path(ironclust_path).absolut()
 
-if (ironclust_path is not None):
-    try:
-        from mountainlab_pytools import mdaio
-
-        HAVE_IRONCLUST = True
-    except ModuleNotFoundError:
-        HAVE_IRONCLUST = True
+if check_if_installed(os.getenv('IRONCLUST_PATH')):
+    HAVE_IRONCLUST = True
 else:
     HAVE_IRONCLUST = False
 
@@ -27,6 +19,7 @@ class IronclustSorter(BaseSorter):
     
     sorter_name = 'ironclust'
     installed = HAVE_IRONCLUST
+    ironclust_path = os.getenv('IRONCLUST_PATH')
     # SortingExtractor_Class = se.NumpySortingExtractor
     SortingExtractor_Class = None # custum get_result
     
@@ -58,23 +51,20 @@ class IronclustSorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
+
     def set_params(self, **params):
         self.params = params
-    
+
+
+    @staticmethod
+    def set_ironclust_path(ironclust_path):
+        IronclustSorter.ironclust_path = ironclust_path
+
     
     def _setup_recording(self):
         p = self.params
-        
-        self.ironclust_path = p['ironclust_path']
-        if self.ironclust_path is None:
-            icp = os.getenv('IRONCLUST_PATH', None)
-            if icp.startswith('"'):
-                icp = icp[1:-1]
-            self.ironclust_path = Path(icp)
-        if self.ironclust_path is None:
-            raise Exception(
-                'You must either set the IRONCLUST_PATH environment variable, or pass the ironclust_path parameter')
-        if not (Path( self.ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
+
+        if not check_if_installed(IronclustSorter.ironclust_path):
             raise ModuleNotFoundError(IronclustSorter.installation_mesg)
         
         dataset_dir = self.output_folder / 'ironclust_dataset'
@@ -116,7 +106,7 @@ class IronclustSorter(BaseSorter):
         if self.debug:
             print('Running IronClust...')
             
-        cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(self.ironclust_path, self.ironclust_path, self.ironclust_path)
+        cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(IronclustSorter.ironclust_path, IronclustSorter.ironclust_path, IronclustSorter.ironclust_path)
         # "p_ironclust('$(tempdir)','$timeseries$','$geom$','$prm$','$firings_true$','$firings_out$','$(argfile)');"
         cmd_call = "p_ironclust('{}', '{}', '{}', '', '', '{}', '{}');" \
             .format(self.output_folder, self.dataset_dir / 'raw.mda', self.dataset_dir / 'geom.csv', self.output_folder / 'firings.mda',
@@ -152,6 +142,19 @@ def _write_text_file(fname, str):
     with fname.open('w') as f:
         f.write(str)
 
+def check_if_installed(ironclust_path):
+    if ironclust_path is not None and ironclust_path.startswith('"'):
+        ironclust_path = ironclust_path[1:-1]
+        ironclust_path = Path(ironclust_path).absolute()
+
+    if (Path(ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
+        try:
+            from mountainlab_pytools import mdaio
+            return True
+        except ModuleNotFoundError:
+            return False
+    else:
+        return False
 
 def run_ironclust(
         recording,
@@ -162,53 +165,12 @@ def run_ironclust(
         **params):
     sorter = IronclustSorter(recording=recording, output_folder=output_folder,
                                     by_property=by_property, parallel=parallel, debug=debug)
+    if 'ironclust_path' in  params.keys() and params['ironclust_path'] is not None:
+        IronclustSorter.set_ironclust_path(params['ironclust_path'])
+    else:
+        IronclustSorter.set_ironclust_path(os.getenv('IRONCLUST_PATH'))
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()
     
-    return sortingextractor        
-        
-        
-        
-        
-############################
-
-
-import spikeextractors as se
-import os, sys
-import time
-
-
-def ironclust(recording,  # Recording object
-              prm_template_name=None,  # Name of the template file
-              by_property=None,
-              parallel=False,
-              output_folder=None,  # Temporary working directory
-              detect_sign=-1,  # Polarity of the spikes, -1, 0, or 1
-              adjacency_radius=-1,  # Channel neighborhood adjacency radius corresponding to geom file
-              detect_threshold=5,  # Threshold for detection
-              merge_thresh=.98,  # Cluster merging threhold 0..1
-              freq_min=300,  # Lower frequency limit for band-pass filter
-              freq_max=6000,  # Upper frequency limit for band-pass filter
-              pc_per_chan=3,  # Number of pc per channel
-              ironclust_path=None
-):
-    t_start_proc = time.time()
-    if by_property is None:
-        sorting = _ironclust(recording, prm_template_name, output_folder, detect_sign, adjacency_radius,
-                             detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
-    else:
-        if by_property in recording.getChannelPropertyNames():
-            sorting = _spikeSortByProperty(recording, 'ironclust', by_property, parallel,
-                                           prm_template_name=prm_template_name,
-                                           output_folder=output_folder, detect_sign=detect_sign,
-                                           adjacency_radius=adjacency_radius, detect_threshold=detect_threshold,
-                                           merge_thresh=merge_thresh, freq_min=freq_min, freq_max=freq_max,
-                                           pc_per_chan=pc_per_chan, ironclust_path=ironclust_path)
-        else:
-            print("Property not available! Running normal spike sorting")
-            sorting = _ironclust(recording, prm_template_name, output_folder, detect_sign, adjacency_radius,
-                                 detect_threshold, merge_thresh, freq_min, freq_max, pc_per_chan, ironclust_path)
-    print('Elapsed time: ', time.time() - t_start_proc)
-
-    return sorting
+    return sortingextractor

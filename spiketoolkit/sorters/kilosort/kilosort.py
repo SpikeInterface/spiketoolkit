@@ -22,17 +22,8 @@ from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 from ..tools import _call_command_split
 
-kilosort_path = os.getenv('KILOSORT_PATH')
-if kilosort_path is not None and kilosort_path.startswith('"'):
-    kilosort_path = kilosort_path[1:-1]
-    kilosort_path = Path(kilosort_path).absolut()
 
-npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
-if npy_matlab_path is not None and npy_matlab_path.startswith('"'):
-    npy_matlab_path = npy_matlab_path[1:-1]
-    npy_matlab_path = Path(npy_matlab_path).absolut()
-
-if (kilosort_path is not None) and (npy_matlab_path is not None):
+if check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH')):
     HAVE_KILOSORT = True
 else:
     HAVE_KILOSORT = False
@@ -46,6 +37,8 @@ class KilosortSorter(BaseSorter):
     
     sorter_name = 'kilosort'
     installed = HAVE_KILOSORT
+    kilosort_path = os.getenv('KILOSORT_PATH')
+    npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
     SortingExtractor_Class = se.KiloSortSortingExtractor
     
     _default_params = {
@@ -74,34 +67,26 @@ class KilosortSorter(BaseSorter):
 
     def set_params(self, **params):
         self.params = params
-    
-    
+
+
+    @staticmethod
+    def set_kilosort_path(kilosort_path):
+        KilosortSorter.kilosort_path = kilosort_path
+
+
+    @staticmethod
+    def set_npy_matlab_path(npy_matlab_path):
+        KilosortSorter.npy_matlab_path = npy_matlab_path
+
+
     def _setup_recording(self):
         
         source_dir = Path(__file__).parent
         
         p = self.params
-        self.kilosort_path = p['kilosort_path']
-        self.npy_matlab_path = p['npy_matlab_path']
 
-        if self.kilosort_path is None or self.kilosort_path == 'None':
-            klp = os.getenv('KILOSORT_PATH')
-            if klp.startswith('"'):
-                klp = klp[1:-1]
-            self.kilosort_path = Path(klp)
-        if self.npy_matlab_path is None or self.npy_matlab_path == 'None':
-            npp = os.getenv('NPY_MATLAB_PATH')
-            if npp.startswith('"'):
-                npp = npp[1:-1]
-            self.npy_matlab_path = Path(npp)
-        if self.kilosort_path is None or self.npy_matlab_path is None:
-            raise Exception(
-                'You must either set the KILOSORT_PATH and NPY_MATLAB_PATH environment variable, '
-                'or pass the kilosort_path and npy_matlab_path parameters')
-        if not (Path(self.kilosort_path) / 'preprocessData.m').is_file() \
-                or not (Path(self.npy_matlab_path) / 'npy-matlab' / 'readNPY.m').is_file():
+        if not check_if_installed(KilosortSorter.kilosort_path, KilosortSorter.npy_matlab_path):
             raise Exception(KilosortSorter.installation_mesg)
-
 
         # save binary file
         if p['file_name'] is None:
@@ -142,8 +127,8 @@ class KilosortSorter(BaseSorter):
 
         abs_channel = (self.output_folder / 'kilosort_channelmap.m').absolute()
         abs_config = (self.output_folder / 'kilosort_config.m').absolute()
-        kilosort_path = Path(self.kilosort_path).absolute()
-        npy_matlab_path = Path(self.npy_matlab_path).absolute() / 'npy-matlab'
+        kilosort_path = Path(KilosortSorter.kilosort_path).absolute()
+        npy_matlab_path = Path(KilosortSorter.npy_matlab_path).absolute() / 'npy-matlab'
 
         kilosort_master = ''.join(kilosort_master).format(ug, kilosort_path, npy_matlab_path, 
                                                                              self.output_folder, abs_channel,
@@ -152,7 +137,6 @@ class KilosortSorter(BaseSorter):
                                                                                 Nfilt, nsamples, kilo_thresh)
         electrode_dimensions = p['electrode_dimensions']
 
-        #TODO FIX GROUP
         if 'group' in self.recording.getChannelPropertyNames():
             groups = [self.recording.getChannelProperty(ch, 'group') for ch in self.recording.getChannelIds()]
         else:
@@ -199,7 +183,23 @@ class KilosortSorter(BaseSorter):
 
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)
-    
+
+
+def check_if_installed(kilosort_path, npy_matlab_path):
+    if kilosort_path is not None and kilosort_path.startswith('"'):
+        kilosort_path = kilosort_path[1:-1]
+        kilosort_path = Path(kilosort_path).absolut()
+
+    if npy_matlab_path is not None and npy_matlab_path.startswith('"'):
+        npy_matlab_path = npy_matlab_path[1:-1]
+        npy_matlab_path = Path(npy_matlab_path).absolut()
+
+    if (Path(kilosort_path) / 'preprocessData.m').is_file() \
+            or not (Path(npy_matlab_path) / 'npy-matlab' / 'readNPY.m').is_file():
+        return True
+    else:
+        return False
+
     
 def run_kilosort(
         recording,
@@ -211,6 +211,14 @@ def run_kilosort(
     sorter = KilosortSorter(recording=recording, output_folder=output_folder,
                                     by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
+    if 'kilosort_path' in  params.keys() and params['kilosort_path'] is not None:
+        KilosortSorter.set_kilosort_path(params['kilosort_path'])
+    else:
+        KilosortSorter.set_kilosort_path(os.getenv('KILOSORT_PATH'))
+    if 'npy_matlab_path' in  params.keys() and params['npy_matlab_path'] is not None:
+        KilosortSorter.set_npy_matlab_path(params['npy_matlab_path'])
+    else:
+        KilosortSorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
     sorter.run()
     sortingextractor = sorter.get_result()
     
