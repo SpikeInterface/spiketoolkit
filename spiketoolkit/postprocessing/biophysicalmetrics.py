@@ -2,47 +2,37 @@ import numpy as np
 
 '''
 This module implements a number of biophysical metrics to validate spike sorting
-results. These are taken from the "Proposal for web-based spike sorting validation"
-white paper written by Alex Barnett, Jeremy Magland, and James Jun
+results.
 '''
 
 
-def getISIViolations(unit_spike_train, sampling_frequency, ref_period=0.002, min_ISI=0.0):
-    '''This function calculates an estimated false positive rate of the spikes
-    in the given spike train using the number of refractory violations:
+def getISIRatio(unit_spike_train, sampling_frequency):
+    '''This function calculates the ratio between the frequency of spikes present
+    within 0- to 2-ms (refractory period) interspike interval (ISI) and those at 0- to 20-ms
+    interval. Taken from:
+
+     "Large-scale, high-density (up to 512 channels) recording of local circuits
+     in behaving animals" - Antal Berényi, et al.
 
     Parameters
     ----------
     unit_spike_train: array_like
         1D array of spike times in frames (sorted in ascending chronological order)
-    ref_period: float
-        The estimated time (in seconds) of the refractory period of the unit
     sampling_frequency: float
         The sampling frequency of recording
-    min_ISI: float
-        The minimum possible ISI time (in seconds)based on the cutoff window.
-        This parameter is for single electrode recordings where there is a cutoff
-        window for detection, this is not defined for multi-electrode recordings.
-        Therefore, the default value is 0, but should be set to about 1ms for for
-        most single electrode recordings.
 
     Returns
     ----------
-    fp_rate: float
-        The estimated false positive rate
-    num_violations: int
-        The number of refractory/minISI violations in the given spike train
-
+    ISI_ratio: float
+        The ratio between the frequency of spikes present within 0- to 2-ms ISI
+        and those at 0- to 20-ms interval.
     '''
-    ref_frame_period = sampling_frequency*ref_period
-    min_frame_ISI = sampling_frequency*min_ISI
+    ref_frame_period = sampling_frequency*0.002
+    long_interval = sampling_frequency*0.02
 
     ISIs = np.diff(unit_spike_train)
-    num_spikes = unit_spike_train.shape[0]
-    num_violations = sum(ISIs<ref_frame_period)
+    num_ref_violations = float(sum(ISIs<ref_frame_period))
+    num_longer_interval = float(sum(ISIs<long_interval))
 
-    violation_time = 2*num_spikes*(ref_period-min_ISI)
-    total_rate = num_spikes/(unit_spike_train[-1]/sampling_frequency)
-    violation_rate = num_violations/violation_time
-    fp_rate = violation_rate/total_rate
-    return fp_rate, num_violations
+    ISI_ratio = num_ref_violations / num_longer_interval
+    return ISI_ratio
