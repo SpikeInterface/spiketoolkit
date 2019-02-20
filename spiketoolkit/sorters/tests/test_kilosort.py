@@ -4,7 +4,7 @@ from spiketoolkit.sorters import KilosortSorter, run_kilosort
 
 @pytest.mark.skipif(not KilosortSorter.installed)
 def test_tdc():
-    recording, sorting_gt = se.example_datasets.toy_example1(num_channels=32, duration=30)
+    recording, sorting_gt = se.example_datasets.toy_example1(num_channels=4, duration=30)
     print(recording)
     print(sorting_gt)
 
