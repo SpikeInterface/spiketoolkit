@@ -23,6 +23,24 @@ import spikeextractors as se
 from ..tools import _call_command_split
 
 
+def check_if_installed(kilosort_path, npy_matlab_path):
+    if kilosort_path is None or npy_matlab_path is None:
+        return False
+    
+    if kilosort_path is not None and kilosort_path.startswith('"'):
+        kilosort_path = kilosort_path[1:-1]
+        kilosort_path = Path(kilosort_path).absolut()
+
+    if npy_matlab_path is not None and npy_matlab_path.startswith('"'):
+        npy_matlab_path = npy_matlab_path[1:-1]
+        npy_matlab_path = Path(npy_matlab_path).absolut()
+
+    if (Path(kilosort_path) / 'preprocessData.m').is_file() \
+            or not (Path(npy_matlab_path) / 'npy-matlab' / 'readNPY.m').is_file():
+        return True
+    else:
+        return False
+
 if check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH')):
     HAVE_KILOSORT = True
 else:
@@ -183,22 +201,6 @@ class KilosortSorter(BaseSorter):
 
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)
-
-
-def check_if_installed(kilosort_path, npy_matlab_path):
-    if kilosort_path is not None and kilosort_path.startswith('"'):
-        kilosort_path = kilosort_path[1:-1]
-        kilosort_path = Path(kilosort_path).absolut()
-
-    if npy_matlab_path is not None and npy_matlab_path.startswith('"'):
-        npy_matlab_path = npy_matlab_path[1:-1]kilosort_path
-        npy_matlab_path = Path(npy_matlab_path).absolut()
-
-    if (Path(kilosort_path) / 'preprocessData.m').is_file() \
-            or not (Path(npy_matlab_path) / 'npy-matlab' / 'readNPY.m').is_file():
-        return True
-    else:
-        return False
 
 
 def run_kilosort(

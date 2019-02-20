@@ -7,6 +7,22 @@ from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 
 
+def check_if_installed(ironclust_path):
+    if ironclust_path is None:
+        return False
+    if ironclust_path is not None and ironclust_path.startswith('"'):
+        ironclust_path = ironclust_path[1:-1]
+        ironclust_path = Path(ironclust_path).absolute()
+
+    if (Path(ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
+        try:
+            from mountainlab_pytools import mdaio
+            return True
+        except ModuleNotFoundError:
+            return False
+    else:
+        return False
+
 if check_if_installed(os.getenv('IRONCLUST_PATH')):
     HAVE_IRONCLUST = True
 else:
@@ -142,19 +158,7 @@ def _write_text_file(fname, str):
     with fname.open('w') as f:
         f.write(str)
 
-def check_if_installed(ironclust_path):
-    if ironclust_path is not None and ironclust_path.startswith('"'):
-        ironclust_path = ironclust_path[1:-1]
-        ironclust_path = Path(ironclust_path).absolute()
 
-    if (Path(ironclust_path) / 'matlab' / 'p_ironclust.m').is_file():
-        try:
-            from mountainlab_pytools import mdaio
-            return True
-        except ModuleNotFoundError:
-            return False
-    else:
-        return False
 
 def run_ironclust(
         recording,
