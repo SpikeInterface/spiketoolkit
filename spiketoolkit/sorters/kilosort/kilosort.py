@@ -191,7 +191,7 @@ def check_if_installed(kilosort_path, npy_matlab_path):
         kilosort_path = Path(kilosort_path).absolut()
 
     if npy_matlab_path is not None and npy_matlab_path.startswith('"'):
-        npy_matlab_path = npy_matlab_path[1:-1]
+        npy_matlab_path = npy_matlab_path[1:-1]kilosort_path
         npy_matlab_path = Path(npy_matlab_path).absolut()
 
     if (Path(kilosort_path) / 'preprocessData.m').is_file() \
@@ -200,14 +200,24 @@ def check_if_installed(kilosort_path, npy_matlab_path):
     else:
         return False
 
-    
+
 def run_kilosort(
         recording,
         output_folder=None,
         by_property=None,
         parallel=False,
         debug=False,
+        kilosort_path=None,
+        npy_matlab_path=None,
         **params):
+    
+    # this preserve the old signature
+    if kilosort_path is not None:
+        KilosortSorter.set_kilosort_path(kilosort_path)
+    if npy_matlab_path is not None:
+        KilosortSorter.set_npy_matlab_path(npy_matlab_path)
+
+    
     sorter = KilosortSorter(recording=recording, output_folder=output_folder,
                                     by_property=by_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
