@@ -100,6 +100,10 @@ To experiment with RecordingExtractors, SortingExtractors, and their associated 
 <br/>
 
 
+## Run test
+
+pytest
+
 ### Authors
 
 [Alessio Paolo Buccino](https://www.mn.uio.no/ifi/english/people/aca/alessiob/) - Center for Inegrative Neurolasticity (CINPLA), Department of Biosciences, Physics, and Informatics, University of Oslo, Oslo, Norway

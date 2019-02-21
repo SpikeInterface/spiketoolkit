@@ -4,10 +4,17 @@ os:
 python:
   - '3.6'
 install:
+  # spikeextractors and spikewidgets are taken from github to get latest version
+  - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest
-  - pip install ml_ms4alg #spikewidgets
-script: pytest
+  - pip install klusta klustakwik2 click
+  - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
+#  - pip install ml_ms4alg  # not done yet
+# - pip install spyking-circus  #too difficult circus need MPI installed
+script: 
+  pytest
 deploy:
   provider: pypi
   user: alejoe91
