@@ -77,26 +77,23 @@ class IronclustSorter(BaseSorter):
         IronclustSorter.ironclust_path = ironclust_path
 
     
-    def _setup_recording(self):
+    def _setup_recording(self, recording, output_folder):
         p = self.params
 
         if not check_if_installed(IronclustSorter.ironclust_path):
             raise ModuleNotFoundError(IronclustSorter.installation_mesg)
         
-        dataset_dir = self.output_folder / 'ironclust_dataset'
+        dataset_dir = (output_folder / 'ironclust_dataset').absolute()
         if not dataset_dir.is_dir():
             dataset_dir.mkdir()
 
-        self.output_folder = self.output_folder.absolute()
-        self.dataset_dir = dataset_dir.absolute()
-
         # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-        se.MdaRecordingExtractor.writeRecording(recording=self.recording, save_path=self.dataset_dir)
-        samplerate = self.recording.getSamplingFrequency()
+        se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
+        samplerate = recording.getSamplingFrequency()
 
         if self.debug:
             print('Reading timeseries header...')
-        HH = mdaio.readmda_header(str(self.dataset_dir / 'raw.mda'))
+        HH = mdaio.readmda_header(str(dataset_dir / 'raw.mda'))
         num_channels = HH.dims[0]
         num_timepoints = HH.dims[1]
         duration_minutes = num_timepoints / samplerate / 60
@@ -116,17 +113,19 @@ class IronclustSorter(BaseSorter):
         txt += 'freq_max={}\n'.format(p['freq_max'])
         txt += 'pc_per_chan={}\n'.format(p['pc_per_chan'])
         txt += 'prm_template_name={}\n'.format(p['prm_template_name'])
-        _write_text_file(self.dataset_dir / 'argfile.txt', txt)
+        _write_text_file(dataset_dir / 'argfile.txt', txt)
     
-    def _run(self):
+    def _run(self, recording, output_folder):
         if self.debug:
             print('Running IronClust...')
             
+        dataset_dir = (output_folder / 'ironclust_dataset').absolute()
+        
         cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(IronclustSorter.ironclust_path, IronclustSorter.ironclust_path, IronclustSorter.ironclust_path)
         # "p_ironclust('$(tempdir)','$timeseries$','$geom$','$prm$','$firings_true$','$firings_out$','$(argfile)');"
         cmd_call = "p_ironclust('{}', '{}', '{}', '', '', '{}', '{}');" \
-            .format(self.output_folder, self.dataset_dir / 'raw.mda', self.dataset_dir / 'geom.csv', self.output_folder / 'firings.mda',
-                    self.dataset_dir / 'argfile.txt')
+            .format(output_folder, dataset_dir / 'raw.mda', dataset_dir / 'geom.csv', output_folder / 'firings.mda',
+                    dataset_dir / 'argfile.txt')
         cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
         if self.debug:
             print(cmd)
@@ -141,10 +140,10 @@ class IronclustSorter(BaseSorter):
         _call_command_split(cmd_list)
         
     
-    def get_result(self):
+    def _get_one_result(self, recording, output_folder):
         # overwrite the SorterBase.get_result
 
-        result_fname = self.output_folder / 'firings.mda'
+        result_fname = output_folder / 'firings.mda'
         
         assert result_fname.exists(),'Result file does not exist: {}'.format(str(result_fname))
 

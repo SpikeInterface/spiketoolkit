@@ -57,11 +57,11 @@ class Mountainsort4Sorter(BaseSorter):
     def set_params(self, **params):
         self.params = params
     
-    def _setup_recording(self):
+    def _setup_recording(self, recording, output_folder):
         pass
         # Not done
     
-    def _run(self):
+    def _run(self, recording, output_folder):
         pass
         # Not done
 

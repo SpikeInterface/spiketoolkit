@@ -97,7 +97,7 @@ class KilosortSorter(BaseSorter):
         KilosortSorter.npy_matlab_path = npy_matlab_path
 
 
-    def _setup_recording(self):
+    def _setup_recording(self, recording, output_folder):
         
         source_dir = Path(__file__).parent
         
@@ -112,7 +112,7 @@ class KilosortSorter(BaseSorter):
         elif file_name.suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
-        se.writeBinaryDatFormat(self.recording, self.output_folder / self.file_name, dtype='int16')
+        se.writeBinaryDatFormat(recording, output_folder / self.file_name, dtype='int16')
 
         # set up kilosort config files and run kilosort on data
         with (source_dir / 'kilosort_master.txt').open('r') as f:
@@ -122,14 +122,14 @@ class KilosortSorter(BaseSorter):
         with (source_dir / 'kilosort_channelmap.txt').open('r') as f:
             kilosort_channelmap = f.readlines()
 
-        nchan = self.recording.getNumChannels()
-        dat_file = (self.output_folder / (self.file_name.name + '.dat')).absolute()
+        nchan = recording.getNumChannels()
+        dat_file = (output_folder / (self.file_name.name + '.dat')).absolute()
         kilo_thresh = p['detect_threshold']
         Nfilt = (nchan // 32) * 32 * 8
         if Nfilt == 0:
             Nfilt = nchan * 8
         nsamples = 128 * 1024 + 64
-        sample_rate = self.recording.getSamplingFrequency()
+        sample_rate = recording.getSamplingFrequency()
 
         if p['useGPU']:
             ug = 1
@@ -143,24 +143,24 @@ class KilosortSorter(BaseSorter):
                 kilosort_path = p['kilosort_path']
                 npy_matlab_path = p['npy_matlab_path']
 
-        abs_channel = (self.output_folder / 'kilosort_channelmap.m').absolute()
-        abs_config = (self.output_folder / 'kilosort_config.m').absolute()
+        abs_channel = (output_folder / 'kilosort_channelmap.m').absolute()
+        abs_config = (output_folder / 'kilosort_config.m').absolute()
         kilosort_path = Path(KilosortSorter.kilosort_path).absolute()
         npy_matlab_path = Path(KilosortSorter.npy_matlab_path).absolute() / 'npy-matlab'
 
         kilosort_master = ''.join(kilosort_master).format(ug, kilosort_path, npy_matlab_path, 
-                                                                             self.output_folder, abs_channel,
+                                                                             output_folder, abs_channel,
                                                           abs_config)
         kilosort_config = ''.join(kilosort_config).format(nchan, nchan, sample_rate, dat_file,
                                                                                 Nfilt, nsamples, kilo_thresh)
         electrode_dimensions = p['electrode_dimensions']
 
-        if 'group' in self.recording.getChannelPropertyNames():
-            groups = [self.recording.getChannelProperty(ch, 'group') for ch in self.recording.getChannelIds()]
+        if 'group' in recording.getChannelPropertyNames():
+            groups = [recording.getChannelProperty(ch, 'group') for ch in recording.getChannelIds()]
         else:
             groups = 'ones(1, Nchannels)'
-        if 'location' in self.recording.getChannelPropertyNames():
-            positions = np.array([self.recording.getChannelProperty(chan, 'location') for chan in self.recording.getChannelIds()])
+        if 'location' in recording.getChannelPropertyNames():
+            positions = np.array([recording.getChannelProperty(chan, 'location') for chan in recording.getChannelIds()])
             if electrode_dimensions is None:
                 kilosort_channelmap = ''.join(kilosort_channelmap
                                               ).format(nchan,
@@ -184,20 +184,20 @@ class KilosortSorter(BaseSorter):
                                  'kilosort_channelmap.m'],
                                 [kilosort_master, kilosort_config,
                                  kilosort_channelmap]):
-            with (self.output_folder / fname).open('w') as f:
+            with (output_folder / fname).open('w') as f:
                 f.writelines(value)    
 
-    def _run(self):
+    def _run(self, recording, output_folder):
         
-        cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(self.output_folder / 'kilosort_master.m')
+        cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
         if self.debug:
             print(cmd)
         if "win" in sys.platform:
             cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
-                        '-r','run {}; quit;'.format(self.output_folder / 'kilosort_master.m')]
+                        '-r','run {}; quit;'.format(output_folder / 'kilosort_master.m')]
         else:
             cmd_list = ['matlab', '-nosplash', '-nodisplay',
-                        '-r', 'run {}; quit;'.format(self.output_folder / 'kilosort_master.m')]
+                        '-r', 'run {}; quit;'.format(output_folder / 'kilosort_master.m')]
 
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)

@@ -26,8 +26,8 @@ def test_run_tridesclous():
 
 
 if __name__ == '__main__':
-    test_run_tridesclous()
-    #~ TridesclousCommonTestSuite().test_on_toy()
+    #~ test_run_tridesclous()
+    TridesclousCommonTestSuite().test_on_toy()
     #~ TridesclousCommonTestSuite().test_several_groups()
     
     

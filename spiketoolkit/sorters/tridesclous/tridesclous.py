@@ -49,7 +49,6 @@ class TridesclousSorter(BaseSorter):
 
         # save prb file:
         probe_file = output_folder / 'probe.prb'
-        print('probe_file', probe_file)
         se.saveProbeFile(recording, probe_file, format='spyking_circus')
         
         # save binary file
@@ -102,7 +101,7 @@ class TridesclousSorter(BaseSorter):
                                 use_sparse_template=use_sparse_template,
                                 sparse_threshold_mad=1.5,
                                 use_opencl_with_sparse=use_opencl_with_sparse,)
-            peeler.run(duration=None, progressbar=True)
+            peeler.run(duration=None, progressbar=self.debug)
 
 
 

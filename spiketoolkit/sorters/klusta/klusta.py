@@ -51,7 +51,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install klusta klustakwik2
+       >>> pip install klusta klustakwik2 click
     
     More information on klusta at:
       * https://github.com/kwikteam/phy"
@@ -66,7 +66,7 @@ class KlustaSorter(BaseSorter):
         self.params = params
         
     
-    def _setup_recording(self):
+    def _setup_recording(self, recording, output_folder):
         source_dir = Path(__file__).parent
         
         # alias to params
@@ -74,16 +74,16 @@ class KlustaSorter(BaseSorter):
         
         # save prb file:
         if p['probe_file'] is None:
-            p['probe_file'] = self.output_folder / 'probe.prb'
-            se.saveProbeFile(self.recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
+            p['probe_file'] = output_folder / 'probe.prb'
+            se.saveProbeFile(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
         # save binary file
         if p['file_name'] is None:
             self.file_name = Path('recording')
-        elif file_name.suffix == '.dat':
+        elif p['file_name'].suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
-        se.writeBinaryDatFormat(self.recording, self.output_folder / self.file_name)
+        se.writeBinaryDatFormat(recording, output_folder / self.file_name)
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -99,29 +99,29 @@ class KlustaSorter(BaseSorter):
         
         # Note: should use format with dict approach here
         klusta_config = ''.join(klusta_config).format(
-            self.output_folder / self.file_name, p['probe_file'], float(self.recording.getSamplingFrequency()),
-            self.recording.getNumChannels(), "'float32'",
+            output_folder / self.file_name, p['probe_file'], float(recording.getSamplingFrequency()),
+            recording.getNumChannels(), "'float32'",
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']
         )
 
-        with (self.output_folder /'config.prm').open('w') as f:
+        with (output_folder /'config.prm').open('w') as f:
             f.writelines(klusta_config)
 
-    def _run(self):
+    def _run(self, recording, output_folder):
         
-        cmd = 'klusta {} --overwrite'.format(self.output_folder /'config.prm')
+        cmd = 'klusta {} --overwrite'.format(output_folder /'config.prm')
         if self.debug:
             print('Running Klusta')
             print(cmd)
         
         _call_command(cmd)
-        if not (self.output_folder / (self.file_name.name + '.kwik')).is_file():
+        if not (output_folder / (self.file_name.name + '.kwik')).is_file():
             raise Exception('Klusta did not run successfully')
 
-    def get_result(self):
+    def _get_one_result(self, recording, output_folder):
         # overwrite the SorterBase.get_result
-        sorting = se.KlustaSortingExtractor(self.output_folder / (self.file_name.name + '.kwik'))
+        sorting = se.KlustaSortingExtractor(output_folder / (self.file_name.name + '.kwik'))
         return sorting
 
