@@ -51,7 +51,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install klusta klustakwik2 click
+       >>> pip install click cython klusta klustakwik2
     
     More information on klusta at:
       * https://github.com/kwikteam/phy"
