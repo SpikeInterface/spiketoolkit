@@ -1,3 +1,4 @@
+import unittest
 import pytest
 
 from spiketoolkit.sorters import TridesclousSorter, run_tridesclous
@@ -6,9 +7,11 @@ from spiketoolkit.sorters.tests.common_tests import SorterCommonTestSuite
 import spikeextractors as se
 
 
+
+
 # This run several tests
 @pytest.mark.skipif(not TridesclousSorter.installed, reason='tridesclous not installed')
-class TridesclousCommonTestSuite(SorterCommonTestSuite):
+class TridesclousCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
     SorterCLass = TridesclousSorter
 
 @pytest.mark.skipif(not TridesclousSorter.installed, reason='tridesclous not installed')

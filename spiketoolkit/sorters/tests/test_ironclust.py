@@ -1,3 +1,4 @@
+import unittest
 import pytest
 import spikeextractors as se
 from spiketoolkit.sorters import IronclustSorter
@@ -6,7 +7,7 @@ from spiketoolkit.sorters.tests.common_tests import SorterCommonTestSuite
 
 # This run several tests
 @pytest.mark.skipif(not IronclustSorter.installed, reason='ironclust not installed')
-class IronclustCommonTestSuite(SorterCommonTestSuite):
+class IronclustCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
     SorterCLass = IronclustSorter
 
 
