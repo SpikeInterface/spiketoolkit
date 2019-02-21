@@ -43,8 +43,9 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 - [KiloSort](https://github.com/cortex-lab/KiloSort)
 - [Klusta](https://github.com/kwikteam/klusta)
 - [Ironclust](https://github.com/jamesjun/ironclust)
+- [tridesclous](https://github.com/tridesclous/tridesclous)
 
-SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 3 spike sorters (Mountainsrt, Spyking Circus, and Kilosort) are run on the same recordings.
+SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same recordings.
 
 ```python
 import spikeextractor as se
@@ -52,19 +53,14 @@ import spiketoolkit as st
 
 # load recording using spikeextractors (e.g. Open Ephys recording)
 recording = se.OpenEphysRecordingExtractor('path-to-open-ephys-folder')
+
 # run spike sorters (with default parameters)
-sorting_MS = st.sorters.mountainsort4(recording)
-sorting_SC = st.sorters.spyking_circus(recording)
-sorting_KS = st.sorters.kilosort(recording, kilosort_path='path-to-kilosort-matlab-installation')
+sorting_MS = st.sorters.run_mountainsort4(recording)
+sorting_SC = st.sorters.run_spykingcircus(recording)
+sorting_KS = st.sorters.run_kilosort(recording, kilosort_path='path-to-kilosort-matlab-installation')
+sorting_TDC = st.sorters.run_tridesclous(recording)
 ```
 
-Other parameters are exposed using arguments. In order to find out which parameters are available, you can these commands in ipython:
-
-```python
-st.sorters.mountainsort?
-st.sorters.spyking_circus?
-st.sorters.kilosort?
-```
 
 **Curating spike sorting outputs**
 
@@ -116,3 +112,7 @@ To experiment with RecordingExtractors, SortingExtractors, and their associated 
 <br/>
 <br/>
 For any correspondence, contact Alessio Buccino at alessiop.buccino@gmail.com
+
+### Contributors
+
+[Samuel Garcia](https://github.com/samuelgarcia) - Centre de Recherche en Neuroscience de Lyon (CRNL), Lyon, France
