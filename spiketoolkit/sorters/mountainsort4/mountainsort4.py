@@ -9,6 +9,7 @@ Reading the code do not make evident if there is a persistency on disk.
 import spiketoolkit as st
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
+from copy import copy
 
 try:
     import ml_ms4alg
@@ -51,8 +52,14 @@ class Mountainsort4Sorter(BaseSorter):
         BaseSorter.__init__(self, **kargs)
 
     def _setup_recording(self, recording, output_folder):
+        self._sorting_result = len(self.recording_list) * [None]
+        print(len(self._sorting_result))
+    
+    def _run(self, recording, output_folder):
+        # Sort
         # alias to params
         p = self.params
+        recording_raw = copy(recording)
         # Bandpass filter
         if p['freq_min'] is not None:
             recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=p['freq_min'],
@@ -67,13 +74,8 @@ class Mountainsort4Sorter(BaseSorter):
             for i, chan in enumerate(recording.getChannelIds()):
                 recording.setChannelProperty(chan, 'location', [0, i])
 
-        self.recording = recording
-    
-    def _run(self, recording, output_folder):
-        # Sort
-        p = self.params
         sorting = ml_ms4alg.mountainsort4(
-            recording=self.recording,
+            recording=recording,
             detect_sign=p['detect_sign'],
             adjacency_radius=p['adjacency_radius'],
             clip_size=p['clip_size'],
@@ -84,13 +86,17 @@ class Mountainsort4Sorter(BaseSorter):
         # Curate
         if p['noise_overlap_threshold'] is not None:
             sorting = ml_ms4alg.mountainsort4_curation(
-                recording=self.recording,
+                recording=recording,
                 sorting=sorting,
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
-        self.sorting = sorting
+        print(self.recording_list)
+        print(recording_raw)
+        ind = self.recording_list.index(recording_raw)
+        self._sorting_result[ind] = sorting
 
 
     def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
-        return self.sorting
+        ind = self.recording_list.index(recording)
+        sorting = self._sorting_result[ind]
+        return sorting
