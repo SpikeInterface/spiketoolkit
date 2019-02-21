@@ -66,22 +66,6 @@ class Mountainsort4Sorter(BaseSorter):
         # Not done
 
 
-def run_mountainsort4(
-        recording,
-        output_folder=None,
-        by_property=None,
-        parallel=False,
-        debug=False,
-        **params):
-    sorter = Mountainsort4Sorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor
-
-
 #####################################
 ## OLD IMPLEMENTAtion ABOVE
 #####################################

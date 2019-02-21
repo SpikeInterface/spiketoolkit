@@ -1,2 +1,2 @@
-from .kilosort import KilosortSorter, run_kilosort
+from .kilosort import KilosortSorter
 

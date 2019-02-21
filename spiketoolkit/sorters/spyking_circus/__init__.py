@@ -1,2 +1,2 @@
-from .spyking_circus import SpykingcircusSorter, run_spykingcircus
+from .spyking_circus import SpykingcircusSorter
 

@@ -158,29 +158,3 @@ def _write_text_file(fname, str):
     with fname.open('w') as f:
         f.write(str)
 
-
-
-def run_ironclust(
-        recording,
-        output_folder=None,
-        by_property=None,
-        parallel=False,
-        debug=False,
-        ironclust_path=None,
-        **params):
-    
-    # this preserve the old signature
-    if ironclust_path is not None:
-        IronclustSorter.set_ironclust_path(ironclust_path)
-    
-    sorter = IronclustSorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
-    if 'ironclust_path' in  params.keys() and params['ironclust_path'] is not None:
-        IronclustSorter.set_ironclust_path(params['ironclust_path'])
-    else:
-        IronclustSorter.set_ironclust_path(os.getenv('IRONCLUST_PATH'))
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor

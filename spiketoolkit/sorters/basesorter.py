@@ -91,7 +91,6 @@ class BaseSorter:
             
         t1 = time.perf_counter()
         
-        
         if self.debug:
             print('{} run time {:0.2f}s'.format(self.sorter_name, t1-t0))
         
@@ -135,10 +134,7 @@ class BaseSorter:
             sorting_list = [sort for sort in sorting_list if sort is not None]
             multi_sorting = se.MultiSortingExtractor(sortings=sorting_list)
             return multi_sorting
-            
-    
-    
-    
+
     # new idea
     def get_params_for_particular_recording(self, rec_name):
        """
@@ -147,14 +143,4 @@ class BaseSorter:
        return {}
 
 
-# generic laucnher via function approach
-def run_sorter_engine(SorterClass, recording, output_folder=None,
-        grouping_property=None, parallel=False, debug=False, **params):
-    
-    sorter = SorterClass(recording=recording, output_folder=output_folder, 
-                                    grouping_property=grouping_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    return sortingextractor
     

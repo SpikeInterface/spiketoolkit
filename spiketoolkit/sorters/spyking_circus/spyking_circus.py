@@ -122,18 +122,3 @@ class SpykingcircusSorter(BaseSorter):
         return sorting
 
 
-
-def run_spykingcircus(
-        recording,
-        output_folder=None,
-        by_property=None,
-        parallel=False,
-        debug=False,
-        **params):
-    sorter = SpykingcircusSorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor

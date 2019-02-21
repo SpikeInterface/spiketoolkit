@@ -105,20 +105,6 @@ class TridesclousSorter(BaseSorter):
             peeler.run(duration=None, progressbar=True)
 
 
-def run_tridesclous(
-        recording,
-        output_folder=None,
-        grouping_property=None,
-        parallel=False,
-        debug=False,
-        **params):
-    sorter = TridesclousSorter(recording=recording, output_folder=output_folder,
-                                    grouping_property=grouping_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor
 
 
 

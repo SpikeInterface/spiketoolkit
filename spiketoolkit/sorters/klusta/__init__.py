@@ -1,1 +1,1 @@
-from .klusta import KlustaSorter, run_klusta
+from .klusta import KlustaSorter

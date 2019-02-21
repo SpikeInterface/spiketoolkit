@@ -125,21 +125,3 @@ class KlustaSorter(BaseSorter):
         sorting = se.KlustaSortingExtractor(self.output_folder / (self.file_name.name + '.kwik'))
         return sorting
 
-
-# this behave like the old klusta(...)
-def run_klusta(
-        recording,
-        output_folder=None,
-        by_property=None,
-        parallel=False,
-        debug=False,
-        **params):
-    
-    sorter = KlustaSorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor
-    

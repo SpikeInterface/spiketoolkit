@@ -202,37 +202,3 @@ class KilosortSorter(BaseSorter):
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)
 
-
-def run_kilosort(
-        recording,
-        output_folder=None,
-        by_property=None,
-        parallel=False,
-        debug=False,
-        kilosort_path=None,
-        npy_matlab_path=None,
-        **params):
-    
-    # this preserve the old signature
-    if kilosort_path is not None:
-        KilosortSorter.set_kilosort_path(kilosort_path)
-    if npy_matlab_path is not None:
-        KilosortSorter.set_npy_matlab_path(npy_matlab_path)
-
-    
-    sorter = KilosortSorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
-    sorter.set_params(**params)
-    if 'kilosort_path' in  params.keys() and params['kilosort_path'] is not None:
-        KilosortSorter.set_kilosort_path(params['kilosort_path'])
-    else:
-        KilosortSorter.set_kilosort_path(os.getenv('KILOSORT_PATH'))
-    if 'npy_matlab_path' in  params.keys() and params['npy_matlab_path'] is not None:
-        KilosortSorter.set_npy_matlab_path(params['npy_matlab_path'])
-    else:
-        KilosortSorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
-    sorter.run()
-    sortingextractor = sorter.get_result()
-    
-    return sortingextractor
-
