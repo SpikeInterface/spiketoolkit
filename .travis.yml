@@ -4,6 +4,12 @@ os:
   - linux
 python:
   - '3.6'
+sudo: enabled
+addons:
+  apt:
+    packages:
+    - libopenmpi-dev
+    - openmpi-bin
 install:
   # spikeextractors and spikewidgets are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
@@ -14,10 +20,10 @@ install:
   - pip install h5py # for klusta
   - pip install click klusta klustakwik2 
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
-#  - pip install ml_ms4alg  # not done yet
-# - pip install spyking-circus  #too difficult circus need MPI installed
+  - pip install spyking-circus
+  - pip install ml_ms4alg
 script: 
-  pytest
+  py.test -s
 deploy:
   provider: pypi
   user: alejoe91
