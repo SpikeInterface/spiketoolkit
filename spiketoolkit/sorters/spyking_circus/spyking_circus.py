@@ -52,9 +52,6 @@ class SpykingcircusSorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
-    def set_params(self, **params):
-        self.params = params
-
     def _setup_recording(self, recording, output_folder):
         p = self.params
         source_dir = Path(__file__).parent

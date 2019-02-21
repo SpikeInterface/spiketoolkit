@@ -50,9 +50,6 @@ class Mountainsort4Sorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
-    def set_params(self, **params):
-        self.params = params
-
     def _setup_recording(self, recording, output_folder):
         # alias to params
         p = self.params

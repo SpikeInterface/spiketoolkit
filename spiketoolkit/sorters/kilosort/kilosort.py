@@ -83,9 +83,6 @@ class KilosortSorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
-    def set_params(self, **params):
-        self.params = params
-
     @staticmethod
     def set_kilosort_path(kilosort_path):
         KilosortSorter.kilosort_path = kilosort_path
