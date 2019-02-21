@@ -1,17 +1,14 @@
 from .filterrecording import FilterRecording
 import numpy as np
 from scipy import special
-from scipy.signal import butter, filtfilt
+from scipy.signal import iirnotch, filtfilt
 
-class BandpassFilterRecording(FilterRecording):
-    def __init__(self, *, recording, freq_min, freq_max, freq_wid, type, order):
+class NotchFilterRecording(FilterRecording):
+    def __init__(self, *, recording, freq, q):
         FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10)
         self._recording = recording
-        self._freq_min = freq_min
-        self._freq_max = freq_max
-        self._freq_wid = freq_wid
-        self._type = type
-        self._order = order
+        self._freq = freq
+        self._q = q
         self.copyChannelProperties(recording)
 
     def filterChunk(self, *, start_frame, end_frame):
@@ -48,27 +45,14 @@ class BandpassFilterRecording(FilterRecording):
         samplerate = self._recording.getSamplingFrequency()
         M = chunk.shape[0]
         chunk2 = chunk
+        fn = 0.5 * float(self.getSamplingFrequency())
         # Do the actual filtering with a DFT with real input
-        if self._type == 'fft':
-            chunk_fft = np.fft.rfft(chunk2)
-            kernel = self._create_filter_kernel(
-                chunk2.shape[1],
-                samplerate,
-                self._freq_min, self._freq_max, self._freq_wid
-            )
-            kernel = kernel[0:chunk_fft.shape[1]]  # because this is the DFT of real data
-            chunk_fft = chunk_fft * np.tile(kernel, (M, 1))
-            chunk_filtered = np.fft.irfft(chunk_fft)
-        elif self._type == 'butter':
-            fn = self.getSamplingFrequency() / 2.
-            band = np.array([self._freq_min, self._freq_max]) / fn
+        b, a = iirnotch(self._freq / fn, self._q)
 
-            b, a = butter(self._order, band, btype='bandpass')
-
-            if np.all(np.abs(np.roots(a)) < 1) and np.all(np.abs(np.roots(a)) < 1):
-                chunk_filtered = filtfilt(b, a, chunk2, axis=1)
-            else:
-                raise ValueError('Filter is not stable')
+        if np.all(np.abs(np.roots(a)) < 1) and np.all(np.abs(np.roots(a)) < 1):
+            chunk_filtered = filtfilt(b, a, chunk2, axis=1)
+        else:
+            raise ValueError('Filter is not stable')
         return chunk_filtered
 
     def _read_chunk(self, i1, i2):
@@ -87,12 +71,9 @@ class BandpassFilterRecording(FilterRecording):
         return ret
 
 
-def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3):
-    return BandpassFilterRecording(
+def notch_filter(recording, freq=3000, q=30):
+    return NotchFilterRecording(
         recording=recording,
-        freq_min=freq_min,
-        freq_max=freq_max,
-        freq_wid=freq_wid,
-        type=type,
-        order=order
+        freq=freq,
+        q=q,
     )
