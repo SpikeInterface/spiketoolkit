@@ -1,46 +1,9 @@
+"""
+Some utils function to run command.
+"""
 from subprocess import Popen, PIPE, CalledProcessError, call
 import shlex
-import tempfile
-import shutil
-import threading
-import spikeextractors as se
-from pathlib import Path
-import platform
 import sys
-import os
-from copy import copy
-
-
-class sortingThread(threading.Thread):
-    def __init__(self, threadID, recording, spikesorter, output_folder=None, **kwargs):
-        threading.Thread.__init__(self)
-        self.threadID = threadID
-        self.recording = recording
-        self.sorter = spikesorter
-        self.kwargs = kwargs
-        self.kwargs['output_folder'] = output_folder
-        print("Thread: ", self.kwargs['output_folder'])
-
-    def run(self):
-        from .mountainsort4 import mountainsort4
-        from .spyking_circus import spyking_circus
-        from .kilosort import kilosort
-        from .ironclust import ironclust
-        from .klusta import klusta
-        print('Sorting ' + str(self.threadID) + ' with ' + self.sorter)
-        if self.sorter == 'klusta':
-            sorting = klusta(recording=self.recording, **self.kwargs)
-        elif self.sorter == 'mountainsort' or self.sorter == 'mountainsort4':
-            sorting = mountainsort4(recording=self.recording, **self.kwargs)
-        elif self.sorter == 'kilosort':
-            sorting = kilosort(recording=self.recording, **self.kwargs)
-        elif self.sorter == 'spyking-circus' or self.sorter == 'spyking_circus':
-            sorting = spyking_circus(recording=self.recording, **self.kwargs)
-        elif self.sorter == 'ironclust':
-            sorting = ironclust(recording=self.recording, **self.kwargs)
-        else:
-            raise ValueError("Spike sorter not supported")
-        self.sorting = sorting
 
 
 def _run_command_and_print_output(command):
@@ -87,82 +50,3 @@ def _call_command_split(command_list):
         call(command_list)
     except CalledProcessError as e:
         raise Exception(e.output)
-
-
-def _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs):
-    '''
-
-    Parameters
-    ----------
-    recording_list
-    spikesorter
-
-    Returns
-    -------
-
-    '''
-    output_folder = copy(kwargs['output_folder'])
-    if len(recording_list) == 1:
-        print("Only 1 property found!")
-    if not isinstance(recording_list[0], se.RecordingExtractor):
-        raise ValueError("'recording_list' must be a list of RecordingExtractor objects")
-    sorting_list = []
-    tmpdir_list = []
-    threads = []
-    for i, recording in enumerate(recording_list):
-        kwargs_copy = copy(kwargs)
-        tmpdir = Path(tempfile.mkdtemp(dir=os.getcwd()))
-        print(tmpdir)
-        tmpdir_list.append(tmpdir)
-        if output_folder is None:
-            tmpdir = Path(tmpdir).absolute()
-            # avoid passing output_folder twice
-            if 'output_folder' in kwargs_copy.keys():
-                del kwargs_copy['output_folder']
-            threads.append(sortingThread(threadID=i, recording=recording, spikesorter=spikesorter,
-                                         output_folder=tmpdir, **kwargs_copy))
-        else:
-            kwargs_copy['output_folder'] = kwargs_copy['output_folder'] + '_' + str(i)
-            threads.append(sortingThread(i, recording, spikesorter, **kwargs_copy))
-    for t in threads:
-        t.start()
-        if not parallel:
-            t.join()
-    if parallel:
-        for t in threads:
-            t.join()
-    for t in threads:
-        try:
-            sorting_list.append(t.sorting)
-        except AttributeError:
-            pass
-    for tmp in tmpdir_list:
-        shutil.rmtree(str(tmp))
-    return sorting_list
-
-
-def _spikeSortByProperty(recording, spikesorter, property, parallel, **kwargs):
-    '''
-
-    Parameters
-    ----------
-    recording
-    sorter
-    kwargs
-
-    Returns
-    -------
-
-    '''
-    recording_list = se.getSubExtractorsByProperty(recording, property)
-    sorting_list = _parallelSpikeSorting(recording_list, spikesorter, parallel, **kwargs)
-    # add group property
-    for i, sorting in enumerate(sorting_list):
-        group = recording_list[i].getChannelProperty(recording_list[i].getChannelIds()[0], 'group')
-        if sorting is not None:
-            for unit in sorting.getUnitIds():
-                sorting.setUnitProperty(unit, 'group', group)
-    # reassemble the sorting outputs
-    sorting_list = [sort for sort in sorting_list if sort is not None]
-    multi_sorting = se.MultiSortingExtractor(sortings=sorting_list)
-    return multi_sorting
