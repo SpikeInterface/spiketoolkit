@@ -138,6 +138,7 @@ class IronclustSorter(BaseSorter):
     
     def _get_one_result(self, recording, output_folder):
         # overwrite the SorterBase.get_result
+        from mountainlab_pytools import mdaio
 
         result_fname = output_folder / 'firings.mda'
         

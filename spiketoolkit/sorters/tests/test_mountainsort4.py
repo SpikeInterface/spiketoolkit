@@ -8,7 +8,7 @@ from spiketoolkit.sorters.tests.common_tests import SorterCommonTestSuite
 # This run several tests
 @pytest.mark.skipif(not Mountainsort4Sorter.installed, reason='moutainsort4 not installed')
 class Mountainsort4CommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
-   SorterCLass = Mountainsort4Sorter
+   SorterClass = Mountainsort4Sorter
 
 
 

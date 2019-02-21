@@ -8,7 +8,7 @@ from spiketoolkit.sorters.tests.common_tests import SorterCommonTestSuite
 # This run several tests
 @pytest.mark.skipif(not KlustaSorter.installed, reason='klusta not installed')
 class KlustaCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
-    SorterCLass = KlustaSorter
+    SorterClass = KlustaSorter
 
 
 

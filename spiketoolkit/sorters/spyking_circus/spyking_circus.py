@@ -65,7 +65,7 @@ class SpykingcircusSorter(BaseSorter):
         # save binary file
         if p['file_name'] is None:
             self.file_name = Path('recording')
-        elif file_name.suffix == '.dat':
+        elif p['file_name'].suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
         np.save(str(output_folder / self.file_name), recording.getTraces().astype('float32'))
