@@ -65,7 +65,7 @@ class TridesclousSorter(BaseSorter):
         tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
                         dtype=dtype.str, sample_rate=recording.getSamplingFrequency(),
                                         total_channel=nb_chan)
-        tdc_dataio.set_probe_file(probe_file)
+        tdc_dataio.set_probe_file(str(probe_file))
         if self.debug:
             print(tdc_dataio)
     

@@ -65,8 +65,7 @@ class KlustaSorter(BaseSorter):
 
     def set_params(self, **params):
         self.params = params
-        
-    
+
     def _setup_recording(self, recording, output_folder):
         source_dir = Path(__file__).parent
         

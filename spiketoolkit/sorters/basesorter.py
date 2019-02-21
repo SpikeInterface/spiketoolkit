@@ -69,7 +69,7 @@ class BaseSorter:
     def set_params(self):
         # need subclass
         raise(NotImplementedError)
-    
+
     def run(self):
         for i, recording in enumerate(self.recording_list):
             self._setup_recording(recording, self.output_folders[i])

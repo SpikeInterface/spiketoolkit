@@ -13,7 +13,7 @@ addons:
 install:
   # spikeextractors and spikewidgets are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
-  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
+#  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest
   - pip install Cython 

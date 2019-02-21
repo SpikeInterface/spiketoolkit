@@ -32,7 +32,7 @@ class SpykingcircusSorter(BaseSorter):
         'detect_threshold': 6,  # Threshold for detection
         'template_width_ms': 3,  # Spyking circus parameter
         'filter': True,
-        'merge_spikes': True,
+        'merge_spikes': False,
         'n_cores': None,
         'electrode_dimensions': None,
         'whitening_max_elts': 1000,  # I believe it relates to subsampling and affects compute time
@@ -54,7 +54,7 @@ class SpykingcircusSorter(BaseSorter):
 
     def set_params(self, **params):
         self.params = params
-    
+
     def _setup_recording(self, recording, output_folder):
         p = self.params
         source_dir = Path(__file__).parent

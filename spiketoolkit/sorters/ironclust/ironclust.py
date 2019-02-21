@@ -78,6 +78,7 @@ class IronclustSorter(BaseSorter):
 
     
     def _setup_recording(self, recording, output_folder):
+        from mountainlab_pytools import mdaio
         p = self.params
 
         if not check_if_installed(IronclustSorter.ironclust_path):
