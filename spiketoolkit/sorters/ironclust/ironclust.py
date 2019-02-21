@@ -67,11 +67,6 @@ class IronclustSorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
-
-    def set_params(self, **params):
-        self.params = params
-
-
     @staticmethod
     def set_ironclust_path(ironclust_path):
         IronclustSorter.ironclust_path = ironclust_path

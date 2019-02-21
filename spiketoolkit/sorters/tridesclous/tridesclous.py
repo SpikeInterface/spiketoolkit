@@ -36,10 +36,6 @@ class TridesclousSorter(BaseSorter):
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
-    def set_params(self, **params):
-        self.params = params
-    
-    
     def _setup_recording(self, recording, output_folder):
         # reset the output folder
         if os.path.exists(output_folder):
