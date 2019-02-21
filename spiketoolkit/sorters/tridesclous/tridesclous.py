@@ -40,38 +40,38 @@ class TridesclousSorter(BaseSorter):
         self.params = params
     
     
-    def _setup_recording(self):
+    def _setup_recording(self, recording, output_folder):
         # reset the output folder
-        if os.path.exists(self.output_folder):
-            shutil.rmtree(self.output_folder)
+        if os.path.exists(output_folder):
+            shutil.rmtree(output_folder)
         
-        os.makedirs(self.output_folder)
+        os.makedirs(output_folder)
 
         # save prb file:
-        probe_file = self.output_folder / 'probe.prb'
+        probe_file = output_folder / 'probe.prb'
         print('probe_file', probe_file)
-        se.saveProbeFile(self.recording, probe_file, format='spyking_circus')
+        se.saveProbeFile(recording, probe_file, format='spyking_circus')
         
         # save binary file
-        raw_filename = self.output_folder / 'raw_signals.raw'
-        traces = self.recording.getTraces()
+        raw_filename = output_folder / 'raw_signals.raw'
+        traces = recording.getTraces()
         dtype = traces.dtype
         with open(raw_filename, mode='wb') as f:
             f.write(traces.T.tobytes())
         
         # initialize source and probe file
-        self.tdc_dataio = tdc.DataIO(dirname=self.output_folder)
-        nb_chan = self.recording.getNumChannels()
+        tdc_dataio = tdc.DataIO(dirname=output_folder)
+        nb_chan = recording.getNumChannels()
         
-        self.tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
-                        dtype=dtype.str, sample_rate=self.recording.getSamplingFrequency(),
+        tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
+                        dtype=dtype.str, sample_rate=recording.getSamplingFrequency(),
                                         total_channel=nb_chan)
-        self.tdc_dataio.set_probe_file(probe_file)
+        tdc_dataio.set_probe_file(probe_file)
         if self.debug:
-            print(self.tdc_dataio)        
-        
-    def _run(self):
-        nb_chan = self.recording.getNumChannels()
+            print(tdc_dataio)
+    
+    def _run(self, recording, output_folder):
+        nb_chan = recording.getNumChannels()
     
         # check params and OpenCL when many channels
         use_sparse_template = False
@@ -85,33 +85,35 @@ class TridesclousSorter(BaseSorter):
             else:
                 print('OpenCL is not available processing will be slow, try install it')
         
+        tdc_dataio = tdc.DataIO(dirname=output_folder)
         # make catalogue
-        # TODO check which channel_group
-        cc = tdc.CatalogueConstructor(dataio=self.tdc_dataio, chan_grp=0)
-        tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **self.params)
-        if self.debug:
-            print(cc)
-        cc.make_catalogue_for_peeler()
-        
-        # apply Peeler (template matching)
-        initial_catalogue = self.tdc_dataio.load_catalogue(chan_grp=0)
-        peeler = tdc.Peeler(self.tdc_dataio)
-        peeler.change_params(catalogue=initial_catalogue,
-                            use_sparse_template=use_sparse_template,
-                            sparse_threshold_mad=1.5,
-                            use_opencl_with_sparse=use_opencl_with_sparse,)
-        peeler.run(duration=None, progressbar=True)
+        chan_grps = list(tdc_dataio.channel_groups.keys())
+        for chan_grp in chan_grps:
+            cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
+            tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **self.params)
+            if self.debug:
+                print(cc)
+            cc.make_catalogue_for_peeler()
+            
+            # apply Peeler (template matching)
+            initial_catalogue = tdc_dataio.load_catalogue(chan_grp=chan_grp)
+            peeler = tdc.Peeler(tdc_dataio)
+            peeler.change_params(catalogue=initial_catalogue,
+                                use_sparse_template=use_sparse_template,
+                                sparse_threshold_mad=1.5,
+                                use_opencl_with_sparse=use_opencl_with_sparse,)
+            peeler.run(duration=None, progressbar=True)
 
 
 def run_tridesclous(
         recording,
         output_folder=None,
-        by_property=None,
+        grouping_property=None,
         parallel=False,
         debug=False,
         **params):
     sorter = TridesclousSorter(recording=recording, output_folder=output_folder,
-                                    by_property=by_property, parallel=parallel, debug=debug)
+                                    grouping_property=grouping_property, parallel=parallel, debug=debug)
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()
