@@ -10,7 +10,8 @@ install:
   - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest
-  - pip install Cython
+  - pip install Cython 
+  - pip install h5py # for klusta
   - pip install click klusta klustakwik2 
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
 #  - pip install ml_ms4alg  # not done yet
