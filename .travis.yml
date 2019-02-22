@@ -23,7 +23,8 @@ install:
   - pip install spyking-circus
   - pip install ml_ms4alg
 script: 
-  py.test -s
+  # py.test -s
+  python -m pytest
 deploy:
   provider: pypi
   user: alejoe91
