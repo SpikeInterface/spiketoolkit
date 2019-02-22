@@ -9,18 +9,23 @@ addons:
   apt:
     packages:
     - libopenmpi-dev
-    - openmpi-bin
+    - libglib2.0-0
+    - libgl1-mesa-glx
+    - qt5-default
+    - packagekit-gtk3-module
+    - libcanberra-gtk-module
 install:
   # spikeextractors and spikewidgets are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
 #  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
-  - pip install pytest
+  - pip install pytest==4.3
   - pip install Cython 
   - pip install h5py # for klusta
   - pip install click klusta klustakwik2 
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
   - pip install spyking-circus
+  - pip install pyqt5
   - pip install ml_ms4alg
 script: 
   # py.test -s
