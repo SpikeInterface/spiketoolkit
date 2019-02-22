@@ -65,7 +65,7 @@ class BaseSorter:
     @classmethod
     def default_params(self):
         return copy.deepcopy(self._default_params)
-    
+
     def set_params(self, **params):
         self.params = self.default_params()
         self.params.update(params)

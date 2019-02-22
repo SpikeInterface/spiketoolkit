@@ -8,7 +8,7 @@ from spiketoolkit.sorters.tests.common_tests import SorterCommonTestSuite
 # This run several tests
 @pytest.mark.skipif(not KilosortSorter.installed, reason='kilosort not installed')
 class KilosortCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
-    SorterCLass = KilosortSorter
+    SorterClass = KilosortSorter
 
 
 if __name__ == '__main__':

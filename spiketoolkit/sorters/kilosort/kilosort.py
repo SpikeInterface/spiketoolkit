@@ -87,11 +87,9 @@ class KilosortSorter(BaseSorter):
     def set_kilosort_path(kilosort_path):
         KilosortSorter.kilosort_path = kilosort_path
 
-
     @staticmethod
     def set_npy_matlab_path(npy_matlab_path):
         KilosortSorter.npy_matlab_path = npy_matlab_path
-
 
     def _setup_recording(self, recording, output_folder):
         
@@ -105,7 +103,7 @@ class KilosortSorter(BaseSorter):
         # save binary file
         if p['file_name'] is None:
             self.file_name = Path('recording')
-        elif file_name.suffix == '.dat':
+        elif p['file_name'].suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
         se.writeBinaryDatFormat(recording, output_folder / self.file_name, dtype='int16')
@@ -198,3 +196,7 @@ class KilosortSorter(BaseSorter):
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)
 
+    def _get_one_result(self, recording, output_folder):
+        # overwrite the SorterBase.get_result
+        sorting = se.KiloSortSortingExtractor(output_folder)
+        return sorting

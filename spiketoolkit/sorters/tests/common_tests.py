@@ -9,14 +9,14 @@ class SorterCommonTestSuite:
       * run with several groups
       * run with several groups in thread
     """
-    SorterCLass = None
+    SorterClass = None
     
     def test_on_toy(self):
         recording, sorting_gt = se.example_datasets.toy_example1(num_channels=4, duration=30)
         
-        params = self.SorterCLass.default_params()
+        params = self.SorterClass.default_params()
         
-        sorter = self.SorterCLass(recording=recording, output_folder=None,
+        sorter = self.SorterClass(recording=recording, output_folder=None,
                                         grouping_property=None, parallel=False, debug=True)
         sorter.set_params(**params)
         sorter.run()
@@ -36,10 +36,10 @@ class SorterCommonTestSuite:
             recording.setChannelProperty(ch_id, 'group', 1)
          
         
-        params = self.SorterCLass.default_params()
+        params = self.SorterClass.default_params()
         
         for parallel in [False, True]:
-            sorter = self.SorterCLass(recording=recording, output_folder=None,
+            sorter = self.SorterClass(recording=recording, output_folder=None,
                                             grouping_property='group', parallel=parallel, debug=False)
             sorter.set_params(**params)
             sorter.run()

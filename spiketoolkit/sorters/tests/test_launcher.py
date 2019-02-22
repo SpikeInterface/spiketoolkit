@@ -15,7 +15,7 @@ def test_run_sorters():
     
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
     
-    sorter_list = ['klusta', 'tridesclous']
+    sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
     
     working_folder = 'test_run_sorters'
     if os.path.exists(working_folder):

@@ -12,7 +12,7 @@ import spikeextractors as se
 # This run several tests
 @pytest.mark.skipif(not TridesclousSorter.installed, reason='tridesclous not installed')
 class TridesclousCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
-    SorterCLass = TridesclousSorter
+    SorterClass = TridesclousSorter
 
 @pytest.mark.skipif(not TridesclousSorter.installed, reason='tridesclous not installed')
 def test_run_tridesclous():

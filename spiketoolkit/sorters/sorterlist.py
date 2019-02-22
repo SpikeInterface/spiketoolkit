@@ -1,7 +1,7 @@
 
 from .klusta import KlustaSorter
 from .tridesclous import TridesclousSorter
-# from .mountainsort4 import Mountainsort4Sorter, run_mountainsort4
+from .mountainsort4 import Mountainsort4Sorter
 from .ironclust import IronclustSorter
 from .kilosort import KilosortSorter
 from .spyking_circus import SpykingcircusSorter
@@ -10,7 +10,7 @@ from .spyking_circus import SpykingcircusSorter
 sorter_full_list = [
     KlustaSorter,
     TridesclousSorter,
-    # Mountainsort4Sorter,
+    Mountainsort4Sorter,
     IronclustSorter,
     KilosortSorter,
     SpykingcircusSorter,
@@ -64,8 +64,8 @@ def run_klusta(*args, **kargs):
 def run_tridesclous(*args, **kargs):
     return run_sorter('tridesclous', *args, **kargs)
 
-# def run_mountainsort4(*args, **kargs):
-    # return run_sorter('mountainsort4', *args, **kargs)
+def run_mountainsort4(*args, **kargs):
+    return run_sorter('mountainsort4', *args, **kargs)
 
 def run_ironclust(*args, **kargs):
     return run_sorter('ironclust', *args, **kargs)

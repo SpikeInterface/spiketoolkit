@@ -32,7 +32,7 @@ class SpykingcircusSorter(BaseSorter):
         'detect_threshold': 6,  # Threshold for detection
         'template_width_ms': 3,  # Spyking circus parameter
         'filter': True,
-        'merge_spikes': True,
+        'merge_spikes': False,
         'n_cores': None,
         'electrode_dimensions': None,
         'whitening_max_elts': 1000,  # I believe it relates to subsampling and affects compute time
@@ -65,7 +65,7 @@ class SpykingcircusSorter(BaseSorter):
         # save binary file
         if p['file_name'] is None:
             self.file_name = Path('recording')
-        elif file_name.suffix == '.dat':
+        elif p['file_name'].suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
         np.save(str(output_folder / self.file_name), recording.getTraces().astype('float32'))
