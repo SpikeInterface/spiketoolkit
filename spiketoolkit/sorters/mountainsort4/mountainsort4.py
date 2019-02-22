@@ -59,7 +59,10 @@ class Mountainsort4Sorter(BaseSorter):
         # Sort
         # alias to params
         p = self.params
-        recording_raw = copy(recording)
+        
+        ind = self.recording_list.index(recording)
+        print('ind', ind)
+        
         # Bandpass filter
         if p['freq_min'] is not None:
             recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=p['freq_min'],
@@ -90,9 +93,7 @@ class Mountainsort4Sorter(BaseSorter):
                 sorting=sorting,
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
-        print(self.recording_list)
-        print(recording_raw)
-        ind = self.recording_list.index(recording_raw)
+
         self._sorting_result[ind] = sorting
 
 

@@ -17,7 +17,7 @@ class SorterCommonTestSuite:
         params = self.SorterClass.default_params()
         
         sorter = self.SorterClass(recording=recording, output_folder=None,
-                                        grouping_property=None, parallel=False, debug=True)
+                                        grouping_property=None, parallel=False, debug=False)
         sorter.set_params(**params)
         sorter.run()
         sorting = sorter.get_result()
