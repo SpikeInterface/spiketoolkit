@@ -19,7 +19,7 @@ def _run_one(arg_list):
     
     
 
-def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=None, debug=False):
+def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=None, processes=None, debug=False):
     """
     This run several sorter on several recording.
     Simple implementation will nested loops.
@@ -29,6 +29,15 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=Non
     sorter_list: list of str (sorter names)
     recording_dict_or_list: a dict (or a list) of recording
     working_folder : str
+    
+    engine = None or 'multiprocessing'
+    processes = only if 'multiprocessing' if None then processes=os.cpu_count()
+    debug=True/False to control sorter verbosity
+    
+    
+    Note: engine='multiprocessing' use the python multiprocessing module.
+    This do not allow to have subprocess in subprocess.
+    So sorter that already use internally multiprocessing, this will fail.
     
     """
     
@@ -55,12 +64,13 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=Non
 
     
     if engine is None:
-        # simple loop
+        # simple loop in main process
         for arg_list in task_list:
             _run_one(arg_list)
     
     elif engine == 'multiprocessing':
-        pool = multiprocessing.Pool()
+        # use mp.Pool
+        pool = multiprocessing.Pool(processes)
         pool.map(_run_one, task_list)
         
     

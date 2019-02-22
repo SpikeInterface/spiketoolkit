@@ -1,5 +1,6 @@
 import os
 import shutil
+import time
 
 import pytest
 from spiketoolkit.sorters import run_sorters
@@ -27,8 +28,8 @@ def test_run_sorters():
     
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
     
-    # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    sorter_list = ['tridesclous']
+    #~ sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
+    sorter_list = ['tridesclous',  'klusta',]
     
     working_folder = 'test_run_sorters'
     if os.path.exists(working_folder):
@@ -36,13 +37,18 @@ def test_run_sorters():
     
     
     # simple loop
+    t0 = time.perf_counter()
     run_sorters(sorter_list, recording_dict, working_folder, engine=None)
+    t1 = time.perf_counter()
+    print(t1-t0)
     
     shutil.rmtree(working_folder)
     
     # multiprocessing
+    t0 = time.perf_counter()
     run_sorters(sorter_list, recording_dict, working_folder, engine='multiprocessing')
-    
+    t1 = time.perf_counter()
+    print(t1-t0)
     
     
     
