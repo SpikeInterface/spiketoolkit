@@ -10,8 +10,8 @@ import spikeextractors as se
 
 
 def test_run_sorters_with_list():
-    rec0, _ = se.example_datasets.toy_example1(num_channels=4, duration=30)
-    rec1, _ = se.example_datasets.toy_example1(num_channels=8, duration=30)
+    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30)
+    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30)
     
     recording_list = [rec0, rec1]
     sorter_list = ['tridesclous']
@@ -23,13 +23,14 @@ def test_run_sorters_with_list():
     
 
 def test_run_sorters():
-    rec0, _ = se.example_datasets.toy_example1(num_channels=4, duration=30)
-    rec1, _ = se.example_datasets.toy_example1(num_channels=8, duration=30)
+    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30)
+    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30)
     
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
     
-    #~ sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    sorter_list = ['tridesclous',  'klusta',]
+    # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
+    #~ sorter_list = ['tridesclous',  'klusta',]
+    sorter_list = ['tridesclous', ]
     
     working_folder = 'test_run_sorters'
     if os.path.exists(working_folder):

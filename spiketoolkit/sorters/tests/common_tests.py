@@ -1,3 +1,4 @@
+import unittest
 import spikeextractors as se
 
 
@@ -12,7 +13,8 @@ class SorterCommonTestSuite:
     SorterClass = None
     
     def test_on_toy(self):
-        recording, sorting_gt = se.example_datasets.toy_example1(num_channels=4, duration=30)
+        
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=30)
         
         params = self.SorterClass.default_params()
         
@@ -26,8 +28,9 @@ class SorterCommonTestSuite:
             print('unit #', unit_id, 'nb', len(sorting.getUnitSpikeTrain(unit_id)))
     
     def test_several_groups(self):
+        
         # run sorter with several groups in paralel or not
-        recording, sorting_gt = se.example_datasets.toy_example1(num_channels=8, duration=30)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=8, duration=30)
         
         # make 2 artificial groups
         for ch_id in range(0, 4):

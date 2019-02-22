@@ -16,7 +16,7 @@ class TridesclousCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
 
 @pytest.mark.skipif(not TridesclousSorter.installed, reason='tridesclous not installed')
 def test_run_tridesclous():
-    recording, sorting_gt = se.example_datasets.toy_example1(num_channels=4, duration=30)
+    recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=30)
     
     params = TridesclousSorter.default_params()
     sorting = run_tridesclous(recording,  **params)
@@ -30,8 +30,10 @@ def test_run_tridesclous():
 
 if __name__ == '__main__':
     #~ test_run_tridesclous()
-    TridesclousCommonTestSuite().test_on_toy()
+    #~ TridesclousCommonTestSuite().test_on_toy()
     #~ TridesclousCommonTestSuite().test_several_groups()
+    
+    unittest.main()
     
     
     
