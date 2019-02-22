@@ -70,7 +70,6 @@ class IronclustSorter(BaseSorter):
     @staticmethod
     def set_ironclust_path(ironclust_path):
         IronclustSorter.ironclust_path = ironclust_path
-
     
     def _setup_recording(self, recording, output_folder):
         from mountainlab_pytools import mdaio
@@ -110,13 +109,13 @@ class IronclustSorter(BaseSorter):
         txt += 'pc_per_chan={}\n'.format(p['pc_per_chan'])
         txt += 'prm_template_name={}\n'.format(p['prm_template_name'])
         _write_text_file(dataset_dir / 'argfile.txt', txt)
-    
+
     def _run(self, recording, output_folder):
         if self.debug:
             print('Running IronClust...')
             
         dataset_dir = (output_folder / 'ironclust_dataset').absolute()
-        
+
         cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(IronclustSorter.ironclust_path, IronclustSorter.ironclust_path, IronclustSorter.ironclust_path)
         # "p_ironclust('$(tempdir)','$timeseries$','$geom$','$prm$','$firings_true$','$firings_out$','$(argfile)');"
         cmd_call = "p_ironclust('{}', '{}', '{}', '', '', '{}', '{}');" \
@@ -134,8 +133,7 @@ class IronclustSorter(BaseSorter):
                         '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
 
         _call_command_split(cmd_list)
-        
-    
+
     def _get_one_result(self, recording, output_folder):
         # overwrite the SorterBase.get_result
         from mountainlab_pytools import mdaio
