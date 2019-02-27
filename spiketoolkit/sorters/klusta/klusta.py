@@ -8,7 +8,7 @@ try:
     import klusta
     import klustakwik2
     HAVE_KLUSTA = True
-except ModuleNotFoundError:
+except ImportError:
     HAVE_KLUSTA = False
 
 
@@ -47,7 +47,6 @@ class KlustaSorter(BaseSorter):
         'n_features_per_channel': 3,
         'pca_n_waveforms_max': 10000,
         'num_starting_clusters': 50,
-        'parallel': True,
     }
     
     installation_mesg = """

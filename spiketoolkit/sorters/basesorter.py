@@ -21,20 +21,21 @@ import time
 import copy
 from pathlib import Path
 import threading
+import shutil
 
 import spikeextractors as se
 
+
 class BaseSorter:
-    
-    sorter_name = '' # convinience for reporting
-    installed = False # check at class level if isntalled or not
-    SortingExtractor_Class = None # convinience to get the extractor
+
+    sorter_name = ''  # convinience for reporting
+    installed = False  # check at class level if isntalled or not
+    SortingExtractor_Class = None  # convinience to get the extractor
     _default_params = {}
-    installation_mesg = "" # error message when not installed
+    installation_mesg = ""  # error message when not installed
     
     def __init__(self, recording=None, output_folder=None, debug=False,
-                                    grouping_property=None, parallel=False):
-        
+                 grouping_property=None, parallel=False, delete_output_folder=False):
         
         assert self.installed, """This sorter {} is not installed.
         Please install it with:  \n{} """.format(self.sorter_name, self.installation_mesg)
@@ -55,13 +56,14 @@ class BaseSorter:
             # several groups
             self.recording_list = se.getSubExtractorsByProperty(recording, grouping_property)
             n_group = len(self.recording_list)
-            self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group) ]
+            self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group)]
         
         # make folders
         for output_folder in self.output_folders:
             if not output_folder.is_dir():
                 output_folder.mkdir()
-    
+        self.delete_folders = delete_output_folder
+
     @classmethod
     def default_params(self):
         return copy.deepcopy(self._default_params)
@@ -122,7 +124,7 @@ class BaseSorter:
     def get_result(self):
         sorting_list = self.get_result_list()
         if len(sorting_list) == 1:
-            return sorting_list[0]
+            sorting = sorting_list[0]
         else:
             for i, sorting in enumerate(sorting_list):
                 group = self.recording_list[i].getChannelProperty(self.recording_list[i].getChannelIds()[0], 'group')
@@ -133,7 +135,14 @@ class BaseSorter:
             # reassemble the sorting outputs
             sorting_list = [sort for sort in sorting_list if sort is not None]
             multi_sorting = se.MultiSortingExtractor(sortings=sorting_list)
-            return multi_sorting
+            sorting = multi_sorting
+
+        if self.delete_folders:
+            for out in self.output_folders:
+                if self.debug:
+                    print("Removing ", str(out))
+                shutil.rmtree(str(out), ignore_errors=True)
+        return sorting
 
     # new idea
     def get_params_for_particular_recording(self, rec_name):
@@ -141,6 +150,3 @@ class BaseSorter:
        this is speculative an nee to be discussed
        """
        return {}
-
-
-    

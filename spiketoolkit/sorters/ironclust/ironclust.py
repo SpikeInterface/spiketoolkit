@@ -18,7 +18,7 @@ def check_if_installed(ironclust_path):
         try:
             from mountainlab_pytools import mdaio
             return True
-        except ModuleNotFoundError:
+        except ImportError:
             return False
     else:
         return False
@@ -76,7 +76,7 @@ class IronclustSorter(BaseSorter):
         p = self.params
 
         if not check_if_installed(IronclustSorter.ironclust_path):
-            raise ModuleNotFoundError(IronclustSorter.installation_mesg)
+            raise ImportError(IronclustSorter.installation_mesg)
         
         dataset_dir = (output_folder / 'ironclust_dataset').absolute()
         if not dataset_dir.is_dir():
