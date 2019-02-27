@@ -41,6 +41,7 @@ def check_if_installed(kilosort_path, npy_matlab_path):
     else:
         return False
 
+
 if check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH')):
     HAVE_KILOSORT = True
 else:
@@ -62,8 +63,8 @@ class KilosortSorter(BaseSorter):
     _default_params = {
         'file_name': None,
         'probe_file': None,
-        'useGPU': False,
-        'detect_threshold': 4,
+        'useGPU': True,
+        'detect_threshold': 5,
         'electrode_dimensions': None,
         'npy_matlab_path': None,
         'kilosort_path': None
@@ -132,7 +133,7 @@ class KilosortSorter(BaseSorter):
 
         if not HAVE_KILOSORT:
             if p['kilosort_path'] is None or p['npy_matlab_path'] is None:
-                raise ModuleNotFoundError('Kilosort is not installed\n', installation_mesg)
+                raise ImportError('Kilosort is not installed\n', installation_mesg)
             else:
                 kilosort_path = p['kilosort_path']
                 npy_matlab_path = p['npy_matlab_path']

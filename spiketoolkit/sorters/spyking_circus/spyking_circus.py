@@ -11,7 +11,7 @@ from ..tools import _run_command_and_print_output
 try:
     import circus
     HAVE_SC = True
-except ModuleNotFoundError:
+except ImportError:
     HAVE_SC = False
 
 
@@ -24,9 +24,8 @@ class SpykingcircusSorter(BaseSorter):
     SortingExtractor_Class = se.SpykingCircusSortingExtractor
     
     _default_params = {
-        'probe_file' : None,
-        'file_name' : None,
-    
+        'probe_file': None,
+        'file_name': None,
         'detect_sign': -1,  # -1 - 1 - 0
         'adjacency_radius': 100,  # Channel neighborhood adjacency radius corresponding to geom file
         'detect_threshold': 6,  # Threshold for detection

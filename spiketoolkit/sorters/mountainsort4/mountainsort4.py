@@ -14,7 +14,7 @@ from copy import copy
 try:
     import ml_ms4alg
     HAVE_MS4 = True
-except ModuleNotFoundError:
+except ImportError:
     HAVE_MS4 = False
 
 
@@ -33,12 +33,12 @@ class Mountainsort4Sorter(BaseSorter):
         'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
         'freq_min': 300,  # Use None for no bandpass filtering
         'freq_max': 6000,
+        'filter': False,
         'whiten': True,  # Whether to do channel whitening as part of preprocessing
         'clip_size': 50,
         'detect_threshold': 3,
         'detect_interval': 10,  # Minimum number of timepoints between events detected on the same channel
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
-        'parallel': True
     }
     
     installation_mesg = """
@@ -53,18 +53,16 @@ class Mountainsort4Sorter(BaseSorter):
 
     def _setup_recording(self, recording, output_folder):
         self._sorting_result = len(self.recording_list) * [None]
-        print(len(self._sorting_result))
-    
+
     def _run(self, recording, output_folder):
         # Sort
         # alias to params
         p = self.params
         
         ind = self.recording_list.index(recording)
-        print('ind', ind)
-        
+
         # Bandpass filter
-        if p['freq_min'] is not None:
+        if p['filter'] and p['freq_min'] is not None and p['freq_max'] is not None:
             recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=p['freq_min'],
                                                          freq_max=p['freq_max'])
 

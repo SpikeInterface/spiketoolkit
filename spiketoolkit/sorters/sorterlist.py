@@ -16,16 +16,14 @@ sorter_full_list = [
     SpykingcircusSorter,
 ]
 
-sorter_dict = {s.sorter_name:s for s in sorter_full_list}
+sorter_dict = {s.sorter_name: s for s in sorter_full_list}
 
-installed_sorter_list = [ s for s in sorter_full_list if s.installed]
-
-
+installed_sorter_list = [s for s in sorter_full_list if s.installed]
 
 
 # generic laucnher via function approach
-def run_sorter(sorter_name_or_class, recording, output_folder=None,
-        grouping_property=None, parallel=False, debug=False, **params):
+def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_output_folder=False,
+               grouping_property=None, parallel=False, debug=False, **params):
     """
     Generic function to run a sorter via function approach.
     
@@ -35,7 +33,7 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None,
        >>> sorting = run_sorter('tridesclous', recording)
     
     by class:
-        >>> sorting = run_sorter(TridesclousSorter, recording)
+       >>> sorting = run_sorter(TridesclousSorter, recording)
     
     """
     
@@ -46,11 +44,12 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None,
     else:
         raise(ValueError('Unkown sorter'))
     
-    sorter = SorterClass(recording=recording, output_folder=output_folder, 
-                                    grouping_property=grouping_property, parallel=parallel, debug=debug)
+    sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
+                         parallel=parallel, debug=debug, delete_output_folder=delete_output_folder)
     sorter.set_params(**params)
     sorter.run()
     sortingextractor = sorter.get_result()
+
     return sortingextractor
 
 

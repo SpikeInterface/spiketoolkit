@@ -8,7 +8,7 @@ import spikeextractors as se
 try:
     import tridesclous as tdc
     HAVE_TDC = True
-except ModuleNotFoundError:
+except ImportError:
     HAVE_TDC = False
 
 
@@ -98,9 +98,6 @@ class TridesclousSorter(BaseSorter):
                                 sparse_threshold_mad=1.5,
                                 use_opencl_with_sparse=use_opencl_with_sparse,)
             peeler.run(duration=None, progressbar=self.debug)
-
-
-
 
 
 TridesclousSorter._default_params = {
