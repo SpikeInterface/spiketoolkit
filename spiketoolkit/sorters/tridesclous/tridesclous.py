@@ -23,7 +23,7 @@ class TridesclousSorter(BaseSorter):
     installed = HAVE_TDC
     SortingExtractor_Class = se.TridesclousSortingExtractor
     
-    _default_params = None # later
+    _default_params = None  # later
     
     installation_mesg = """
        >>> pip install https://github.com/tridesclous/tridesclous/archive/master.zip
@@ -38,10 +38,9 @@ class TridesclousSorter(BaseSorter):
 
     def _setup_recording(self, recording, output_folder):
         # reset the output folder
-        if os.path.exists(output_folder):
-            shutil.rmtree(output_folder)
-        
-        os.makedirs(output_folder)
+        if output_folder.is_dir():
+            shutil.rmtree(str(output_folder))
+        os.makedirs(str(output_folder))
 
         # save prb file:
         probe_file = output_folder / 'probe.prb'
@@ -51,16 +50,16 @@ class TridesclousSorter(BaseSorter):
         raw_filename = output_folder / 'raw_signals.raw'
         traces = recording.getTraces()
         dtype = traces.dtype
-        with open(raw_filename, mode='wb') as f:
+        with raw_filename.open('wb') as f:
             f.write(traces.T.tobytes())
         
         # initialize source and probe file
-        tdc_dataio = tdc.DataIO(dirname=output_folder)
+        tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         nb_chan = recording.getNumChannels()
         
-        tdc_dataio.set_data_source(type='RawData', filenames=[raw_filename],
-                        dtype=dtype.str, sample_rate=recording.getSamplingFrequency(),
-                                        total_channel=nb_chan)
+        tdc_dataio.set_data_source(type='RawData', filenames=[str(raw_filename)],
+                                   dtype=dtype.str, sample_rate=recording.getSamplingFrequency(),
+                                   total_channel=nb_chan)
         tdc_dataio.set_probe_file(str(probe_file))
         if self.debug:
             print(tdc_dataio)
@@ -80,7 +79,7 @@ class TridesclousSorter(BaseSorter):
             else:
                 print('OpenCL is not available processing will be slow, try install it')
         
-        tdc_dataio = tdc.DataIO(dirname=output_folder)
+        tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         # make catalogue
         chan_grps = list(tdc_dataio.channel_groups.keys())
         for chan_grp in chan_grps:
@@ -94,46 +93,46 @@ class TridesclousSorter(BaseSorter):
             initial_catalogue = tdc_dataio.load_catalogue(chan_grp=chan_grp)
             peeler = tdc.Peeler(tdc_dataio)
             peeler.change_params(catalogue=initial_catalogue,
-                                use_sparse_template=use_sparse_template,
-                                sparse_threshold_mad=1.5,
-                                use_opencl_with_sparse=use_opencl_with_sparse,)
+                                 use_sparse_template=use_sparse_template,
+                                 sparse_threshold_mad=1.5,
+                                 use_opencl_with_sparse=use_opencl_with_sparse,)
             peeler.run(duration=None, progressbar=self.debug)
 
 
 TridesclousSorter._default_params = {
-    'fullchain_kargs':{
-        'duration' : 300.,
-        'preprocessor' : {
-            'highpass_freq' : None,
-            'lowpass_freq' : None,
-            'smooth_size' : 0,
-            'chunksize' : 1024,
-            'lostfront_chunksize' : 128,
-            'signalpreprocessor_engine' : 'numpy',
+    'fullchain_kargs': {
+        'duration': 300.,
+        'preprocessor': {
+            'highpass_freq': None,
+            'lowpass_freq': None,
+            'smooth_size': 0,
+            'chunksize': 1024,
+            'lostfront_chunksize': 128,
+            'signalpreprocessor_engine': 'numpy',
             'common_ref_removal':False,
         },
-        'peak_detector' : {
-            'peakdetector_engine' : 'numpy',
-            'peak_sign' : '-',
-            'relative_threshold' : 5.5,
-            'peak_span' : 0.0002,
+        'peak_detector': {
+            'peakdetector_engine': 'numpy',
+            'peak_sign': '-',
+            'relative_threshold': 5.5,
+            'peak_span': 0.0002,
         },
-        'noise_snippet' : {
-            'nb_snippet' : 300,
+        'noise_snippet': {
+            'nb_snippet': 300,
         },
-        'extract_waveforms' : {
-            'n_left' : -45,
-            'n_right' : 60,
-            'mode' : 'rand',
-            'nb_max' : 20000,
-            'align_waveform' : False,
+        'extract_waveforms': {
+            'n_left': -45,
+            'n_right': 60,
+            'mode': 'rand',
+            'nb_max': 20000,
+            'align_waveform': False,
         },
-        'clean_waveforms' : {
-            'alien_value_threshold' : 100.,
+        'clean_waveforms': {
+            'alien_value_threshold': 100.,
         },
     },
     'feat_method': 'peak_max',
     'feat_kargs': {},
     'clust_method': 'sawchaincut',
-    'clust_kargs' :{'kde_bandwith': 1.},
+    'clust_kargs': {'kde_bandwith': 1.},
 }
