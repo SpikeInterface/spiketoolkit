@@ -1,1 +1,2 @@
-from .spyking_circus import spyking_circus, spyking_circus_default_params
+from .spyking_circus import SpykingcircusSorter
+

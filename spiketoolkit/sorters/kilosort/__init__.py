@@ -1,1 +1,2 @@
-from .kilosort import kilosort, kilosort_default_params
+from .kilosort import KilosortSorter
+
