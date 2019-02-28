@@ -38,6 +38,7 @@ class RemoveArtifactsRecording(RecordingExtractor):
             channel_ids = self.getChannelIds()
         traces = self._recording.getTraces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)
         triggers = self._triggers[(self._triggers > start_frame) & (self._triggers < end_frame)] - start_frame
+
         pad = [int(self._ms_before * self.getSamplingFrequency() / 1000),
                int(self._ms_after * self.getSamplingFrequency() / 1000)]
 

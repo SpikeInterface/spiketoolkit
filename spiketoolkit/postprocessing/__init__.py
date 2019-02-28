@@ -1,2 +1,1 @@
-from .postprocessing import getUnitWaveforms, getUnitTemplate, getUnitMaxChannel, \
-    computePCAScores, computeUnitSNR, exportToPhy
+from .postprocessing import getUnitWaveforms, getUnitTemplate, getUnitMaxChannel, computePCAScores,  exportToPhy
