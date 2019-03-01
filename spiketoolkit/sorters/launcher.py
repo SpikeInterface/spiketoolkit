@@ -11,15 +11,25 @@ import multiprocessing
 
 def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
-    rec_name, recording, sorter_name, output_folder, debug = arg_list
+    rec_name, recording, sorter_name, output_folder,grouping_property, debug = arg_list
     
     os.makedirs(output_folder)
-    params = sorter_dict[sorter_name].default_params()
-    run_sorter(sorter_name, recording, output_folder=output_folder, debug=debug, **params)
+    #~ params = sorter_dict[sorter_name].default_params()
+    #~ run_sorter(sorter_name, recording, output_folder=output_folder, debug=debug, **params)
+
+    SorterClass = sorter_dict[sorter_name]
+    sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
+                         parallel=True, debug=debug, delete_output_folder=False)
+    params = SorterClass.default_params()
+    sorter.set_params(**params)
+    run_time = sorter.run()
+    #~ print(run_time)
+    #~ sortingextractor = sorter.get_result()
+    return run_time
     
     
 
-def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=None, processes=None, debug=False):
+def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_property=None, engine=None, processes=None, debug=False):
     """
     This run several sorter on several recording.
     Simple implementation will nested loops.
@@ -43,6 +53,9 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=Non
     
     assert not os.path.exists(working_folder), 'working_folder already exists, please remove it'
     
+    for sorter_name in sorter_list:
+        assert sorter_name in sorter_dict, '{} is not in sorter list'.format(rec_name)
+    
     if isinstance(recording_dict_or_list, list):
         # in case of list
         recording_dict = { 'recording_{}'.format(i): rec for i, rec in enumerate(recording_dict_or_list) }
@@ -58,20 +71,34 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, engine=Non
     for rec_name, recording in recording_dict.items():
         for sorter_name in sorter_list:
             output_folder = working_folder / rec_name / sorter_name
-            task_list.append((rec_name, recording, sorter_name, output_folder, debug))
+            task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug))
             
             
 
     
+    
     if engine is None:
         # simple loop in main process
+        run_times = []
         for arg_list in task_list:
-            _run_one(arg_list)
+            run_time = _run_one(arg_list)
+            run_times.append(run_time)
     
     elif engine == 'multiprocessing':
         # use mp.Pool
         pool = multiprocessing.Pool(processes)
-        pool.map(_run_one, task_list)
-        
+        run_times = pool.map(_run_one, task_list)
     
-    
+    # write run time in csv file
+    with open(working_folder / 'run_time.csv', mode='w') as f:
+        for i, run_time in enumerate(run_times):
+            rec_name = task_list[i][0]
+            sorter_name = task_list[i][2]
+            txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
+            f.write(txt)
+
+
+
+
+
+
