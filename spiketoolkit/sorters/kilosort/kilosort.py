@@ -61,7 +61,6 @@ class KilosortSorter(BaseSorter):
     SortingExtractor_Class = se.KiloSortSortingExtractor
     
     _default_params = {
-        'file_name': None,
         'probe_file': None,
         'useGPU': True,
         'detect_threshold': 5,
@@ -102,12 +101,8 @@ class KilosortSorter(BaseSorter):
             raise Exception(KilosortSorter.installation_mesg)
 
         # save binary file
-        if p['file_name'] is None:
-            self.file_name = Path('recording')
-        elif p['file_name'].suffix == '.dat':
-            self.file_name = p['file_name'].stem
-        p['file_name'] = self.file_name
-        se.writeBinaryDatFormat(recording, output_folder / self.file_name, dtype='int16')
+        file_name = 'recording'
+        se.writeBinaryDatFormat(recording, output_folder / file_name, dtype='int16')
 
         # set up kilosort config files and run kilosort on data
         with (source_dir / 'kilosort_master.txt').open('r') as f:
@@ -118,7 +113,7 @@ class KilosortSorter(BaseSorter):
             kilosort_channelmap = f.readlines()
 
         nchan = recording.getNumChannels()
-        dat_file = (output_folder / (self.file_name.name + '.dat')).absolute()
+        dat_file = (output_folder / (file_name + '.dat')).absolute()
         kilo_thresh = p['detect_threshold']
         Nfilt = (nchan // 32) * 32 * 8
         if Nfilt == 0:
