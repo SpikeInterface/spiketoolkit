@@ -22,6 +22,7 @@ import copy
 from pathlib import Path
 import threading
 import shutil
+import os
 
 import spikeextractors as se
 
@@ -56,12 +57,15 @@ class BaseSorter:
             # several groups
             self.recording_list = se.getSubExtractorsByProperty(recording, grouping_property)
             n_group = len(self.recording_list)
-            self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group)]
+            if n_group>1:
+                self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group)]
+            else:
+                self.output_folders = [output_folder]
         
         # make folders
         for output_folder in self.output_folders:
             if not output_folder.is_dir():
-                output_folder.mkdir()
+                os.makedirs(str(output_folder))
         self.delete_folders = delete_output_folder
 
     @classmethod

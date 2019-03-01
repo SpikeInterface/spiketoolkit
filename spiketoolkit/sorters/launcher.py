@@ -13,7 +13,7 @@ def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug = arg_list
     
-    os.makedirs(output_folder)
+    #~ os.makedirs(output_folder)
     #~ params = sorter_dict[sorter_name].default_params()
     #~ run_sorter(sorter_name, recording, output_folder=output_folder, debug=debug, **params)
 

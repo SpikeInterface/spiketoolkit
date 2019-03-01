@@ -112,8 +112,8 @@ TridesclousSorter._default_params = {
     'fullchain_kargs': {
         'duration': 300.,
         'preprocessor': {
-            'highpass_freq': None,
-            'lowpass_freq': None,
+            'highpass_freq': 400.,
+            'lowpass_freq': 5000.,
             'smooth_size': 0,
             'chunksize': 1024,
             'lostfront_chunksize': 128,
