@@ -21,7 +21,6 @@ class SpykingcircusSorter(BaseSorter):
     
     sorter_name = 'spykingcircus'
     installed = HAVE_SC
-    SortingExtractor_Class = se.SpykingCircusSortingExtractor
     
     _default_params = {
         'probe_file': None,
@@ -89,7 +88,6 @@ class SpykingcircusSorter(BaseSorter):
         if p['n_cores'] is None:
             p['n_cores'] = np.maximum(1, int(os.cpu_count() / 2))
 
-
     def _run(self,  recording, output_folder):
         n_cores = self.params['n_cores']
         cmd = 'spyking-circus {} -c {} '.format(output_folder / 'recording.npy', n_cores)
@@ -107,9 +105,7 @@ class SpykingcircusSorter(BaseSorter):
             if retcode != 0:
                 raise Exception('Spyking circus merging returned a non-zero exit code')
 
-    def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
+    @staticmethod
+    def get_result_from_folder(output_folder):
         sorting = se.SpykingCircusSortingExtractor(output_folder / 'recording')
         return sorting
-
-

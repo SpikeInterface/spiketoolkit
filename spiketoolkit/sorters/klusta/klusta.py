@@ -32,7 +32,6 @@ class KlustaSorter(BaseSorter):
     
     sorter_name = 'klusta'
     installed = HAVE_KLUSTA
-    SortingExtractor_Class = se.KlustaSortingExtractor
     
     _default_params = {
         'file_name': None,
@@ -112,8 +111,8 @@ class KlustaSorter(BaseSorter):
         if not (output_folder /  'recording.kwik').is_file():
             raise Exception('Klusta did not run successfully')
 
-    def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
+    @staticmethod
+    def get_result_from_folder(output_folder):
         sorting = se.KlustaSortingExtractor(output_folder / 'recording.kwik')
         return sorting
 

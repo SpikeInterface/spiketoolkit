@@ -21,7 +21,6 @@ class TridesclousSorter(BaseSorter):
     
     sorter_name = 'tridesclous'
     installed = HAVE_TDC
-    SortingExtractor_Class = se.TridesclousSortingExtractor
     
     _default_params = None  # later
     
@@ -106,6 +105,11 @@ class TridesclousSorter(BaseSorter):
                                  sparse_threshold_mad=1.5,
                                  use_opencl_with_sparse=use_opencl_with_sparse,)
             peeler.run(duration=None, progressbar=self.debug)
+    
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.TridesclousSortingExtractor(output_folder)
+        return sorting
 
 
 TridesclousSorter._default_params = {

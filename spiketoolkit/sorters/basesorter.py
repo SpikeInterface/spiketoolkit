@@ -112,16 +112,14 @@ class BaseSorter:
         # this run the sorter on ONE recording (or SubExtractor)
         raise(NotImplementedError)
     
-    def _get_one_result(self, recording, output_folder):
-        # general case that do not work always
-        # sometime (klusta, ironclust) need to be over written
-        sorting = self.SortingExtractor_Class(output_folder)
-        return sorting
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        raise(NotImplementedError)
     
     def get_result_list(self):
         sorting_list = []
         for i, recording in enumerate(self.recording_list):
-            sorting = self._get_one_result(recording, self.output_folders[i])
+            sorting = self.get_result_from_folder(self.output_folders[i])
             sorting_list.append(sorting)
         return sorting_list
     

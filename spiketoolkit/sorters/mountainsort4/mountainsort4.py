@@ -94,6 +94,7 @@ class Mountainsort4Sorter(BaseSorter):
         
         se.MdaSortingExtractor.writeSorting(sorting, str(output_folder / 'firings.mda'))
 
-    def _get_one_result(self, recording, output_folder):
+    @staticmethod
+    def get_result_from_folder(output_folder):
         sorting = se.MdaSortingExtractor(str(output_folder / 'firings.mda'))
         return sorting
