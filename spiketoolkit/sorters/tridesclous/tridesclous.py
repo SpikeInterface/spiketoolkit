@@ -28,7 +28,7 @@ class TridesclousSorter(BaseSorter):
     installation_mesg = """
        >>> pip install https://github.com/tridesclous/tridesclous/archive/master.zip
     
-    More information on klusta at:
+    More information on tridesclous at:
       * https://github.com/tridesclous/tridesclous
       * https://tridesclous.readthedocs.io
     """
@@ -46,12 +46,21 @@ class TridesclousSorter(BaseSorter):
         probe_file = output_folder / 'probe.prb'
         se.saveProbeFile(recording, probe_file, format='spyking_circus')
         
-        # save binary file
+        # save binary file in loop chunk by hcunk to save memory footprint
         raw_filename = output_folder / 'raw_signals.raw'
-        traces = recording.getTraces()
-        dtype = traces.dtype
+        n_sample = recording.getNumFrames()
+        n_chan = recording.getNumChannels()
+        chunksize = 2**24// n_chan
+        n_chunk = n_sample // chunksize
+        if n_sample % chunksize > 0:
+            n_chunk += 1
         with raw_filename.open('wb') as f:
-            f.write(traces.T.tobytes())
+            for i in range(n_chunk):
+                traces = recording.getTraces(start_frame=i*chunksize,
+                                                            end_frame=min((i+1)*chunksize, n_sample))
+                f.write(traces.T.tobytes())
+        
+        dtype = traces.dtype
         
         # initialize source and probe file
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
