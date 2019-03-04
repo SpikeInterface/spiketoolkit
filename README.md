@@ -48,7 +48,7 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same recordings.
 
 ```python
-import spikeextractor as se
+import spikeextractors as se
 import spiketoolkit as st
 
 # load recording using spikeextractors (e.g. Open Ephys recording)
