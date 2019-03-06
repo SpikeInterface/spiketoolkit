@@ -11,7 +11,7 @@ import multiprocessing
 
 def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
-    rec_name, recording, sorter_name, output_folder,grouping_property, debug = arg_list
+    rec_name, recording, sorter_name, output_folder,grouping_property, debug, write_log = arg_list
     
     #~ os.makedirs(output_folder)
     #~ params = sorter_dict[sorter_name].default_params()
@@ -97,15 +97,17 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         #~ run_times = pool.map(_run_one, task_list)
         run_times = pool.map(_run_one, task_list)
     
-    # collect run time and write to cvs
-    with open(working_folder / 'run_time.csv', mode='w') as f:
-        for task in task_list:
-            rec_name = task[0]
-            sorter_name = task[2]
-            output_folder = task[3]
-            with open(output_folder / 'run_log.txt', mode='r') as logfile:
-                run_time = float(logfile.readline().replace('run_time:', ''))
-            
-            txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
-            f.write(txt)
+    
+    if write_log:
+        # collect run time and write to cvs
+        with open(working_folder / 'run_time.csv', mode='w') as f:
+            for task in task_list:
+                rec_name = task[0]
+                sorter_name = task[2]
+                output_folder = task[3]
+                with open(output_folder / 'run_log.txt', mode='r') as logfile:
+                    run_time = float(logfile.readline().replace('run_time:', ''))
+                
+                txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
+                f.write(txt)
     
