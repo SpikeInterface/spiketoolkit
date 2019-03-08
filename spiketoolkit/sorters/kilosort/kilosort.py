@@ -26,7 +26,7 @@ from ..tools import _call_command_split
 def check_if_installed(kilosort_path, npy_matlab_path):
     if kilosort_path is None or npy_matlab_path is None:
         return False
-    
+
     if kilosort_path is not None and kilosort_path.startswith('"'):
         kilosort_path = kilosort_path[1:-1]
         kilosort_path = Path(kilosort_path).absolut()
@@ -74,7 +74,7 @@ class KilosortSorter(BaseSorter):
         >>> git clone https://github.com/cortex-lab/KiloSort
         >>> git clone https://github.com/kwikteam/npy-matlab\n
     and provide the installation path with the 'kilosort_path' and 
-    npy_matlab_path' arguments or by setting the KILOSORT_PATH 
+    npy_matlab_path' arguments or by setting the KILOSORT2_PATH 
     and NPY_MATLAB_PATH environment variables.\n\n
     
     More information on KiloSort at:
