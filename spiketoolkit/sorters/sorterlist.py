@@ -4,6 +4,7 @@ from .tridesclous import TridesclousSorter
 from .mountainsort4 import Mountainsort4Sorter
 from .ironclust import IronclustSorter
 from .kilosort import KilosortSorter
+from .kilosort2 import Kilosort2Sorter
 from .spyking_circus import SpykingcircusSorter
 
 
@@ -13,6 +14,7 @@ sorter_full_list = [
     Mountainsort4Sorter,
     IronclustSorter,
     KilosortSorter,
+    Kilosort2Sorter,
     SpykingcircusSorter,
 ]
 
@@ -42,7 +44,7 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_outpu
     elif sorter_name_or_class in sorter_full_list:
         SorterClass = sorter_name_or_class
     else:
-        raise(ValueError('Unkown sorter'))
+        raise(ValueError('Unknown sorter'))
     
     sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                          parallel=parallel, debug=debug, delete_output_folder=delete_output_folder)
@@ -71,6 +73,9 @@ def run_ironclust(*args, **kargs):
 
 def run_kilosort(*args, **kargs):
     return run_sorter('kilosort', *args, **kargs)
+
+def run_kilosort2(*args, **kargs):
+    return run_sorter('kilosort2', *args, **kargs)
 
 def run_spykingcircus(*args, **kargs):
     return run_sorter('spykingcircus', *args, **kargs)

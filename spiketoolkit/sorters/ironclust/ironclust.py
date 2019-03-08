@@ -140,7 +140,7 @@ class IronclustSorter(BaseSorter):
 
         result_fname = output_folder / 'firings.mda'
         
-        assert result_fname.exists(),'Result file does not exist: {}'.format(str(result_fname))
+        assert result_fname.exists(), 'Result file does not exist: {}'.format(str(result_fname))
 
         firings = mdaio.readmda(str(result_fname))
         sorting = se.NumpySortingExtractor()

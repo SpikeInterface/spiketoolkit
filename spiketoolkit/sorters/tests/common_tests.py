@@ -14,12 +14,12 @@ class SorterCommonTestSuite:
     
     def test_on_toy(self):
         
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=30)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=60)
         
         params = self.SorterClass.default_params()
         
         sorter = self.SorterClass(recording=recording, output_folder=None,
-                                        grouping_property=None, parallel=False, debug=False)
+                                  grouping_property=None, parallel=False, debug=False)
         sorter.set_params(**params)
         sorter.run()
         sorting = sorter.get_result()
@@ -43,7 +43,7 @@ class SorterCommonTestSuite:
         
         for parallel in [False, True]:
             sorter = self.SorterClass(recording=recording, output_folder=None,
-                                            grouping_property='group', parallel=parallel, debug=False)
+                                      grouping_property='group', parallel=parallel, debug=False)
             sorter.set_params(**params)
             sorter.run()
             sorting = sorter.get_result()
