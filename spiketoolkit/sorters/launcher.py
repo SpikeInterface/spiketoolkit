@@ -13,25 +13,20 @@ def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug, write_log = arg_list
     
-    #~ os.makedirs(output_folder)
-    #~ params = sorter_dict[sorter_name].default_params()
-    #~ run_sorter(sorter_name, recording, output_folder=output_folder, debug=debug, **params)
-
-    SorterClass = sorter_dict[sorter_name]
-    sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
-                         parallel=True, debug=debug, delete_output_folder=False)
-    params = SorterClass.default_params()
-    sorter.set_params(**params)
-    run_time = sorter.run()
+    try:
+        SorterClass = sorter_dict[sorter_name]
+        sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
+                            parallel=True, debug=debug, delete_output_folder=False)
+        params = SorterClass.default_params()
+        sorter.set_params(**params)
     
-    if write_log:
+        run_time = sorter.run()
+    except:
+        run_time = None
+        
+    if write_log and run_time is not None:
         with open(output_folder / 'run_log.txt', mode='w') as f:
             f.write('run_time: {}\n'.format(run_time))
-    
-    #~ print(run_time)
-    #~ sortingextractor = sorter.get_result()
-    #~ return run_time
-    
     
 
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_property=None,
@@ -78,24 +73,16 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         for sorter_name in sorter_list:
             output_folder = working_folder / rec_name / sorter_name
             task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug, write_log))
-            
-            
-
-    
     
     if engine is None:
         # simple loop in main process
-        #~ run_times = []
         for arg_list in task_list:
             _run_one(arg_list)
-            #~ run_time = _run_one(arg_list)
-            #~ run_times.append(run_time)
     
     elif engine == 'multiprocessing':
         # use mp.Pool
         pool = multiprocessing.Pool(processes)
-        #~ run_times = pool.map(_run_one, task_list)
-        run_times = pool.map(_run_one, task_list)
+        pool.map(_run_one, task_list)
     
     
     if write_log:
