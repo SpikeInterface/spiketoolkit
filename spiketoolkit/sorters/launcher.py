@@ -41,7 +41,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     recording_dict_or_list: a dict (or a list) of recording
     working_folder : str
     
-    engine = None or 'multiprocessing'
+    engine = None ( = 'loop') or 'multiprocessing'
     processes = only if 'multiprocessing' if None then processes=os.cpu_count()
     debug=True/False to control sorter verbosity
     
@@ -74,7 +74,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
             output_folder = working_folder / rec_name / sorter_name
             task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug, write_log))
     
-    if engine is None:
+    if engine is None or engine == 'loop':
         # simple loop in main process
         for arg_list in task_list:
             _run_one(arg_list)
