@@ -25,7 +25,7 @@ ops.lam = 10;
 ops.AUCsplit = 0.9; 
 
 % minimum spike rate (Hz), if a cluster falls below this for too long it gets removed
-ops.minFR = 1/50; 
+ops.minFR = {};
 
 % number of samples to average over (annealed from first to second value) 
 ops.momentum = [20 400]; 

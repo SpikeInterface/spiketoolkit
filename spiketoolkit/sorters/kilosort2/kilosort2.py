@@ -63,11 +63,11 @@ class Kilosort2Sorter(BaseSorter):
     _default_params = {
         'file_name': None,
         'probe_file': None,
-        'useGPU': True,
         'detect_threshold': 5,
         'electrode_dimensions': None,
         'npy_matlab_path': None,
-        'kilosort2_path': None
+        'kilosort2_path': None,
+        'minFR': 0.1,
     }
 
     installation_mesg = """\nTo use Kilosort run:\n
@@ -120,16 +120,8 @@ class Kilosort2Sorter(BaseSorter):
         nchan = recording.getNumChannels()
         dat_file = (output_folder / (self.file_name.name + '.dat')).absolute()
         kilo_thresh = p['detect_threshold']
-        Nfilt = (nchan // 32) * 32 * 8
-        if Nfilt == 0:
-            Nfilt = nchan * 8
-        nsamples = 128 * 1024 + 64
-        sample_rate = recording.getSamplingFrequency()
 
-        if p['useGPU']:
-            ug = 1
-        else:
-            ug = 0
+        sample_rate = recording.getSamplingFrequency()
 
         if not HAVE_KILOSORT2:
             if p['kilosort2_path'] is None or p['npy_matlab_path'] is None:
@@ -145,7 +137,8 @@ class Kilosort2Sorter(BaseSorter):
 
         kilosort2_master = ''.join(kilosort2_master).format(kilosort2_path, npy_matlab_path,
                                                             output_folder, abs_channel, abs_config)
-        kilosort2_config = ''.join(kilosort2_config).format(nchan, nchan, sample_rate, dat_file, kilo_thresh)
+        kilosort2_config = ''.join(kilosort2_config).format(nchan, nchan, sample_rate, dat_file, p['minFR'],
+                                                            kilo_thresh)
         electrode_dimensions = p['electrode_dimensions']
 
         if 'group' in recording.getChannelPropertyNames():
