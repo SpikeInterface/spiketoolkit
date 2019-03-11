@@ -6,6 +6,7 @@ from .ironclust import IronclustSorter
 from .kilosort import KilosortSorter
 from .kilosort2 import Kilosort2Sorter
 from .spyking_circus import SpykingcircusSorter
+from .herdingspikes import HerdingspikesSorter
 
 
 sorter_full_list = [
@@ -16,6 +17,7 @@ sorter_full_list = [
     KilosortSorter,
     Kilosort2Sorter,
     SpykingcircusSorter,
+    HerdingspikesSorter
 ]
 
 sorter_dict = {s.sorter_name: s for s in sorter_full_list}
@@ -28,24 +30,24 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_outpu
                grouping_property=None, parallel=False, debug=False, **params):
     """
     Generic function to run a sorter via function approach.
-    
+
     2 Usage with name or class:
-    
+
     by name:
        >>> sorting = run_sorter('tridesclous', recording)
-    
+
     by class:
        >>> sorting = run_sorter(TridesclousSorter, recording)
-    
+
     """
-    
+
     if isinstance(sorter_name_or_class, str):
         SorterClass = sorter_dict[sorter_name_or_class]
     elif sorter_name_or_class in sorter_full_list:
         SorterClass = sorter_name_or_class
     else:
         raise(ValueError('Unknown sorter'))
-    
+
     sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                          parallel=parallel, debug=debug, delete_output_folder=delete_output_folder)
     sorter.set_params(**params)
@@ -80,3 +82,5 @@ def run_kilosort2(*args, **kargs):
 def run_spykingcircus(*args, **kargs):
     return run_sorter('spykingcircus', *args, **kargs)
 
+def run_herdingspikes(*args, **kargs):
+    return run_sorter('herdingspikes', *args, **kargs)
