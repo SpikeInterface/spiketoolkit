@@ -103,6 +103,12 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
 
 
 def collect_results(working_folder):
+    """
+    Collect results in a working_folder.
+    
+    The output is nested dict[rec_name][sorter_name] of SortingExtrator.
+    
+    """
     results = {}
     
     for rec_name in os.listdir(working_folder):
@@ -117,11 +123,5 @@ def collect_results(working_folder):
                 continue
             SorterClass = sorter_dict[sorter_name]
             results[rec_name][sorter_name] = SorterClass.get_result_from_folder(output_folder)
-            
-        
     
     return results
-    
-    
-    
-    
