@@ -46,9 +46,9 @@ class CommonReferenceRecording(RecordingExtractor):
             else:
                 new_groups = []
                 for g in self._groups:
-                    new_chans =[]
+                    new_chans = []
                     for chan in g:
-                        if chan in self._recording.getChannelIds():
+                        if chan in channel_ids:
                             new_chans.append(chan)
                     new_groups.append(new_chans)
                 print('Common median in groups: ', new_groups)

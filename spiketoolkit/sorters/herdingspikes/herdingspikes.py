@@ -46,7 +46,7 @@ class HerdingspikesSorter(BaseSorter):
 
     def _run(self, recording, output_folder):
 
-        H = hs.HSDetection(self.Probe, file_directory_name=output_folder,
+        H = hs.HSDetection(self.Probe, file_directory_name=str(output_folder),
                            **self.params['detection_params'])  # risky
 
         H.DetectFromRaw(load=True)
