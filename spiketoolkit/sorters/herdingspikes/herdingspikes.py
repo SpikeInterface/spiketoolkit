@@ -58,6 +58,11 @@ class HerdingspikesSorter(BaseSorter):
         sorted_file = str(output_folder / 'HS2_sorted.hdf5')
         C.SaveHDF5(sorted_file)
 
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
+        return sorting
+
 
 HerdingspikesSorter._default_params = {
     'probe_params': {
