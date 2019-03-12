@@ -188,7 +188,7 @@ class Kilosort2Sorter(BaseSorter):
         # retcode = _run_command_and_print_output_split(cmd_list)
         _call_command_split(cmd_list)
 
-    def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
+    @staticmethod
+    def get_result_from_folder(output_folder):
         sorting = se.KiloSortSortingExtractor(output_folder)
         return sorting
