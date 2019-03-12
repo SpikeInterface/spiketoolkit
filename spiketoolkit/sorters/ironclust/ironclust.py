@@ -36,8 +36,6 @@ class IronclustSorter(BaseSorter):
     sorter_name = 'ironclust'
     installed = HAVE_IRONCLUST
     ironclust_path = os.getenv('IRONCLUST_PATH')
-    # SortingExtractor_Class = se.NumpySortingExtractor
-    SortingExtractor_Class = None # custum get_result
     
     _default_params = {
         'prm_template_name': None,  # Name of the template file
@@ -134,11 +132,13 @@ class IronclustSorter(BaseSorter):
 
         _call_command_split(cmd_list)
 
-    def _get_one_result(self, recording, output_folder):
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        
         # overwrite the SorterBase.get_result
         from mountainlab_pytools import mdaio
 
-        result_fname = output_folder / 'firings.mda'
+        result_fname = Path(output_folder) / 'firings.mda'
         
         assert result_fname.exists(), 'Result file does not exist: {}'.format(str(result_fname))
 

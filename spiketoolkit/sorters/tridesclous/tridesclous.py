@@ -21,14 +21,13 @@ class TridesclousSorter(BaseSorter):
     
     sorter_name = 'tridesclous'
     installed = HAVE_TDC
-    SortingExtractor_Class = se.TridesclousSortingExtractor
     
     _default_params = None  # later
     
     installation_mesg = """
        >>> pip install https://github.com/tridesclous/tridesclous/archive/master.zip
     
-    More information on klusta at:
+    More information on tridesclous at:
       * https://github.com/tridesclous/tridesclous
       * https://tridesclous.readthedocs.io
     """
@@ -46,12 +45,21 @@ class TridesclousSorter(BaseSorter):
         probe_file = output_folder / 'probe.prb'
         se.saveProbeFile(recording, probe_file, format='spyking_circus')
         
-        # save binary file
+        # save binary file in loop chunk by hcunk to save memory footprint
         raw_filename = output_folder / 'raw_signals.raw'
-        traces = recording.getTraces()
-        dtype = traces.dtype
+        n_sample = recording.getNumFrames()
+        n_chan = recording.getNumChannels()
+        chunksize = 2**24// n_chan
+        n_chunk = n_sample // chunksize
+        if n_sample % chunksize > 0:
+            n_chunk += 1
         with raw_filename.open('wb') as f:
-            f.write(traces.T.tobytes())
+            for i in range(n_chunk):
+                traces = recording.getTraces(start_frame=i*chunksize,
+                                                            end_frame=min((i+1)*chunksize, n_sample))
+                f.write(traces.T.tobytes())
+        
+        dtype = traces.dtype
         
         # initialize source and probe file
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
@@ -97,14 +105,19 @@ class TridesclousSorter(BaseSorter):
                                  sparse_threshold_mad=1.5,
                                  use_opencl_with_sparse=use_opencl_with_sparse,)
             peeler.run(duration=None, progressbar=self.debug)
+    
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.TridesclousSortingExtractor(output_folder)
+        return sorting
 
 
 TridesclousSorter._default_params = {
     'fullchain_kargs': {
         'duration': 300.,
         'preprocessor': {
-            'highpass_freq': None,
-            'lowpass_freq': None,
+            'highpass_freq': 400.,
+            'lowpass_freq': 5000.,
             'smooth_size': 0,
             'chunksize': 1024,
             'lostfront_chunksize': 128,

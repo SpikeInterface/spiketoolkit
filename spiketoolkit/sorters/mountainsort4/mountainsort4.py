@@ -52,7 +52,7 @@ class Mountainsort4Sorter(BaseSorter):
         BaseSorter.__init__(self, **kargs)
 
     def _setup_recording(self, recording, output_folder):
-        self._sorting_result = len(self.recording_list) * [None]
+        pass
 
     def _run(self, recording, output_folder):
         # Sort
@@ -91,11 +91,10 @@ class Mountainsort4Sorter(BaseSorter):
                 sorting=sorting,
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
+        
+        se.MdaSortingExtractor.writeSorting(sorting, str(output_folder / 'firings.mda'))
 
-        self._sorting_result[ind] = sorting
-
-
-    def _get_one_result(self, recording, output_folder):
-        ind = self.recording_list.index(recording)
-        sorting = self._sorting_result[ind]
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.MdaSortingExtractor(str(output_folder / 'firings.mda'))
         return sorting
