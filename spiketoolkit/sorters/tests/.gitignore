@@ -19,4 +19,7 @@ test_spykingcircus_*/*
 test_mountainsort4/*
 test_mountainsort4_*/*
 
+test_yass/*
+test_yass_*/*
+
 test_run_sorters*/*

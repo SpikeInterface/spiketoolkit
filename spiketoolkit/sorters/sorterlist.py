@@ -7,6 +7,7 @@ from .kilosort import KilosortSorter
 from .kilosort2 import Kilosort2Sorter
 from .spyking_circus import SpykingcircusSorter
 from .herdingspikes import HerdingspikesSorter
+from .yass import YassSorter
 
 
 sorter_full_list = [
@@ -17,7 +18,8 @@ sorter_full_list = [
     KilosortSorter,
     Kilosort2Sorter,
     SpykingcircusSorter,
-    HerdingspikesSorter
+    HerdingspikesSorter,
+    YassSorter,
 ]
 
 sorter_dict = {s.sorter_name: s for s in sorter_full_list}
@@ -84,3 +86,6 @@ def run_spykingcircus(*args, **kargs):
 
 def run_herdingspikes(*args, **kargs):
     return run_sorter('herdingspikes', *args, **kargs)
+
+def run_yass(*args, **kargs):
+    return run_sorter('yass', *args, **kargs)
