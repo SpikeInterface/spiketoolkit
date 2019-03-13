@@ -1,3 +1,4 @@
+from pathlib import Path
 import numpy as np
 
 from spiketoolkit.sorters.basesorter import BaseSorter
@@ -66,12 +67,15 @@ class YassSorter(BaseSorter):
 
     
     def _run(self, recording, output_folder):
-        cmd = 'yass {}'.format(output_folder/ 'config.yaml')
-        _run_command_and_print_output_split(cmd)
+        cmd = 'yass sort {}'.format(output_folder/ 'config.yaml')
+        retcode = _run_command_and_print_output(cmd)
+        
+        if retcode != 0:
+            raise Exception('yass returned a non-zero exit code')
+        
     
     @staticmethod
     def get_result_from_folder(output_folder):
         sorting = se.YassSortingExtractor(output_folder)
         return sorting
-
 
