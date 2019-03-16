@@ -3,7 +3,7 @@ import shutil
 import time
 
 import pytest
-from spiketoolkit.sorters import run_sorters
+from spiketoolkit.sorters import run_sorters, collect_results
 
 import spikeextractors as se
 
@@ -39,9 +39,10 @@ def test_run_sorters_with_dict():
     
     # simple loop
     t0 = time.perf_counter()
-    run_sorters(sorter_list, recording_dict, working_folder, engine=None)
+    results = run_sorters(sorter_list, recording_dict, working_folder, engine=None)
     t1 = time.perf_counter()
     print(t1-t0)
+    print(results)
 
 
 def test_run_sorters_multiprocessing():
@@ -64,13 +65,20 @@ def test_run_sorters_multiprocessing():
     run_sorters(sorter_list, recording_dict, working_folder, engine='multiprocessing', processes=4)
     t1 = time.perf_counter()
     print(t1-t0)
-    
-    
+
+
+def test_collect_results():
+    working_folder = 'test_run_sorters_dict'
+    results = collect_results(working_folder)
+    print(results)
     
     
 if __name__ == '__main__':
     #~ test_run_sorters_with_list()
     
-    #~ test_run_sorters_with_dict()
+    test_run_sorters_with_dict()
     
-    test_run_sorters_multiprocessing()
+    #~ test_run_sorters_multiprocessing()
+    
+    #~ test_collect_results()
+    

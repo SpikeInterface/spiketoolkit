@@ -55,7 +55,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     assert not os.path.exists(working_folder), 'working_folder already exists, please remove it'
     
     for sorter_name in sorter_list:
-        assert sorter_name in sorter_dict, '{} is not in sorter list'.format(rec_name)
+        assert sorter_name in sorter_dict, '{} is not in sorter list'.format(sorter_name)
     
     if isinstance(recording_dict_or_list, list):
         # in case of list
@@ -98,3 +98,30 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
                 txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
                 f.write(txt)
     
+    results = collect_results(working_folder)
+    return results
+
+
+def collect_results(working_folder):
+    """
+    Collect results in a working_folder.
+    
+    The output is nested dict[rec_name][sorter_name] of SortingExtrator.
+    
+    """
+    results = {}
+    
+    for rec_name in os.listdir(working_folder):
+        if not os.path.isdir(os.path.join(working_folder, rec_name)):
+            continue
+        print(rec_name)
+        results[rec_name] = {}
+        for sorter_name in os.listdir(os.path.join(working_folder, rec_name)):
+            print('  ', sorter_name)
+            output_folder = os.path.join(working_folder, rec_name, sorter_name)
+            if not os.path.isdir(output_folder):
+                continue
+            SorterClass = sorter_dict[sorter_name]
+            results[rec_name][sorter_name] = SorterClass.get_result_from_folder(output_folder)
+    
+    return results
