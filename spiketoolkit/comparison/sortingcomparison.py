@@ -20,7 +20,7 @@ class SortingComparison():
         if count:
             if verbose:
                 print("Counting...")
-            self._do_counting(verbose=False)
+            self._do_counting(verbose=verbose)
 
     def getSorting1(self):
         return self._sorting1
@@ -324,14 +324,21 @@ class SortingComparison():
         self._labels_st2 = dict()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
+        
+        # copy spike trains for faster access from extractors with memmapped data
+        sts1 = []
+        for u in sorting1.getUnitIds():
+            sts1.append(sorting1.getUnitSpikeTrain(u))
+        sts2 = []
+        for u in sorting2.getUnitIds():
+            sts2.append(sorting2.getUnitSpikeTrain(u))
+
         # Evaluate
-        for u1 in unit1_ids:
-            st1 = sorting1.getUnitSpikeTrain(u1)
-            lab_st1 = np.array(['UNPAIRED'] * len(st1))
+        for i,u1 in enumerate(unit1_ids):
+            lab_st1 = np.array(['UNPAIRED'] * len(sts1[i]))
             self._labels_st1[u1] = lab_st1
-        for u2 in unit2_ids:
-            st2 = sorting2.getUnitSpikeTrain(u2)
-            lab_st2 = np.array(['UNPAIRED'] * len(st2))
+        for i,u2 in enumerate(unit2_ids):
+            lab_st2 = np.array(['UNPAIRED'] * len(sts2[i]))
             self._labels_st2[u2] = lab_st2
 
         if verbose:
@@ -342,35 +349,32 @@ class SortingComparison():
                 lab_st2 = self._labels_st2[self.getMappedSorting1().getMappedUnitIds(u1)]
                 mapped_st = self.getMappedSorting1().getUnitSpikeTrain(u1)
                 # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
-                for sp_i, n_sp in enumerate(sorting1.getUnitSpikeTrain(u1)):
-                    id_sp = np.where((mapped_st > n_sp - self._delta_tp) & (mapped_st < n_sp + self._delta_tp))[0]
-                    if len(id_sp) == 1:
+                for sp_i, n_sp in enumerate(sts1[u_i]):
+                    matches = (np.abs(mapped_st.astype(int)-n_sp)<=self._delta_tp//2)
+                    if np.sum(matches) > 0:
                         lab_st1[sp_i] = 'TP'
-                        lab_st2[id_sp] = 'TP'
+                        lab_st2[np.where(matches)[0][0]] = 'TP'
             else:
-                lab_st1 = np.array(['FN'] * len(sorting1.getUnitSpikeTrain(u1)))
+                lab_st1 = np.array(['FN'] * len(sts1[u_i]))
 
         # find CL-CLO-CLSO
         if verbose:
             print('Finding CL')
         for u_i, u1 in enumerate(sorting1.getUnitIds()):
             lab_st1 = self._labels_st1[u1]
-            st1 = sorting1.getUnitSpikeTrain(u1)
+            st1 = sts1[u_i]
             for l_gt, lab in enumerate(lab_st1):
                 if lab == 'UNPAIRED':
                     for u_j, u2 in enumerate(sorting2.getUnitIds()):
                         if u2 in self.getMappedSorting1().getMappedUnitIds() \
                                 and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
                             lab_st2 = self._labels_st2[u2]
-                            st2 = sorting2.getUnitSpikeTrain(u2)
-
+                            st2 = sts2[u_j]
                             n_up = st1[l_gt]
-                            id_sp = np.where((st2 > n_up - self._delta_tp) & (st2 < n_up + self._delta_tp))[0]
-                            if len(id_sp) == 1 and lab_st2[id_sp] == 'UNPAIRED':
+                            id_sp = np.where((st2.astype(int)-n_sp)<=self._delta_tp//2)[0]
+                            if len(id_sp) > 0 and lab_st2[id_sp[0]] == 'UNPAIRED':
                                 lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
-                                lab_st2[id_sp] = 'CL_' + str(u2) + '_' + str(u1)
-                                # if lab_st2[id_sp] == 'UNPAIRED':
-                                #     lab_st2[id_sp] = 'CL_NP'
+                                lab_st2[id_sp[0]] = 'CL_' + str(u2) + '_' + str(u1)
 
         if verbose:
             print('Finding FP and FN')
@@ -386,8 +390,8 @@ class SortingComparison():
                 if lab == 'UNPAIRED':
                     lab_st2[l_gt] = 'FP'
 
-        TOT_ST1 = sum([len(sorting1.getUnitSpikeTrain(unit)) for unit in sorting1.getUnitIds()])
-        TOT_ST2 = sum([len(sorting2.getUnitSpikeTrain(unit)) for unit in sorting2.getUnitIds()])
+        TOT_ST1 = sum([len(sts1[unit]) for unit in range(len(sts1))])
+        TOT_ST2 = sum([len(sts2[unit]) for unit in range(len(sts2))])
         total_spikes = TOT_ST1 + TOT_ST2
         TP = sum([len(np.where('TP' == self._labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
         CL = sum(
