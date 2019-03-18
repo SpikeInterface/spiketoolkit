@@ -61,7 +61,8 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             gt_sorting = ground_truths[rec_name]
 
             comp = SortingComparison(gt_sorting, sorting, count=True)
-
+            
+            # this must be refactored inside "sortingcomparison"
             counts = comp.counts
             performances.loc[(rec_name, sorter_name), 'tp_rate'] = float(counts['TP']) / counts['TOT_ST1'] * 100
             performances.loc[(rec_name, sorter_name), 'fn_rate'] = float(counts['FN']) / counts['TOT_ST1'] * 100
