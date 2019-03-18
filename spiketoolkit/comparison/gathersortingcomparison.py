@@ -9,18 +9,30 @@ from .sortingcomparison import SortingComparison
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """
     Loop over output folder in a tree to collect sorting from
-    several sorter on several dataset.
+    several sorter on several dataset and returns sythetic DataFrame with 
+    several metrics (performance, run_time, ...)
     
-    Compare then to ground_truth given as dict.
-    
-    return dict containing several pandas DataFrame from several metrics.
-    
-    Dataframes for results have a MultiIndex apporach (rec_name, sorter_name).
-    this can be convienent in some situation and anoying in others.
+    Use SortingComparison internally.
     
     
+    Parameters
+    ----------
+    working_folder: str
+        The folrder where sorter.run_sorters have done the job.
+    ground_truths: dict
+        A dict where each key is the recording label and each value 
+        the SortingExtractor containing the ground truth.
+    use_multi_index: bool (True by default)
+        Use (or not) multi index for output dataframe.
+        Multiindex is composed from (rec_name, sorter_name).
+
+    Returns
+    ----------
     
-    
+    out_dataframes: a dict of DataFrame
+        Return several usefull DataFrame to compare all results:
+          * run_times
+          * performances
     """
     
     working_folder = Path(working_folder)
@@ -34,7 +46,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     out_dataframes['run_times'] = run_times
     
     
-    columns =  ['fn_rate', 'tp_rate']
+    columns =  ['tp_rate', 'fn_rate']
     performances = pd.DataFrame(index=run_times.index, columns=columns)
     out_dataframes['performances'] = performances
     
@@ -48,11 +60,11 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             
             gt_sorting = ground_truths[rec_name]
 
-            comp = st.comparison.SortingComparison(gt_sorting, sorting, count=True)
+            comp = SortingComparison(gt_sorting, sorting, count=True)
 
             counts = comp.counts
-            performance.loc[(rec_name, sorter_name), 'tp_rate'] = float(counts['TP']) / counts['TOT_ST1'] * 100
-            performance.loc[(rec_name, sorter_name), 'fn_rate'] = float(counts['FN']) / counts['TOT_ST1'] * 100
+            performances.loc[(rec_name, sorter_name), 'tp_rate'] = float(counts['TP']) / counts['TOT_ST1'] * 100
+            performances.loc[(rec_name, sorter_name), 'fn_rate'] = float(counts['FN']) / counts['TOT_ST1'] * 100
 
     
     if not use_multi_index:

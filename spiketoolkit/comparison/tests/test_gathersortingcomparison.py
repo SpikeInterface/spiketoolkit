@@ -2,6 +2,7 @@
 import os
 import shutil
 import time
+import pickle
 
 import pytest
 from spiketoolkit.sorters import run_sorters, collect_results
@@ -22,28 +23,20 @@ def setup_module():
 
 def _run_sorters():
     path = 'test_TDC_vs_HS2/'
-
+    
     if os.path.exists(path):
         shutil.rmtree(path)
-
+    os.mkdir(path)
     
-    # cerate several recording/sorting
+    # cerate several recording/sorting and save to disk
     rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30)
     rec1, gt_sorting1 = se.example_datasets.toy_example(num_channels=32, duration=30)
+    pickle.dump(gt_sorting0, open(path + 'gt_sorting0', mode='wb'))
+    pickle.dump(gt_sorting1, open(path + 'gt_sorting1', mode='wb'))
     
-    #~ se.NumpySortingExtractor.writeSorting(gt_sorting0, path+'gt_sorting0')
-    #~ se.NumpySortingExtractor.writeSorting(gt_sorting1, path+'gt_sorting1')
-    
-    #~ print(gt_sorting0)
-    
-    #~ exit()
-    
+    # run all sorter
     recording_dict = {'toy_tetrode' : rec0, 'toy_probe32': rec1}
-    
-    sorter_list = ['tridesclous', 'herdingspikes']
-    
-    
-    # simple loop
+    sorter_list = ['tridesclous', 'herdingspikes', 'klusta']
     t0 = time.perf_counter()
     run_sorters(sorter_list, recording_dict, working_folder, engine=None)
     t1 = time.perf_counter()
@@ -56,12 +49,11 @@ def test_gather_sorting_comparison():
     This test illustrate how to lauche several sorter on several datasets
     and then collect all result in one function.
     """
-    
-    
-    
-    #~ ground_truths = {'toy_tetrode' : gt_sorting0, 'toy_probe32': gt_sorting1}
-    
+    # reload GT from disk
     ground_truths = {}
+    ground_truths['toy_tetrode'] = pickle.load(open(path + 'gt_sorting0', mode='rb'))
+    ground_truths['toy_probe32'] = pickle.load(open(path + 'gt_sorting1', mode='rb'))
+    
     
     comp_dataframes = gather_sorting_comparison(working_folder, ground_truths,use_multi_index=True)
     for k, df in comp_dataframes.items():
@@ -74,7 +66,7 @@ def test_gather_sorting_comparison():
     
 
 if __name__ == '__main__':
-    #~ setup_module()
-    test_gather_sorting_comparison() 
+    setup_module()
+    #~ test_gather_sorting_comparison() 
 
 
