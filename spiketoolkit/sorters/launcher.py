@@ -55,7 +55,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     assert not os.path.exists(working_folder), 'working_folder already exists, please remove it'
     
     for sorter_name in sorter_list:
-        assert sorter_name in sorter_dict, '{} is not in sorter list'.format(rec_name)
+        assert sorter_name in sorter_dict, '{} is not in sorter list'.format(sorter_name)
     
     if isinstance(recording_dict_or_list, list):
         # in case of list
