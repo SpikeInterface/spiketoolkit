@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import SortingComparison
+from .sortingcomparison import SortingComparison, compute_performance, _perf_columns
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """
@@ -46,8 +46,8 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     out_dataframes['run_times'] = run_times
     
     
-    columns =  ['tp_rate', 'fn_rate']
-    performances = pd.DataFrame(index=run_times.index, columns=columns)
+    #~ columns =  ['tp_rate', 'fn_rate']
+    performances = pd.DataFrame(index=run_times.index, columns=_perf_columns)
     out_dataframes['performances'] = performances
     
     results = collect_results(working_folder)
@@ -62,10 +62,14 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
             comp = SortingComparison(gt_sorting, sorting, count=True)
             
+            perf = compute_performance(comp, verbose=False, output='pandas')
+            
+            performances.loc[(rec_name, sorter_name), :] = perf
+            
             # this must be refactored inside "sortingcomparison"
-            counts = comp.counts
-            performances.loc[(rec_name, sorter_name), 'tp_rate'] = float(counts['TP']) / counts['TOT_ST1'] * 100
-            performances.loc[(rec_name, sorter_name), 'fn_rate'] = float(counts['FN']) / counts['TOT_ST1'] * 100
+            #~ counts = comp.counts
+            #~ performances.loc[(rec_name, sorter_name), 'tp_rate'] = float(counts['TP']) / counts['TOT_ST1'] * 100
+            #~ performances.loc[(rec_name, sorter_name), 'fn_rate'] = float(counts['FN']) / counts['TOT_ST1'] * 100
 
     
     if not use_multi_index:

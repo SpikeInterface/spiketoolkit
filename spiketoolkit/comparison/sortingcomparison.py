@@ -2,6 +2,7 @@ import numpy as np
 import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 
+import pandas as pd
 
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
@@ -628,7 +629,29 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
     return conf_matrix, ax
 
 
-def compute_performance(SC):
+def compute_performance(SC, verbose=True, output='dict'):
+    """
+    return performance
+    
+    Parameters
+    -------
+    SC: SortingComparison instance
+        The SortingComparison
+        
+    verbose: bool
+        Display on console or not
+    
+    output: dict or pandas
+    
+    
+    Returns
+    ----------
+    
+    performance: dict or pandas.Serie depending output param
+
+    
+    
+    """
     counts = SC.counts
 
     tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
@@ -643,21 +666,34 @@ def compute_performance(SC):
     precision = tp_rate / (tp_rate + fp_st1) * 100
     false_discovery_rate = fp_st1 / (tp_rate + fp_st1) * 100
 
-    print('PERFORMANCE: \n')
-    print('TP: ', tp_rate, ' %')
-    print('CL: ', cl_rate, ' %')
-    print('FN: ', fn_rate, ' %')
-    print('FP (%ST1): ', fp_st1, ' %')
-    print('FP (%ST2): ', fp_st2, ' %')
-
-    print('\nACCURACY: ', accuracy, ' %')
-    print('SENSITIVITY: ', sensitivity, ' %')
-    print('MISS RATE: ', miss_rate, ' %')
-    print('PRECISION: ', precision, ' %')
-    print('FALSE DISCOVERY RATE: ', false_discovery_rate, ' %')
-
     performance = {'tp': tp_rate, 'cl': cl_rate, 'fn': fn_rate, 'fp_st1': fp_st1, 'fp_st2': fp_st2,
                    'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
                    'false_disc_rate': false_discovery_rate}
+    
+    if verbose:
+        txt = _txt_performance.format(**performance)
+        print(txt)
+    
+    if output == 'dict':
+        return performance
+    elif output == 'pandas':
+        return pd.Series(performance)
 
-    return performance
+# usefull for gathercomparison
+_perf_columns = ['tp', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
+
+
+_txt_performance = """PERFORMANCE
+TP : {tp} %
+CL : {cl} %
+FN : {fn} %
+FP (%ST1): {fp_st1} %
+FP (%ST2): {fp_st2} %
+
+ACCURACY: {accuracy}
+SENSITIVITY: {sensitivity}
+MISS RATE: {miss_rate}
+PRECISION: {precision}
+FALSE DISCOVERY RATE: {false_disc_rate}
+"""
+
