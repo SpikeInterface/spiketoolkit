@@ -7,8 +7,32 @@ from scipy.optimize import linear_sum_assignment
 
 
 
+def count_matching_events(times1, times2, delta=10):
+    times_concat = np.concatenate((times1, times2))
+    membership = np.concatenate((np.ones(times1.shape) * 1, np.ones(times2.shape) * 2))
+    indices = times_concat.argsort()
+    times_concat_sorted = times_concat[indices]
+    membership_sorted = membership[indices]
+    diffs = times_concat_sorted[1:] - times_concat_sorted[:-1]
+    inds = np.where((diffs <= delta) & (membership_sorted[0:-1] != membership_sorted[1:]))[0]
+    if (len(inds) == 0):
+        return 0
+    inds2 = np.where(inds[:-1] + 1 != inds[1:])[0]
+    return len(inds2) + 1
 
-def get_matching(sorting1, sorting2, delta_tp):
+
+
+def compute_agreement_score(num_matches, num1, num2):
+    """
+    Agreement score is used as a criteria to match unit1 and unit2.
+    """
+    denom = num1 + num2 - num_matches
+    if denom == 0:
+        return 0
+    return num_matches / denom
+
+
+def get_matching(sorting1, sorting2, delta_tp, min_accuracy):
     """
     This compute the matching between 2 sorters.
     
@@ -56,19 +80,17 @@ def get_matching(sorting1, sorting2, delta_tp):
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
     
-    """
-    
     # Compute events counts
     event_counts1 = np.zeros((N1)).astype(np.int64)
     for i1, u1 in enumerate(unit1_ids):
         times1 = sorting1.getUnitSpikeTrain(u1)
         event_counts1[i1] = len(times1)
-        self._event_counts_1[u1] = len(times1)
+        event_counts_1[u1] = len(times1)
     event_counts2 = np.zeros((N2)).astype(np.int64)
     for i2, u2 in enumerate(unit2_ids):
         times2 = sorting2.getUnitSpikeTrain(u2)
         event_counts2[i2] = len(times2)
-        self._event_counts_2[u2] = len(times2)
+        event_counts_2[u2] = len(times2)
 
     # Compute matching events
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
@@ -77,41 +99,41 @@ def get_matching(sorting1, sorting2, delta_tp):
         times1 = sorting1.getUnitSpikeTrain(u1)
         for i2, u2 in enumerate(unit2_ids):
             times2 = sorting2.getUnitSpikeTrain(u2)
-            num_matches = count_matching_events(times1, times2, delta=self._delta_tp)
+            num_matches = count_matching_events(times1, times2, delta=delta_tp)
             matching_event_counts[i1, i2] = num_matches
-            scores[i1, i2] = self._compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2])
+            scores[i1, i2] = compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2])
 
     # Find best matches for spiketrains 1
     for i1, u1 in enumerate(unit1_ids):
         scores0 = scores[i1, :]
-        self._matching_event_counts_12[u1] = dict()
+        matching_event_counts_12[u1] = dict()
         if len(scores0)>0:
             if np.max(scores0) > 0:
                 inds0 = np.where(scores0 > 0)[0]
                 for i2 in inds0:
-                    self._matching_event_counts_12[u1][unit2_ids[i2]] = matching_event_counts[i1, i2]
+                    matching_event_counts_12[u1][unit2_ids[i2]] = matching_event_counts[i1, i2]
                 i2_best = np.argmax(scores0)
-                self._best_match_units_12[u1] = unit2_ids[i2_best]
+                best_match_units_12[u1] = unit2_ids[i2_best]
             else:
-                self._best_match_units_12[u1] = -1
+                best_match_units_12[u1] = -1
         else:
-            self._best_match_units_12[u1] = -1
+            best_match_units_12[u1] = -1
 
     # Find best matches for spiketrains 2
     for i2, u2 in enumerate(unit2_ids):
         scores0 = scores[:, i2]
-        self._matching_event_counts_21[u2] = dict()
+        matching_event_counts_21[u2] = dict()
         if len(scores0)>0:
             if np.max(scores0) > 0:
                 inds0 = np.where(scores0 > 0)[0]
                 for i1 in inds0:
-                    self._matching_event_counts_21[u2][unit1_ids[i1]] = matching_event_counts[i1, i2]
+                    matching_event_counts_21[u2][unit1_ids[i1]] = matching_event_counts[i1, i2]
                 i1_best = np.argmax(scores0)
-                self._best_match_units_21[u2] = unit1_ids[i1_best]
+                best_match_units_21[u2] = unit1_ids[i1_best]
             else:
-                self._best_match_units_21[u2] = -1
+                best_match_units_21[u2] = -1
         else:
-            self._best_match_units_21[u2] = -1
+            best_match_units_21[u2] = -1
 
     # Assign best matches
     [inds1, inds2] = linear_sum_assignment(-scores)
@@ -126,14 +148,19 @@ def get_matching(sorting1, sorting2, delta_tp):
             aa = inds1.index(i1)
             i2 = inds2[aa]
             u2 = unit2_ids[i2]
-            if self.getAgreementFraction(u1, u2) > self._min_accuracy:
-                self._unit_map12[u1] = u2
+            # criteria on agreement_score
+            num_matches = matching_event_counts_12[u1].get(u2, 0)
+            num1 = event_counts_1[u1]
+            num2 = event_counts_2[u2]
+            agree_score = compute_agreement_score(num_matches, num1, num2)
+            if agree_score > min_accuracy:
+                unit_map12[u1] = u2
             else:
-                self._unit_map12[u1] = -1
+                unit_map12[u1] = -1
         else:
-            # self._unit_map12[u1] = k2
+            # unit_map12[u1] = k2
             # k2 = k2+1
-            self._unit_map12[u1] = -1
+            unit_map12[u1] = -1
     if len(unit1_ids)>0:
         k1 = np.max(unit1_ids) + 1
     else:
@@ -143,17 +170,19 @@ def get_matching(sorting1, sorting2, delta_tp):
             aa = inds2.index(i2)
             i1 = inds1[aa]
             u1 = unit1_ids[i1]
-            if self.getAgreementFraction(u1, u2) > self._min_accuracy:
-                self._unit_map21[u2] = u1
+            # criteria on agreement_score
+            num_matches = matching_event_counts_12[u1].get(u2, 0)
+            num1 = event_counts_1[u1]
+            num2 = event_counts_2[u2]
+            agree_score = compute_agreement_score(num_matches, num1, num2)
+            if agree_score > min_accuracy:
+                unit_map21[u2] = u1
             else:
-                self._unit_map21[u2] = -1
+                unit_map21[u2] = -1
         else:
-            # self._unit_map21[u2] = k1
+            # unit_map21[u2] = k1
             # k1 = k1+1
-            self._unit_map21[u2] = -1
-            
-    """
-
+            unit_map21[u2] = -1
     
     return (event_counts_1,  event_counts_2,
                 matching_event_counts_12, best_match_units_12,
