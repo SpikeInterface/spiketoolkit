@@ -1,6 +1,11 @@
 from spikeextractors import CuratedSortingExtractor
 
 class MinSpikeThreshold(CuratedSortingExtractor):
+    '''A SortingExtractor that automatically excludes units with num spikes
+    less than the minimum threshold number given by the user.
+
+
+    '''
     def __init__(self, sorting, min_spike_threshold=50):
         CuratedSortingExtractor.__init__(self, parent_sorting=sorting)
         self._sorting = sorting
