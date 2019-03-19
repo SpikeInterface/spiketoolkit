@@ -1,5 +1,10 @@
 from spikeextractors import CuratedSortingExtractor
 
+'''
+Basic example of a postprocessing module. They can inherit from the
+CuratedSortingExtractor to allow for excluding, merging, and splitting of units.
+'''
+
 class ThresholdMinNumSpike(CuratedSortingExtractor):
     '''A SortingExtractor that automatically excludes units with num spikes
     less than the minimum num spikethreshold number specified by the user.
