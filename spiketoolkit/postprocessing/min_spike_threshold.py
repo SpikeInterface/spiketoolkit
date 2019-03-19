@@ -1,4 +1,4 @@
-from .CuratedSortingExtractor import CuratedSortingExtractor
+from spikeextractors import CuratedSortingExtractor
 
 class MinSpikeThreshold(CuratedSortingExtractor):
     def __init__(self, sorting, min_spike_threshold=50):
