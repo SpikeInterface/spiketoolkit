@@ -4,19 +4,23 @@ from scipy.optimize import linear_sum_assignment
 
 import pandas as pd
 
-from .comparisontools import (count_matching_events, do_matching, do_counting, do_confusion_matrix)
+from .comparisontools import (count_matching_events, compute_agreement_score, 
+                                                do_matching, do_counting, do_confusion_matrix)
 
 
 
 class SortingComparison():
-    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, minimum_accuracy=0.5,
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
                  count=False, verbose=False):
+        # Samuel EDIT : the variable delta_tp should be strongly documented as it affect the match
+        # Samuel EDIT : the variable min_accuracy should be strongly documented as it affect the match
         self._sorting1 = sorting1
         self._sorting2 = sorting2
+        # Smuel EDIT: this is used only for plotting, shall we remove this sortingX_name?
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
         self._delta_tp = delta_tp
-        self._min_accuracy = minimum_accuracy
+        self._min_accuracy = min_accuracy
         if verbose:
             print("Matching...")
         self._do_matching()
@@ -28,9 +32,11 @@ class SortingComparison():
             self._do_counting(verbose=verbose)
 
     def getSorting1(self):
+        # Samuel EDIT : why not a direct attribute acees  with self.sorting1 ?
         return self._sorting1
 
     def getSorting2(self):
+        # Samuel EDIT : why not a direct attribute acees  with self.sorting2 ?
         return self._sorting2
 
     def getLabels1(self, unit_id):
@@ -46,9 +52,11 @@ class SortingComparison():
             raise Exception("Unit_id is not a valid unit")
 
     def getMappedSorting1(self):
+        # Samuel EDIT : the use case of this must documented
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
 
     def getMappedSorting2(self):
+        # Samuel EDIT : the use case of this must documented
         return MappedSortingExtractor(self._sorting1, self._unit_map21)
 
     def getMatchingEventCount(self, unit1, unit2):
@@ -63,12 +71,6 @@ class SortingComparison():
                 return 0
         else:
             raise Exception('getMatchingEventCount: unit1 and unit2 must not be None.')
-
-    def _compute_agreement_score(self, num_matches, num1, num2):
-        denom = num1 + num2 - num_matches
-        if denom == 0:
-            return 0
-        return num_matches / denom
 
     def _compute_safe_frac(self, numer, denom):
         if denom == 0:
@@ -96,6 +98,8 @@ class SortingComparison():
         return list(a.keys())
 
     def getAgreementFraction(self, unit1=None, unit2=None):
+        # Samuel NOTE: I guess that this function is no more necessary
+        # please confirm this
         if (unit1 is not None) and (unit2 is None):
             if unit1 != -1:
                 unit2 = self.getBestUnitMatch1(unit1)
@@ -119,7 +123,7 @@ class SortingComparison():
                 return 0
         else:
             return 0
-        return self._compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
+        return compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
 
     def getFalsePositiveFraction(self, unit1, unit2=None):
         if unit1 is None:
@@ -158,6 +162,7 @@ class SortingComparison():
             self._do_counting(verbose=False)
 
     def plotConfusionMatrix(self, xlabel=None, ylabel=None):
+        # Samuel EDIT
         # This must be moved in spikewidget
         import matplotlib.pylab as plt
 
@@ -229,6 +234,9 @@ class SortingComparison():
 
     @staticmethod
     def compareSpikeTrains(spiketrain1, spiketrain2, delta_tp=10, verbose=False):
+        #Samuel EDIT : my guess is that should be also removed
+        # or move to function in comparisontools
+        
         lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
         lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
 
@@ -284,6 +292,10 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
+# Samuel EDIT
+# I really do not andderstand what there is this function ???
+# is it another version of the confisnion matrix ?
+# is it done with another object model ?
 def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
     '''
 
@@ -370,7 +382,7 @@ def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
 
 def compute_performance(SC, verbose=True, output='dict'):
     """
-    return performance
+    Return some performance value for comparison.
     
     Parameters
     -------
