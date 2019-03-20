@@ -312,7 +312,7 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
     
 
 
-def do_confusion(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
+def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
     Compute the confusion matrix between two sorting.
     

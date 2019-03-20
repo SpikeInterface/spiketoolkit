@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 import spikeextractors as se
 
-from spiketoolkit.comparison import do_matching, do_counting, do_confusion
+from spiketoolkit.comparison import do_matching, do_counting, do_confusion_matrix
 
 
 
@@ -67,7 +67,7 @@ def test_do_counting():
     assert counts['FN'] == 0
     
 
-def test_do_confusion():
+def test_do_confusion_matrix():
     
     # simple match
     sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
@@ -76,7 +76,7 @@ def test_do_confusion():
     labels_st1 = {0: np.array(['TP', 'TP', 'FN']), 1: np.array(['TP'])}
     labels_st2 = {0: np.array(['TP', 'TP']), 5: np.array(['TP'])}
     
-    conf_matrix,  st1_idxs, st2_idxs = do_confusion(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
+    conf_matrix,  st1_idxs, st2_idxs = do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
     cm = np.array([[2, 0, 1], [0, 1, 0], [0, 0, 0]], dtype='int64')
     assert_array_equal(conf_matrix, cm)
     assert_array_equal(st1_idxs, [0, 1])
@@ -88,7 +88,7 @@ def test_do_confusion():
     unit_map12 = {0: 0, 1: 1}
     labels_st1 = {0: np.array(['TP', 'TP', 'TP']), 1: np.array(['TP', 'TP'])}
     labels_st2 = {0: np.array(['TP', 'TP', 'TP']), 1: np.array(['TP', 'TP'])}
-    conf_matrix,  st1_idxs, st2_idxs = do_confusion(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
+    conf_matrix,  st1_idxs, st2_idxs = do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
     cm =  np.array([[3, 0, 0], [0, 2, 0], [0, 0, 0]], dtype='int64')
     assert_array_equal(conf_matrix, cm)
     
@@ -99,6 +99,6 @@ def test_do_confusion():
 if __name__ == '__main__':
     test_do_matching()
     test_do_counting()
-    test_do_confusion()
+    test_do_confusion_matrix()
 
 
