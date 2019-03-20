@@ -25,7 +25,7 @@ class SortingComparison():
         if count:
             if verbose:
                 print("Counting...")
-            self._do_counting(verbose=False)
+            self._do_counting(verbose=verbose)
 
     def getSorting1(self):
         return self._sorting1
@@ -135,7 +135,7 @@ class SortingComparison():
                 return 0
         else:
             return 0
-        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
+        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
 
     def getFalseNegativeFraction(self, unit1, unit2=None):
         if unit1 is None:
@@ -151,7 +151,7 @@ class SortingComparison():
                 return 0
         else:
             return 0
-        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
+        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
 
     def computeCounts(self):
         if self._counts is None:

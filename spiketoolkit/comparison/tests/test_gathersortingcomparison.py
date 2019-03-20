@@ -68,7 +68,7 @@ def test_gather_sorting_comparison():
     
 
 if __name__ == '__main__':
-    #~ setup_module()
+    setup_module()
     test_gather_sorting_comparison() 
 
 

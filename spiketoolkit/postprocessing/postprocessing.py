@@ -482,7 +482,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     pc_features = pc_features[sorting_idxs, :nPCchan, :]
 
     # amplitudes.npy
-    amplitudes = np.ones((len(spike_times), 1))
+    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
 
     # channel_map.npy
     channel_map = np.array(recording.getChannelIds())
@@ -506,7 +506,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     similar_templates = _computeTemplatesSimilarity(templates)
 
     # templates.npy
-    templates = np.array(templates).swapaxes(1, 2)
+    templates = np.array(templates, dtype='float32').swapaxes(1, 2)
 
     # template_ind.npy
     templates_ind = np.tile(np.arange(recording.getNumChannels()), (len(sorting.getUnitIds()), 1))
@@ -516,7 +516,9 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
 
     # whitening_mat.npy - [nChannels, nChannels] double
     # whitening_mat_inv.npy - [nChannels, nChannels] double
-    whitening_mat, whitening_mat_inv = _computeWhiteningAndInverse(recording)
+    # whitening_mat, whitening_mat_inv = _computeWhiteningAndInverse(recording)
+    whitening_mat = np.eye(recording.getNumChannels())
+    whitening_mat_inv = whitening_mat
 
     np.save(str(output_folder / 'amplitudes.npy'), amplitudes)
     np.save(str(output_folder / 'spike_times.npy'), spike_times.astype(int))
@@ -524,8 +526,8 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     np.save(str(output_folder / 'spike_templates.npy'), spike_templates.astype(int))
     np.save(str(output_folder / 'pc_features.npy'), pc_features)
     np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind.astype(int))
-    np.save(str(output_folder / 'templates.npy'), templates)
-    np.save(str(output_folder / 'templates_ind.npy'), templates_ind.astype(int))
+    np.save(str(output_folder / 'templates.npy'), templates, )
+    # np.save(str(output_folder / 'templates_ind.npy'), templates_ind.astype(int))
     np.save(str(output_folder / 'similar_templates.npy'), similar_templates)
     np.save(str(output_folder / 'channel_map.npy'), channel_map.astype(int))
     np.save(str(output_folder / 'channel_positions.npy'), positions)
