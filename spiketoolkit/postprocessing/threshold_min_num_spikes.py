@@ -1,18 +1,18 @@
-from spikeextractors import CuratedSortingExtractor
+from spikeextractors import CurationSortingExtractor
 
 '''
 Basic example of a postprocessing module. They can inherit from the
-CuratedSortingExtractor to allow for excluding, merging, and splitting of units.
+CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
-class ThresholdMinNumSpike(CuratedSortingExtractor):
+class ThresholdMinNumSpike(CurationSortingExtractor):
     '''A SortingExtractor that automatically excludes units with num spikes
     less than the minimum num spikethreshold number specified by the user.
 
 
     '''
     def __init__(self, sorting, min_num_spike_threshold=50):
-        CuratedSortingExtractor.__init__(self, parent_sorting=sorting)
+        CurationSortingExtractor.__init__(self, parent_sorting=sorting)
         self._sorting = sorting
         self._min_num_spike_threshold = min_num_spike_threshold
 
