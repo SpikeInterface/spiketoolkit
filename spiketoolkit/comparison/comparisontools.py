@@ -32,7 +32,7 @@ def compute_agreement_score(num_matches, num1, num2):
     return num_matches / denom
 
 
-def get_matching(sorting1, sorting2, delta_tp, min_accuracy):
+def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
     """
     This compute the matching between 2 sorters.
     
@@ -189,9 +189,12 @@ def get_matching(sorting1, sorting2, delta_tp, min_accuracy):
                 matching_event_counts_21,  best_match_units_21, 
                 unit_map12,  unit_map21)
 
+
+
+
+
     
-    
-def get_counting(sorting1, sorting2):
+def do_counting(sorting1, sorting2, delta_tp, unit_map12):
     """
     This count all counting score possible lieke:
       * TP: true positive
@@ -209,7 +212,11 @@ def get_counting(sorting1, sorting2):
     
     sorting2: SortingExtractor instance
         The tested sorting.
+    
+    delta_tp: int
         
+    unit_map12: dict
+        Dict of matching from sorting1 to sorting2.
 
     Output
     ----------
@@ -222,75 +229,69 @@ def get_counting(sorting1, sorting2):
     
     labels_st2: np.array of str
         Contain label for units of sorting 2
-    
     """
+    
     unit1_ids = sorting1.getUnitIds()
     unit2_ids = sorting2.getUnitIds()
-    self._labels_st1 = dict()
-    self._labels_st2 = dict()
+    labels_st1 = dict()
+    labels_st2 = dict()
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
     
-    
-    """
     # Evaluate
     for u1 in unit1_ids:
         st1 = sorting1.getUnitSpikeTrain(u1)
         lab_st1 = np.array(['UNPAIRED'] * len(st1))
-        self._labels_st1[u1] = lab_st1
+        labels_st1[u1] = lab_st1
     for u2 in unit2_ids:
         st2 = sorting2.getUnitSpikeTrain(u2)
         lab_st2 = np.array(['UNPAIRED'] * len(st2))
-        self._labels_st2[u2] = lab_st2
+        labels_st2[u2] = lab_st2
 
-    if verbose:
-        print('Finding TP')
     for u_i, u1 in enumerate(sorting1.getUnitIds()):
-        if self.getMappedSorting1().getMappedUnitIds(u1) != -1:
-            lab_st1 = self._labels_st1[u1]
-            lab_st2 = self._labels_st2[self.getMappedSorting1().getMappedUnitIds(u1)]
-            mapped_st = self.getMappedSorting1().getUnitSpikeTrain(u1)
+        u2 = unit_map12[u1]
+        if u2 !=-1:
+            lab_st1 = labels_st1[u1]
+            lab_st2 = labels_st2[u2]
+            mapped_st = sorting2.getUnitSpikeTrain(u2)
             # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
             for sp_i, n_sp in enumerate(sorting1.getUnitSpikeTrain(u1)):
-                id_sp = np.where((mapped_st > n_sp - self._delta_tp) & (mapped_st < n_sp + self._delta_tp))[0]
+                id_sp = np.where((mapped_st > n_sp - delta_tp) & (mapped_st < n_sp + delta_tp))[0]
                 if len(id_sp) == 1:
                     lab_st1[sp_i] = 'TP'
                     lab_st2[id_sp] = 'TP'
+        # Sam garcia note : I guess this is a mistake
         else:
             lab_st1 = np.array(['FN'] * len(sorting1.getUnitSpikeTrain(u1)))
 
     # find CL-CLO-CLSO
-    if verbose:
-        print('Finding CL')
     for u_i, u1 in enumerate(sorting1.getUnitIds()):
-        lab_st1 = self._labels_st1[u1]
+        lab_st1 = labels_st1[u1]
         st1 = sorting1.getUnitSpikeTrain(u1)
         for l_gt, lab in enumerate(lab_st1):
             if lab == 'UNPAIRED':
                 for u_j, u2 in enumerate(sorting2.getUnitIds()):
-                    if u2 in self.getMappedSorting1().getMappedUnitIds() \
-                            and self.getMappedSorting1().getMappedUnitIds(u1) != -1:
-                        lab_st2 = self._labels_st2[u2]
+                    
+                    if u2 in unit_map12.values() and unit_map12[u1] != -1:
+                        lab_st2 = labels_st2[u2]
                         st2 = sorting2.getUnitSpikeTrain(u2)
 
                         n_up = st1[l_gt]
-                        id_sp = np.where((st2 > n_up - self._delta_tp) & (st2 < n_up + self._delta_tp))[0]
+                        id_sp = np.where((st2 > n_up - delta_tp) & (st2 < n_up + delta_tp))[0]
                         if len(id_sp) == 1 and lab_st2[id_sp] == 'UNPAIRED':
                             lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
                             lab_st2[id_sp] = 'CL_' + str(u2) + '_' + str(u1)
                             # if lab_st2[id_sp] == 'UNPAIRED':
                             #     lab_st2[id_sp] = 'CL_NP'
 
-    if verbose:
-        print('Finding FP and FN')
     for u1 in sorting1.getUnitIds():
-        lab_st1 = self._labels_st1[u1]
+        lab_st1 = labels_st1[u1]
         for l_gt, lab in enumerate(lab_st1):
             if lab == 'UNPAIRED':
                 lab_st1[l_gt] = 'FN'
 
     for u2 in sorting2.getUnitIds():
-        lab_st2 = self._labels_st2[u2]
+        lab_st2 = labels_st2[u2]
         for l_gt, lab in enumerate(lab_st2):
             if lab == 'UNPAIRED':
                 lab_st2[l_gt] = 'FP'
@@ -298,25 +299,20 @@ def get_counting(sorting1, sorting2):
     TOT_ST1 = sum([len(sorting1.getUnitSpikeTrain(unit)) for unit in sorting1.getUnitIds()])
     TOT_ST2 = sum([len(sorting2.getUnitSpikeTrain(unit)) for unit in sorting2.getUnitIds()])
     total_spikes = TOT_ST1 + TOT_ST2
-    TP = sum([len(np.where('TP' == self._labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
+    TP = sum([len(np.where('TP' == labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
     CL = sum(
-        [len([i for i, v in enumerate(self._labels_st1[unit]) if 'CL' in v]) for unit in sorting1.getUnitIds()])
-    FN = sum([len(np.where('FN' == self._labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
-    FP = sum([len(np.where('FP' == self._labels_st2[unit])[0]) for unit in sorting2.getUnitIds()])
-    self.counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1,
+        [len([i for i, v in enumerate(labels_st1[unit]) if 'CL' in v]) for unit in sorting1.getUnitIds()])
+    FN = sum([len(np.where('FN' == labels_st1[unit])[0]) for unit in sorting1.getUnitIds()])
+    FP = sum([len(np.where('FP' == labels_st2[unit])[0]) for unit in sorting2.getUnitIds()])
+    
+    counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1,
                    'TOT_ST2': TOT_ST2}
 
-    if verbose:
-        print('TP :', TP)
-        print('CL :', CL)
-        print('FN :', FN)
-        print('FP :', FP)
-        print('TOTAL: ', TOT_ST1, TOT_ST2, TP + CL + FN + FP)
+    return counts, labels_st1, labels_st2
     
-    """
 
 
-def get_confusion(self, sorting1, sorting2):
+def do_confusion(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
     Compute the confusion matrix between two sorting.
     
@@ -327,6 +323,9 @@ def get_confusion(self, sorting1, sorting2):
     
     sorting2: SortingExtractor instance
         The tested sorting.
+
+    unit_map12: dict
+        Dict of matching from sorting1 to sorting2.
         
 
     Output
@@ -334,62 +333,60 @@ def get_confusion(self, sorting1, sorting2):
     
     confusion_matrix: the confusion matrix
     
+    st1_idxs: ???
+    
+    st2_idxs: ???
+    
     
     """
 
-    unit1_ids = sorting1.getUnitIds()
-    unit2_ids = sorting2.getUnitIds()
+    unit1_ids = np.array(sorting1.getUnitIds())
+    unit2_ids = np.array(sorting2.getUnitIds())
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
     
-    
-    """
     conf_matrix = np.zeros((N1 + 1, N2 + 1), dtype=int)
-    idxs_matched = np.where(np.array(self.getMappedSorting1().getMappedUnitIds()) != -1)
-    if len(idxs_matched) > 0:
-        idxs_matched = idxs_matched[0]
-    idxs_unmatched = np.where(np.array(self.getMappedSorting1().getMappedUnitIds()) == -1)
-    if len(idxs_unmatched) > 0:
-        idxs_unmatched = idxs_unmatched[0]
-    unit_map_matched = np.array(self.getMappedSorting1().getMappedUnitIds())[idxs_matched]
+    
+    mapped_units = np.array(list(unit_map12.values()))
+    idxs_matched, = np.where(mapped_units != -1)
+    idxs_unmatched, = np.where(mapped_units == -1)
+    unit_map_matched = mapped_units[idxs_matched]
 
-    st1_idxs = np.append(np.array(sorting1.getUnitIds())[idxs_matched],
-                         np.array(sorting1.getUnitIds())[idxs_unmatched])
+    st1_idxs =np.hstack([unit1_ids[idxs_matched], unit1_ids[idxs_unmatched]])
     st2_matched = unit_map_matched
     st2_unmatched = []
 
-    for u_i, u1 in enumerate(np.array(sorting1.getUnitIds())[idxs_matched]):
-        lab_st1 = self._labels_st1[u1]
+    for u_i, u1 in enumerate(unit1_ids[idxs_matched]):
+        lab_st1 = labels_st1[u1]
         tp = len(np.where('TP' == lab_st1)[0])
         conf_matrix[u_i, u_i] = int(tp)
-        for u_j, u2 in enumerate(sorting2.getUnitIds()):
-            lab_st2 = self._labels_st2[u2]
+        for u_j, u2 in enumerate(unit2_ids):
+            lab_st2 = labels_st2[u2]
             cl_str = str(u1) + '_' + str(u2)
             cl = len([i for i, v in enumerate(lab_st1) if 'CL' in v and cl_str in v])
             if cl != 0:
-                st_p = np.where(u2 == unit_map_matched)
+                st_p, = np.where(u2 == unit_map_matched)
                 conf_matrix[u_i, st_p] = int(cl)
         fn = len(np.where('FN' == lab_st1)[0])
         conf_matrix[u_i, -1] = int(fn)
 
-    for u_i, u1 in enumerate(np.array(sorting1.getUnitIds())[idxs_unmatched]):
-        lab_st1 = self._labels_st1[u1]
+    for u_i, u1 in enumerate(unit1_ids[idxs_unmatched]):
+        lab_st1 = labels_st1[u1]
         fn = len(np.where('FN' == lab_st1)[0])
         conf_matrix[u_i + len(idxs_matched), -1] = int(fn)
 
-    for u_j, u2 in enumerate(sorting2.getUnitIds()):
-        lab_st2 = self._labels_st2[u2]
+    for u_j, u2 in enumerate(unit2_ids):
+        lab_st2 = labels_st2[u2]
         fp = len(np.where('FP' == lab_st2)[0])
-        st_p = np.where(u2 == unit_map_matched)[0]
+        st_p, = np.where(u2 == unit_map_matched)
         if len(st_p) != 0:
             conf_matrix[-1, st_p] = int(fp)
         else:
             st2_unmatched.append(int(u2))
             conf_matrix[-1, len(idxs_matched) + len(st2_unmatched) - 1] = int(fp)
+    
+    st2_idxs = np.hstack([st2_matched, st2_unmatched]).astype('int64')
 
-    self._confusion_matrix = conf_matrix
-    st2_idxs = np.append(st2_matched, st2_unmatched)
-
-    return st1_idxs, st2_idxs
-
-    """
+    return conf_matrix,  st1_idxs, st2_idxs
+    
+    

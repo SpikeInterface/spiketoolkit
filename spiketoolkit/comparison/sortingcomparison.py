@@ -531,18 +531,18 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
-def count_matching_events(times1, times2, delta=10):
-    times_concat = np.concatenate((times1, times2))
-    membership = np.concatenate((np.ones(times1.shape) * 1, np.ones(times2.shape) * 2))
-    indices = times_concat.argsort()
-    times_concat_sorted = times_concat[indices]
-    membership_sorted = membership[indices]
-    diffs = times_concat_sorted[1:] - times_concat_sorted[:-1]
-    inds = np.where((diffs <= delta) & (membership_sorted[0:-1] != membership_sorted[1:]))[0]
-    if (len(inds) == 0):
-        return 0
-    inds2 = np.where(inds[:-1] + 1 != inds[1:])[0]
-    return len(inds2) + 1
+#~ def count_matching_events(times1, times2, delta=10):
+    #~ times_concat = np.concatenate((times1, times2))
+    #~ membership = np.concatenate((np.ones(times1.shape) * 1, np.ones(times2.shape) * 2))
+    #~ indices = times_concat.argsort()
+    #~ times_concat_sorted = times_concat[indices]
+    #~ membership_sorted = membership[indices]
+    #~ diffs = times_concat_sorted[1:] - times_concat_sorted[:-1]
+    #~ inds = np.where((diffs <= delta) & (membership_sorted[0:-1] != membership_sorted[1:]))[0]
+    #~ if (len(inds) == 0):
+        #~ return 0
+    #~ inds2 = np.where(inds[:-1] + 1 != inds[1:])[0]
+    #~ return len(inds2) + 1
 
 
 def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
@@ -649,8 +649,6 @@ def compute_performance(SC, verbose=True, output='dict'):
     
     performance: dict or pandas.Serie depending output param
 
-    
-    
     """
     counts = SC.counts
 
@@ -680,7 +678,7 @@ def compute_performance(SC, verbose=True, output='dict'):
         return pd.Series(performance)
 
 # usefull for gathercomparison
-_perf_columns = ['tp', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
+_perf_keys = ['tp', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
 
 
 _txt_performance = """PERFORMANCE
