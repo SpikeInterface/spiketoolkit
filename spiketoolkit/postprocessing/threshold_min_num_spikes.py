@@ -25,6 +25,6 @@ class ThresholdMinNumSpike(CurationSortingExtractor):
 
 def threshold_min_num_spikes(sorting, min_num_spike_threshold=50):
     return ThresholdMinNumSpike(
-        sorting=recording,
+        sorting=sorting,
         min_num_spike_threshold=min_num_spike_threshold,
     )
