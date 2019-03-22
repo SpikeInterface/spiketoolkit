@@ -21,7 +21,8 @@ class ThresholdMinNumSpike(CurationSortingExtractor):
             spike_train_size = len(self.getUnitSpikeTrain(unit_id))
             if(spike_train_size < self._min_num_spike_threshold):
                 units_to_be_excluded.append(unit_id)
-        self.excludeUnits(units_to_be_excluded)
+        if(len(units_to_be_excluded) != 0):
+            self.excludeUnits(units_to_be_excluded)
 
 def threshold_min_num_spikes(sorting, min_num_spike_threshold=50):
     return ThresholdMinNumSpike(
