@@ -4,7 +4,7 @@ from scipy import special
 from scipy.signal import butter, filtfilt
 
 class BandpassFilterRecording(FilterRecording):
-    def __init__(self, *, recording, freq_min, freq_max, freq_wid, type, order):
+    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3):
         FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10)
         self._recording = recording
         self._freq_min = freq_min
@@ -24,7 +24,7 @@ class BandpassFilterRecording(FilterRecording):
 
     def _create_filter_kernel(self, N, samplerate, freq_min, freq_max, freq_wid=1000):
         # Matches ahb's code /matlab/processors/ms_bandpass_filter.m
-        # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16    
+        # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
         T = N / samplerate  # total time
         df = 1 / T  # frequency grid
         relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.

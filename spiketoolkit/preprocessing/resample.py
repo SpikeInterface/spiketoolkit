@@ -3,7 +3,7 @@ import numpy as np
 from scipy import special, signal
 
 class ResampledRecording(RecordingExtractor):
-    def __init__(self, *, recording, resample_rate):
+    def __init__(self, recording, resample_rate):
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate
