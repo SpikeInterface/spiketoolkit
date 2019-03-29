@@ -4,7 +4,6 @@ import numpy as np
 class CommonReferenceRecording(RecordingExtractor):
     def __init__(self, recording, reference='median', groups=None, ref_channel=None):
         '''
-
         Parameters
         ----------
         recording

@@ -2,7 +2,7 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 class RectifyRecording(RecordingExtractor):
-    def __init__(self, *, recording):
+    def __init__(self, recording):
         RecordingExtractor.__init__(self)
         self._recording = recording
         self.copyChannelProperties(recording)

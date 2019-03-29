@@ -2,7 +2,7 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 class RemoveArtifactsRecording(RecordingExtractor):
-    def __init__(self, recording, triggers, ms_before, ms_after):
+    def __init__(self, recording, triggers, ms_before=0.5, ms_after=3):
         '''
 
         Parameters
