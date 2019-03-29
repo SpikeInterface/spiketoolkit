@@ -56,7 +56,17 @@ class SortingComparison():
             raise Exception("Unit_id is not a valid unit")
 
     def getMappedSorting1(self):
-        # Samuel EDIT : the use case of this must documented
+        """
+        Returns a MappedSortingExtractor for sorting 1.
+        
+        The returned MappedSortingExtractor.getUnitIds returns the unit_ids of sorting 1.
+        
+        The returned MappedSortingExtractor.getMappedUnitIds returns the mapped unit_ids
+        of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1). 
+        
+        The returned MappedSortingExtractor.getUnitspikeTrains returns the the spike trains 
+        of sorting 2 mapped to the unit_ids of sorting 1.  
+        """
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
 
     def getMappedSorting2(self):

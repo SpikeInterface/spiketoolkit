@@ -268,7 +268,7 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
                     lab_st2[np.where(matches)[0][0]] = 'TP'
         else:
             lab_st1 = np.array(['FN'] * len(sts1[u_i]))
-            labels_st1[u1] = lab_st1
+            #~ labels_st1[u1] = lab_st1
 
     # find CL-CLO-CLSO
     for u_i, u1 in enumerate(sorting1.getUnitIds()):
@@ -280,7 +280,8 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
                 for u_j, u2 in enumerate(sorting2.getUnitIds()):
                     if u2 in unit_map12.values() and unit_map12[u1] != -1:
                         lab_st2 = labels_st2[u2]
-                        st2 = sts2[u_j]
+                        n_sp = st1[l_gt]
+                        mapped_st = sts2[u_j]
                         matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_tp//2) 
                         if np.sum(matches) > 0:
                             lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
