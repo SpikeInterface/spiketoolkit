@@ -6,7 +6,7 @@ import time
 
 
 class FilterRecording(se.RecordingExtractor):
-    def __init__(self, *, recording, chunk_size=10000):
+    def __init__(self, recording, chunk_size=10000):
         se.RecordingExtractor.__init__(self)
         self._recording = recording
         self._chunk_size = chunk_size

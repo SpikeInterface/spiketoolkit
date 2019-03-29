@@ -4,7 +4,7 @@ from scipy import special
 from scipy.signal import iirnotch, filtfilt
 
 class NotchFilterRecording(FilterRecording):
-    def __init__(self, *, recording, freq, q):
+    def __init__(self, recording, freq=3000, q=30):
         FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10)
         self._recording = recording
         self._freq = freq
@@ -22,7 +22,7 @@ class NotchFilterRecording(FilterRecording):
 
     def _create_filter_kernel(self, N, samplerate, freq_min, freq_max, freq_wid=1000):
         # Matches ahb's code /matlab/processors/ms_bandpass_filter.m
-        # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16    
+        # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
         T = N / samplerate  # total time
         df = 1 / T  # frequency grid
         relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.

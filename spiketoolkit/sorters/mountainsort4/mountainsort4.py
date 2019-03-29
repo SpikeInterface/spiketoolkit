@@ -22,12 +22,12 @@ class Mountainsort4Sorter(BaseSorter):
     """
     Mountainsort
     """
-    
+
     sorter_name = 'mountainsort4'
     installed = HAVE_MS4
-    
+
     SortingExtractor_Class = None # there is not extractor !!!!!!!!!!!!!!!!!!!!!!!!
-    
+
     _default_params = {
         'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
@@ -40,14 +40,14 @@ class Mountainsort4Sorter(BaseSorter):
         'detect_interval': 10,  # Minimum number of timepoints between events detected on the same channel
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
     }
-    
+
     installation_mesg = """
        >>> pip install ml_ms4alg
-    
+
     More information on mountainsort at:
       * https://github.com/flatironinstitute/mountainsort
     """
-    
+
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
@@ -58,7 +58,7 @@ class Mountainsort4Sorter(BaseSorter):
         # Sort
         # alias to params
         p = self.params
-        
+
         ind = self.recording_list.index(recording)
 
         # Bandpass filter
@@ -91,7 +91,7 @@ class Mountainsort4Sorter(BaseSorter):
                 sorting=sorting,
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
-        
+
         se.MdaSortingExtractor.writeSorting(sorting, str(output_folder / 'firings.mda'))
 
     @staticmethod
