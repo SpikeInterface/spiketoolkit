@@ -44,7 +44,7 @@ class MultiSortingComparison():
         graph = nx.Graph()
         for sort_name, sort_comp in self.sorting_comparisons.items():
             unit_agreement = {}
-            units = sort_comp[0].getSorting1().getUnitIds()
+            units = sort_comp[0].getSorting1().get_unit_ids()
             for unit in units:
                 matched_list = {}
                 matched_agreement = {}
@@ -82,7 +82,7 @@ class MultiSortingComparison():
                 self._new_units[unit_id] = {'matched_number': matched_num,
                                             'avg_agreement': avg_agr,
                                             'sorter_unit_ids': sorting_idxs}
-                self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].getUnitSpikeTrain(unit))
+                self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].get_unit_spike_train(unit))
                 unit_id += 1
                 # print("ADDING NODE (no match): ", n)
                 added_nodes.append(str(n))
@@ -107,8 +107,8 @@ class MultiSortingComparison():
                     sorter2, unit2 = n2.split('_')
                     unit1 = int(unit1)
                     unit2 = int(unit2)
-                    sp1 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
-                    sp2 = self._sorting_list[self._name_list.index(sorter1)].getUnitSpikeTrain(unit1)
+                    sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
+                    sp2 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
                     lab1, lab2 = SortingComparison.compareSpikeTrains(sp1, sp2)
                     tp_idx1 = np.where(np.array(lab1) == 'TP')
                     tp_idx2 = np.where(np.array(lab2) == 'TP')
@@ -132,16 +132,16 @@ class MultiSortingComparison():
         import matplotlib.pylab as plt
         sorted_name_list = sorted(self._name_list)
         sorting_agr = AgreementSortingExtractor(self, minimum_matching)
-        unit_ids = sorting_agr.getUnitIds()
+        unit_ids = sorting_agr.get_unit_ids()
         agreement_matrix = np.zeros((len(unit_ids), len(sorted_name_list)))
 
         for u_i, unit in enumerate(unit_ids):
             for sort_name, sorter in enumerate(sorted_name_list):
-                assigned_unit = sorting_agr.getUnitProperty(unit, 'sorter_unit_ids')[sorter]
+                assigned_unit = sorting_agr.get_unit_property(unit, 'sorter_unit_ids')[sorter]
                 if assigned_unit == -1:
                     agreement_matrix[u_i, sort_name] = np.nan
                 else:
-                    agreement_matrix[u_i, sort_name] = sorting_agr.getUnitProperty(unit, 'avg_agreement')
+                    agreement_matrix[u_i, sort_name] = sorting_agr.get_unit_property(unit, 'avg_agreement')
 
         fig, ax = plt.subplots()
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.
@@ -172,20 +172,20 @@ class AgreementSortingExtractor(se.SortingExtractor):
                                   if self._msc._new_units[u]['matched_number'] >= min_agreement)
 
         for unit in self._unit_ids:
-            self.setUnitProperty(unit_id=unit, property_name='matched_number',
+            self.set_unit_property(unit_id=unit, property_name='matched_number',
                                  value=self._msc._new_units[unit]['matched_number'])
-            self.setUnitProperty(unit_id=unit, property_name='avg_agreement',
+            self.set_unit_property(unit_id=unit, property_name='avg_agreement',
                                  value=self._msc._new_units[unit]['avg_agreement'])
-            self.setUnitProperty(unit_id=unit, property_name='sorter_unit_ids',
+            self.set_unit_property(unit_id=unit, property_name='sorter_unit_ids',
                                  value=self._msc._new_units[unit]['sorter_unit_ids'])
 
-    def getUnitIds(self, unit_ids=None):
+    def get_unit_ids(self, unit_ids=None):
         if unit_ids is None:
             return self._unit_ids
         else:
             return self._unit_ids[unit_ids]
 
-    def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
-        if unit_id not in self.getUnitIds():
+    def get_unit_spike_train(self, unit_id, start_frame=None, end_frame=None):
+        if unit_id not in self.get_unit_ids():
             raise Exception("Unit id is invalid")
-        return np.array(self._msc._spiketrains[self.getUnitIds().index(unit_id)])
+        return np.array(self._msc._spiketrains[self.get_unit_ids().index(unit_id)])

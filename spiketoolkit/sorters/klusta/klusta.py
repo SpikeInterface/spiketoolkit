@@ -70,11 +70,11 @@ class KlustaSorter(BaseSorter):
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
+            se.save_probe_file(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
         # save binary file
         file_name = 'recording'
-        se.writeBinaryDatFormat(recording, output_folder / file_name, dtype='int16')
+        se.write_binary_dat_format(recording, output_folder / file_name, dtype='int16')
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -89,8 +89,8 @@ class KlustaSorter(BaseSorter):
         
         # Note: should use format with dict approach here
         klusta_config = ''.join(klusta_config).format(
-            output_folder / file_name, p['probe_file'], float(recording.getSamplingFrequency()),
-            recording.getNumChannels(), "'int16'",
+            output_folder / file_name, p['probe_file'], float(recording.get_sampling_frequency()),
+            recording.get_num_channels(), "'int16'",
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']

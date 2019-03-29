@@ -81,8 +81,8 @@ class IronclustSorter(BaseSorter):
             dataset_dir.mkdir()
 
         # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-        se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
-        samplerate = recording.getSamplingFrequency()
+        se.MdaRecordingExtractor.write_recording(recording=recording, save_path=dataset_dir)
+        samplerate = recording.get_sampling_frequency()
 
         if self.debug:
             print('Reading timeseries header...')

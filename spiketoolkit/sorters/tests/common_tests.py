@@ -24,8 +24,8 @@ class SorterCommonTestSuite:
         sorter.run()
         sorting = sorter.get_result()
         
-        for unit_id in sorting.getUnitIds():
-            print('unit #', unit_id, 'nb', len(sorting.getUnitSpikeTrain(unit_id)))
+        for unit_id in sorting.get_unit_ids():
+            print('unit #', unit_id, 'nb', len(sorting.get_unit_spike_train(unit_id)))
     
     def test_several_groups(self):
         
@@ -34,9 +34,9 @@ class SorterCommonTestSuite:
         
         # make 2 artificial groups
         for ch_id in range(0, 4):
-            recording.setChannelProperty(ch_id, 'group', 0)
+            recording.set_channel_property(ch_id, 'group', 0)
         for ch_id in range(4, 8):
-            recording.setChannelProperty(ch_id, 'group', 1)
+            recording.set_channel_property(ch_id, 'group', 1)
          
         
         params = self.SorterClass.default_params()
