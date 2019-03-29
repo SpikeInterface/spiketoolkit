@@ -20,9 +20,9 @@ def computeUnitSNR(recording, sorting, unit_ids=None, save_as_property=True):
         unit_ids = sorting.get_unit_ids()
     channel_noise_levels = _computeChannelNoiseLevels(recording=recording)
     if unit_ids is not None:
-        templates = st.postprocessing.getUnitTemplate(recording, sorting, unit_ids=unit_ids)
+        templates = st.postprocessing.get_unit_template(recording, sorting, unit_ids=unit_ids)
     else:
-        templates = st.postprocessing.getUnitTemplate(recording, sorting)
+        templates = st.postprocessing.get_unit_template(recording, sorting)
     snr_list = []
     for i, unit_id in enumerate(sorting.get_unit_ids()):
         snr = _computeTemplateSNR(templates[i], channel_noise_levels)

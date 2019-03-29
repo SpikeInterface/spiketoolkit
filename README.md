@@ -68,7 +68,7 @@ With SpikeToolit you can export any sorting output to the  [phy](https://github.
 
 ```python
 # esport Mountainsort output to phy
-st.exportToPhy(sorting_MS)
+st.export_to_phy(sorting_MS)
 # curate the data running: phy template-gui path-to-exported-params.py
 # reimport curated sorting output
 sorting_MS_curated = se.PhysortingExtractors('path-to-created-phy-folder')
