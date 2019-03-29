@@ -12,11 +12,15 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
                  count=False, verbose=False):
-        # Samuel EDIT : the variable delta_tp should be strongly documented as it affect the match
-        # Samuel EDIT : the variable min_accuracy should be strongly documented as it affect the match
+        """
+        TODO : doc here
+        
+        the variable delta_tp should be strongly documented as it affect the match
+        
+        the variable min_accuracy should be strongly documented as it affect the match
+        """
         self._sorting1 = sorting1
         self._sorting2 = sorting2
-        # Smuel EDIT: this is used only for plotting, shall we remove this sortingX_name?
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
         self._delta_tp = delta_tp
@@ -232,36 +236,6 @@ class SortingComparison():
         return st1_idxs, st2_idxs
 
 
-    @staticmethod
-    def compareSpikeTrains(spiketrain1, spiketrain2, delta_tp=10, verbose=False):
-        #Samuel EDIT : my guess is that should be also removed
-        # or move to function in comparisontools
-        
-        lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
-        lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
-
-        if verbose:
-            print('Finding TP')
-        # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
-        for sp_i, n_sp in enumerate(spiketrain1):
-            id_sp = np.where((spiketrain2 > n_sp - delta_tp) & (spiketrain2 < n_sp + delta_tp))[0]
-            if len(id_sp) == 1:
-                lab_st1[sp_i] = 'TP'
-                lab_st2[id_sp] = 'TP'
-
-        if verbose:
-            print('Finding FP and FN')
-        for l_gt, lab in enumerate(lab_st1):
-            if lab == 'UNPAIRED':
-                lab_st1[l_gt] = 'FN'
-
-        for l_gt, lab in enumerate(lab_st2):
-            if lab == 'UNPAIRED':
-                lab_st2[l_gt] = 'FP'
-
-        return lab_st1, lab_st2
-
-
 class MappedSortingExtractor(se.SortingExtractor):
     def __init__(self, sorting, unit_map):
         se.SortingExtractor.__init__(self)
@@ -290,94 +264,6 @@ class MappedSortingExtractor(se.SortingExtractor):
         else:
             print(unit_id, " is not matched!")
             return None
-
-
-# Samuel EDIT
-# I really do not andderstand what there is this function ???
-# is it another version of the confisnion matrix ?
-# is it done with another object model ?
-def confusion_matrix(gtst, sst, pairs, plot_fig=True, xlabel=None, ylabel=None):
-    '''
-
-    Parameters
-    ----------
-    gtst
-    sst
-    pairs 1D array with paired sst to gtst
-
-    Returns
-    -------
-
-    '''
-    conf_matrix = np.zeros((len(gtst) + 1, len(sst) + 1), dtype=int)
-    idxs_pairs_clean = np.where(pairs != -1)
-    idxs_pairs_dirty = np.where(pairs == -1)
-    pairs_clean = pairs[idxs_pairs_clean]
-    gtst_clean = np.array(gtst)[idxs_pairs_clean]
-    gtst_extra = np.array(gtst)[idxs_pairs_dirty]
-
-    gtst_idxs = np.append(idxs_pairs_clean, idxs_pairs_dirty)
-    sst_idxs = pairs_clean
-    sst_extra = []
-
-    for gt_i, gt in enumerate(gtst_clean):
-        if gt.annotations['paired']:
-            tp = len(np.where('TP' == gt.annotations['labels'])[0])
-            conf_matrix[gt_i, gt_i] = int(tp)
-            for st_i, st in enumerate(sst):
-                cl_str = str(gt_i) + '_' + str(st_i)
-                cl = len([i for i, v in enumerate(gt.annotations['labels']) if 'CL' in v and cl_str in v])
-                if cl != 0:
-                    st_p = np.where(st_i == pairs_clean)
-                    conf_matrix[gt_i, st_p] = int(cl)
-        fn = len(np.where('FN' == gt.annotations['labels'])[0])
-        conf_matrix[gt_i, -1] = int(fn)
-    for gt_i, gt in enumerate(gtst_extra):
-        fn = len(np.where('FN' == gt.annotations['labels'])[0])
-        conf_matrix[gt_i + len(gtst_clean), -1] = int(fn)
-    for st_i, st in enumerate(sst):
-        fp = len(np.where('FP' == st.annotations['labels'])[0])
-        st_p = np.where(st_i == pairs_clean)[0]
-        if len(st_p) != 0:
-            conf_matrix[-1, st_p] = fp
-        else:
-            sst_extra.append(int(st_i))
-            conf_matrix[-1, len(pairs_clean) + len(sst_extra) - 1] = fp
-
-    if plot_fig:
-        fig, ax = plt.subplots()
-        # Using matshow here just because it sets the ticks up nicely. imshow is faster.
-        ax.matshow(conf_matrix, cmap='Greens')
-
-        for (i, j), z in np.ndenumerate(conf_matrix):
-            if z != 0:
-                if z > np.max(conf_matrix) / 2.:
-                    ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
-                else:
-                    ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
-                    # ,   bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
-
-        ax.axhline(int(len(gtst) - 1) + 0.5, color='black')
-        ax.axvline(int(len(sst) - 1) + 0.5, color='black')
-
-        # Major ticks
-        ax.set_xticks(np.arange(0, len(sst) + 1))
-        ax.set_yticks(np.arange(0, len(gtst) + 1))
-        ax.xaxis.tick_bottom()
-        # Labels for major ticks
-        ax.set_xticklabels(np.append(np.append(sst_idxs, sst_extra).astype(int), 'FN'), fontsize=12)
-        ax.set_yticklabels(np.append(gtst_idxs, 'FP'), fontsize=12)
-
-        if xlabel == None:
-            ax.set_xlabel('Sorted spike trains', fontsize=15)
-        else:
-            ax.set_xlabel(xlabel, fontsize=20)
-        if ylabel == None:
-            ax.set_ylabel('Ground truth spike trains', fontsize=15)
-        else:
-            ax.set_ylabel(ylabel, fontsize=20)
-
-    return conf_matrix, ax
 
 
 def compute_performance(SC, verbose=True, output='dict'):

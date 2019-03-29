@@ -264,13 +264,11 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
             for sp_i, n_sp in enumerate(sts1[u_i]):
                 matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_tp//2)
                 if np.sum(matches) > 0:
-                        lab_st1[sp_i] = 'TP'
-                        lab_st2[np.where(matches)[0][0]] = 'TP'
+                    lab_st1[sp_i] = 'TP'
+                    lab_st2[np.where(matches)[0][0]] = 'TP'
         else:
-            # Sam garcia note : I guess this is a mistake
             lab_st1 = np.array(['FN'] * len(sts1[u_i]))
-            # Sam note : I would add this line
-            # labels_st1[u1] = lab_st1
+            labels_st1[u1] = lab_st1
 
     # find CL-CLO-CLSO
     for u_i, u1 in enumerate(sorting1.getUnitIds()):
@@ -283,12 +281,11 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
                     if u2 in unit_map12.values() and unit_map12[u1] != -1:
                         lab_st2 = labels_st2[u2]
                         st2 = sts2[u_j]
-
-                        n_up = st1[l_gt]
-                        id_sp = np.where((st2.astype(int)-n_sp)<=delta_tp//2)[0]
-                        if len(id_sp) > 0 and lab_st2[id_sp[0]] == 'UNPAIRED':
+                        matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_tp//2) 
+                        if np.sum(matches) > 0:
                             lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
-                            lab_st2[id_sp[0]] = 'CL_' + str(u2) + '_' + str(u1)
+                            lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
+
 
     for u1 in sorting1.getUnitIds():
         lab_st1 = labels_st1[u1]
@@ -339,9 +336,10 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     
     confusion_matrix: the confusion matrix
     
-    st1_idxs: ???
+    st1_idxs: order of units1 in confusion matrix
     
-    st2_idxs: ???
+    
+    st2_idxs: order of units2 in confusion matrix
     
     
     """
