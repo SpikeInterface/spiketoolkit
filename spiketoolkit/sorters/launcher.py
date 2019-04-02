@@ -109,16 +109,17 @@ def collect_results(working_folder):
     The output is nested dict[rec_name][sorter_name] of SortingExtrator.
 
     """
-    results = {}
+    results = {} 
+    working_folder = Path(working_folder)
 
     for rec_name in os.listdir(working_folder):
-        if not os.path.isdir(os.path.join(working_folder, rec_name)):
+        if not os.path.isdir(working_folder / rec_name):
             continue
-        print(rec_name)
+        # print(rec_name)
         results[rec_name] = {}
-        for sorter_name in os.listdir(os.path.join(working_folder, rec_name)):
-            print('  ', sorter_name)
-            output_folder = os.path.join(working_folder, rec_name, sorter_name)
+        for sorter_name in os.listdir(working_folder / rec_name):
+            # print('  ', sorter_name)
+            output_folder = working_folder / rec_name / sorter_name
             if not os.path.isdir(output_folder):
                 continue
             SorterClass = sorter_dict[sorter_name]

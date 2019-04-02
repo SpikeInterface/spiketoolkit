@@ -16,7 +16,8 @@ addons:
     - libcanberra-gtk-module
 install:
   # spikeextractors and spikewidgets are taken from github to get latest version
-  - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+  # - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+  - pip install spikeextractors==0.3.1
 #  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest==4.3
@@ -24,6 +25,7 @@ install:
   - pip install h5py # for klusta
   - pip install click klusta klustakwik2 
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
+  - pip install https://github.com/mhhennig/HS2/archive/master.zip
   - pip install spyking-circus
   - pip install pyqt5
   - pip install ml_ms4alg

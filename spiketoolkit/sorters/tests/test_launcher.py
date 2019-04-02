@@ -30,7 +30,8 @@ def test_run_sorters_with_dict():
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
     #~ sorter_list = ['tridesclous',  'klusta',]
-    sorter_list = ['tridesclous', ]
+    #~ sorter_list = ['tridesclous', ]
+    sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_dict'
     if os.path.exists(working_folder):
@@ -54,7 +55,7 @@ def test_run_sorters_multiprocessing():
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
     #~ sorter_list = ['tridesclous',  'klusta',]
-    sorter_list = ['tridesclous', ]
+    sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_mp'
     if os.path.exists(working_folder):
