@@ -9,7 +9,7 @@ class NotchFilterRecording(FilterRecording):
         self._recording = recording
         self._freq = freq
         self._q = q
-        self.copyChannelProperties(recording)
+        self.copy_channel_properties(recording)
         print('Notch filter at: ', self._freq)
 
     def filterChunk(self, *, start_frame, end_frame):
@@ -43,10 +43,10 @@ class NotchFilterRecording(FilterRecording):
         return val
 
     def _do_filter(self, chunk):
-        samplerate = self._recording.getSamplingFrequency()
+        samplerate = self._recording.get_sampling_frequency()
         M = chunk.shape[0]
         chunk2 = chunk
-        fn = 0.5 * float(self.getSamplingFrequency())
+        fn = 0.5 * float(self.get_sampling_frequency())
         # Do the actual filtering with a DFT with real input
         b, a = iirnotch(self._freq / fn, self._q)
 
@@ -57,8 +57,8 @@ class NotchFilterRecording(FilterRecording):
         return chunk_filtered
 
     def _read_chunk(self, i1, i2):
-        M = len(self._recording.getChannelIds())
-        N = self._recording.getNumFrames()
+        M = len(self._recording.get_channel_ids())
+        N = self._recording.get_num_frames()
         if i1 < 0:
             i1b = 0
         else:
@@ -68,7 +68,7 @@ class NotchFilterRecording(FilterRecording):
         else:
             i2b = i2
         ret = np.zeros((M, i2 - i1))
-        ret[:, i1b - i1:i2b - i1] = self._recording.getTraces(start_frame=i1b, end_frame=i2b)
+        ret[:, i1b - i1:i2b - i1] = self._recording.get_traces(start_frame=i1b, end_frame=i2b)
         return ret
 
 

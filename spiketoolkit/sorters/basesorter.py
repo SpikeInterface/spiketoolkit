@@ -55,7 +55,7 @@ class BaseSorter:
             self.output_folders = [output_folder]
         else:
             # several groups
-            self.recording_list = se.getSubExtractorsByProperty(recording, grouping_property)
+            self.recording_list = se.get_sub_extractors_by_property(recording, grouping_property)
             n_group = len(self.recording_list)
             if n_group>1:
                 self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group)]
@@ -129,10 +129,10 @@ class BaseSorter:
             sorting = sorting_list[0]
         else:
             for i, sorting in enumerate(sorting_list):
-                group = self.recording_list[i].getChannelProperty(self.recording_list[i].getChannelIds()[0], 'group')
+                group = self.recording_list[i].get_channel_property(self.recording_list[i].get_channel_ids()[0], 'group')
                 if sorting is not None:
-                    for unit in sorting.getUnitIds():
-                        sorting.setUnitProperty(unit, 'group', group)
+                    for unit in sorting.get_unit_ids():
+                        sorting.set_unit_property(unit, 'group', group)
 
             # reassemble the sorting outputs
             sorting_list = [sort for sort in sorting_list if sort is not None]

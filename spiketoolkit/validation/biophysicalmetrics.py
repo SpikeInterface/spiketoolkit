@@ -35,9 +35,9 @@ def getISIRatio(sorting, sampling_frequency, unit_ids=None, save_as_property=Tru
     '''
     ISI_ratios = []
     if unit_ids is None:
-        unit_ids = sorting.getUnitIds()
+        unit_ids = sorting.get_unit_ids()
     for unit_id in unit_ids:
-        unit_spike_train = sorting.getUnitSpikeTrain(unit_id)
+        unit_spike_train = sorting.get_unit_spike_train(unit_id)
         ref_frame_period = sampling_frequency*0.002
         long_interval = sampling_frequency*0.02
 
@@ -47,6 +47,6 @@ def getISIRatio(sorting, sampling_frequency, unit_ids=None, save_as_property=Tru
 
         ISI_ratio = num_ref_violations / num_longer_interval
         if save_as_property:
-            sorting.setUnitProperty(unit_id, 'ISI_ratio', ISI_ratio)
+            sorting.set_unit_property(unit_id, 'ISI_ratio', ISI_ratio)
         ISI_ratios.append(ISI_ratio)
     return ISI_ratios

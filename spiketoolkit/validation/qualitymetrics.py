@@ -17,17 +17,17 @@ def computeUnitSNR(recording, sorting, unit_ids=None, save_as_property=True):
 
     '''
     if unit_ids is None:
-        unit_ids = sorting.getUnitIds()
+        unit_ids = sorting.get_unit_ids()
     channel_noise_levels = _computeChannelNoiseLevels(recording=recording)
     if unit_ids is not None:
         templates = st.postprocessing.getUnitTemplate(recording, sorting, unit_ids=unit_ids)
     else:
         templates = st.postprocessing.getUnitTemplate(recording, sorting)
     snr_list = []
-    for i, unit_id in enumerate(sorting.getUnitIds()):
+    for i, unit_id in enumerate(sorting.get_unit_ids()):
         snr = _computeTemplateSNR(templates[i], channel_noise_levels)
         if save_as_property:
-            sorting.setUnitProperty(unit_id, 'snr', snr)
+            sorting.set_unit_property(unit_id, 'snr', snr)
         snr_list.append(snr)
     return snr_list
 
@@ -39,8 +39,8 @@ def _computeTemplateSNR(template, channel_noise_levels):
     return np.max(channel_snrs)
 
 def _computeChannelNoiseLevels(recording):
-    M = recording.getNumChannels()
-    X = recording.getTraces(start_frame=0, end_frame=np.minimum(1000, recording.getNumFrames()))
+    M = recording.get_num_channels()
+    X = recording.get_traces(start_frame=0, end_frame=np.minimum(1000, recording.get_num_frames()))
     ret = []
     for ch in range(M):
         noise_level = np.std(X[ch, :])

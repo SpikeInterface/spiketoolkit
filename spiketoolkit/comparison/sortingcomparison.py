@@ -44,13 +44,13 @@ class SortingComparison():
         return self._sorting2
 
     def getLabels1(self, unit_id):
-        if unit_id in self._sorting1.getUnitIds():
+        if unit_id in self._sorting1.get_unit_ids():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
 
     def getLabels2(self, unit_id):
-        if unit_id in self._sorting1.getUnitIds():
+        if unit_id in self._sorting1.get_unit_ids():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
@@ -59,7 +59,7 @@ class SortingComparison():
         """
         Returns a MappedSortingExtractor for sorting 1.
         
-        The returned MappedSortingExtractor.getUnitIds returns the unit_ids of sorting 1.
+        The returned MappedSortingExtractor.get_unit_ids returns the unit_ids of sorting 1.
         
         The returned MappedSortingExtractor.getMappedUnitIds returns the mapped unit_ids
         of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1). 
@@ -185,8 +185,8 @@ class SortingComparison():
 
         sorting1 = self._sorting1
         sorting2 = self._sorting2
-        unit1_ids = sorting1.getUnitIds()
-        unit2_ids = sorting2.getUnitIds()
+        unit1_ids = sorting1.get_unit_ids()
+        unit2_ids = sorting2.get_unit_ids()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
         st1_idxs, st2_idxs = self._do_confusion()
@@ -253,7 +253,7 @@ class MappedSortingExtractor(se.SortingExtractor):
         self._unit_map = unit_map
         self._unit_ids = list(self._unit_map.keys())
 
-    def getUnitIds(self, unit_ids=None):
+    def get_unit_ids(self, unit_ids=None):
         if unit_ids is None:
             return self._unit_ids
         else:
@@ -267,10 +267,10 @@ class MappedSortingExtractor(se.SortingExtractor):
         else:
             return list([self._unit_map[u] for u in self._unit_ids if u in unit_ids])
 
-    def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
+    def get_unit_spike_train(self, unit_id, start_frame=None, end_frame=None):
         unit2 = self._unit_map[unit_id]
         if unit2 != -1:
-            return self._sorting.getUnitSpikeTrain(unit2, start_frame=start_frame, end_frame=end_frame)
+            return self._sorting.get_unit_spike_train(unit2, start_frame=start_frame, end_frame=end_frame)
         else:
             print(unit_id, " is not matched!")
             return None
