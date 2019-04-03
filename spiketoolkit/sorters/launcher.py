@@ -3,17 +3,21 @@ Utils functions to launch several sorter on several recording in parralelle or n
 """
 import os
 from pathlib import Path
+import multiprocessing
+
+import spikeextractors as se
 
 from .sorterlist import sorter_dict, run_sorter
 
-import multiprocessing
+
 
 
 def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug, write_log = arg_list
 
-    try:
+    #~ try:
+    if True:
         SorterClass = sorter_dict[sorter_name]
         sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                             parallel=True, debug=debug, delete_output_folder=False)
@@ -21,8 +25,8 @@ def _run_one(arg_list):
         sorter.set_params(**params)
 
         run_time = sorter.run()
-    except:
-        run_time = None
+    #~ except:
+        #~ run_time = None
 
     if write_log and run_time is not None:
         with open(output_folder / 'run_log.txt', mode='w') as f:
@@ -30,7 +34,7 @@ def _run_one(arg_list):
 
 
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_property=None,
-                            engine=None, processes=None, debug=False, write_log=True):
+                            shared_binary_copy=True, engine=None, engine_kargs={}, debug=False, write_log=True):
     """
     This run several sorter on several recording.
     Simple implementation will nested loops.
@@ -50,10 +54,54 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     This do not allow to have subprocess in subprocess.
     So sorter that already use internally multiprocessing, this will fail.
 
+    Parameters
+    ----------
+    
+    sorter_list: list of str
+        List of sorter name.
+    
+    recording_dict_or_list: dict or list
+        A dict of recording. The key will be the name of teh recording.
+        In a list is given then the name will be recording_0, recording_1, ...
+    
+    working_folder: a path
+        The working directory.
+        This must not exists before calling this function.
+    
+    grouping_property:
+        The property of grouping given to sorters.
+    
+    shared_binary_copy: True default
+        Before running each sorter, all recording are copied inside 
+        the working_folder with the raw binary format (BinDatRecordingExtractor)
+        and new recording are done BinDatRecordingExtractor.
+        This avoid multiple copy inside each sorter of teh same file but
+        imply a global of all files.
+
+    engine: 'loop' or 'multiprocessing' 
+    
+    engine_kargs: dict
+        This contains kargs specific to the launcher engine:
+            * 'loop' : no kargs
+            * 'multiprocessing' : {'processes' : } number of processes
+    
+    debug: bool default True
+    
+    write_log: bool default True
+    
+    Output
+    ----------
+    
+    results : dict
+        The output is nested dict[rec_name][sorter_name] of SortingExtrator.
+
+
+
     """
 
     assert not os.path.exists(working_folder), 'working_folder already exists, please remove it'
-
+    working_folder = Path(working_folder)
+    
     for sorter_name in sorter_list:
         assert sorter_name in sorter_dict, '{} is not in sorter list'.format(sorter_name)
 
@@ -65,13 +113,33 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     else:
         raise(ValueError('bad recording dict'))
 
-
-    working_folder = Path(working_folder)
+    if shared_binary_copy:
+        assert grouping_property is None, 'shared_binary_copy do not work with grouping_property not None'
+        
+        os.makedirs(working_folder / 'raw_files')
+        old_rec_dict = dict(recording_dict)
+        recording_dict = {}
+        for rec_name, recording in old_rec_dict.items():
+            raw_filename = working_folder / 'raw_files' / (rec_name+'.raw')
+            prb_filename = working_folder / 'raw_files' / (rec_name+'.prb')
+            n_chan = recording.getNumChannels()
+            chunksize = 2**24// n_chan
+            sr = recording.getSamplingFrequency()
+            
+            # save binary
+            se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
+            # save location (with PRB format)
+            se.saveProbeFile(recording, prb_filename, format='spyking_circus')
+            
+            # make new  recording
+            new_rec = se.BinDatRecordingExtractor(raw_filename, sr, n_chan, 'float32')
+            se.loadProbeFile(new_rec, prb_filename)
+            recording_dict[rec_name] = new_rec
 
     task_list = []
     for rec_name, recording in recording_dict.items():
         for sorter_name in sorter_list:
-            output_folder = working_folder / rec_name / sorter_name
+            output_folder = working_folder / 'output_folders' / rec_name / sorter_name
             task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug, write_log))
 
     if engine is None or engine == 'loop':
@@ -81,6 +149,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
 
     elif engine == 'multiprocessing':
         # use mp.Pool
+        processes = engine_kargs.get('processes', None)
         pool = multiprocessing.Pool(processes)
         pool.map(_run_one, task_list)
 
@@ -111,15 +180,17 @@ def collect_results(working_folder):
     """
     results = {} 
     working_folder = Path(working_folder)
+    output_folders = working_folder/'output_folders'
 
-    for rec_name in os.listdir(working_folder):
-        if not os.path.isdir(working_folder / rec_name):
+    for rec_name in os.listdir(output_folders):
+        if not os.path.isdir(output_folders / rec_name):
             continue
         # print(rec_name)
         results[rec_name] = {}
-        for sorter_name in os.listdir(working_folder / rec_name):
+        for sorter_name in os.listdir(output_folders / rec_name):
             # print('  ', sorter_name)
-            output_folder = working_folder / rec_name / sorter_name
+            output_folder = output_folders / rec_name / sorter_name
+            #~ print(output_folder)
             if not os.path.isdir(output_folder):
                 continue
             SorterClass = sorter_dict[sorter_name]

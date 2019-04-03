@@ -53,7 +53,6 @@ class TridesclousSorter(BaseSorter):
             dtype = recording._timeseries.dtype.str
             nb_chan = len(recording._channels)
             offset = recording._timeseries.offset   
-            print('offset', offset)
         else:
             # save binary file (chunk by hcunk) into a new file
             raw_filename = output_folder / 'raw_signals.raw'
