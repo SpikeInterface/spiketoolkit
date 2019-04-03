@@ -12,7 +12,7 @@ class NotchFilterRecording(FilterRecording):
         self.copy_channel_properties(recording)
         print('Notch filter at: ', self._freq)
 
-    def filterChunk(self, *, start_frame, end_frame):
+    def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
         i1 = start_frame - padding
         i2 = end_frame + padding

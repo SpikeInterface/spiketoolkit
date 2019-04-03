@@ -5,7 +5,7 @@ This module implements a number of biophysical metrics to validate spike sorting
 results.
 '''
 
-def getISIRatio(sorting, sampling_frequency, unit_ids=None, save_as_property=True):
+def get_ISI_ratio(sorting, sampling_frequency, unit_ids=None, save_as_property=True):
     '''This function calculates the ratio between the frequency of spikes present
     within 0- to 2-ms (refractory period) interspike interval (ISI) and those at 0- to 20-ms
     interval. It then returns the ratios and also adds a property, ISI_ratio, for

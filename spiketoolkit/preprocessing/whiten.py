@@ -25,7 +25,7 @@ class WhitenRecording(FilterRecording):
         W = (U @ np.diag(1 / np.sqrt(S))) @ Ut
         return W
 
-    def filterChunk(self, *, start_frame, end_frame):
+    def filter_chunk(self, *, start_frame, end_frame):
         chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
         chunk2 = self._whitening_matrix @ chunk
         return chunk2

@@ -47,8 +47,8 @@ class FilterRecording(se.RecordingExtractor):
         return np.concatenate(filtered_chunk_list, axis=1)
 
     @abstractmethod
-    def filterChunk(self, *, start_frame, end_frame):
-        raise NotImplementedError('filterChunk not implemented')
+    def filter_chunk(self, *, start_frame, end_frame):
+        raise NotImplementedError('filter_chunk not implemented')
 
     def _get_filtered_chunk(self, ind):
         code = str(ind)
@@ -58,7 +58,7 @@ class FilterRecording(se.RecordingExtractor):
         else:
             start0 = ind * self._chunk_size
             end0 = (ind + 1) * self._chunk_size
-            chunk1 = self.filterChunk(start_frame=start0, end_frame=end0)
+            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0)
             self._filtered_chunk_cache.add(code, chunk1)
             return chunk1
 

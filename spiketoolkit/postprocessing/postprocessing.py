@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 from pathlib import Path
 
 
-def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, start_frame=None, end_frame=None,
+def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None, start_frame=None, end_frame=None,
                      ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf, filter=False,
                      bandpass=[300, 6000], save_as_features=True, verbose=False, compute_property_from_recording=False):
     '''
@@ -201,7 +201,7 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
             return waveform_list
 
 
-def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
+def get_unit_template(recording, sorting, unit_ids=None, grouping_property=None,
                     save_as_property=True, start_frame=None, end_frame=None,
                     ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False,
                     bandpass=[300, 6000], compute_property_from_recording=False,
@@ -257,7 +257,7 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
                 waveforms = np.array(waveforms[idx_not_none])
             template = np.mean(waveforms, axis=0)
         else:
-            template = np.mean(getUnitWaveforms(recording, sorting, unit_id, start_frame=start_frame,
+            template = np.mean(get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
                                                 end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                                 ms_before=ms_before, ms_after=ms_after, filter=filter,
                                                 bandpass=bandpass, grouping_property=grouping_property,
@@ -275,7 +275,7 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
         return template_list
 
 
-def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
+def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=None,
                       save_as_property=True, start_frame=None, end_frame=None,
                       ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
                       compute_property_from_recording=False, verbose=False):
@@ -324,7 +324,7 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
         if template_property:
             template = sorting.get_unit_property(unit_id, 'template')
         else:
-            template = getUnitTemplate(recording, sorting, unit_id, start_frame=start_frame,
+            template = get_unit_template(recording, sorting, unit_id, start_frame=start_frame,
                                        end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                        ms_before=ms_before, ms_after=ms_after, filter=filter,
                                        bandpass=bandpass, grouping_property=grouping_property,
@@ -343,7 +343,7 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
         return max_list
 
 
-def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compute_property_from_recording=False,
+def compute_pca_scores(recording, sorting, n_comp=3, grouping_property=None, compute_property_from_recording=False,
                      by_electrode=False, max_num_waveforms=np.inf, save_as_features=True, verbose=False):
     '''
 
@@ -380,11 +380,11 @@ def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compu
     else:
         if verbose:
             print("Computing waveforms")
-        waveforms = getUnitWaveforms(recording, sorting)
+        waveforms = get_unit_waveforms(recording, sorting)
 
     for i_w, wf in enumerate(waveforms):
         if wf is None:
-            wf = getUnitWaveforms(recording, sorting, [sorting.get_unit_ids()[i_w]],
+            wf = get_unit_waveforms(recording, sorting, [sorting.get_unit_ids()[i_w]],
                                   max_num_waveforms=max_num_waveforms,
                                   compute_property_from_recording=compute_property_from_recording,
                                   verbose=verbose)
@@ -432,7 +432,7 @@ def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compu
     return pca_scores
 
 
-def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
+def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
                 max_num_waveforms=np.inf):
     import spiketoolkit as st
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
@@ -460,7 +460,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     if nPC > recording.get_num_channels():
         nPC = recording.get_num_channels()
         print("Changed number of PC to number of channels: ", nPC)
-    pc_scores = computePCAScores(recording, sorting, n_comp=nPC, by_electrode=True, max_num_waveforms=max_num_waveforms)
+    pc_scores = compute_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True, max_num_waveforms=max_num_waveforms)
 
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
@@ -502,8 +502,8 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.get_unit_ids()), 1))
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    templates = getUnitTemplate(recording, sorting)
-    similar_templates = _computeTemplatesSimilarity(templates)
+    templates = get_unit_template(recording, sorting)
+    similar_templates = _compute_templates_similarity(templates)
 
     # templates.npy
     templates = np.array(templates, dtype='float32').swapaxes(1, 2)
@@ -516,7 +516,7 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
 
     # whitening_mat.npy - [nChannels, nChannels] double
     # whitening_mat_inv.npy - [nChannels, nChannels] double
-    # whitening_mat, whitening_mat_inv = _computeWhiteningAndInverse(recording)
+    # whitening_mat, whitening_mat_inv = _compute_whitening_and_inverse(recording)
     whitening_mat = np.eye(recording.get_num_channels())
     whitening_mat_inv = whitening_mat
 
@@ -537,13 +537,13 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     print('Run:\n\nphy template-gui ', str(output_folder / 'params.py'))
 
 
-def _computeTemplateSNR(template, channel_noise_levels):
+def _compute_template_SNR(template, channel_noise_levels):
     channel_snrs = []
     for ch in range(template.shape[0]):
         channel_snrs.append((np.max(template[ch, :]) - np.min(template[ch, :])) / channel_noise_levels[ch])
     return np.max(channel_snrs)
 
-def _computeChannelNoiseLevels(recording):
+def _compute_channel_noise_levels(recording):
     M = recording.get_num_channels()
     X = recording.get_traces(start_frame=0, end_frame=np.minimum(1000, recording.get_num_frames()))
     ret = []
@@ -552,7 +552,7 @@ def _computeChannelNoiseLevels(recording):
         ret.append(noise_level)
     return ret
 
-def _computeTemplatesSimilarity(templates):
+def _compute_templates_similarity(templates):
     similarity = np.zeros((len(templates), len(templates)))
     for i, t_i in enumerate(templates):
         for j, t_j in enumerate(templates):
@@ -562,7 +562,7 @@ def _computeTemplatesSimilarity(templates):
             similarity[i, j] = np.abs(a[0, 1])
     return similarity
 
-def _computeWhiteningAndInverse(recording):
+def _compute_whitening_and_inverse(recording):
     white_recording = st.preprocessing.whiten(recording)
     wh_mat = white_recording._whitening_matrix
     wh_mat_inv = np.linalg.inv(wh_mat)
@@ -581,4 +581,3 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, 
                                    snippet_len=snippet_len, channel_ids=channels)
     spikes = np.dstack(tuple(spikes))
     return spikes, event_indices
-

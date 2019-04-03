@@ -17,10 +17,10 @@ class MultiSortingComparison():
         self._min_accuracy = minimum_accuracy
         self._do_matching()
 
-    def getSortingList(self):
+    def get_sorting_list(self):
         return self._sorting_list
 
-    def getAgreementSorting(self, minimum_matching=0):
+    def get_agreement_sorting(self, minimum_matching=0):
         return AgreementSortingExtractor(self, min_agreement=minimum_matching)
 
     def _do_matching(self):
@@ -44,13 +44,13 @@ class MultiSortingComparison():
         graph = nx.Graph()
         for sort_name, sort_comp in self.sorting_comparisons.items():
             unit_agreement = {}
-            units = sort_comp[0].getSorting1().get_unit_ids()
+            units = sort_comp[0].get_sorting1().get_unit_ids()
             for unit in units:
                 matched_list = {}
                 matched_agreement = {}
                 for sc in sort_comp:
-                    mapped_unit = sc.getMappedSorting1().getMappedUnitIds(unit)
-                    mapped_agr = sc.getAgreementFraction(unit, sc.getMappedSorting1().getMappedUnitIds(unit))
+                    mapped_unit = sc.get_mapped_sorting1().get_mapped_unit_ids(unit)
+                    mapped_agr = sc.get_agreement_fraction(unit, sc.get_mapped_sorting1().get_mapped_unit_ids(unit))
                     matched_list[sc.sorting2_name] = mapped_unit
                     matched_agreement[sc.sorting2_name] = mapped_agr
 
@@ -128,7 +128,7 @@ class MultiSortingComparison():
                     added_nodes.append(str(n2))
         self.added_nodes = added_nodes
 
-    def plotAgreement(self, minimum_matching=0):
+    def plot_agreement(self, minimum_matching=0):
         import matplotlib.pylab as plt
         sorted_name_list = sorted(self._name_list)
         sorting_agr = AgreementSortingExtractor(self, minimum_matching)
