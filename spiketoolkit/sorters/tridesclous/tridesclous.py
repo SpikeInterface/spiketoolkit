@@ -46,22 +46,30 @@ class TridesclousSorter(BaseSorter):
         probe_file = output_folder / 'probe.prb'
         se.saveProbeFile(recording, probe_file, format='spyking_circus')
         
-        # save binary file in loop chunk by hcunk to save memory footprint
-        raw_filename = output_folder / 'raw_signals.raw'
-        n_chan = recording.getNumChannels()
-        chunksize = 2**24// n_chan
-        se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
-        
-        #~ dtype = traces.dtype
-        dtype= np.dtype('float32')
+        # source file
+        if isinstance(recording, se.BinDatRecordingExtractor) and recording._frame_first:
+            # no need to copy
+            raw_filename = recording._datfile
+            dtype = recording._timeseries.dtype.str
+            nb_chan = len(recording._channels)
+            offset = recording._timeseries.offset   
+            print('offset', offset)
+        else:
+            # save binary file (chunk by hcunk) into a new file
+            raw_filename = output_folder / 'raw_signals.raw'
+            n_chan = recording.getNumChannels()
+            chunksize = 2**24// n_chan
+            se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
+            dtype= np.dtype('float32').str
+            offset = 0
         
         # initialize source and probe file
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         nb_chan = recording.getNumChannels()
         
         tdc_dataio.set_data_source(type='RawData', filenames=[str(raw_filename)],
-                                   dtype=dtype.str, sample_rate=recording.getSamplingFrequency(),
-                                   total_channel=nb_chan)
+                                   dtype=dtype, sample_rate=recording.getSamplingFrequency(),
+                                   total_channel=nb_chan, offset=offset)
         tdc_dataio.set_probe_file(str(probe_file))
         if self.debug:
             print(tdc_dataio)

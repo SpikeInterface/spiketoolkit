@@ -49,3 +49,35 @@ class SorterCommonTestSuite:
             sorter.run()
             sorting = sorter.get_result()
             del sorting
+    
+    def test_with_BinDatRecordingExtractor(self):
+        # some sorter (TDC, KS, KS2, ...) work by default with the raw binary
+        # format as input to avoid copy when the recording is already this format
+        
+        # create a raw dat file
+        raw_filename = 'raw_file.dat'
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=2, duration=10)
+        samplerate = recording.getSamplingFrequency()
+        traces = recording.getTraces().astype('float32')
+        with open(raw_filename, mode='wb') as f:
+            # make an offset of 13 bytes
+            f.write(b'\x00'*13)
+            f.write(traces.T.tobytes())
+        
+        recording = se.BinDatRecordingExtractor(raw_filename, samplerate, 2, 'float32', frames_first=True, offset=13)
+        
+        params = self.SorterClass.default_params()
+        sorter = self.SorterClass(recording=recording, output_folder=None)
+        sorter.set_params(**params)
+        sorter.run()
+        sorting = sorter.get_result()
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
