@@ -75,20 +75,20 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
     unit_map12 = dict()
     unit_map21 = dict()
 
-    unit1_ids = sorting1.getUnitIds()
-    unit2_ids = sorting2.getUnitIds()
+    unit1_ids = sorting1.get_unit_ids()
+    unit2_ids = sorting2.get_unit_ids()
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
     
     # Compute events counts
     event_counts1 = np.zeros((N1)).astype(np.int64)
     for i1, u1 in enumerate(unit1_ids):
-        times1 = sorting1.getUnitSpikeTrain(u1)
+        times1 = sorting1.get_unit_spike_train(u1)
         event_counts1[i1] = len(times1)
         event_counts_1[u1] = len(times1)
     event_counts2 = np.zeros((N2)).astype(np.int64)
     for i2, u2 in enumerate(unit2_ids):
-        times2 = sorting2.getUnitSpikeTrain(u2)
+        times2 = sorting2.get_unit_spike_train(u2)
         event_counts2[i2] = len(times2)
         event_counts_2[u2] = len(times2)
 
@@ -96,9 +96,9 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
     for i1, u1 in enumerate(unit1_ids):
-        times1 = sorting1.getUnitSpikeTrain(u1)
+        times1 = sorting1.get_unit_spike_train(u1)
         for i2, u2 in enumerate(unit2_ids):
-            times2 = sorting2.getUnitSpikeTrain(u2)
+            times2 = sorting2.get_unit_spike_train(u2)
             num_matches = count_matching_events(times1, times2, delta=delta_tp)
             matching_event_counts[i1, i2] = num_matches
             scores[i1, i2] = compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2])
@@ -231,8 +231,8 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
         Contain label for units of sorting 2
     """
     
-    unit1_ids = sorting1.getUnitIds()
-    unit2_ids = sorting2.getUnitIds()
+    unit1_ids = sorting1.get_unit_ids()
+    unit2_ids = sorting2.get_unit_ids()
     labels_st1 = dict()
     labels_st2 = dict()
     N1 = len(unit1_ids)
@@ -240,13 +240,13 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
 
     # copy spike trains for faster access from extractors with memmapped data
     #~ sts1 = []
-    #~ for u in sorting1.getUnitIds():
-        #~ sts1.append(sorting1.getUnitSpikeTrain(u))
+    #~ for u in sorting1.get_unit_ids():
+        #~ sts1.append(sorting1.get_unit_spike_train(u))
     #~ sts2 = []
-    #~ for u in sorting2.getUnitIds():
-        #~ sts2.append(sorting2.getUnitSpikeTrain(u))
-    sts1 = {u1: sorting1.getUnitSpikeTrain(u1) for u1 in unit1_ids}
-    sts2 = {u2: sorting2.getUnitSpikeTrain(u2) for u2 in unit2_ids}
+    #~ for u in sorting2.get_unit_ids():
+        #~ sts2.append(sorting2.get_unit_spike_train(u))
+    sts1 = {u1: sorting1.get_unit_spike_train(u1) for u1 in unit1_ids}
+    sts2 = {u2: sorting2.get_unit_spike_train(u2) for u2 in unit2_ids}
     
     # Evaluate
     for u1 in unit1_ids:
@@ -261,7 +261,7 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
         if u2 !=-1:
             lab_st1 = labels_st1[u1]
             lab_st2 = labels_st2[u2]
-            mapped_st = sorting2.getUnitSpikeTrain(u2)
+            mapped_st = sorting2.get_unit_spike_train(u2)
             # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
             for sp_i, n_sp in enumerate(sts1[u1]):
                 matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_tp//2)
@@ -345,8 +345,8 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     
     """
 
-    unit1_ids = np.array(sorting1.getUnitIds())
-    unit2_ids = np.array(sorting2.getUnitIds())
+    unit1_ids = np.array(sorting1.get_unit_ids())
+    unit2_ids = np.array(sorting2.get_unit_ids())
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
     

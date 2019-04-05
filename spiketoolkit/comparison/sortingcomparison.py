@@ -4,7 +4,7 @@ from scipy.optimize import linear_sum_assignment
 
 import pandas as pd
 
-from .comparisontools import (count_matching_events, compute_agreement_score, 
+from .comparisontools import (count_matching_events, compute_agreement_score,
                                                 do_matching, do_counting, do_confusion_matrix)
 
 
@@ -14,9 +14,9 @@ class SortingComparison():
                  count=False, verbose=False):
         """
         TODO : doc here
-        
+
         the variable delta_tp should be strongly documented as it affect the match
-        
+
         the variable min_accuracy should be strongly documented as it affect the match
         """
         self._sorting1 = sorting1
@@ -35,45 +35,45 @@ class SortingComparison():
                 print("Counting...")
             self._do_counting(verbose=verbose)
 
-    def getSorting1(self):
+    def get_sorting1(self):
         # Samuel EDIT : why not a direct attribute acees  with self.sorting1 ?
         return self._sorting1
 
-    def getSorting2(self):
+    def get_sorting2(self):
         # Samuel EDIT : why not a direct attribute acees  with self.sorting2 ?
         return self._sorting2
 
-    def getLabels1(self, unit_id):
-        if unit_id in self._sorting1.getUnitIds():
+    def get_labels1(self, unit_id):
+        if unit_id in self._sorting1.get_unit_ids():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
 
-    def getLabels2(self, unit_id):
-        if unit_id in self._sorting1.getUnitIds():
+    def get_labels2(self, unit_id):
+        if unit_id in self._sorting1.get_unit_ids():
             return self._labels_st1[unit_id]
         else:
             raise Exception("Unit_id is not a valid unit")
 
-    def getMappedSorting1(self):
+    def get_mapped_sorting1(self):
         """
         Returns a MappedSortingExtractor for sorting 1.
-        
-        The returned MappedSortingExtractor.getUnitIds returns the unit_ids of sorting 1.
-        
-        The returned MappedSortingExtractor.getMappedUnitIds returns the mapped unit_ids
-        of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1). 
-        
-        The returned MappedSortingExtractor.getUnitspikeTrains returns the the spike trains 
-        of sorting 2 mapped to the unit_ids of sorting 1.  
+
+        The returned MappedSortingExtractor.get_unit_ids returns the unit_ids of sorting 1.
+
+        The returned MappedSortingExtractor.get_mapped_unit_ids returns the mapped unit_ids
+        of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1).
+
+        The returned MappedSortingExtractor.getUnitspikeTrains returns the the spike trains
+        of sorting 2 mapped to the unit_ids of sorting 1.
         """
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
 
-    def getMappedSorting2(self):
+    def get_mapped_sorting2(self):
         # Samuel EDIT : the use case of this must documented
         return MappedSortingExtractor(self._sorting1, self._unit_map21)
 
-    def getMatchingEventCount(self, unit1, unit2):
+    def get_matching_event_count(self, unit1, unit2):
         if (unit1 is not None) and (unit2 is not None):
             if unit1 != -1:
                 a = self._matching_event_counts_12[unit1]
@@ -84,52 +84,52 @@ class SortingComparison():
             else:
                 return 0
         else:
-            raise Exception('getMatchingEventCount: unit1 and unit2 must not be None.')
+            raise Exception('get_matching_event_count: unit1 and unit2 must not be None.')
 
     def _compute_safe_frac(self, numer, denom):
         if denom == 0:
             return 0
         return float(numer) / denom
 
-    def getBestUnitMatch1(self, unit1):
+    def get_best_unit_match1(self, unit1):
         if unit1 in self._best_match_units_12:
             return self._best_match_units_12[unit1]
         else:
             return None
 
-    def getBestUnitMatch2(self, unit2):
+    def get_best_unit_match2(self, unit2):
         if unit2 in self._best_match_units_21:
             return self._best_match_units_21[unit2]
         else:
             return None
 
-    def getMatchingUnitList1(self, unit1):
+    def get_matching_unit_list1(self, unit1):
         a = self._matching_event_counts_12[unit1]
         return list(a.keys())
 
-    def getMatchingUnitList2(self, unit2):
+    def get_matching_unit_list2(self, unit2):
         a = self._matching_event_counts_21[unit2]
         return list(a.keys())
 
-    def getAgreementFraction(self, unit1=None, unit2=None):
+    def get_agreement_fraction(self, unit1=None, unit2=None):
         # Samuel NOTE: I guess that this function is no more necessary
         # please confirm this
         if (unit1 is not None) and (unit2 is None):
             if unit1 != -1:
-                unit2 = self.getBestUnitMatch1(unit1)
+                unit2 = self.get_best_unit_match1(unit1)
                 if unit2 is None or unit2 == -1:
                     return 0
             else:
                 return 0
         if (unit1 is None) and (unit2 is not None):
             if unit1 != -1 and unit2 != -1:
-                unit1 = self.getBestUnitMatch2(unit2)
+                unit1 = self.get_best_unit_match2(unit2)
                 if unit1 is None or unit1 == -1:
                     return 0
             else:
                 return 0
         if (unit1 is None) and (unit2 is None):
-            raise Exception('getAgreementFraction: at least one of unit1 and unit2 must not be None.')
+            raise Exception('get_agreement_fraction: at least one of unit1 and unit2 must not be None.')
 
         if unit1 != -1 and unit2 != -1:
             a = self._matching_event_counts_12[unit1]
@@ -139,11 +139,11 @@ class SortingComparison():
             return 0
         return compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
 
-    def getFalsePositiveFraction(self, unit1, unit2=None):
+    def get_false_positive_fraction(self, unit1, unit2=None):
         if unit1 is None:
-            raise Exception('getFalsePositiveFraction: unit1 must not be None')
+            raise Exception('get_false_positive_fraction: unit1 must not be None')
         if unit2 is None:
-            unit2 = self.getBestUnitMatch1(unit1)
+            unit2 = self.get_best_unit_match1(unit1)
             if unit2 is None or unit2 == -1:
                 return 0
 
@@ -155,11 +155,11 @@ class SortingComparison():
             return 0
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
 
-    def getFalseNegativeFraction(self, unit1, unit2=None):
+    def get_false_negative_fraction(self, unit1, unit2=None):
         if unit1 is None:
-            raise Exception('getFalsePositiveFraction: unit1 must not be None')
+            raise Exception('get_false_positive_fraction: unit1 must not be None')
         if unit2 is None:
-            unit2 = self.getBestUnitMatch1(unit1)
+            unit2 = self.get_best_unit_match1(unit1)
             if unit2 is None:
                 return 0
 
@@ -171,11 +171,11 @@ class SortingComparison():
             return 0
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
 
-    def computeCounts(self):
+    def compute_counts(self):
         if self._counts is None:
             self._do_counting(verbose=False)
 
-    def plotConfusionMatrix(self, xlabel=None, ylabel=None):
+    def plot_confusion_matrix(self, xlabel=None, ylabel=None):
         # Samuel EDIT
         # This must be moved in spikewidget
         import matplotlib.pylab as plt
@@ -185,8 +185,8 @@ class SortingComparison():
 
         sorting1 = self._sorting1
         sorting2 = self._sorting2
-        unit1_ids = sorting1.getUnitIds()
-        unit2_ids = sorting2.getUnitIds()
+        unit1_ids = sorting1.get_unit_ids()
+        unit2_ids = sorting2.get_unit_ids()
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
         st1_idxs, st2_idxs = self._do_confusion()
@@ -234,7 +234,7 @@ class SortingComparison():
             self._best_match_units_12, self._matching_event_counts_21,\
             self._best_match_units_21,self._unit_map12,\
             self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_tp, self._min_accuracy)
-   
+
     def _do_counting(self, verbose=False):
         self._counts, self._labels_st1, self._labels_st2 = do_counting(self._sorting1, self._sorting2,
                                                     self._delta_tp, self._unit_map12)
@@ -242,7 +242,7 @@ class SortingComparison():
     def _do_confusion(self):
         self._confusion_matrix,  st1_idxs, st2_idxs = do_confusion_matrix(self._sorting1, self._sorting2,
                                                 self._unit_map12, self._labels_st1, self._labels_st2)
-        
+
         return st1_idxs, st2_idxs
 
 
@@ -253,13 +253,13 @@ class MappedSortingExtractor(se.SortingExtractor):
         self._unit_map = unit_map
         self._unit_ids = list(self._unit_map.keys())
 
-    def getUnitIds(self, unit_ids=None):
+    def get_unit_ids(self, unit_ids=None):
         if unit_ids is None:
             return self._unit_ids
         else:
             return self._unit_ids[unit_ids]
 
-    def getMappedUnitIds(self, unit_ids=None):
+    def get_mapped_unit_ids(self, unit_ids=None):
         if unit_ids is None:
             return list(self._unit_map.values())
         elif isinstance(unit_ids, (int, np.integer)):
@@ -267,10 +267,10 @@ class MappedSortingExtractor(se.SortingExtractor):
         else:
             return list([self._unit_map[u] for u in self._unit_ids if u in unit_ids])
 
-    def getUnitSpikeTrain(self, unit_id, start_frame=None, end_frame=None):
+    def get_unit_spike_train(self, unit_id, start_frame=None, end_frame=None):
         unit2 = self._unit_map[unit_id]
         if unit2 != -1:
-            return self._sorting.getUnitSpikeTrain(unit2, start_frame=start_frame, end_frame=end_frame)
+            return self._sorting.get_unit_spike_train(unit2, start_frame=start_frame, end_frame=end_frame)
         else:
             print(unit_id, " is not matched!")
             return None
@@ -279,21 +279,21 @@ class MappedSortingExtractor(se.SortingExtractor):
 def compute_performance(SC, verbose=True, output='dict'):
     """
     Return some performance value for comparison.
-    
+
     Parameters
     -------
     SC: SortingComparison instance
         The SortingComparison
-        
+
     verbose: bool
         Display on console or not
-    
+
     output: dict or pandas
-    
-    
+
+
     Returns
     ----------
-    
+
     performance: dict or pandas.Serie depending output param
 
     """
@@ -314,11 +314,11 @@ def compute_performance(SC, verbose=True, output='dict'):
     performance = {'tp': tp_rate, 'cl': cl_rate, 'fn': fn_rate, 'fp_st1': fp_st1, 'fp_st2': fp_st2,
                    'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
                    'false_disc_rate': false_discovery_rate}
-    
+
     if verbose:
         txt = _txt_performance.format(**performance)
         print(txt)
-    
+
     if output == 'dict':
         return performance
     elif output == 'pandas':
@@ -341,4 +341,3 @@ MISS RATE: {miss_rate}
 PRECISION: {precision}
 FALSE DISCOVERY RATE: {false_disc_rate}
 """
-

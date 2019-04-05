@@ -56,12 +56,12 @@ class SpykingcircusSorter(BaseSorter):
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='spyking_circus',
+            se.save_probe_file(recording, p['probe_file'], format='spyking_circus',
                                 radius=p['adjacency_radius'], dimensions=p['electrode_dimensions'])
 
         # save binary file
         file_name = 'recording'
-        np.save(str(output_folder / file_name), recording.getTraces().astype('float32'))
+        np.save(str(output_folder / file_name), recording.get_traces().astype('float32'))
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -70,7 +70,7 @@ class SpykingcircusSorter(BaseSorter):
         else:
             detect_sign = 'both'
         
-        sample_rate = float(recording.getSamplingFrequency())
+        sample_rate = float(recording.get_sampling_frequency())
         
         # set up spykingcircus config file
         with (source_dir / 'config_default.params').open('r') as f:

@@ -71,9 +71,9 @@ class Mountainsort4Sorter(BaseSorter):
             recording = st.preprocessing.whiten(recording=recording)
 
         # Check location
-        if 'location' not in recording.getChannelPropertyNames():
-            for i, chan in enumerate(recording.getChannelIds()):
-                recording.setChannelProperty(chan, 'location', [0, i])
+        if 'location' not in recording.get_channel_property_names():
+            for i, chan in enumerate(recording.get_channel_ids()):
+                recording.set_channel_property(chan, 'location', [0, i])
 
         sorting = ml_ms4alg.mountainsort4(
             recording=recording,
@@ -92,7 +92,7 @@ class Mountainsort4Sorter(BaseSorter):
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
 
-        se.MdaSortingExtractor.writeSorting(sorting, str(output_folder / 'firings.mda'))
+        se.MdaSortingExtractor.write_sorting(sorting, str(output_folder / 'firings.mda'))
 
     @staticmethod
     def get_result_from_folder(output_folder):
