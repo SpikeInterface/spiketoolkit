@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit)
 
 Alpha Development
-Version 0.1.7
+Version 0.2.0
 
 
 # SpikeToolkit
