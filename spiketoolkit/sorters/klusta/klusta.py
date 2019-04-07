@@ -49,7 +49,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install click Cython
+       >>> pip install Cython h5py tqdm
        >>> pip install click klusta klustakwik2
     
     More information on klusta at:
