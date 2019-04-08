@@ -114,12 +114,19 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         raise(ValueError('bad recording dict'))
 
     if shared_binary_copy:
-        assert grouping_property is None, 'shared_binary_copy do not work with grouping_property not None'
+        #~ assert grouping_property is None, 'shared_binary_copy do not work with grouping_property not None'
         
         os.makedirs(working_folder / 'raw_files')
         old_rec_dict = dict(recording_dict)
         recording_dict = {}
         for rec_name, recording in old_rec_dict.items():
+            if grouping_property is not None:
+                recording_list = se.get_sub_extractors_by_property(recording, grouping_property)
+                n_group = len(recording_list)
+                assert n_group == 1, 'shared_binary_copy work only when one group'
+                recording = recording_list[0]
+                grouping_property = None
+            
             raw_filename = working_folder / 'raw_files' / (rec_name+'.raw')
             prb_filename = working_folder / 'raw_files' / (rec_name+'.prb')
             n_chan = recording.get_num_channels()
@@ -132,7 +139,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
             se.save_probe_file(recording, prb_filename, format='spyking_circus')
             
             # make new  recording
-            new_rec = se.BinDatRecordingExtractor(raw_filename, sr, n_chan, 'float32')
+            new_rec = se.BinDatRecordingExtractor(raw_filename, sr, n_chan, 'float32', frames_first=True)
             se.load_probe_file(new_rec, prb_filename)
             recording_dict[rec_name] = new_rec
 

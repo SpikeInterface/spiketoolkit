@@ -54,9 +54,11 @@ class TridesclousSorter(BaseSorter):
             nb_chan = len(recording._channels)
             offset = recording._timeseries.offset   
         else:
+            if self.debug:
+                print('Local copy of recording')
             # save binary file (chunk by hcunk) into a new file
             raw_filename = output_folder / 'raw_signals.raw'
-            n_chan = recording.getNumChannels()
+            n_chan = recording.get_num_channels()
             chunksize = 2**24// n_chan
             se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
             dtype= np.dtype('float32').str
