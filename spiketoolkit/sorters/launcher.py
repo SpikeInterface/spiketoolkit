@@ -122,18 +122,18 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         for rec_name, recording in old_rec_dict.items():
             raw_filename = working_folder / 'raw_files' / (rec_name+'.raw')
             prb_filename = working_folder / 'raw_files' / (rec_name+'.prb')
-            n_chan = recording.getNumChannels()
+            n_chan = recording.get_num_channels()
             chunksize = 2**24// n_chan
-            sr = recording.getSamplingFrequency()
+            sr = recording.get_sampling_frequency()
             
             # save binary
-            se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
+            se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
             # save location (with PRB format)
-            se.saveProbeFile(recording, prb_filename, format='spyking_circus')
+            se.save_probe_file(recording, prb_filename, format='spyking_circus')
             
             # make new  recording
             new_rec = se.BinDatRecordingExtractor(raw_filename, sr, n_chan, 'float32')
-            se.loadProbeFile(new_rec, prb_filename)
+            se.load_probe_file(new_rec, prb_filename)
             recording_dict[rec_name] = new_rec
 
     task_list = []
