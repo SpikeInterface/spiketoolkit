@@ -44,7 +44,7 @@ class TridesclousSorter(BaseSorter):
 
         # save prb file:
         probe_file = output_folder / 'probe.prb'
-        se.saveProbeFile(recording, probe_file, format='spyking_circus')
+        se.save_probe_file(recording, probe_file, format='spyking_circus')
         
         # source file
         if isinstance(recording, se.BinDatRecordingExtractor) and recording._frame_first:
@@ -58,23 +58,23 @@ class TridesclousSorter(BaseSorter):
             raw_filename = output_folder / 'raw_signals.raw'
             n_chan = recording.getNumChannels()
             chunksize = 2**24// n_chan
-            se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
+            se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
             dtype= np.dtype('float32').str
             offset = 0
         
         # initialize source and probe file
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
-        nb_chan = recording.getNumChannels()
+        nb_chan = recording.get_num_channels()
         
         tdc_dataio.set_data_source(type='RawData', filenames=[str(raw_filename)],
-                                   dtype=dtype, sample_rate=recording.getSamplingFrequency(),
+                                   dtype=dtype, sample_rate=recording.get_sampling_frequency(),
                                    total_channel=nb_chan, offset=offset)
         tdc_dataio.set_probe_file(str(probe_file))
         if self.debug:
             print(tdc_dataio)
     
     def _run(self, recording, output_folder):
-        nb_chan = recording.getNumChannels()
+        nb_chan = recording.get_num_channels()
     
         # check params and OpenCL when many channels
         use_sparse_template = False

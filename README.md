@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit)
 
 Alpha Development
-Version 0.1.7
+Version 0.2.0
 
 
 # SpikeToolkit
@@ -68,7 +68,7 @@ With SpikeToolit you can export any sorting output to the  [phy](https://github.
 
 ```python
 # esport Mountainsort output to phy
-st.exportToPhy(sorting_MS)
+st.export_to_phy(sorting_MS)
 # curate the data running: phy template-gui path-to-exported-params.py
 # reimport curated sorting output
 sorting_MS_curated = se.PhysortingExtractors('path-to-created-phy-folder')
@@ -89,7 +89,7 @@ Alternatively, one can run a multi-sorting comparison that finds units in agreem
 ```python
 multi_comparison = st.comparison.MultiSortingComparison([sorting_MS, sorting_SC, sorting_KS])
 # extract units shared among all 3 spike sorting outputs
-agreement_sorting = multi_comparison.getAgreementSorting(minimum_match=3)
+agreement_sorting = multi_comparison.get_agreement_sorting(minimum_match=3)
 ```
 
 ## Interactive Example

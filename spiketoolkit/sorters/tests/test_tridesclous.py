@@ -22,9 +22,9 @@ def test_run_tridesclous():
     sorting = run_tridesclous(recording,  **params)
     
     print(sorting)
-    print(sorting.getUnitIds())
-    for unit_id in sorting.getUnitIds():
-        print('unit #', unit_id, 'nb', len(sorting.getUnitSpikeTrain(unit_id)))
+    print(sorting.get_unit_ids())
+    for unit_id in sorting.get_unit_ids():
+        print('unit #', unit_id, 'nb', len(sorting.get_unit_spike_train(unit_id)))
 
 
 
