@@ -34,7 +34,7 @@ def _run_one(arg_list):
 
 
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_property=None,
-                            shared_binary_copy=True, engine=None, engine_kargs={}, debug=False, write_log=True):
+                            shared_binary_copy=False, engine=None, engine_kargs={}, debug=False, write_log=True):
     """
     This run several sorter on several recording.
     Simple implementation will nested loops.
@@ -71,7 +71,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     grouping_property:
         The property of grouping given to sorters.
     
-    shared_binary_copy: True default
+    shared_binary_copy: False default
         Before running each sorter, all recording are copied inside 
         the working_folder with the raw binary format (BinDatRecordingExtractor)
         and new recording are done BinDatRecordingExtractor.
