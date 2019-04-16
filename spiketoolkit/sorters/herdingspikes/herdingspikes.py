@@ -38,8 +38,9 @@ class HerdingspikesSorter(BaseSorter):
             # shutil.rmtree(str(output_folder))
 
         # this should have its name changed
-        self.Probe = hs.probe.RecordingExtractor(recording,
-                                                 **self.params['probe_params'])
+        self.Probe = hs.probe.RecordingExtractor(
+            recording, masked_channels=self.params['probe_masked_channels'],
+            **self.params['extra_probe_params'])
 
     def _run(self, recording, output_folder):
 
@@ -81,8 +82,9 @@ HerdingspikesSorter._default_params = {
     'left_cutout_time': 1.0,
     'right_cutout_time': 2.2,
     'detection_threshold': 20,
+    'probe_masked_channels': [],
 
-    'probe_params': {
+    'extra_probe_params': {
         'inner_radius': 50,
         'neighbor_radius': 50,
         'noise_duration': None,
