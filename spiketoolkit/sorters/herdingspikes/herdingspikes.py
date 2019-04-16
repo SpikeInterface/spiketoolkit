@@ -87,20 +87,14 @@ HerdingspikesSorter._default_params = {
     'extra_probe_params': {
         'inner_radius': 50,
         'neighbor_radius': 50,
-        'noise_duration': None,
-        'spike_peak_duration': None,
         'event_length': 0.5,
         'peak_jitter': 0.2
     },
 
     'extra_detection_params': {
         'to_localize': True,
-        'cutout_start': None,
-        'cutout_end': None,
         'num_com_centers': 1,
         'maa': 0,
-        'maxsl': None,
-        'minsl': None,
         'ahpthr': 0,
         'out_file_name': "HS2_detected",
         'decay_filtering': False,
