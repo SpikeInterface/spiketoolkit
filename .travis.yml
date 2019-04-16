@@ -24,9 +24,10 @@ install:
   - pip install h5py # for klusta
   - pip install click klusta klustakwik2 
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
+  - pip install https://github.com/mhhennig/HS2/archive/master.zip
   - pip install spyking-circus
   - pip install pyqt5
-  - pip install ml_ms4alg
+  - pip install https://github.com/alejoe91/ml_ms4alg/archive/master.zip
 script: 
   # py.test -s
   python -m pytest

@@ -22,12 +22,12 @@ class Mountainsort4Sorter(BaseSorter):
     """
     Mountainsort
     """
-    
+
     sorter_name = 'mountainsort4'
     installed = HAVE_MS4
-    
+
     SortingExtractor_Class = None # there is not extractor !!!!!!!!!!!!!!!!!!!!!!!!
-    
+
     _default_params = {
         'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
@@ -40,25 +40,25 @@ class Mountainsort4Sorter(BaseSorter):
         'detect_interval': 10,  # Minimum number of timepoints between events detected on the same channel
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
     }
-    
+
     installation_mesg = """
        >>> pip install ml_ms4alg
-    
+
     More information on mountainsort at:
       * https://github.com/flatironinstitute/mountainsort
     """
-    
+
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
     def _setup_recording(self, recording, output_folder):
-        self._sorting_result = len(self.recording_list) * [None]
+        pass
 
     def _run(self, recording, output_folder):
         # Sort
         # alias to params
         p = self.params
-        
+
         ind = self.recording_list.index(recording)
 
         # Bandpass filter
@@ -71,9 +71,9 @@ class Mountainsort4Sorter(BaseSorter):
             recording = st.preprocessing.whiten(recording=recording)
 
         # Check location
-        if 'location' not in recording.getChannelPropertyNames():
-            for i, chan in enumerate(recording.getChannelIds()):
-                recording.setChannelProperty(chan, 'location', [0, i])
+        if 'location' not in recording.get_channel_property_names():
+            for i, chan in enumerate(recording.get_channel_ids()):
+                recording.set_channel_property(chan, 'location', [0, i])
 
         sorting = ml_ms4alg.mountainsort4(
             recording=recording,
@@ -92,10 +92,9 @@ class Mountainsort4Sorter(BaseSorter):
                 noise_overlap_threshold=p['noise_overlap_threshold']
             )
 
-        self._sorting_result[ind] = sorting
+        se.MdaSortingExtractor.write_sorting(sorting, str(output_folder / 'firings.mda'))
 
-
-    def _get_one_result(self, recording, output_folder):
-        ind = self.recording_list.index(recording)
-        sorting = self._sorting_result[ind]
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.MdaSortingExtractor(str(output_folder / 'firings.mda'))
         return sorting

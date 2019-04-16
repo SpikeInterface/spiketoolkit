@@ -32,7 +32,6 @@ class KlustaSorter(BaseSorter):
     
     sorter_name = 'klusta'
     installed = HAVE_KLUSTA
-    SortingExtractor_Class = se.KlustaSortingExtractor
     
     _default_params = {
         'file_name': None,
@@ -50,7 +49,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install click Cython
+       >>> pip install Cython h5py tqdm
        >>> pip install click klusta klustakwik2
     
     More information on klusta at:
@@ -71,15 +70,11 @@ class KlustaSorter(BaseSorter):
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
+            se.save_probe_file(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
         # save binary file
-        if p['file_name'] is None:
-            self.file_name = Path('recording')
-        elif p['file_name'].suffix == '.dat':
-            self.file_name = p['file_name'].stem
-        p['file_name'] = self.file_name
-        se.writeBinaryDatFormat(recording, output_folder / self.file_name)
+        file_name = 'recording'
+        se.write_binary_dat_format(recording, output_folder / file_name, dtype='int16')
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -92,11 +87,10 @@ class KlustaSorter(BaseSorter):
         with (source_dir / 'config_default.prm').open('r') as f:
             klusta_config = f.readlines()
         
-        
         # Note: should use format with dict approach here
         klusta_config = ''.join(klusta_config).format(
-            output_folder / self.file_name, p['probe_file'], float(recording.getSamplingFrequency()),
-            recording.getNumChannels(), "'float32'",
+            output_folder / file_name, p['probe_file'], float(recording.get_sampling_frequency()),
+            recording.get_num_channels(), "'int16'",
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']
@@ -113,11 +107,11 @@ class KlustaSorter(BaseSorter):
             print(cmd)
         
         _call_command(cmd)
-        if not (output_folder / (self.file_name.name + '.kwik')).is_file():
+        if not (output_folder /  'recording.kwik').is_file():
             raise Exception('Klusta did not run successfully')
 
-    def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
-        sorting = se.KlustaSortingExtractor(output_folder / (self.file_name.name + '.kwik'))
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.KlustaSortingExtractor(output_folder / 'recording.kwik')
         return sorting
 

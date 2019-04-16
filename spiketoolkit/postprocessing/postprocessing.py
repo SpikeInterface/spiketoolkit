@@ -5,7 +5,7 @@ from sklearn.decomposition import PCA
 from pathlib import Path
 
 
-def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, start_frame=None, end_frame=None,
+def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None, start_frame=None, end_frame=None,
                      ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf, filter=False,
                      bandpass=[300, 6000], save_as_features=True, verbose=False, compute_property_from_recording=False):
     '''
@@ -38,7 +38,7 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
     elif unit_ids is None:
-        unit_ids = sorting.getUnitIds()
+        unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
 
@@ -47,11 +47,11 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
 
     waveform_list = []
     if grouping_property is not None:
-        if grouping_property not in recording.getChannelPropertyNames():
+        if grouping_property not in recording.get_channel_property_names():
             raise ValueError("'grouping_property' should be a property of recording extractors")
         if compute_property_from_recording:
             compute_sorting_group = True
-        elif grouping_property not in sorting.getUnitPropertyNames():
+        elif grouping_property not in sorting.get_unit_property_names():
             print(grouping_property, ' not in sorting extractor. Computing it from the recording extractor')
             compute_sorting_group = True
         else:
@@ -59,8 +59,8 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
         print("Waveforms by property: ", grouping_property)
 
         if not compute_sorting_group:
-            rec_list, rec_props = se.getSubExtractorsByProperty(recording, grouping_property, return_property_list=True)
-            sort_list, sort_props = se.getSubExtractorsByProperty(sorting, grouping_property, return_property_list=True)
+            rec_list, rec_props = se.get_sub_extractors_by_property(recording, grouping_property, return_property_list=True)
+            sort_list, sort_props = se.get_sub_extractors_by_property(sorting, grouping_property, return_property_list=True)
             if len(rec_props) != len(sort_props):
                 print('Different' + grouping_property + ' numbers: using largest number of ' + grouping_property)
                 if len(rec_props) > len(sort_props):
@@ -79,14 +79,14 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
                 for i, unit_id in enumerate(unit_ids):
                     # ts_ = time.time()
                     if sort is not None and rec is not None:
-                        if unit_id in sort.getUnitIds():
+                        if unit_id in sort.get_unit_ids():
                             if not filter:
                                 rec = rec
                             else:
                                 rec = st.preprocessing.bandpass_filter(recording=rec, freq_min=bandpass[0],
                                                                        freq_max=bandpass[1])
 
-                            fs = rec.getSamplingFrequency()
+                            fs = rec.get_sampling_frequency()
                             n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
                             if verbose:
@@ -101,30 +101,30 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
                             waveforms = waveforms.astype(dtype)
 
                             if save_as_features:
-                                if len(indices) < len(sort.getUnitSpikeTrain(unit_id)):
-                                    if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
-                                        features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
+                                if len(indices) < len(sort.get_unit_spike_train(unit_id)):
+                                    if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
+                                        features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                                     else:
-                                        features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'waveforms'))
+                                        features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
                                     for i, ind in enumerate(indices):
                                         features[ind] = waveforms[i]
                                 else:
                                     features = waveforms
-                                sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
+                                sorting.set_unit_spike_features(unit_id, 'waveforms', features)
                             waveform_list.append(waveforms)
         else:
             for i, unit_id in enumerate(unit_ids):
                 # ts_ = time.time()
-                if unit_id in sorting.getUnitIds():
-                    rec_groups = np.array([recording.getChannelProperty(ch, grouping_property)
-                                           for ch in recording.getChannelIds()])
+                if unit_id in sorting.get_unit_ids():
+                    rec_groups = np.array([recording.get_channel_property(ch, grouping_property)
+                                           for ch in recording.get_channel_ids()])
                     if not filter:
                         rec = recording
                     else:
                         rec = st.preprocessing.bandpass_filter(recording=recording, freq_min=bandpass[0],
                                                                freq_max=bandpass[1])
 
-                    fs = rec.getSamplingFrequency()
+                    fs = rec.get_sampling_frequency()
                     n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
                     if verbose:
@@ -139,33 +139,33 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
                     waveforms = waveforms.astype(dtype)
                     mean_waveforms = np.squeeze(np.mean(waveforms, axis=0))
                     max_amp_elec = np.unravel_index(mean_waveforms.argmin(), mean_waveforms.shape)[0]
-                    group = recording.getChannelProperty(recording.getChannelIds()[max_amp_elec], grouping_property)
+                    group = recording.get_channel_property(recording.get_channel_ids()[max_amp_elec], grouping_property)
                     elec_group = np.where(rec_groups == group)
                     waveforms = np.squeeze(waveforms[:, elec_group, :])
                     if save_as_features:
-                        if len(indices) < len(sorting.getUnitSpikeTrain(unit_id)):
-                            if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
-                                features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
+                        if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
+                            if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
+                                features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                             else:
-                                features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'waveforms'))
+                                features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
                             for i, ind in enumerate(indices):
                                 features[ind] = waveforms[i]
                         else:
                             features = waveforms
-                        sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
+                        sorting.set_unit_spike_features(unit_id, 'waveforms', features)
                     waveform_list.append(waveforms)
             return waveform_list
     else:
         for i, unit_id in enumerate(unit_ids):
             # ts_ = time.time()
-            if unit_id not in sorting.getUnitIds():
+            if unit_id not in sorting.get_unit_ids():
                 raise Exception("unit_ids is not in valid")
 
             if filter:
                 recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=bandpass[0],
-                                                             freq_max=bandpass[1]).getTraces(start_frame, end_frame)
+                                                             freq_max=bandpass[1]).get_traces(start_frame=start_frame, end_frame=end_frame)
 
-            fs = recording.getSamplingFrequency()
+            fs = recording.get_sampling_frequency()
             n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
             if verbose:
@@ -181,16 +181,16 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
             waveforms = waveforms.astype(dtype)
             # print('swap wf: ', time.time() - ts_)
             if save_as_features:
-                if len(indices) < len(sorting.getUnitSpikeTrain(unit_id)):
-                    if 'waveforms' not in sorting.getUnitSpikeFeatureNames(unit_id):
-                        features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
+                if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
+                    if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
+                        features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                     else:
-                        features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'waveforms'))
+                        features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
                     for i, ind in enumerate(indices):
                         features[ind] = waveforms[i]
                 else:
                     features = waveforms
-                sorting.setUnitSpikeFeatures(unit_id, 'waveforms', features)
+                sorting.set_unit_spike_features(unit_id, 'waveforms', features)
             # print('append feats: ', time.time() - ts_)
             waveform_list.append(waveforms)
             # print('append wf: ', time.time() - ts_)
@@ -201,7 +201,7 @@ def getUnitWaveforms(recording, sorting, unit_ids=None, grouping_property=None, 
             return waveform_list
 
 
-def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
+def get_unit_template(recording, sorting, unit_ids=None, grouping_property=None,
                     save_as_property=True, start_frame=None, end_frame=None,
                     ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False,
                     bandpass=[300, 6000], compute_property_from_recording=False,
@@ -231,11 +231,11 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
     elif unit_ids is None:
-        unit_ids = sorting.getUnitIds()
+        unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
 
-    if 'waveforms' in sorting.getUnitSpikeFeatureNames():
+    if 'waveforms' in sorting.get_unit_spike_feature_names():
         if verbose:
             print("Using 'waveforms' features")
         waveforms_features = True
@@ -246,10 +246,10 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
 
     template_list = []
     for i, unit_id in enumerate(unit_ids):
-        if unit_id not in sorting.getUnitIds():
+        if unit_id not in sorting.get_unit_ids():
             raise Exception("unit_ids is not in valid")
         if waveforms_features:
-            waveforms = sorting.getUnitSpikeFeatures(unit_id, 'waveforms')
+            waveforms = sorting.get_unit_spike_features(unit_id, 'waveforms')
             idx_not_none = np.array([i for i in range(len(waveforms)) if waveforms[i] is not None])
             if len(idx_not_none) != len(waveforms):
                 if verbose:
@@ -257,7 +257,7 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
                 waveforms = np.array(waveforms[idx_not_none])
             template = np.mean(waveforms, axis=0)
         else:
-            template = np.mean(getUnitWaveforms(recording, sorting, unit_id, start_frame=start_frame,
+            template = np.mean(get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
                                                 end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                                 ms_before=ms_before, ms_after=ms_after, filter=filter,
                                                 bandpass=bandpass, grouping_property=grouping_property,
@@ -266,7 +266,7 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
                                , axis=0)
 
         if save_as_property:
-            sorting.setUnitProperty(unit_id, 'template', template)
+            sorting.set_unit_property(unit_id, 'template', template)
 
         template_list.append(template)
     if len(template_list) == 1:
@@ -275,7 +275,7 @@ def getUnitTemplate(recording, sorting, unit_ids=None, grouping_property=None,
         return template_list
 
 
-def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
+def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=None,
                       save_as_property=True, start_frame=None, end_frame=None,
                       ms_before=3., ms_after=3., max_num_waveforms=np.inf, filter=False, bandpass=[300, 6000],
                       compute_property_from_recording=False, verbose=False):
@@ -304,11 +304,11 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
     elif unit_ids is None:
-        unit_ids = sorting.getUnitIds()
+        unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
 
-    if 'template' in sorting.getUnitPropertyNames():
+    if 'template' in sorting.get_unit_property_names():
         if verbose:
             print("Using 'template' property")
         template_property = True
@@ -319,12 +319,12 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
 
     max_list = []
     for i, unit_id in enumerate(unit_ids):
-        if unit_id not in sorting.getUnitIds():
+        if unit_id not in sorting.get_unit_ids():
             raise Exception("unit_ids is not in valid")
         if template_property:
-            template = sorting.getUnitProperty(unit_id, 'template')
+            template = sorting.get_unit_property(unit_id, 'template')
         else:
-            template = getUnitTemplate(recording, sorting, unit_id, start_frame=start_frame,
+            template = get_unit_template(recording, sorting, unit_id, start_frame=start_frame,
                                        end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                        ms_before=ms_before, ms_after=ms_after, filter=filter,
                                        bandpass=bandpass, grouping_property=grouping_property,
@@ -333,7 +333,7 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
         max_channel = np.unravel_index(np.argmax(np.abs(template)),
                                        template.shape)[0]
         if save_as_property:
-            sorting.setUnitProperty(unit_id, 'max_channel', max_channel)
+            sorting.set_unit_property(unit_id, 'max_channel', max_channel)
 
         max_list.append(max_channel)
 
@@ -343,7 +343,7 @@ def getUnitMaxChannel(recording, sorting, unit_ids=None, grouping_property=None,
         return max_list
 
 
-def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compute_property_from_recording=False,
+def compute_pca_scores(recording, sorting, n_comp=3, grouping_property=None, compute_property_from_recording=False,
                      by_electrode=False, max_num_waveforms=np.inf, save_as_features=True, verbose=False):
     '''
 
@@ -365,12 +365,12 @@ def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compu
     all_waveforms = np.array([])
     nspikes = []
     idx_not_none = None
-    if 'waveforms' in sorting.getUnitSpikeFeatureNames():
+    if 'waveforms' in sorting.get_unit_spike_feature_names():
         if verbose:
             print("Using 'waveforms' features")
         waveforms = []
-        for unit_id in sorting.getUnitIds():
-            wf = sorting.getUnitSpikeFeatures(unit_id, 'waveforms')
+        for unit_id in sorting.get_unit_ids():
+            wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
             idx_not_none = np.array([i for i in range(len(wf)) if wf[i] is not None])
             if len(idx_not_none) != len(wf):
                 if verbose:
@@ -380,17 +380,17 @@ def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compu
     else:
         if verbose:
             print("Computing waveforms")
-        waveforms = getUnitWaveforms(recording, sorting)
+        waveforms = get_unit_waveforms(recording, sorting)
 
     for i_w, wf in enumerate(waveforms):
         if wf is None:
-            wf = getUnitWaveforms(recording, sorting, [sorting.getUnitIds()[i_w]],
+            wf = get_unit_waveforms(recording, sorting, [sorting.get_unit_ids()[i_w]],
                                   max_num_waveforms=max_num_waveforms,
                                   compute_property_from_recording=compute_property_from_recording,
                                   verbose=verbose)
         if by_electrode:
             wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
-            nspikes.append(len(wf) * recording.getNumChannels())
+            nspikes.append(len(wf) * recording.get_num_channels())
         else:
             wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
             nspikes.append(len(wf))
@@ -410,29 +410,29 @@ def computePCAScores(recording, sorting, n_comp=3, grouping_property=None, compu
         pcascores = scores[init: init + nsp, :]
         init = nsp + 1
         if by_electrode:
-            pca_scores.append(pcascores.reshape(nsp // recording.getNumChannels(),
-                                                recording.getNumChannels(), n_comp))
+            pca_scores.append(pcascores.reshape(nsp // recording.get_num_channels(),
+                                                recording.get_num_channels(), n_comp))
         else:
             pca_scores.append(pcascores)
 
     if save_as_features:
-        for i, unit_id in enumerate(sorting.getUnitIds()):
-            if len(pca_scores[i]) < len(sorting.getUnitSpikeTrain(unit_id)):
+        for i, unit_id in enumerate(sorting.get_unit_ids()):
+            if len(pca_scores[i]) < len(sorting.get_unit_spike_train(unit_id)):
                 assert idx_not_none is not None
-                if 'pca_scores' not in sorting.getUnitSpikeFeatureNames(unit_id):
-                    features = np.array([None] * len(sorting.getUnitSpikeTrain(unit_id)))
+                if 'pca_scores' not in sorting.get_unit_spike_feature_names(unit_id):
+                    features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                 else:
-                    features = np.array(sorting.getUnitSpikeFeatures(unit_id, 'pca_scores'))
+                    features = np.array(sorting.get_unit_spike_features(unit_id, 'pca_scores'))
                 for i, ind in enumerate(idx_not_none):
                     features[ind] = pca_scores[i]
             else:
                 features = pca_scores[i]
-            sorting.setUnitSpikeFeatures(unit_id, 'pca_scores', features)
+            sorting.set_unit_spike_features(unit_id, 'pca_scores', features)
 
     return pca_scores
 
 
-def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
+def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=False, electrode_dimensions=None,
                 max_num_waveforms=np.inf):
     import spiketoolkit as st
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
@@ -445,30 +445,30 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
         recording = st.preprocessing.bandpass_filter(recording, freq_min=300, freq_max=6000)
 
     # save dat file
-    se.writeBinaryDatFormat(recording, output_folder / 'recording.dat', dtype='int16')
+    se.write_binary_dat_format(recording, output_folder / 'recording.dat', dtype='int16')
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
         f.write("dat_path =" + "'" + str(output_folder / 'recording.dat') + "'" + '\n')
-        f.write('n_channels_dat = ' + str(recording.getNumChannels()) + '\n')
+        f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
         f.write("dtype = 'int16'\n")
         f.write('offset = 0\n')
-        f.write('sample_rate = ' + str(recording.getSamplingFrequency()) + '\n')
+        f.write('sample_rate = ' + str(recording.get_sampling_frequency()) + '\n')
         f.write('hp_filtered = False')
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
-    if nPC > recording.getNumChannels():
-        nPC = recording.getNumChannels()
+    if nPC > recording.get_num_channels():
+        nPC = recording.get_num_channels()
         print("Changed number of PC to number of channels: ", nPC)
-    pc_scores = computePCAScores(recording, sorting, n_comp=nPC, by_electrode=True, max_num_waveforms=max_num_waveforms)
+    pc_scores = compute_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True, max_num_waveforms=max_num_waveforms)
 
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
     spike_clusters = np.array([])
     pc_features = np.array([])
-    for i_u, id in enumerate(sorting.getUnitIds()):
-        st = sorting.getUnitSpikeTrain(id)
-        cl = [i_u] * len(sorting.getUnitSpikeTrain(id))
+    for i_u, id in enumerate(sorting.get_unit_ids()):
+        st = sorting.get_unit_spike_train(id)
+        cl = [i_u] * len(sorting.get_unit_spike_train(id))
         pc = pc_scores[i_u]
         spike_times = np.concatenate((spike_times, np.array(st)))
         spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
@@ -482,41 +482,43 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     pc_features = pc_features[sorting_idxs, :nPCchan, :]
 
     # amplitudes.npy
-    amplitudes = np.ones((len(spike_times), 1))
+    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
 
     # channel_map.npy
-    channel_map = np.array(recording.getChannelIds())
+    channel_map = np.array(recording.get_channel_ids())
 
     # channel_positions.npy
-    if 'location' in recording.getChannelPropertyNames():
-        positions = np.array([recording.getChannelProperty(chan, 'location')
-                              for chan in range(recording.getNumChannels())])
+    if 'location' in recording.get_channel_property_names():
+        positions = np.array([recording.get_channel_property(chan, 'location')
+                              for chan in range(recording.get_num_channels())])
         if electrode_dimensions is not None:
             positions = positions[:, electrode_dimensions]
     else:
         print("'location' property is not available and it will be linear.")
-        positions = np.zeros((recording.getNumChannels(), 2))
-        positions[:, 1] = np.arange(recording.getNumChannels())
+        positions = np.zeros((recording.get_num_channels(), 2))
+        positions[:, 1] = np.arange(recording.get_num_channels())
 
     # pc_feature_ind.npy - [nTemplates, nPCFeatures] uint32
-    pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.getUnitIds()), 1))
+    pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.get_unit_ids()), 1))
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    templates = getUnitTemplate(recording, sorting)
-    similar_templates = _computeTemplatesSimilarity(templates)
+    templates = get_unit_template(recording, sorting)
+    similar_templates = _compute_templates_similarity(templates)
 
     # templates.npy
-    templates = np.array(templates).swapaxes(1, 2)
+    templates = np.array(templates, dtype='float32').swapaxes(1, 2)
 
     # template_ind.npy
-    templates_ind = np.tile(np.arange(recording.getNumChannels()), (len(sorting.getUnitIds()), 1))
+    templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
 
     # whitening_mat.npy - [nChannels, nChannels] double
     # whitening_mat_inv.npy - [nChannels, nChannels] double
-    whitening_mat, whitening_mat_inv = _computeWhiteningAndInverse(recording)
+    # whitening_mat, whitening_mat_inv = _compute_whitening_and_inverse(recording)
+    whitening_mat = np.eye(recording.get_num_channels())
+    whitening_mat_inv = whitening_mat
 
     np.save(str(output_folder / 'amplitudes.npy'), amplitudes)
     np.save(str(output_folder / 'spike_times.npy'), spike_times.astype(int))
@@ -524,8 +526,8 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     np.save(str(output_folder / 'spike_templates.npy'), spike_templates.astype(int))
     np.save(str(output_folder / 'pc_features.npy'), pc_features)
     np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind.astype(int))
-    np.save(str(output_folder / 'templates.npy'), templates)
-    np.save(str(output_folder / 'templates_ind.npy'), templates_ind.astype(int))
+    np.save(str(output_folder / 'templates.npy'), templates, )
+    # np.save(str(output_folder / 'templates_ind.npy'), templates_ind.astype(int))
     np.save(str(output_folder / 'similar_templates.npy'), similar_templates)
     np.save(str(output_folder / 'channel_map.npy'), channel_map.astype(int))
     np.save(str(output_folder / 'channel_positions.npy'), positions)
@@ -535,22 +537,22 @@ def exportToPhy(recording, sorting, output_folder, nPCchan=3, nPC=5, filter=Fals
     print('Run:\n\nphy template-gui ', str(output_folder / 'params.py'))
 
 
-def _computeTemplateSNR(template, channel_noise_levels):
+def _compute_template_SNR(template, channel_noise_levels):
     channel_snrs = []
     for ch in range(template.shape[0]):
         channel_snrs.append((np.max(template[ch, :]) - np.min(template[ch, :])) / channel_noise_levels[ch])
     return np.max(channel_snrs)
 
-def _computeChannelNoiseLevels(recording):
-    M = recording.getNumChannels()
-    X = recording.getTraces(start_frame=0, end_frame=np.minimum(1000, recording.getNumFrames()))
+def _compute_channel_noise_levels(recording):
+    M = recording.get_num_channels()
+    X = recording.get_traces(start_frame=0, end_frame=np.minimum(1000, recording.get_num_frames()))
     ret = []
     for ch in range(M):
         noise_level = np.std(X[ch, :])
         ret.append(noise_level)
     return ret
 
-def _computeTemplatesSimilarity(templates):
+def _compute_templates_similarity(templates):
     similarity = np.zeros((len(templates), len(templates)))
     for i, t_i in enumerate(templates):
         for j, t_j in enumerate(templates):
@@ -560,7 +562,7 @@ def _computeTemplatesSimilarity(templates):
             similarity[i, j] = np.abs(a[0, 1])
     return similarity
 
-def _computeWhiteningAndInverse(recording):
+def _compute_whitening_and_inverse(recording):
     white_recording = st.preprocessing.whiten(recording)
     wh_mat = white_recording._whitening_matrix
     wh_mat_inv = np.linalg.inv(wh_mat)
@@ -568,15 +570,14 @@ def _computeWhiteningAndInverse(recording):
 
 
 def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, channels=None):
-    st = sorting.getUnitSpikeTrain(unit_id=unit)
+    st = sorting.get_unit_spike_train(unit_id=unit)
     num_events = len(st)
     if num_events > max_num:
         event_indices = np.random.choice(range(num_events), size=max_num, replace=False)
     else:
         event_indices = range(num_events)
 
-    spikes = recording.getSnippets(reference_frames=st[event_indices].astype(int),
+    spikes = recording.get_snippets(reference_frames=st[event_indices].astype(int),
                                    snippet_len=snippet_len, channel_ids=channels)
     spikes = np.dstack(tuple(spikes))
     return spikes, event_indices
-

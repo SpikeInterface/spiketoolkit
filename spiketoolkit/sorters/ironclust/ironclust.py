@@ -32,13 +32,11 @@ else:
 class IronclustSorter(BaseSorter):
     """
     """
-    
+
     sorter_name = 'ironclust'
     installed = HAVE_IRONCLUST
     ironclust_path = os.getenv('IRONCLUST_PATH')
-    # SortingExtractor_Class = se.NumpySortingExtractor
-    SortingExtractor_Class = None # custum get_result
-    
+
     _default_params = {
         'prm_template_name': None,  # Name of the template file
         'detect_sign': -1,  # Polarity of the spikes, -1, 0, or 1
@@ -59,32 +57,32 @@ class IronclustSorter(BaseSorter):
         >>> git clone https://github.com/jamesjun/ironclust\n
     and provide the installation path with the 'ironclust_path' argument or
     by setting the IRONCLUST_PATH environment variable.\n\n
-    
+
     More information on KiloSort at:
         https://github.com/jamesjun/ironclust
     """
-    
+
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
     @staticmethod
     def set_ironclust_path(ironclust_path):
         IronclustSorter.ironclust_path = ironclust_path
-    
+
     def _setup_recording(self, recording, output_folder):
         from mountainlab_pytools import mdaio
         p = self.params
 
         if not check_if_installed(IronclustSorter.ironclust_path):
             raise ImportError(IronclustSorter.installation_mesg)
-        
+
         dataset_dir = (output_folder / 'ironclust_dataset').absolute()
         if not dataset_dir.is_dir():
             dataset_dir.mkdir()
 
         # Generate three files in the dataset directory: raw.mda, geom.csv, params.json
-        se.MdaRecordingExtractor.writeRecording(recording=recording, save_path=dataset_dir)
-        samplerate = recording.getSamplingFrequency()
+        se.MdaRecordingExtractor.write_recording(recording=recording, save_path=dataset_dir)
+        samplerate = recording.get_sampling_frequency()
 
         if self.debug:
             print('Reading timeseries header...')
@@ -95,7 +93,7 @@ class IronclustSorter(BaseSorter):
         if self.debug:
             print('Num. channels = {}, Num. timepoints = {}, duration = {} minutes'.format(num_channels, num_timepoints,
                                                                                        duration_minutes))
-        
+
         if self.debug:
             print('Creating .params file...')
         txt = ''
@@ -113,7 +111,7 @@ class IronclustSorter(BaseSorter):
     def _run(self, recording, output_folder):
         if self.debug:
             print('Running IronClust...')
-            
+
         dataset_dir = (output_folder / 'ironclust_dataset').absolute()
 
         cmd_path = "addpath('{}', '{}/matlab', '{}/mdaio');".format(IronclustSorter.ironclust_path, IronclustSorter.ironclust_path, IronclustSorter.ironclust_path)
@@ -124,7 +122,7 @@ class IronclustSorter(BaseSorter):
         cmd = 'matlab -nosplash -nodisplay -r "{} {} quit;"'.format(cmd_path, cmd_call)
         if self.debug:
             print(cmd)
-        
+
         if "win" in sys.platform:
             cmd_list = ['matlab', '-nosplash', '-nodisplay', '-wait',
                         '-r', '{} {} quit;'.format(cmd_path, cmd_call)]
@@ -134,21 +132,22 @@ class IronclustSorter(BaseSorter):
 
         _call_command_split(cmd_list)
 
-    def _get_one_result(self, recording, output_folder):
+    @staticmethod
+    def get_result_from_folder(output_folder):
+
         # overwrite the SorterBase.get_result
         from mountainlab_pytools import mdaio
 
-        result_fname = output_folder / 'firings.mda'
-        
+        result_fname = Path(output_folder) / 'firings.mda'
+
         assert result_fname.exists(), 'Result file does not exist: {}'.format(str(result_fname))
 
         firings = mdaio.readmda(str(result_fname))
         sorting = se.NumpySortingExtractor()
-        sorting.setTimesLabels(firings[1, :], firings[2, :])
+        sorting.set_times_labels(firings[1, :], firings[2, :])
         return sorting
 
 
 def _write_text_file(fname, str):
     with fname.open('w') as f:
         f.write(str)
-

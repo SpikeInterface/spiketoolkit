@@ -21,11 +21,9 @@ class SpykingcircusSorter(BaseSorter):
     
     sorter_name = 'spykingcircus'
     installed = HAVE_SC
-    SortingExtractor_Class = se.SpykingCircusSortingExtractor
     
     _default_params = {
         'probe_file': None,
-        'file_name': None,
         'detect_sign': -1,  # -1 - 1 - 0
         'adjacency_radius': 100,  # Channel neighborhood adjacency radius corresponding to geom file
         'detect_threshold': 6,  # Threshold for detection
@@ -58,16 +56,12 @@ class SpykingcircusSorter(BaseSorter):
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='spyking_circus',
+            se.save_probe_file(recording, p['probe_file'], format='spyking_circus',
                                 radius=p['adjacency_radius'], dimensions=p['electrode_dimensions'])
 
         # save binary file
-        if p['file_name'] is None:
-            self.file_name = Path('recording')
-        elif p['file_name'].suffix == '.dat':
-            self.file_name = p['file_name'].stem
-        p['file_name'] = self.file_name
-        np.save(str(output_folder / self.file_name), recording.getTraces().astype('float32'))
+        file_name = 'recording'
+        np.save(str(output_folder / file_name), recording.get_traces().astype('float32'))
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -76,7 +70,7 @@ class SpykingcircusSorter(BaseSorter):
         else:
             detect_sign = 'both'
         
-        sample_rate = float(recording.getSamplingFrequency())
+        sample_rate = float(recording.get_sampling_frequency())
         
         # set up spykingcircus config file
         with (source_dir / 'config_default.params').open('r') as f:
@@ -88,18 +82,17 @@ class SpykingcircusSorter(BaseSorter):
         circus_config = ''.join(circus_config).format(sample_rate, p['probe_file'], p['template_width_ms'],
                     p['detect_threshold'], detect_sign, p['filter'], p['whitening_max_elts'], 
                     p['clustering_max_elts'], auto)
-        with (output_folder / (self.file_name.name + '.params')).open('w') as f:
+        with (output_folder / (file_name + '.params')).open('w') as f:
             f.writelines(circus_config)
 
         if p['n_cores'] is None:
             p['n_cores'] = np.maximum(1, int(os.cpu_count() / 2))
 
-
     def _run(self,  recording, output_folder):
         n_cores = self.params['n_cores']
-        cmd = 'spyking-circus {} -c {} '.format(output_folder / (self.file_name.name + '.npy'), n_cores)
-        cmd_merge = 'spyking-circus {} -m merging -c {} '.format(output_folder / (self.file_name.name + '.npy'), n_cores)
-        # cmd_convert = 'spyking-circus {} -m converting'.format(join(output_folder, file_name+'.npy'))
+        cmd = 'spyking-circus {} -c {} '.format(output_folder / 'recording.npy', n_cores)
+        cmd_merge = 'spyking-circus {} -m merging -c {} '.format(output_folder / 'recording.npy', n_cores)
+        # cmd_convert = 'spyking-circus {} -m converting'.format(join(output_folder, 'recording.npy'))
         if self.debug:
             print(cmd)
         retcode = _run_command_and_print_output(cmd)
@@ -112,9 +105,7 @@ class SpykingcircusSorter(BaseSorter):
             if retcode != 0:
                 raise Exception('Spyking circus merging returned a non-zero exit code')
 
-    def _get_one_result(self, recording, output_folder):
-        # overwrite the SorterBase.get_result
-        sorting = se.SpykingCircusSortingExtractor(output_folder / self.file_name)
+    @staticmethod
+    def get_result_from_folder(output_folder):
+        sorting = se.SpykingCircusSortingExtractor(output_folder / 'recording')
         return sorting
-
-

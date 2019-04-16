@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 
@@ -36,9 +33,9 @@ class HerdingspikesSorter(BaseSorter):
 
     def _setup_recording(self, recording, output_folder):
         # reset the output folder
-        if output_folder.is_dir():
-            shutil.rmtree(str(output_folder))
-        os.makedirs(str(output_folder))
+        # if output_folder.is_dir():
+        #     pass
+            # shutil.rmtree(str(output_folder))
 
         # this should have its name changed
         self.Probe = hs.probe.RecordingExtractor(recording,
@@ -46,7 +43,7 @@ class HerdingspikesSorter(BaseSorter):
 
     def _run(self, recording, output_folder):
 
-        H = hs.HSDetection(self.Probe, file_directory_name=output_folder,
+        H = hs.HSDetection(self.Probe, file_directory_name=str(output_folder),
                            left_cutout_time=self.params['left_cutout_time'],
                            right_cutout_time=self.params['right_cutout_time'],
                            threshold=self.params['detection_threshold'],
@@ -62,7 +59,14 @@ class HerdingspikesSorter(BaseSorter):
                              bin_seeding=self.params['clustering_bin_seeding'])
 
         sorted_file = str(output_folder / 'HS2_sorted.hdf5')
-        C.SaveHDF5(sorted_file)
+        if(not H.spikes.empty):
+            C = hs.HSClustering(H)
+            C.ShapePCA(**self.params['pca_params'])
+            C.CombinedClustering(**self.params['clustering_params'])
+            C.SaveHDF5(sorted_file)
+        else:
+            C = hs.HSClustering(H)
+            C.SaveHDF5(sorted_file)
 
     @staticmethod
     def get_result_from_folder(output_folder):
