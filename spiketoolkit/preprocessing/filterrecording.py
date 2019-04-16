@@ -22,7 +22,7 @@ class FilterRecording(se.RecordingExtractor):
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 
-    def get_traces(self, start_frame=None, end_frame=None, channel_ids=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
         if start_frame is None:
             start_frame = 0
         if end_frame is None:
