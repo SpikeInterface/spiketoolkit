@@ -163,7 +163,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
             if filter:
                 recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=bandpass[0],
-                                                             freq_max=bandpass[1]).get_traces(start_frame, end_frame)
+                                                             freq_max=bandpass[1]).get_traces(start_frame=start_frame, end_frame=end_frame)
 
             fs = recording.get_sampling_frequency()
             n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
