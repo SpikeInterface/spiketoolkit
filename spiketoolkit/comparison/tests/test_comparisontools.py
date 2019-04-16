@@ -12,8 +12,8 @@ from spiketoolkit.comparison import do_matching, do_counting, do_confusion_matri
 def make_sorting(times1, labels1, times2, labels2):
     sorting1 = se.NumpySortingExtractor()
     sorting2 = se.NumpySortingExtractor()
-    sorting1.setTimesLabels(np.array(times1), np.array(labels1))
-    sorting2.setTimesLabels(np.array(times2), np.array(labels2))
+    sorting1.set_times_labels(np.array(times1), np.array(labels1))
+    sorting2.set_times_labels(np.array(times2), np.array(labels2))
     return sorting1, sorting2
     
     
