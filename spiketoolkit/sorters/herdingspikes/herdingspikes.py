@@ -63,12 +63,17 @@ class HerdingspikesSorter(BaseSorter):
         if(not H.spikes.empty):
             C = hs.HSClustering(H)
             C.ShapePCA(**self.params['extra_pca_params'])
-            C.CombinedClustering(**self.params['clustering_params'])
+            C.CombinedClustering(alpha=self.params['clustering_alpha'], 
+                                 clustering_algorithm=MeanShift,
+                                 cluster_subset=self.params['clustering_subset'],
+                                 bandwidth=self.params['clustering_bandwidth'],
+                                 bin_seeding=self.params['clustering_bin_seeding'],
+                                 n_jobs=self.params['clustering_n_jobs']
+                                 )
             C.SaveHDF5(sorted_file)
         else:
             C = hs.HSClustering(H)
             C.SaveHDF5(sorted_file)
-
     @staticmethod
     def get_result_from_folder(output_folder):
         return se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
@@ -79,6 +84,7 @@ HerdingspikesSorter._default_params = {
     'clustering_alpha': 6.0,
     'clustering_n_jobs': -1,
     'clustering_bin_seeding': False,
+    'clustering_subset': None,
     'left_cutout_time': 1.0,
     'right_cutout_time': 2.2,
     'detection_threshold': 20,
