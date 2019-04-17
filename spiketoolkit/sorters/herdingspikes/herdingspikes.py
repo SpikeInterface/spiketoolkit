@@ -1,6 +1,3 @@
-import os
-import shutil
-
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 
@@ -40,18 +37,27 @@ class HerdingspikesSorter(BaseSorter):
         #     pass
             # shutil.rmtree(str(output_folder))
 
-
         # this should have its name changed
-        self.Probe = hs.probe.RecordingExtractor(recording,
-                                                 **self.params['probe_params'])
+        self.Probe = hs.probe.RecordingExtractor(
+            recording, masked_channels=self.params['probe_masked_channels'],
+            **self.params['extra_probe_params'])
 
     def _run(self, recording, output_folder):
 
         H = hs.HSDetection(self.Probe, file_directory_name=str(output_folder),
-                           **self.params['detection_params'])  # risky
+                           left_cutout_time=self.params['left_cutout_time'],
+                           right_cutout_time=self.params['right_cutout_time'],
+                           threshold=self.params['detection_threshold'],
+                           **self.params['detection_params'])
 
         H.DetectFromRaw(load=True)
 
+        C = hs.HSClustering(H)
+        C.ShapePCA(**self.params['pca_params'])
+        C.CombinedClustering(bandwidth=self.params['clustering_bandwidth'],
+                             alpha=self.params['clustering_alpha'],
+                             n_jobs=self.params['clustering_n_jobs'],
+                             bin_seeding=self.params['clustering_bin_seeding'])
 
         sorted_file = str(output_folder / 'HS2_sorted.hdf5')
         if(not H.spikes.empty):
@@ -65,42 +71,41 @@ class HerdingspikesSorter(BaseSorter):
 
     @staticmethod
     def get_result_from_folder(output_folder):
-        sorting = se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
-        return sorting
+        return se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
 
 
 HerdingspikesSorter._default_params = {
-    'probe_params': {
+    'clustering_bandwidth': 6.0,
+    'clustering_alpha': 6.0,
+    'clustering_n_jobs': -1,
+    'clustering_bin_seeding': False,
+    'left_cutout_time': 1.0,
+    'right_cutout_time': 2.2,
+    'detection_threshold': 20,
+    'probe_masked_channels': [],
+
+    'extra_probe_params': {
         'inner_radius': 50,
         'neighbor_radius': 50,
-        'noise_duration': 4,
-        'spike_peak_duration': 4
+        'event_length': 0.5,
+        'peak_jitter': 0.2
     },
 
-    'detection_params': {
+    'extra_detection_params': {
         'to_localize': True,
-        'cutout_start': 10,
-        'cutout_end': 34,
-        'threshold': 20,
-        'num_com_centers': 3,
+        'num_com_centers': 1,
         'maa': 0,
-        'maxsl': 13,
-        'minsl': 2,
-        'ahpthr': 5,
+        'ahpthr': 0,
         'out_file_name': "HS2_detected",
         'decay_filtering': False,
-        'save_all': False
+        'save_all': False,
+        'amp_evaluation_time': 0.4,
+        'spk_evaluation_time': 1.7
     },
 
-    'pca_params': {
+    'extra_pca_params': {
         'pca_ncomponents': 2,
         'pca_whiten': True
     },
 
-    'clustering_params': {
-        'alpha': 6.0,
-        'bandwidth': 6.0,
-        'bin_seeding': False,
-        'n_jobs': -1
-    }
 }
