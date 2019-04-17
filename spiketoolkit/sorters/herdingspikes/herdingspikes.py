@@ -48,7 +48,7 @@ class HerdingspikesSorter(BaseSorter):
                            left_cutout_time=self.params['left_cutout_time'],
                            right_cutout_time=self.params['right_cutout_time'],
                            threshold=self.params['detection_threshold'],
-                           **self.params['detection_params'])
+                           **self.params['extra_detection_params'])
 
         H.DetectFromRaw(load=True)
 
