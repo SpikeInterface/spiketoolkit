@@ -63,8 +63,7 @@ class HerdingspikesSorter(BaseSorter):
         if(not H.spikes.empty):
             C = hs.HSClustering(H)
             C.ShapePCA(**self.params['extra_pca_params'])
-            C.CombinedClustering(alpha=self.params['clustering_alpha'], 
-                                 clustering_algorithm=MeanShift,
+            C.CombinedClustering(alpha=self.params['clustering_alpha'],
                                  cluster_subset=self.params['clustering_subset'],
                                  bandwidth=self.params['clustering_bandwidth'],
                                  bin_seeding=self.params['clustering_bin_seeding'],
