@@ -53,7 +53,7 @@ class HerdingspikesSorter(BaseSorter):
         H.DetectFromRaw(load=True)
 
         C = hs.HSClustering(H)
-        C.ShapePCA(**self.params['pca_params'])
+        C.ShapePCA(**self.params['extra_pca_params'])
         C.CombinedClustering(bandwidth=self.params['clustering_bandwidth'],
                              alpha=self.params['clustering_alpha'],
                              n_jobs=self.params['clustering_n_jobs'],
@@ -62,7 +62,7 @@ class HerdingspikesSorter(BaseSorter):
         sorted_file = str(output_folder / 'HS2_sorted.hdf5')
         if(not H.spikes.empty):
             C = hs.HSClustering(H)
-            C.ShapePCA(**self.params['pca_params'])
+            C.ShapePCA(**self.params['extra_pca_params'])
             C.CombinedClustering(**self.params['clustering_params'])
             C.SaveHDF5(sorted_file)
         else:
