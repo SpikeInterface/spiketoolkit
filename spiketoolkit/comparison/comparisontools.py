@@ -93,20 +93,20 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy, n_jobs=-1):
         event_counts_2[u2] = len(times2)
 
     # Compute matching events
-    def match_spikes(times1, all_times2, i1, u1, unit2_ids, delta_tp):
+    def match_spikes(times1, all_times2, unit2_ids, delta_tp, event_counts1, event_counts2):
         matching_event_counts = []
         scores = []
         for i2, u2 in enumerate(unit2_ids):
             times2 = all_times2[i2]
             num_matches = count_matching_events(times1, times2, delta=delta_tp)
             matching_event_counts.append(num_matches)
-            scores.append(compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2]))
+            scores.append(compute_agreement_score(num_matches, event_counts1, event_counts2[i2]))
         return matching_event_counts, scores
         
     s2_spiketrains = [sorting2.get_unit_spike_train(u2) for u2 in unit2_ids]
-    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), 
-                                                        s2_spiketrains, 
-                                                        i1, u1, unit2_ids, delta_tp) for i1, u1 in enumerate(unit1_ids))
+    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), s2_spiketrains, 
+                                                            unit2_ids, delta_tp, event_counts1[i1], 
+                                                            event_counts2) for i1, u1 in enumerate(unit1_ids))
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
     for i1, u1 in enumerate(unit1_ids):
