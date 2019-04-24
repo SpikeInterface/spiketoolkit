@@ -4,8 +4,7 @@ Some functions internally use by SortingComparison.
 
 import numpy as np
 from scipy.optimize import linear_sum_assignment
-
-
+from joblib import Parallel, delayed
 
 def count_matching_events(times1, times2, delta=10):
     times_concat = np.concatenate((times1, times2))
@@ -32,7 +31,7 @@ def compute_agreement_score(num_matches, num1, num2):
     return num_matches / denom
 
 
-def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
+def do_matching(sorting1, sorting2, delta_tp, min_accuracy, n_jobs=-1):
     """
     This compute the matching between 2 sorters.
     
@@ -44,6 +43,7 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
     
     delta_tp: int
     
+    n_jobs: int
     
     Output
     ----------
@@ -93,15 +93,25 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
         event_counts_2[u2] = len(times2)
 
     # Compute matching events
+    def match_spikes(times1, all_times2, i1, u1, unit2_ids, delta_tp):
+        matching_event_counts = []
+        scores = []
+        for i2, u2 in enumerate(unit2_ids):
+            times2 = all_times2[i2]
+            num_matches = count_matching_events(times1, times2, delta=delta_tp)
+            matching_event_counts.append(num_matches)
+            scores.append(compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2]))
+        return matching_event_counts, scores
+        
+    s2_spiketrains = [sorting2.get_unit_spike_train(u2) for u2 in unit2_ids]
+    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), 
+                                                        s2_spiketrains, 
+                                                        i1, u1, unit2_ids, delta_tp) for i1, u1 in enumerate(unit1_ids))
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
     for i1, u1 in enumerate(unit1_ids):
-        times1 = sorting1.get_unit_spike_train(u1)
-        for i2, u2 in enumerate(unit2_ids):
-            times2 = sorting2.get_unit_spike_train(u2)
-            num_matches = count_matching_events(times1, times2, delta=delta_tp)
-            matching_event_counts[i1, i2] = num_matches
-            scores[i1, i2] = compute_agreement_score(num_matches, event_counts1[i1], event_counts2[i2])
+        matching_event_counts[i1] = results[i1][0]
+        scores[i1] = results[i1][1]
 
     # Find best matches for spiketrains 1
     for i1, u1 in enumerate(unit1_ids):
@@ -118,7 +128,7 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy):
                 best_match_units_12[u1] = -1
         else:
             best_match_units_12[u1] = -1
-
+    
     # Find best matches for spiketrains 2
     for i2, u2 in enumerate(unit2_ids):
         scores0 = scores[:, i2]
