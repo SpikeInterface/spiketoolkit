@@ -510,7 +510,7 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
                   max_num_waveforms=np.inf, compute_property_from_recording=False,
                   verbose=False):
     '''
-    Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
+    Exports paired recording and sorting extractors to phy template-gui format.
 
     Parameters
     ----------
