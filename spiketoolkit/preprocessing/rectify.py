@@ -27,6 +27,21 @@ class RectifyRecording(RecordingExtractor):
 
 
 def rectify(recording):
+    '''
+    Rectifies the recording extractor traces. It is useful, in combination with 'resample', to compute multi-unit
+    activity (MUA).
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor object to be rectified
+
+    Returns
+    -------
+    rectified_recording: RectifyRecording
+        The rectified recording extractor object
+
+    '''
     return RectifyRecording(
         recording=recording
     )

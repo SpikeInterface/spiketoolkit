@@ -88,6 +88,30 @@ class BandpassFilterRecording(FilterRecording):
 
 
 def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3):
+    '''
+    Performs a lazy filter on the recording extractor traces.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be filtered
+    freq_min: int or float
+        High-pass cutoff frequency
+    freq_max: int or float
+        Low-pass cutoff frequency
+    freq_wid: int or float
+        Width of the filter (when type is 'fft')
+    type: str
+        'fft' or 'butter'. The 'fft' filter uses a kernel in the frequency domain. The 'butter' filter uses
+        scipy butter and filtfilt functions.
+    order: int
+        Order of the filter (if 'butter')
+
+    Returns
+    -------
+    filter_recording: BandpassFilterRecording
+        The filtered recording extractor object
+    '''
     return BandpassFilterRecording(
         recording=recording,
         freq_min=freq_min,

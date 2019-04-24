@@ -73,6 +73,24 @@ class NotchFilterRecording(FilterRecording):
 
 
 def notch_filter(recording, freq=3000, q=30):
+    '''
+    Performs a notch filter on the recording extractor traces using scipy iirnotch function.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be notch-filtered
+    freq: int or float
+        The target frequency of the notch filter.
+    q: int
+        The quality factor of the notch filter.
+
+    Returns
+    -------
+    filter_recording: NotchFilterRecording
+        The notch-filtered recording extractor object
+
+    '''
     return NotchFilterRecording(
         recording=recording,
         freq=freq,

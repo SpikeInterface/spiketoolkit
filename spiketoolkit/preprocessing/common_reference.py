@@ -3,13 +3,6 @@ import numpy as np
 
 class CommonReferenceRecording(RecordingExtractor):
     def __init__(self, recording, reference='median', groups=None, ref_channel=None):
-        '''
-        Parameters
-        ----------
-        recording
-        reference
-        groups
-        '''
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -104,6 +97,33 @@ class CommonReferenceRecording(RecordingExtractor):
 
 
 def common_reference(recording, reference='median', groups=None, ref_channel=None):
+    '''
+    Re-references the recording extractor traces.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be re-referenced
+    reference: str
+        'median', 'average', or 'single'.
+        If 'median', common median reference (CMR) is implemented (the median of
+        the selected channels is removed for each timestamp).
+        If 'average', common average reference (CAR) is implemented (the mean of the selected channels is removed
+        for each timestamp).
+        If 'single', the selected channel(s) is remove from all channels.
+    groups: list
+        List of lists containins the channels for splitting the reference. The CMR, CAR, or referencing with respect to
+        single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple
+        tetrodes.
+    ref_channel: int or list
+        If no 'groups' are specified, all channels are referenced to 'ref_channel'. If 'groups' is provided, then a
+        list of channels to be applied to each group is expected.
+
+    Returns
+    -------
+    referenced_recording: CommonReferenceRecording
+        The re-referenced recording extractor object
+    '''
     return CommonReferenceRecording(
         recording=recording, reference=reference, groups=groups, ref_channel=ref_channel
     )
