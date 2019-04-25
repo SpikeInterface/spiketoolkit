@@ -35,7 +35,7 @@ class MultiSortingComparison():
                                                          sorting1_name=self._name_list[i],
                                                          sorting2_name=self._name_list[j],
                                                          delta_tp=self._delta_tp,
-                                                         minimum_accuracy=self._min_accuracy,
+                                                         min_accuracy=self._min_accuracy,
                                                          verbose=True))
             self.sorting_comparisons[self._name_list[i]] = comparison_
 
@@ -54,10 +54,10 @@ class MultiSortingComparison():
                     matched_list[sc.sorting2_name] = mapped_unit
                     matched_agreement[sc.sorting2_name] = mapped_agr
 
-                    node1_name = sort_name + '_' + str(unit)
+                    node1_name = str(sort_name) + '_' + str(unit)
                     graph.add_node(node1_name)
                     if mapped_unit != -1:
-                        node2_name = sc.sorting2_name + '_' + str(mapped_unit)
+                        node2_name = str(sc.sorting2_name) + '_' + str(mapped_unit)
                         if node2_name not in graph:
                             graph.add_node(node2_name)
                             print('Adding edge: ', node1_name, node2_name)
