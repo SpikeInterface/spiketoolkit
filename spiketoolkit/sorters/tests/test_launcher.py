@@ -29,9 +29,9 @@ def test_run_sorters_with_dict():
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    #~ sorter_list = ['tridesclous',  'klusta',]
+    sorter_list = ['tridesclous',  'klusta',]
     #~ sorter_list = ['tridesclous', ]
-    sorter_list = ['tridesclous', 'herdingspikes']
+    #~ sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_dict'
     if os.path.exists(working_folder):
@@ -54,8 +54,8 @@ def test_run_sorters_multiprocessing():
         recording_dict['rec_'+str(i)] = rec
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    #~ sorter_list = ['tridesclous',  'klusta',]
-    sorter_list = ['tridesclous', 'herdingspikes']
+    sorter_list = ['tridesclous',  'klusta',]
+    #~ sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_mp'
     if os.path.exists(working_folder):
@@ -81,5 +81,5 @@ if __name__ == '__main__':
     
     #~ test_run_sorters_multiprocessing()
     
-    test_collect_results()
+    #~ test_collect_results()
     

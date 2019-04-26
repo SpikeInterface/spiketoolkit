@@ -81,7 +81,7 @@ class KlustaSorter(BaseSorter):
         else:
             # save binary file (chunk by hcunk) into a new file
             raw_filename = output_folder / 'recording'
-            n_chan = recording.getNumChannels()
+            n_chan = recording.get_num_channels()
             chunksize = 2**24// n_chan
             se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='int16', chunksize=chunksize)
             dtype= 'float32'
