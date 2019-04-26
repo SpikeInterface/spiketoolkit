@@ -81,5 +81,5 @@ if __name__ == '__main__':
     
     #~ test_run_sorters_multiprocessing()
     
-    #~ test_collect_results()
+    test_collect_results()
     

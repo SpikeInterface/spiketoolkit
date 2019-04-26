@@ -28,6 +28,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
     Returns
     ----------
+    comparisons: a dict of SortingComparison
     
     out_dataframes: a dict of DataFrame
         Return several usefull DataFrame to compare all results:
@@ -37,7 +38,9 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     
     working_folder = Path(working_folder)
     
+    comparisons = {}
     out_dataframes = {}
+    
     
     # get run times:
     run_times = pd.read_csv(working_folder /  'run_time.csv', sep='\t', header=None)
@@ -62,6 +65,8 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
             comp = SortingComparison(gt_sorting, sorting, count=True)
             
+            comparisons[(rec_name, sorter_name)] = comp
+            
             perf = compute_performance(comp, verbose=False, output='pandas')
             
             performances.loc[(rec_name, sorter_name), :] = perf
@@ -71,6 +76,6 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
         for k, df in out_dataframes.items():
             out_dataframes[k] = df.reset_index()
     
-    return out_dataframes
+    return comparisons, out_dataframes
 
 

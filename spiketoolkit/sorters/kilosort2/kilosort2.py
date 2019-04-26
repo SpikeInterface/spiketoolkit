@@ -107,7 +107,7 @@ class Kilosort2Sorter(BaseSorter):
         elif p['file_name'].suffix == '.dat':
             self.file_name = p['file_name'].stem
         p['file_name'] = self.file_name
-        se.writeBinaryDatFormat(recording, output_folder / self.file_name, dtype='int16')
+        se.write_binary_dat_format(recording, output_folder / self.file_name, dtype='int16')
 
         # set up kilosort2 config files and run kilosort2 on data
         with (source_dir / 'kilosort2_master.txt').open('r') as f:
@@ -117,11 +117,11 @@ class Kilosort2Sorter(BaseSorter):
         with (source_dir / 'kilosort2_channelmap.txt').open('r') as f:
             kilosort2_channelmap = f.readlines()
 
-        nchan = recording.getNumChannels()
+        nchan = recording.get_num_channels()
         dat_file = (output_folder / (self.file_name.name + '.dat')).absolute()
         kilo_thresh = p['detect_threshold']
 
-        sample_rate = recording.getSamplingFrequency()
+        sample_rate = recording.get_sampling_frequency()
 
         if not HAVE_KILOSORT2:
             if p['kilosort2_path'] is None or p['npy_matlab_path'] is None:
@@ -141,12 +141,12 @@ class Kilosort2Sorter(BaseSorter):
                                                             kilo_thresh)
         electrode_dimensions = p['electrode_dimensions']
 
-        if 'group' in recording.getChannelPropertyNames():
-            groups = [recording.getChannelProperty(ch, 'group') for ch in recording.getChannelIds()]
+        if 'group' in recording.get_channel_property_names():
+            groups = [recording.get_channel_property(ch, 'group') for ch in recording.get_channel_ids()]
         else:
             groups = 'ones(1, Nchannels)'
-        if 'location' in recording.getChannelPropertyNames():
-            positions = np.array([recording.getChannelProperty(chan, 'location') for chan in recording.getChannelIds()])
+        if 'location' in recording.get_channel_property_names():
+            positions = np.array([recording.get_channel_property(chan, 'location') for chan in recording.get_channel_ids()])
             if electrode_dimensions is None:
                 kilosort2_channelmap = ''.join(kilosort2_channelmap
                                               ).format(nchan,
@@ -160,7 +160,7 @@ class Kilosort2Sorter(BaseSorter):
                                                        list(positions[:, electrode_dimensions[0]]),
                                                        list(positions[:, electrode_dimensions[1]]),
                                                        groups,
-                                                       recording.getSamplingFrequency())
+                                                       recording.get_sampling_frequency())
             else:
                 raise Exception("Electrode dimension should bi a list of len 2")
         else:

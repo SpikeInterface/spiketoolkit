@@ -47,7 +47,7 @@ class KlustaSorter(BaseSorter):
     }
     
     installation_mesg = """
-       >>> pip install click Cython
+       >>> pip install Cython h5py tqdm
        >>> pip install click klusta klustakwik2
     
     More information on klusta at:
@@ -68,9 +68,8 @@ class KlustaSorter(BaseSorter):
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
-            se.saveProbeFile(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
+            se.save_probe_file(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
-        # save binary file
         # source file
         if isinstance(recording, se.BinDatRecordingExtractor) and recording._frame_first and\
                         recording._timeseries.offset==0:
@@ -84,9 +83,8 @@ class KlustaSorter(BaseSorter):
             raw_filename = output_folder / 'recording'
             n_chan = recording.getNumChannels()
             chunksize = 2**24// n_chan
-            se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='int16', chunksize=chunksize)
+            se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='int16', chunksize=chunksize)
             dtype= 'float32'
-        
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -101,8 +99,8 @@ class KlustaSorter(BaseSorter):
         
         # Note: should use format with dict approach here
         klusta_config = ''.join(klusta_config).format(raw_filename,
-            p['probe_file'], float(recording.getSamplingFrequency()),
-            recording.getNumChannels(), "'{}'".format(dtype),
+            p['probe_file'], float(recording.get_sampling_frequency()),
+            recording.get_num_channels(), "'{}'".format(dtype),
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']
