@@ -63,13 +63,11 @@ class SorterCommonTestSuite:
         samplerate = recording.getSamplingFrequency()
         traces = recording.getTraces().astype('float32')
         with open(raw_filename, mode='wb') as f:
-            # make an offset of 13 bytes
-            f.write(b'\x00'*13)
             f.write(traces.T.tobytes())
 
         se.saveProbeFile(recording, prb_filename, format='spyking_circus')
 
-        recording = se.BinDatRecordingExtractor(raw_filename, samplerate, 2, 'float32', frames_first=True, offset=13)
+        recording = se.BinDatRecordingExtractor(raw_filename, samplerate, 2, 'float32', frames_first=True, offset=0)
         se.loadProbeFile(recording, prb_filename)
         
         params = self.SorterClass.default_params()

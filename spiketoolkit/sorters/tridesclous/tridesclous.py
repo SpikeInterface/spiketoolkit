@@ -59,7 +59,7 @@ class TridesclousSorter(BaseSorter):
             n_chan = recording.getNumChannels()
             chunksize = 2**24// n_chan
             se.writeBinaryDatFormat(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
-            dtype= np.dtype('float32').str
+            dtype='float32'
             offset = 0
         
         # initialize source and probe file

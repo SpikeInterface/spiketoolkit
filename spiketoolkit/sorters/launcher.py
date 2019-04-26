@@ -16,8 +16,7 @@ def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug, write_log = arg_list
 
-    #~ try:
-    if True:
+    try:
         SorterClass = sorter_dict[sorter_name]
         sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                             parallel=True, debug=debug, delete_output_folder=False)
@@ -25,8 +24,8 @@ def _run_one(arg_list):
         sorter.set_params(**params)
 
         run_time = sorter.run()
-    #~ except:
-        #~ run_time = None
+    except:
+        run_time = None
 
     if write_log and run_time is not None:
         with open(output_folder / 'run_log.txt', mode='w') as f:
@@ -161,11 +160,12 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
                 rec_name = task[0]
                 sorter_name = task[2]
                 output_folder = task[3]
-                with open(output_folder / 'run_log.txt', mode='r') as logfile:
-                    run_time = float(logfile.readline().replace('run_time:', ''))
+                if os.path.exists(output_folder / 'run_log.txt'):
+                    with open(output_folder / 'run_log.txt', mode='r') as logfile:
+                        run_time = float(logfile.readline().replace('run_time:', ''))
 
-                txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
-                f.write(txt)
+                    txt = '{}\t{}\t{}\n'.format(rec_name, sorter_name,run_time)
+                    f.write(txt)
 
     results = collect_results(working_folder)
     return results
@@ -185,10 +185,10 @@ def collect_results(working_folder):
     for rec_name in os.listdir(output_folders):
         if not os.path.isdir(output_folders / rec_name):
             continue
-        # print(rec_name)
+        # print(rec_name)
         results[rec_name] = {}
         for sorter_name in os.listdir(output_folders / rec_name):
-            # print('  ', sorter_name)
+            # print('  ', sorter_name)
             output_folder = output_folders / rec_name / sorter_name
             #~ print(output_folder)
             if not os.path.isdir(output_folder):
