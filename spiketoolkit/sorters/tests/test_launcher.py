@@ -63,7 +63,7 @@ def test_run_sorters_multiprocessing():
 
     # multiprocessing
     t0 = time.perf_counter()
-    run_sorters(sorter_list, recording_dict, working_folder, engine='multiprocessing', processes=4)
+    run_sorters(sorter_list, recording_dict, working_folder, engine='multiprocessing', engine_kargs={'processes':4})
     t1 = time.perf_counter()
     print(t1-t0)
 
