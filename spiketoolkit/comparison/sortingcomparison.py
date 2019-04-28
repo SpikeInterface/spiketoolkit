@@ -325,7 +325,7 @@ def compute_performance(SC, verbose=True, output='dict'):
         return pd.Series(performance)
 
 # usefull for gathercomparison
-_perf_keys = ['tp', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
+_perf_keys = ['tp', 'fn', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
 
 
 _txt_performance = """PERFORMANCE

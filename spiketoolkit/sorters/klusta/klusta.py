@@ -19,7 +19,6 @@ class KlustaSorter(BaseSorter):
     
     
     probe_file
-    file_name
     threshold_strong_std_factor
     threshold_weak_std_factor
     detect_sign
@@ -34,7 +33,6 @@ class KlustaSorter(BaseSorter):
     installed = HAVE_KLUSTA
     
     _default_params = {
-        'file_name': None,
         'probe_file': None,
     
         'adjacency_radius': None,
@@ -72,9 +70,21 @@ class KlustaSorter(BaseSorter):
             p['probe_file'] = output_folder / 'probe.prb'
             se.save_probe_file(recording, p['probe_file'], format='klusta', radius=p['adjacency_radius'])
 
-        # save binary file
-        file_name = 'recording'
-        se.write_binary_dat_format(recording, output_folder / file_name, dtype='int16')
+        # source file
+        if isinstance(recording, se.BinDatRecordingExtractor) and recording._frame_first and\
+                        recording._timeseries.offset==0:
+            # no need to copy
+            raw_filename = str(recording._datfile)
+            raw_filename = raw_filename.replace('.dat', '')
+            dtype = recording._timeseries.dtype.str
+            nb_chan = len(recording._channels)
+        else:
+            # save binary file (chunk by hcunk) into a new file
+            raw_filename = output_folder / 'recording'
+            n_chan = recording.get_num_channels()
+            chunksize = 2**24// n_chan
+            se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='int16', chunksize=chunksize)
+            dtype= 'float32'
 
         if p['detect_sign'] < 0:
             detect_sign = 'negative'
@@ -88,9 +98,9 @@ class KlustaSorter(BaseSorter):
             klusta_config = f.readlines()
         
         # Note: should use format with dict approach here
-        klusta_config = ''.join(klusta_config).format(
-            output_folder / file_name, p['probe_file'], float(recording.get_sampling_frequency()),
-            recording.get_num_channels(), "'int16'",
+        klusta_config = ''.join(klusta_config).format(raw_filename,
+            p['probe_file'], float(recording.get_sampling_frequency()),
+            recording.get_num_channels(), "'{}'".format(dtype),
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'", 
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'], 
             p['pca_n_waveforms_max'], p['num_starting_clusters']
