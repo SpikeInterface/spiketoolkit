@@ -5,3 +5,4 @@ from .common_reference import common_reference, CommonReferenceRecording
 from .resample import resample, ResampledRecording
 from .rectify import rectify, RectifyRecording
 from .remove_artifacts import remove_artifacts, RemoveArtifactsRecording
+from .scale_traces import scale_traces, ScaleTracesRecording
