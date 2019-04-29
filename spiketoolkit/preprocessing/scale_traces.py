@@ -3,15 +3,6 @@ import numpy as np
 
 class ScaleTracesRecording(RecordingExtractor):
     def __init__(self, recording, scalar):
-        '''
-        Scales the traces from the given recording extractor
-        Parameters
-        ----------
-        recording: RecordingExtractor
-            The recording extractor to be scaled
-        scalar: int or float
-            Scalar for the traces of the recording extractor
-        '''
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -40,6 +31,21 @@ class ScaleTracesRecording(RecordingExtractor):
 
 
 def scale_traces(recording, scalar):
+    '''
+    Scales the traces from the given recording extractor
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be scaled
+    scalar: int or float
+        Scalar for the traces of the recording extractor
+
+    Returns
+    -------
+    scale_traces: ScaleTracesRecording
+        The scaled traces recording extractor object
+    '''
     return ScaleTracesRecording(
         recording=recording, scalar=scalar
     )
