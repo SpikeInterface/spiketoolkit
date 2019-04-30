@@ -2,6 +2,7 @@ import numpy as np
 import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 from .sortingcomparison import SortingComparison
+from .comparisontools import compare_spike_trains
 import networkx as nx
 
 
@@ -12,7 +13,7 @@ class MultiSortingComparison():
         if name_list is not None and len(name_list) == len(sorting_list):
             self._name_list = name_list
         else:
-            self._name_list = range(len(sorting_list))
+            self._name_list = [str(i) for i in range(len(sorting_list))]
         self._delta_tp = delta_tp
         self._min_accuracy = minimum_accuracy
         self._do_matching()
@@ -109,7 +110,7 @@ class MultiSortingComparison():
                     unit2 = int(unit2)
                     sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
                     sp2 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
-                    lab1, lab2 = SortingComparison.compareSpikeTrains(sp1, sp2)
+                    lab1, lab2 = compare_spike_trains(sp1, sp2)
                     tp_idx1 = np.where(np.array(lab1) == 'TP')
                     tp_idx2 = np.where(np.array(lab2) == 'TP')
                     assert len(tp_idx1) == len(tp_idx2)

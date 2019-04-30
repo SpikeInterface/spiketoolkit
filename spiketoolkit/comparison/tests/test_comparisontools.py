@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 import spikeextractors as se
 
-from spiketoolkit.comparison import do_matching, do_counting, do_confusion_matrix
+from spiketoolkit.comparison import do_matching, do_counting, do_confusion_matrix, compare_spike_trains
 
 
 
@@ -93,12 +93,24 @@ def test_do_confusion_matrix():
     assert_array_equal(conf_matrix, cm)
     
     
-
+def test_compare_spike_trains():
+    sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
+                                                            [101, 201, 301, ], [0, 0, 5])
+    sp1 = np.array([100, 200, 300])
+    sp2 = np.array([101, 201, 202, 300])
+    lab_st1, lab_st2 = compare_spike_trains(sp1, sp2)
+    
+    # Note from Samuel : I copy/paste the implementation from old code.
+    # I think we should change this the 201 should be a TP but in this case it 
+    # is a FP
+    assert_array_equal(lab_st1, np.array(['TP', 'FN', 'TP']))
+    assert_array_equal(lab_st2, np.array(['TP', 'FP', 'FP', 'TP']))
 
 
 if __name__ == '__main__':
     test_do_matching()
     test_do_counting()
     test_do_confusion_matrix()
+    test_compare_spike_trains()
 
 

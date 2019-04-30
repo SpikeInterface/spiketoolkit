@@ -404,4 +404,47 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
 
     return conf_matrix,  st1_idxs, st2_idxs
     
+
+def compare_spike_trains(spiketrain1, spiketrain2, delta_tp=10):
+    """
+    Compare 2 spike trains.
+    
+    Note:
+      * The first spiketrain is supposed to be the ground truth.
+      * this implementation do not count a TP when more than one spike
+        is present around the same time in spiketrain2.
+    
+    Parameters
+    ----------
+    spiketrain1,spiketrain2: numpy.array
+        Times of spikes for the 2 spike trains.
+        
+    
+    Output
+    ----------
+    
+    lab_st1, lab_st2: numpy.array
+        Label of score for each spike.
+    
+    """
+    lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
+    lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
+
+    # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
+    for sp_i, n_sp in enumerate(spiketrain1):
+        id_sp, = np.where((spiketrain2 > n_sp - delta_tp) & (spiketrain2 < n_sp + delta_tp))
+        if len(id_sp) == 1:
+            lab_st1[sp_i] = 'TP'
+            lab_st2[id_sp] = 'TP'
+
+    for l_gt, lab in enumerate(lab_st1):
+        if lab == 'UNPAIRED':
+            lab_st1[l_gt] = 'FN'
+
+    for l_gt, lab in enumerate(lab_st2):
+        if lab == 'UNPAIRED':
+            lab_st2[l_gt] = 'FP'
+
+    return lab_st1, lab_st2
+    
     
