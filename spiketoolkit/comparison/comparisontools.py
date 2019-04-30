@@ -354,8 +354,13 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
             'FN': np.sum(labels_st1[u1] == 'FN'),
             'FP': np.sum(labels_st2[u2] == 'FP'),
             'NB_SPIKE_1' : labels_st1[u1].size,
-            'NB_SPIKE_2' : labels_st2[u2].size,
         }
+        
+        if u2==-1:
+            # no match
+            count_by_spiketrains[u1]['NB_SPIKE_2'] = 0
+        else:
+            count_by_spiketrains[u1]['NB_SPIKE_2'] = labels_st2[u2].size
     
     # put everything in a dict so this can be extened
     mixed_counts = {

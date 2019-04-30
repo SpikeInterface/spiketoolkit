@@ -273,7 +273,6 @@ class SortingComparison():
             
             for u1 in unit1_ids:
                 counts = self._mixed_counts['by_spiketrains'][u1]
-                print(counts)
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
@@ -309,7 +308,9 @@ class SortingComparison():
                 perf = pd.Series(perf)
             
         elif method == 'pooled_with_average':
-            raise(NotImplentedError)
+            perf = self.get_performance(method='by_spiketrain').mean(axis=0)
+            if output == 'dict':
+                perf = perf.to_dict()
             
         return perf
     
@@ -325,7 +326,9 @@ class SortingComparison():
             print(txt)
         
         elif method == 'pooled_with_average':
-            raise(NotImplentedError)
+            perf = self.get_performance(method=method, output='dict')
+            txt = _template_pooled_with_sum_performance.format(**perf)
+            print(txt)
 
 
 class MappedSortingExtractor(se.SortingExtractor):

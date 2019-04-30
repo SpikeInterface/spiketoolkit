@@ -90,8 +90,8 @@ def test_do_counting():
     assert mixed_counts['by_spiketrains'][0]['CL'] == 0
     assert mixed_counts['by_spiketrains'][0]['FN'] == 1
     assert mixed_counts['by_spiketrains'][0]['FP'] == 0
-    assert mixed_counts['by_spiketrains'][0]['NB1'] == 3
-    assert mixed_counts['by_spiketrains'][0]['NB2'] == 2
+    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_1'] == 3
+    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_2'] == 2
     
     ######
     # match when 2 units fire at same time
@@ -108,8 +108,8 @@ def test_do_counting():
     assert mixed_counts['by_spiketrains'][0]['CL'] == 0
     assert mixed_counts['by_spiketrains'][0]['FN'] == 0
     assert mixed_counts['by_spiketrains'][0]['FP'] == 0
-    assert mixed_counts['by_spiketrains'][0]['NB1'] == 3
-    assert mixed_counts['by_spiketrains'][0]['NB2'] == 3
+    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_1'] == 3
+    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_2'] == 3
     
 
 def test_do_confusion_matrix():

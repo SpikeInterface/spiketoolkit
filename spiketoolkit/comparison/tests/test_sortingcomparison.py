@@ -27,12 +27,14 @@ def test_SortingComparison():
     sc._do_confusion()
     print(sc._confusion_matrix)
     
-    methods = ['by_spiketrain', 'pooled_with_sum'] #, 'pooled_with_average',]
+    methods = ['by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
     for method in methods:
+        print('**', method, '**')
         perf = sc.get_performance(method=method)
         print(perf)
     
-    for method in methods:        
+    for method in methods:
+        print('**', method, '**')
         sc.print_performance(method=method)
         
         
