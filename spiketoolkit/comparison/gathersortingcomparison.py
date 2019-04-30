@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import SortingComparison, compute_performance, _perf_keys
+from .sortingcomparison import SortingComparison, _perf_keys
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """

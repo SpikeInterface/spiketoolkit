@@ -5,7 +5,7 @@ from scipy.optimize import linear_sum_assignment
 import pandas as pd
 
 from .comparisontools import (count_matching_events, compute_agreement_score,
-                                                do_matching, do_counting, do_confusion_matrix)
+                                                do_matching, do_score_labels, do_counting, do_confusion_matrix)
 
 
 
@@ -29,7 +29,7 @@ class SortingComparison():
             print("Matching...")
         self._do_matching()
 
-        self._counts = None
+        self._mixed_counts = None
         if count:
             if verbose:
                 print("Counting...")
@@ -172,7 +172,7 @@ class SortingComparison():
         return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
 
     def compute_counts(self):
-        if self._counts is None:
+        if self._mixed_counts is None:
             self._do_counting(verbose=False)
 
     def plot_confusion_matrix(self, xlabel=None, ylabel=None):
@@ -180,7 +180,7 @@ class SortingComparison():
         # This must be moved in spikewidget
         import matplotlib.pylab as plt
 
-        if self._counts is None:
+        if self._mixed_counts is None:
             self._do_counting(verbose=False)
 
         sorting1 = self._sorting1
@@ -236,14 +236,96 @@ class SortingComparison():
             self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_tp, self._min_accuracy)
 
     def _do_counting(self, verbose=False):
-        self._counts, self._labels_st1, self._labels_st2 = do_counting(self._sorting1, self._sorting2,
-                                                    self._delta_tp, self._unit_map12)
+        self._labels_st1, self._labels_st2 = do_score_labels(self._sorting1, self._sorting2, self._delta_tp, self._unit_map12)
+        self._mixed_counts = do_counting(self._sorting1, self._sorting2, self._unit_map12, self._labels_st1, self._labels_st2)
 
     def _do_confusion(self):
         self._confusion_matrix,  st1_idxs, st2_idxs = do_confusion_matrix(self._sorting1, self._sorting2,
                                                 self._unit_map12, self._labels_st1, self._labels_st2)
 
         return st1_idxs, st2_idxs
+    
+    def get_performance(self, method='by_spiketrain', output='pandas'):
+        """
+        Compute performance rate with several method:
+          * 'by_spiketrain'
+          * 'pooled_with_sum'
+          * 'pooled_with_average'
+    
+        Parameters
+        ----------
+        
+        method: str 'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
+        
+        ourtput: str 'pandas' or 'dict'
+        
+        
+        
+        """
+        
+        if method == 'by_spiketrain':
+            assert output=='pandas', "Output must be pandas for by_spiketrain"
+            
+            
+            unit1_ids = self._sorting1.get_unit_ids()
+            
+            perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
+            
+            for u1 in unit1_ids:
+                counts = self._mixed_counts['by_spiketrains'][u1]
+                print(counts)
+                perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2'] * 100
+            
+            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1']) * 100
+            perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
+            perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
+            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
+            perf['false_discovery_rate'] = perf['fp_rate_st1'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
+            
+        elif method == 'pooled_with_sum':
+            counts = self._mixed_counts['pooled_with_sum']
+
+            tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
+            cl_rate = float(counts['CL']) / counts['TOT_ST1'] * 100
+            fn_rate = float(counts['FN']) / counts['TOT_ST1'] * 100
+            fp_rate_st1 = float(counts['FP']) / counts['TOT_ST1'] * 100
+            fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
+
+            accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1) * 100
+            sensitivity = tp_rate / (tp_rate + fn_rate) * 100
+            miss_rate = fn_rate / (tp_rate + fn_rate) * 100
+            precision = tp_rate / (tp_rate + fp_rate_st1) * 100
+            false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1) * 100
+
+            perf = {'tp_rate': tp_rate, 'cl_rate': cl_rate, 'fn_rate': fn_rate, 'fp_rate_st1': fp_rate_st1, 'fp_rate_st2': fp_rate_st2,
+                           'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
+                           'false_disc_rate': false_discovery_rate}
+        
+            if output == 'pandas':
+                perf = pd.Series(perf)
+            
+        elif method == 'pooled_with_average':
+            raise(NotImplentedError)
+            
+        return perf
+    
+    
+    def print_performance(self, method='by_spiketrain'):
+        if method == 'by_spiketrain':
+            perf = self.get_performance(method=method, output='pandas')
+            print(perf)
+        
+        elif method == 'pooled_with_sum':
+            perf = self.get_performance(method=method, output='dict')
+            txt = _template_pooled_with_sum_performance.format(**perf)
+            print(txt)
+        
+        elif method == 'pooled_with_average':
+            raise(NotImplentedError)
 
 
 class MappedSortingExtractor(se.SortingExtractor):
@@ -276,64 +358,19 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
-def compute_performance(SC, verbose=True, output='dict'):
-    """
-    Return some performance value for comparison.
 
-    Parameters
-    -------
-    SC: SortingComparison instance
-        The SortingComparison
-
-    verbose: bool
-        Display on console or not
-
-    output: dict or pandas
-
-
-    Returns
-    ----------
-
-    performance: dict or pandas.Serie depending output param
-
-    """
-    counts = SC._counts
-
-    tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
-    cl_rate = float(counts['CL']) / counts['TOT_ST1'] * 100
-    fn_rate = float(counts['FN']) / counts['TOT_ST1'] * 100
-    fp_st1 = float(counts['FP']) / counts['TOT_ST1'] * 100
-    fp_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
-
-    accuracy = tp_rate / (tp_rate + fn_rate + fp_st1) * 100
-    sensitivity = tp_rate / (tp_rate + fn_rate) * 100
-    miss_rate = fn_rate / (tp_rate + fn_rate) * 100
-    precision = tp_rate / (tp_rate + fp_st1) * 100
-    false_discovery_rate = fp_st1 / (tp_rate + fp_st1) * 100
-
-    performance = {'tp': tp_rate, 'cl': cl_rate, 'fn': fn_rate, 'fp_st1': fp_st1, 'fp_st2': fp_st2,
-                   'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
-                   'false_disc_rate': false_discovery_rate}
-
-    if verbose:
-        txt = _txt_performance.format(**performance)
-        print(txt)
-
-    if output == 'dict':
-        return performance
-    elif output == 'pandas':
-        return pd.Series(performance)
 
 # usefull for gathercomparison
-_perf_keys = ['tp', 'fn', 'cl','fp_st1', 'fp_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
+_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
 
 
-_txt_performance = """PERFORMANCE
-TP : {tp} %
-CL : {cl} %
-FN : {fn} %
-FP (%ST1): {fp_st1} %
-FP (%ST2): {fp_st2} %
+
+_template_pooled_with_sum_performance = """PERFORMANCE
+TP : {tp_rate} %
+CL : {cl_rate} %
+FN : {fn_rate} %
+FP (%ST1): {fp_rate_st1} %
+FP (%ST2): {fp_rate_st2} %
 
 ACCURACY: {accuracy}
 SENSITIVITY: {sensitivity}
