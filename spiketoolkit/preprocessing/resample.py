@@ -35,7 +35,6 @@ class ResampledRecording(RecordingExtractor):
                                            end_frame=end_frame_not_sampled,
                                            channel_ids=channel_ids)
         if np.mod(self._recording.get_sampling_frequency(), self._resample_rate) == 0:
-            print('Decimate')
             traces_resampled = signal.decimate(traces,
                                                q=int(self._recording.get_sampling_frequency() / self._resample_rate),
                                                axis=1)
@@ -48,6 +47,23 @@ class ResampledRecording(RecordingExtractor):
 
 
 def resample(recording, resample_rate):
+    '''
+    Resamples the recording extractor traces. If the resampling rate is multiple of the sampling rate, the faster
+    scipy decimate function is used.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be resampled
+    resample_rate: int or float
+        The resampling frequency
+
+    Returns
+    -------
+    resampled_recording: ResampledRecording
+        The resampled recording extractor
+
+    '''
     return ResampledRecording(
         recording=recording,
         resample_rate=resample_rate

@@ -32,6 +32,20 @@ class WhitenRecording(FilterRecording):
 
 
 def whiten(recording):
+    '''
+    Whitens the recording extractor traces.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be whitened.
+
+    Returns
+    -------
+    whitened_recording: WhitenRecording
+        The whitened recording extractor
+
+    '''
     return WhitenRecording(
         recording=recording
     )

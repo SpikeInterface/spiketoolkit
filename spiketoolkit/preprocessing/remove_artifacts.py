@@ -53,6 +53,26 @@ class RemoveArtifactsRecording(RecordingExtractor):
 
 
 def remove_artifacts(recording, triggers, ms_before=0.5, ms_after=3):
+    '''
+    Removes stimulation artifacts from recording extractor traces. Artifact periods are zeroed-out.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to remove artifacts from
+    triggers: list
+        List of int with the stimulation trigger frames
+    ms_before: float
+        Time interval in ms to remove before the trigger events
+    ms_after: float
+        Time interval in ms to remove after the trigger events
+
+    Returns
+    -------
+    removed_recording: RemoveArtifactsRecording
+        The recording extractor after artifact removal
+
+    '''
     return RemoveArtifactsRecording(
         recording=recording, triggers=triggers, ms_before=ms_before, ms_after=ms_after
     )
