@@ -318,16 +318,19 @@ class SortingComparison():
     def print_performance(self, method='by_spiketrain'):
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
-            print(perf)
+            #~ print(perf)
+            d = {k: perf[k].values.tolist() for k in perf.columns}
+            txt = _template_txt_performance.format(method=method, **d)
+            print(txt)
         
         elif method == 'pooled_with_sum':
             perf = self.get_performance(method=method, output='dict')
-            txt = _template_pooled_with_sum_performance.format(**perf)
+            txt = _template_txt_performance.format(method=method, **perf)
             print(txt)
         
         elif method == 'pooled_with_average':
             perf = self.get_performance(method=method, output='dict')
-            txt = _template_pooled_with_sum_performance.format(**perf)
+            txt = _template_txt_performance.format(method=method, **perf)
             print(txt)
 
 
@@ -368,7 +371,8 @@ _perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'acc
 
 
 
-_template_pooled_with_sum_performance = """PERFORMANCE
+_template_txt_performance = """PERFORMANCE
+Method : {method}
 TP : {tp_rate} %
 CL : {cl_rate} %
 FN : {fn_rate} %

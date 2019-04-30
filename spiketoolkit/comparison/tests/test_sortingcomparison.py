@@ -29,12 +29,10 @@ def test_SortingComparison():
     
     methods = ['by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
     for method in methods:
-        print('**', method, '**')
         perf = sc.get_performance(method=method)
-        print(perf)
+        #~ print(perf)
     
     for method in methods:
-        print('**', method, '**')
         sc.print_performance(method=method)
         
         
