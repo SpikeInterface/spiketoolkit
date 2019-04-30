@@ -273,11 +273,15 @@ class SortingComparison():
             
             for u1 in unit1_ids:
                 counts = self._mixed_counts['by_spiketrains'][u1]
+                
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2'] * 100
+                if counts['NB_SPIKE_2'] > 0:
+                    perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2'] * 100
+                else:
+                    perf.loc[u1, 'fp_rate_st2'] = np.nan
             
             perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1']) * 100
             perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
@@ -292,13 +296,21 @@ class SortingComparison():
             cl_rate = float(counts['CL']) / counts['TOT_ST1'] * 100
             fn_rate = float(counts['FN']) / counts['TOT_ST1'] * 100
             fp_rate_st1 = float(counts['FP']) / counts['TOT_ST1'] * 100
-            fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
+            if counts['TOT_ST2'] > 0:
+                fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
+                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1) * 100
+                sensitivity = tp_rate / (tp_rate + fn_rate) * 100
+                miss_rate = fn_rate / (tp_rate + fn_rate) * 100
+                precision = tp_rate / (tp_rate + fp_rate_st1) * 100
+                false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1) * 100
+            else:
+                fp_rate_st2 = np.nan
+                accuracy = 0.
+                sensitivity = 0.
+                miss_rate = np.nan
+                precision = 0.
+                false_discovery_rate = np.nan
 
-            accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1) * 100
-            sensitivity = tp_rate / (tp_rate + fn_rate) * 100
-            miss_rate = fn_rate / (tp_rate + fn_rate) * 100
-            precision = tp_rate / (tp_rate + fp_rate_st1) * 100
-            false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1) * 100
 
             perf = {'tp_rate': tp_rate, 'cl_rate': cl_rate, 'fn_rate': fn_rate, 'fp_rate_st1': fp_rate_st1, 'fp_rate_st2': fp_rate_st2,
                            'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
@@ -319,7 +331,7 @@ class SortingComparison():
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
             #~ print(perf)
-            d = {k: perf[k].values.tolist() for k in perf.columns}
+            d = {k: perf[k].tolist() for k in perf.columns}
             txt = _template_txt_performance.format(method=method, **d)
             print(txt)
         

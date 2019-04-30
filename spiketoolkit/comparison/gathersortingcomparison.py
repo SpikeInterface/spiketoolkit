@@ -49,9 +49,12 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     out_dataframes['run_times'] = run_times
     
     
-    #~ columns =  ['tp_rate', 'fn_rate']
-    performances = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    out_dataframes['performances'] = performances
+    perf_pooled_with_sum = pd.DataFrame(index=run_times.index, columns=_perf_keys)
+    out_dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
+
+    perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
+    out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
+    
     
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
@@ -63,13 +66,15 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             
             gt_sorting = ground_truths[rec_name]
 
-            comp = SortingComparison(gt_sorting, sorting, count=True)
+            sorting_comp = SortingComparison(gt_sorting, sorting, count=True)
             
-            comparisons[(rec_name, sorter_name)] = comp
+            comparisons[(rec_name, sorter_name)] = sorting_comp
             
-            perf = compute_performance(comp, verbose=False, output='pandas')
-            
-            performances.loc[(rec_name, sorter_name), :] = perf
+            perf = sorting_comp.get_performance(method='pooled_with_sum', output='pandas')
+            perf_pooled_with_sum.loc[(rec_name, sorter_name), :] = perf
+
+            perf = sorting_comp.get_performance(method='pooled_with_average', output='pandas')
+            perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
 
     
     if not use_multi_index:

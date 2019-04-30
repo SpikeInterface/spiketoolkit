@@ -352,14 +352,15 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
             'TP': np.sum(labels_st1[u1] == 'TP'),
             'CL': sum(e.startswith('CL') for e in labels_st1[u1]),
             'FN': np.sum(labels_st1[u1] == 'FN'),
-            'FP': np.sum(labels_st2[u2] == 'FP'),
             'NB_SPIKE_1' : labels_st1[u1].size,
         }
         
         if u2==-1:
             # no match
+            count_by_spiketrains[u1]['FP'] = 0
             count_by_spiketrains[u1]['NB_SPIKE_2'] = 0
         else:
+            count_by_spiketrains[u1]['FP'] = np.sum(labels_st2[u2] == 'FP')
             count_by_spiketrains[u1]['NB_SPIKE_2'] = labels_st2[u2].size
     
     # put everything in a dict so this can be extened
