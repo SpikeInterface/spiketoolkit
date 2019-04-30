@@ -36,8 +36,8 @@ def _run_sorters():
     
     # run all sorter
     recording_dict = {'toy_tetrode' : rec0, 'toy_probe32': rec1}
-    #~ sorter_list = ['tridesclous', 'herdingspikes']
-    sorter_list = ['tridesclous', 'klusta']
+    sorter_list = ['tridesclous', 'herdingspikes']
+    #~ sorter_list = ['tridesclous', 'klusta']
     t0 = time.perf_counter()
     run_sorters(sorter_list, recording_dict, working_folder, engine=None)
     t1 = time.perf_counter()
@@ -69,7 +69,7 @@ def test_gather_sorting_comparison():
     
 
 if __name__ == '__main__':
-    #~ setup_module()
+    setup_module()
     test_gather_sorting_comparison() 
 
 
