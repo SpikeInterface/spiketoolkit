@@ -1,9 +1,25 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
-from scipy import special, signal
+
+try:
+    from scipy import special, signal
+    HAVE_RR = True
+except ImportError:
+    HAVE_RR = False
 
 class ResampledRecording(RecordingExtractor):
+
+    preprocessor_name = 'ResampledRecording'
+    installed = HAVE_RR  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+        {'name': 'resample_rate', 'type': 'float', 'title': "The resampling frequency"},
+    ]
+    installation_mesg = "To use the ResampledRecording, install scipy: \n\n pip install scipy\n\n"  # err
+
+
     def __init__(self, recording, resample_rate):
+        assert HAVE_RR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate

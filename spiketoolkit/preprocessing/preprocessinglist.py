@@ -6,3 +6,16 @@ from .resample import resample, ResampledRecording
 from .rectify import rectify, RectifyRecording
 from .remove_artifacts import remove_artifacts, RemoveArtifactsRecording
 from .scale_traces import scale_traces, ScaleTracesRecording
+
+preprocessers_full_list = [
+    BandpassFilterRecording,
+    NotchFilterRecording,
+    WhitenRecording,
+    CommonReferenceRecording,
+    ResampledRecording,
+    RectifyRecording,
+    RemoveArtifactsRecording,
+    ScaleTracesRecording
+]
+
+installed_preprocessers_list = [pp for pp in preprocessers_full_list if pp.installed]

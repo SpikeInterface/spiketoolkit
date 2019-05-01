@@ -20,15 +20,15 @@ install:
 #  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest==4.3
-  - pip install Cython 
+  - pip install Cython
   - pip install h5py # for klusta
-  - pip install click klusta klustakwik2 
+  - pip install click klusta klustakwik2
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
   - pip install https://github.com/mhhennig/HS2/archive/master.zip
   - pip install spyking-circus
   - pip install pyqt5
   - pip install https://github.com/alejoe91/ml_ms4alg/archive/master.zip
-script: 
+script:
   # py.test -s
   python -m pytest
 deploy:

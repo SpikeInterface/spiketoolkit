@@ -1,9 +1,6 @@
 from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
-import threading
-import time
-
 
 class FilterRecording(se.RecordingExtractor):
     def __init__(self, recording, chunk_size=10000):

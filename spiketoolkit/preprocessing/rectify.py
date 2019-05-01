@@ -2,6 +2,14 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 class RectifyRecording(RecordingExtractor):
+
+    preprocessor_name = 'RectifyRecording'
+    installed = True  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+    ]
+    installation_mesg = ""  # err
+
     def __init__(self, recording):
         RecordingExtractor.__init__(self)
         self._recording = recording
