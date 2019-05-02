@@ -1,16 +1,33 @@
 from .filterrecording import FilterRecording
 import numpy as np
-from scipy import special
-from scipy.signal import iirnotch, filtfilt
+
+try:
+    from scipy import special
+    from scipy.signal import iirnotch, filtfilt
+    HAVE_NFR = True
+except ImportError:
+    HAVE_NFR = False
 
 class NotchFilterRecording(FilterRecording):
-    def __init__(self, recording, freq=3000, q=30):
+
+    preprocessor_name = 'NotchFilterRecording'
+    installed = HAVE_NFR  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+        {'name': 'freq', 'type': 'float', 'value':3000, 'default':3000, 'title': "Frequency"},
+        {'name': 'q', 'type': 'int', 'value':30, 'default':30, 'title': "Quality factor"},
+    ]
+    installation_mesg = "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"  # error message when not installed
+
+    def __init__(self, recording, freq=3000, q=30, verbose=True):
+        assert HAVE_NFR, "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"
         FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10)
         self._recording = recording
         self._freq = freq
         self._q = q
         self.copy_channel_properties(recording)
-        print('Notch filter at: ', self._freq)
+        if(verbose):
+            print('Notch filter at: ', self._freq)
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
@@ -72,7 +89,7 @@ class NotchFilterRecording(FilterRecording):
         return ret
 
 
-def notch_filter(recording, freq=3000, q=30):
+def notch_filter(recording, freq=3000, q=30, verbose=True):
     '''
     Performs a notch filter on the recording extractor traces using scipy iirnotch function.
 
@@ -84,7 +101,8 @@ def notch_filter(recording, freq=3000, q=30):
         The target frequency of the notch filter.
     q: int
         The quality factor of the notch filter.
-
+    verbose: bool
+        Filter is verbose if True
     Returns
     -------
     filter_recording: NotchFilterRecording
@@ -95,4 +113,5 @@ def notch_filter(recording, freq=3000, q=30):
         recording=recording,
         freq=freq,
         q=q,
+        verbose=verbose,
     )

@@ -2,6 +2,15 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 class ScaleTracesRecording(RecordingExtractor):
+
+    preprocessor_name = 'ScaleTracesRecording'
+    installed = True  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+        {'name': 'scalar', 'type': 'float', 'title': "Scalar for the traces of the recording extractor"},
+    ]
+    installation_mesg = ""  # err
+
     def __init__(self, recording, scalar):
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
