@@ -61,33 +61,36 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         List of sorter name.
     
     recording_dict_or_list: dict or list
-        A dict of recording. The key will be the name of teh recording.
+        A dict of recording. The key will be the name of the recording.
         In a list is given then the name will be recording_0, recording_1, ...
     
-    working_folder: a path
+    working_folder: str
         The working directory.
         This must not exists before calling this function.
     
-    grouping_property:
+    grouping_property: str
         The property of grouping given to sorters.
     
     shared_binary_copy: False default
         Before running each sorter, all recording are copied inside 
         the working_folder with the raw binary format (BinDatRecordingExtractor)
-        and new recording are done BinDatRecordingExtractor.
-        This avoid multiple copy inside each sorter of teh same file but
+        and new recording are instantiated as BinDatRecordingExtractor.
+        This avoids multiple copy inside each sorter of the same file but
         imply a global of all files.
 
-    engine: 'loop' or 'multiprocessing' 
+    engine: str
+        'loop' or 'multiprocessing'
     
     engine_kargs: dict
         This contains kargs specific to the launcher engine:
             * 'loop' : no kargs
             * 'multiprocessing' : {'processes' : } number of processes
     
-    debug: bool default True
+    debug: bool
+        default True
     
-    write_log: bool default True
+    write_log: bool
+        default True
     
     Output
     ----------
@@ -150,7 +153,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     if engine is None or engine == 'loop':
         # simple loop in main process
         for arg_list in task_list:
-            print(arg_list)
+            # print(arg_list)
             _run_one(arg_list)
 
     elif engine == 'multiprocessing':
