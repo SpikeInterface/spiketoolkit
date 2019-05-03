@@ -200,13 +200,9 @@ def do_matching(sorting1, sorting2, delta_tp, min_accuracy, n_jobs=-1):
                 unit_map12,  unit_map21)
 
 
-
-
-
-    
-def do_counting(sorting1, sorting2, delta_tp, unit_map12):
+def do_score_labels(sorting1, sorting2, delta_tp, unit_map12):
     """
-    This count all counting score possible lieke:
+    Make the labelling at spike level for each spike train:
       * TP: true positive
       * CL: classification error
       * FN: False negative
@@ -231,16 +227,12 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
     Output
     ----------
     
-    counts: dict 
-        A dict containing all coutning
+    labels_st1: dict of np.array of str
+        Contain score labels for units of sorting 1
     
-    labels_st1: np.array of str
-        Contain label for units of sorting 1
-    
-    labels_st2: np.array of str
-        Contain label for units of sorting 2
+    labels_st2: dict of np.array of str
+        Contain score labels for units of sorting 2
     """
-    
     unit1_ids = sorting1.get_unit_ids()
     unit2_ids = sorting2.get_unit_ids()
     labels_st1 = dict()
@@ -249,12 +241,6 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
     N2 = len(unit2_ids)
 
     # copy spike trains for faster access from extractors with memmapped data
-    #~ sts1 = []
-    #~ for u in sorting1.get_unit_ids():
-        #~ sts1.append(sorting1.get_unit_spike_train(u))
-    #~ sts2 = []
-    #~ for u in sorting2.get_unit_ids():
-        #~ sts2.append(sorting2.get_unit_spike_train(u))
     sts1 = {u1: sorting1.get_unit_spike_train(u1) for u1 in unit1_ids}
     sts2 = {u2: sorting2.get_unit_spike_train(u2) for u2 in unit2_ids}
     
@@ -309,20 +295,91 @@ def do_counting(sorting1, sorting2, delta_tp, unit_map12):
         lab_st2 = labels_st2[u2]
         for l_gt, lab in enumerate(lab_st2):
             if lab == 'UNPAIRED':
-                lab_st2[l_gt] = 'FP'
+                lab_st2[l_gt] = 'FP'                
+    
+    return labels_st1, labels_st2
+    
+def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
+    """
+    Count the number of TP/FP/FN/.. with several strategies:
+      * 'by_spiketrains'
+      * 'pooled_with_sum'
+    
+    Note1: the strategy of counting affect a lot.
+    
+    Note2: 'pooled_with_average' is done outside with avering the rate (not the counting)
+    
+    
+    Parameters
+    ----------
+    sorting1: SortingExtractor instance
+        The ground truth sorting.
+    
+    sorting2: SortingExtractor instance
+        The tested sorting.
 
-    TOT_ST1 = sum([len(sts1[u1]) for u1 in unit1_ids])
-    TOT_ST2 = sum([len(sts2[u2]) for u2 in unit2_ids])
+    unit_map12: dict
+        Dict of matching from sorting1 to sorting2.
+        
+    
+    labels_st1: dict of np.array of str
+        Contain score labels for units of sorting 1
+    
+    labels_st2: dict of np.array of str
+        Contain score labels for units of sorting 2
+
+    Output
+    ----------
+    
+    mixed_counts: dict of dict
+        A dict with a sub dict for each method.
+    
+    """
+    unit1_ids = sorting1.get_unit_ids()
+    unit2_ids = sorting2.get_unit_ids()
+
+
+    # pooled_with_sum
+    # Note from Samuel: this was the previous counting method before May 2019
+    # The code is not modified but could be faster using 
+    # count_by_spiketrains dict
+    TOT_ST1 = sum([len(labels_st1[u1]) for u1 in unit1_ids])
+    TOT_ST2 = sum([len(labels_st2[u2]) for u2 in unit2_ids])
     total_spikes = TOT_ST1 + TOT_ST2
-    TP = sum([len(np.where('TP' == labels_st1[unit])[0]) for unit in unit1_ids])
+    TP = sum([len(np.where('TP' == labels_st1[u1])[0]) for u1 in unit1_ids])
     CL = sum([len([i for i, v in enumerate(labels_st1[u1]) if 'CL' in v]) for u1 in unit1_ids])
     FN = sum([len(np.where('FN' == labels_st1[u1])[0]) for u1 in unit1_ids])
     FP = sum([len(np.where('FP' == labels_st2[u2])[0]) for u2 in unit2_ids])
+    counts_pooled_with_sum = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 
+                                'TOT': total_spikes, 'TOT_ST1': TOT_ST1, 'TOT_ST2': TOT_ST2}
     
-    counts = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 'TOT': total_spikes, 'TOT_ST1': TOT_ST1,
-                   'TOT_ST2': TOT_ST2}
-
-    return counts, labels_st1, labels_st2
+    
+    # by_spiketrains
+    count_by_spiketrains = {}
+    for u1 in unit1_ids:
+        u2 = unit_map12[u1]
+        count_by_spiketrains[u1] = {
+            'TP': np.sum(labels_st1[u1] == 'TP'),
+            'CL': sum(e.startswith('CL') for e in labels_st1[u1]),
+            'FN': np.sum(labels_st1[u1] == 'FN'),
+            'NB_SPIKE_1' : labels_st1[u1].size,
+        }
+        
+        if u2==-1:
+            # no match
+            count_by_spiketrains[u1]['FP'] = 0
+            count_by_spiketrains[u1]['NB_SPIKE_2'] = 0
+        else:
+            count_by_spiketrains[u1]['FP'] = np.sum(labels_st2[u2] == 'FP')
+            count_by_spiketrains[u1]['NB_SPIKE_2'] = labels_st2[u2].size
+    
+    # put everything in a dict so this can be extened
+    mixed_counts = {
+        'by_spiketrains': count_by_spiketrains,
+        'pooled_with_sum': counts_pooled_with_sum,
+    }
+    
+    return mixed_counts
     
 
 

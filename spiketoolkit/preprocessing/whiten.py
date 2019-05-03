@@ -3,6 +3,14 @@ import numpy as np
 
 
 class WhitenRecording(FilterRecording):
+
+    preprocessor_name = 'WhitenRecording'
+    installed = True  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+    ]
+    installation_mesg = ""  # err
+
     def __init__(self, recording):
         FilterRecording.__init__(self, recording=recording, chunk_size=1000)
         self._recording = recording
@@ -32,6 +40,20 @@ class WhitenRecording(FilterRecording):
 
 
 def whiten(recording):
+    '''
+    Whitens the recording extractor traces.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be whitened.
+
+    Returns
+    -------
+    whitened_recording: WhitenRecording
+        The whitened recording extractor
+
+    '''
     return WhitenRecording(
         recording=recording
     )

@@ -1,9 +1,25 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
-from scipy import special, signal
+
+try:
+    from scipy import special, signal
+    HAVE_RR = True
+except ImportError:
+    HAVE_RR = False
 
 class ResampledRecording(RecordingExtractor):
+
+    preprocessor_name = 'ResampledRecording'
+    installed = HAVE_RR  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+        {'name': 'resample_rate', 'type': 'float', 'title': "The resampling frequency"},
+    ]
+    installation_mesg = "To use the ResampledRecording, install scipy: \n\n pip install scipy\n\n"  # err
+
+
     def __init__(self, recording, resample_rate):
+        assert HAVE_RR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate
@@ -35,7 +51,6 @@ class ResampledRecording(RecordingExtractor):
                                            end_frame=end_frame_not_sampled,
                                            channel_ids=channel_ids)
         if np.mod(self._recording.get_sampling_frequency(), self._resample_rate) == 0:
-            print('Decimate')
             traces_resampled = signal.decimate(traces,
                                                q=int(self._recording.get_sampling_frequency() / self._resample_rate),
                                                axis=1)
@@ -48,6 +63,23 @@ class ResampledRecording(RecordingExtractor):
 
 
 def resample(recording, resample_rate):
+    '''
+    Resamples the recording extractor traces. If the resampling rate is multiple of the sampling rate, the faster
+    scipy decimate function is used.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be resampled
+    resample_rate: int or float
+        The resampling frequency
+
+    Returns
+    -------
+    resampled_recording: ResampledRecording
+        The resampled recording extractor
+
+    '''
     return ResampledRecording(
         recording=recording,
         resample_rate=resample_rate

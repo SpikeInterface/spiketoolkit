@@ -4,16 +4,23 @@ import spiketoolkit as st
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True):
     '''
+    Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel.
 
     Parameters
     ----------
-    recording
-    sorting
-    unit_ids
-    save_as_property
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extraxtor
+    unit_ids: list
+        List of unit ids to compute SNR for. If not specified, all units are used
+    save_as_property: bool
+        If True (defult), the computed SNR is added as a unit property to the sorting extractor as 'snr'
 
     Returns
     -------
+    snr_list: list
+        List of computed SNRs
 
     '''
     if unit_ids is None:

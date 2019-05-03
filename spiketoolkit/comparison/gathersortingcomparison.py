@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import SortingComparison, compute_performance, _perf_keys
+from .sortingcomparison import SortingComparison, _perf_keys
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """
@@ -28,6 +28,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
     Returns
     ----------
+    comparisons: a dict of SortingComparison
     
     out_dataframes: a dict of DataFrame
         Return several usefull DataFrame to compare all results:
@@ -37,7 +38,9 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     
     working_folder = Path(working_folder)
     
+    comparisons = {}
     out_dataframes = {}
+    
     
     # get run times:
     run_times = pd.read_csv(working_folder /  'run_time.csv', sep='\t', header=None)
@@ -46,9 +49,12 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     out_dataframes['run_times'] = run_times
     
     
-    #~ columns =  ['tp_rate', 'fn_rate']
-    performances = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    out_dataframes['performances'] = performances
+    perf_pooled_with_sum = pd.DataFrame(index=run_times.index, columns=_perf_keys)
+    out_dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
+
+    perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
+    out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
+    
     
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
@@ -60,17 +66,21 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             
             gt_sorting = ground_truths[rec_name]
 
-            comp = SortingComparison(gt_sorting, sorting, count=True)
+            sorting_comp = SortingComparison(gt_sorting, sorting, count=True)
             
-            perf = compute_performance(comp, verbose=False, output='pandas')
+            comparisons[(rec_name, sorter_name)] = sorting_comp
             
-            performances.loc[(rec_name, sorter_name), :] = perf
+            perf = sorting_comp.get_performance(method='pooled_with_sum', output='pandas')
+            perf_pooled_with_sum.loc[(rec_name, sorter_name), :] = perf
+
+            perf = sorting_comp.get_performance(method='pooled_with_average', output='pandas')
+            perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
 
     
     if not use_multi_index:
         for k, df in out_dataframes.items():
             out_dataframes[k] = df.reset_index()
     
-    return out_dataframes
+    return comparisons, out_dataframes
 
 

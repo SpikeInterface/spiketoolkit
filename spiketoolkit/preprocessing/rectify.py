@@ -2,6 +2,14 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 class RectifyRecording(RecordingExtractor):
+
+    preprocessor_name = 'RectifyRecording'
+    installed = True  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
+    ]
+    installation_mesg = ""  # err
+
     def __init__(self, recording):
         RecordingExtractor.__init__(self)
         self._recording = recording
@@ -27,6 +35,21 @@ class RectifyRecording(RecordingExtractor):
 
 
 def rectify(recording):
+    '''
+    Rectifies the recording extractor traces. It is useful, in combination with 'resample', to compute multi-unit
+    activity (MUA).
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor object to be rectified
+
+    Returns
+    -------
+    rectified_recording: RectifyRecording
+        The rectified recording extractor object
+
+    '''
     return RectifyRecording(
         recording=recording
     )
