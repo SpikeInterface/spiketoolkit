@@ -13,7 +13,7 @@ class MultiSortingComparison():
         if name_list is not None and len(name_list) == len(sorting_list):
             self._name_list = name_list
         else:
-            self._name_list = [str(i) for i in range(len(sorting_list))]
+            self._name_list = ['sorter' + str(i) for i in range(len(sorting_list))]
         self._delta_tp = delta_tp
         self._min_accuracy = min_accuracy
         self._do_matching(verbose, delta_tp)
@@ -143,8 +143,7 @@ class MultiSortingComparison():
 
         self.added_nodes = added_nodes
 
-    def plot_agreement(self, minimum_matching=0):
-        import matplotlib.pylab as plt
+    def _do_agreement_matrix(self, minimum_matching=0):
         sorted_name_list = sorted(self._name_list)
         sorting_agr = AgreementSortingExtractor(self, minimum_matching)
         unit_ids = sorting_agr.get_unit_ids()
@@ -160,6 +159,14 @@ class MultiSortingComparison():
                     agreement_matrix[u_i, sort_name] = np.nan
                 else:
                     agreement_matrix[u_i, sort_name] = sorting_agr.get_unit_property(unit, 'avg_agreement')
+        return agreement_matrix
+
+    def plot_agreement(self, minimum_matching=0):
+        import matplotlib.pylab as plt
+        sorted_name_list = sorted(self._name_list)
+        sorting_agr = AgreementSortingExtractor(self, minimum_matching)
+        unit_ids = sorting_agr.get_unit_ids()
+        agreement_matrix = _do_agreement_matrix(minimum_matching)
 
         fig, ax = plt.subplots()
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.
@@ -224,7 +231,7 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accu
     sorting_list: list
         List of sorting extractor objects to be compared
     name_list: list
-        List of spike sorter names. If not given, sorters are named as 'sorter_0', 'sorter_1', 'sorter_2', etc.
+        List of spike sorter names. If not given, sorters are named as 'sorter0', 'sorter1', 'sorter2', etc.
     delta_tp: int
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
