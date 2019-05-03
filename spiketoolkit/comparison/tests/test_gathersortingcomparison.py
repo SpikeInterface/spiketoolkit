@@ -36,8 +36,8 @@ def _run_sorters():
     
     # run all sorter
     recording_dict = {'toy_tetrode' : rec0, 'toy_probe32': rec1}
-    #~ sorter_list = ['tridesclous', 'herdingspikes']
-    sorter_list = ['tridesclous', 'klusta']
+    sorter_list = ['tridesclous', 'herdingspikes']
+    #~ sorter_list = ['tridesclous', 'klusta']
     t0 = time.perf_counter()
     run_sorters(sorter_list, recording_dict, working_folder, engine=None)
     t1 = time.perf_counter()
@@ -55,9 +55,9 @@ def test_gather_sorting_comparison():
     ground_truths['toy_tetrode'] = pickle.load(open(path + 'gt_sorting0', mode='rb'))
     ground_truths['toy_probe32'] = pickle.load(open(path + 'gt_sorting1', mode='rb'))
     
-    comp_dataframes = gather_sorting_comparison(working_folder, ground_truths,use_multi_index=True)
+    comparisons, dataframes = gather_sorting_comparison(working_folder, ground_truths,use_multi_index=True)
     
-    for k, df in comp_dataframes.items():
+    for k, df in dataframes.items():
         print('*'*10)
         print(k)
         print(df)
