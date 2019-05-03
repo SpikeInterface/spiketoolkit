@@ -489,10 +489,10 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_tp=10):
 
     # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
     for sp_i, n_sp in enumerate(spiketrain1):
-        id_sp, = np.where((spiketrain2 > n_sp - delta_tp) & (spiketrain2 < n_sp + delta_tp))
-        if len(id_sp) == 1:
+        matches = (np.abs(spiketrain2.astype(int) - n_sp) <= delta_tp // 2)
+        if np.sum(matches) > 0:
             lab_st1[sp_i] = 'TP'
-            lab_st2[id_sp] = 'TP'
+            lab_st2[np.where(matches)[0][0]] = 'TP'
 
     for l_gt, lab in enumerate(lab_st1):
         if lab == 'UNPAIRED':

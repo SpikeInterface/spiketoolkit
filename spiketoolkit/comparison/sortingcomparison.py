@@ -257,18 +257,17 @@ class SortingComparison():
         
         method: str 'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
         
-        ourtput: str 'pandas' or 'dict'
+        output: str 'pandas' or 'dict'
         
         
         
         """
-        
+        if self._mixed_counts is None:
+            self._do_counting()
         if method == 'by_spiketrain':
             assert output=='pandas', "Output must be pandas for by_spiketrain"
-            
-            
+
             unit1_ids = self._sorting1.get_unit_ids()
-            
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             
             for u1 in unit1_ids:
@@ -312,9 +311,9 @@ class SortingComparison():
                 false_discovery_rate = np.nan
 
 
-            perf = {'tp_rate': tp_rate, 'cl_rate': cl_rate, 'fn_rate': fn_rate, 'fp_rate_st1': fp_rate_st1, 'fp_rate_st2': fp_rate_st2,
-                           'accuracy': accuracy, 'sensitivity': sensitivity, 'precision': precision, 'miss_rate': miss_rate,
-                           'false_disc_rate': false_discovery_rate}
+            perf = {'tp_rate': tp_rate, 'fn_rate': fn_rate, 'cl_rate': cl_rate, 'fp_rate_st1': fp_rate_st1,
+                    'fp_rate_st2': fp_rate_st2, 'accuracy': accuracy, 'sensitivity': sensitivity,
+                    'precision': precision, 'miss_rate': miss_rate, 'false_discovery_rate': false_discovery_rate}
         
             if output == 'pandas':
                 perf = pd.Series(perf)
@@ -376,10 +375,48 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
+def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
+                        count=False, verbose=False):
+    '''
+    Compares two spike sorter outputs.
 
+    - Spike trains are matched based on their agreement scores
+    - Individual spikes are labelled as true positives (TP), false negatives (FN), false positives 1 (FP from spike
+    train 1), false positives 2 (FP from spike train 2), misclassifications (CL)
+
+    It also allows to compute_performance and confusion matrix.
+
+    Parameters
+    ----------
+    sorting1: SortingExtractor
+        The first sorting for the comparison
+    sorting2: SortingExtractor
+        The second sorting for the comparison
+    sorting1_name: str
+        The name of sorter 1
+    sorting2_name: : str
+        The name of sorter 2
+    delta_tp: int
+        Number of frames to consider coincident spikes (default 10)
+    min_accuracy: float
+        Minimum agreement score to match units (default 0.5)
+    count: bool
+        If True, counts are performed at initialization
+    verbose: bool
+        If True, output is verbose
+
+    Returns
+    -------
+    sorting_comparison: SortingComparison
+        The SortingComparison object
+
+    '''
+    return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_tp, min_accuracy,
+                             count, verbose)
 
 # usefull for gathercomparison
-_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'accuracy', 'sensitivity', 'precision', 'miss_rate', 'false_disc_rate']
+_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'accuracy', 'sensitivity', 'precision',
+              'miss_rate', 'false_discovery_rate']
 
 
 
@@ -395,5 +432,5 @@ ACCURACY: {accuracy}
 SENSITIVITY: {sensitivity}
 MISS RATE: {miss_rate}
 PRECISION: {precision}
-FALSE DISCOVERY RATE: {false_disc_rate}
+FALSE DISCOVERY RATE: {false_discovery_rate}
 """

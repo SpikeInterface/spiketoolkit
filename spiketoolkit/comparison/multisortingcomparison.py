@@ -7,7 +7,7 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_tp=10, minimum_accuracy=0.5):
+    def __init__(self, sorting_list, name_list=None, delta_tp=10, min_accuracy=0.5, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
@@ -15,8 +15,8 @@ class MultiSortingComparison():
         else:
             self._name_list = [str(i) for i in range(len(sorting_list))]
         self._delta_tp = delta_tp
-        self._min_accuracy = minimum_accuracy
-        self._do_matching()
+        self._min_accuracy = min_accuracy
+        self._do_matching(verbose, delta_tp)
 
     def get_sorting_list(self):
         return self._sorting_list
@@ -24,20 +24,21 @@ class MultiSortingComparison():
     def get_agreement_sorting(self, minimum_matching=0):
         return AgreementSortingExtractor(self, min_agreement=minimum_matching)
 
-    def _do_matching(self):
+    def _do_matching(self, verbose, tollerance=10):
         # do pairwise matching
         self.sorting_comparisons = {}
         for i in range(len(self._sorting_list)):
-            comparison_ = []
+            comparison_ = {}
             for j in range(len(self._sorting_list)):
                 if i != j:
-                    print("Comparing: ", self._name_list[i], " and ", self._name_list[j])
-                    comparison_.append(SortingComparison(self._sorting_list[i], self._sorting_list[j],
-                                                         sorting1_name=self._name_list[i],
-                                                         sorting2_name=self._name_list[j],
-                                                         delta_tp=self._delta_tp,
-                                                         min_accuracy=self._min_accuracy,
-                                                         verbose=True))
+                    if verbose:
+                        print("Comparing: ", self._name_list[i], " and ", self._name_list[j])
+                    comparison_[self._name_list[j]] = SortingComparison(self._sorting_list[i], self._sorting_list[j],
+                                                                        sorting1_name=self._name_list[i],
+                                                                        sorting2_name=self._name_list[j],
+                                                                        delta_tp=self._delta_tp,
+                                                                        min_accuracy=self._min_accuracy,
+                                                                        verbose=verbose)
             self.sorting_comparisons[self._name_list[i]] = comparison_
 
         # create graph
@@ -45,23 +46,24 @@ class MultiSortingComparison():
         graph = nx.Graph()
         for sort_name, sort_comp in self.sorting_comparisons.items():
             unit_agreement = {}
-            units = sort_comp[0].get_sorting1().get_unit_ids()
+            sort_comp2 = list(sort_comp.keys())
+            units = sort_comp[sort_comp2[0]].get_sorting1().get_unit_ids()
             for unit in units:
                 matched_list = {}
                 matched_agreement = {}
-                for sc in sort_comp:
+                for k, sc in sort_comp.items():
                     mapped_unit = sc.get_mapped_sorting1().get_mapped_unit_ids(unit)
                     mapped_agr = sc.get_agreement_fraction(unit, sc.get_mapped_sorting1().get_mapped_unit_ids(unit))
                     matched_list[sc.sorting2_name] = mapped_unit
                     matched_agreement[sc.sorting2_name] = mapped_agr
-
                     node1_name = str(sort_name) + '_' + str(unit)
                     graph.add_node(node1_name)
                     if mapped_unit != -1:
                         node2_name = str(sc.sorting2_name) + '_' + str(mapped_unit)
                         if node2_name not in graph:
                             graph.add_node(node2_name)
-                            print('Adding edge: ', node1_name, node2_name)
+                            if verbose:
+                                print('Adding edge: ', node1_name, node2_name)
                             graph.add_edge(node1_name, node2_name, weight=mapped_agr)
                 unit_agreement[unit] = {'units': matched_list, 'score': matched_agreement}
             agreement[sort_name] = unit_agreement
@@ -72,6 +74,7 @@ class MultiSortingComparison():
         self._spiketrains = []
         added_nodes = []
         unit_id = 0
+
         for n in self.graph.nodes():
             edges = graph.edges(n, data=True)
             sorter, unit = (str(n)).split('_')
@@ -92,41 +95,52 @@ class MultiSortingComparison():
                 all_edges = list(edges)
                 for e in edges:
                     n1, n2, d = e
-                    new_edge = self.graph.edges(n2, data=True)
-                    if len(new_edge) > 0:
-                        for e_n in new_edge:
-                            e_n1, e_n2, d = e_n
-                            if sorted([e_n1, e_n2]) not in [sorted([u, v]) for u, v, _ in all_edges]:
+                    n2_edges = self.graph.edges(n2, data=True)
+                    if len(n2_edges) > 0:
+                        for e_n in n2_edges:
+                            n_n1, n_n2, d = e_n
+                            if sorted([n_n1, n_n2]) not in [sorted([u, v]) for u, v, _ in all_edges]:
                                 all_edges.append(e_n)
                 matched_num = len(all_edges) + 1
                 avg_agr = np.mean([d['weight'] for u, v, d in all_edges])
                 max_edge = list(all_edges)[np.argmax([d['weight'] for u, v, d in all_edges])]
-                n1, n2, d = max_edge
 
-                if n1 not in added_nodes and n2 not in added_nodes:
-                    sorter1, unit1 = n1.split('_')
-                    sorter2, unit2 = n2.split('_')
-                    unit1 = int(unit1)
-                    unit2 = int(unit2)
-                    sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
-                    sp2 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
-                    lab1, lab2 = compare_spike_trains(sp1, sp2)
-                    tp_idx1 = np.where(np.array(lab1) == 'TP')
-                    tp_idx2 = np.where(np.array(lab2) == 'TP')
-                    assert len(tp_idx1) == len(tp_idx2)
-                    sp_tp1 = list(np.array(sp1)[tp_idx1])
-                    sp_tp2 = list(np.array(sp2)[tp_idx2])
-                    assert np.all(sp_tp1 == sp_tp2)
-                    sorting_idxs = {sorter1: unit1, sorter2: unit2}
-                    self._new_units[unit_id] = {'matched_number': matched_num,
-                                                'avg_agreement': avg_agr,
-                                                'sorter_unit_ids': sorting_idxs}
-                    self._spiketrains.append(sp_tp1)
-                    unit_id += 1
-                    # print("ADDING NODES: ", n, n1, n2, d['weight'])
-                    added_nodes.append(str(n))
-                    added_nodes.append(str(n1))
-                    added_nodes.append(str(n2))
+                for edge in all_edges:
+                    n1, n2, d = edge
+                    if n1 not in added_nodes or n2 not in added_nodes:
+                        sorter1, unit1 = n1.split('_')
+                        sorter2, unit2 = n2.split('_')
+                        unit1 = int(unit1)
+                        unit2 = int(unit2)
+                        sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
+                        sp2 = self._sorting_list[self._name_list.index(sorter2)].get_unit_spike_train(unit2)
+                        lab1, lab2 = compare_spike_trains(sp1, sp2)
+                        tp_idx1 = np.where(np.array(lab1) == 'TP')[0]
+                        tp_idx2 = np.where(np.array(lab2) == 'TP')[0]
+                        assert len(tp_idx1) == len(tp_idx2)
+                        sp_tp1 = list(np.array(sp1)[tp_idx1])
+                        sp_tp2 = list(np.array(sp2)[tp_idx2])
+                        assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
+                        sorting_idxs = {sorter1: unit1, sorter2: unit2}
+                        if unit_id not in self._new_units.keys():
+                            self._new_units[unit_id] = {'matched_number': matched_num,
+                                                        'avg_agreement': avg_agr,
+                                                        'sorter_unit_ids': sorting_idxs}
+                        else:
+                            full_sorting_idxs = self._new_units[unit_id]['sorter_unit_ids']
+                            for s, u in sorting_idxs.items():
+                                if s not in full_sorting_idxs:
+                                    full_sorting_idxs[s] = u
+                            self._new_units[unit_id] = {'matched_number': matched_num,
+                                                        'avg_agreement': avg_agr,
+                                                        'sorter_unit_ids': full_sorting_idxs}
+                        if edge == max_edge:
+                            self._spiketrains.append(sp_tp1)
+                        added_nodes.append(str(n))
+                        added_nodes.append(str(n1))
+                        added_nodes.append(str(n2))
+                unit_id += 1
+
         self.added_nodes = added_nodes
 
     def plot_agreement(self, minimum_matching=0):
@@ -138,7 +152,10 @@ class MultiSortingComparison():
 
         for u_i, unit in enumerate(unit_ids):
             for sort_name, sorter in enumerate(sorted_name_list):
-                assigned_unit = sorting_agr.get_unit_property(unit, 'sorter_unit_ids')[sorter]
+                if sorter in sorting_agr.get_unit_property(unit, 'sorter_unit_ids').keys():
+                    assigned_unit = sorting_agr.get_unit_property(unit, 'sorter_unit_ids')[sorter]
+                else:
+                    assigned_unit = -1
                 if assigned_unit == -1:
                     agreement_matrix[u_i, sort_name] = np.nan
                 else:
@@ -174,11 +191,11 @@ class AgreementSortingExtractor(se.SortingExtractor):
 
         for unit in self._unit_ids:
             self.set_unit_property(unit_id=unit, property_name='matched_number',
-                                 value=self._msc._new_units[unit]['matched_number'])
+                                   value=self._msc._new_units[unit]['matched_number'])
             self.set_unit_property(unit_id=unit, property_name='avg_agreement',
-                                 value=self._msc._new_units[unit]['avg_agreement'])
+                                   value=self._msc._new_units[unit]['avg_agreement'])
             self.set_unit_property(unit_id=unit, property_name='sorter_unit_ids',
-                                 value=self._msc._new_units[unit]['sorter_unit_ids'])
+                                   value=self._msc._new_units[unit]['sorter_unit_ids'])
 
     def get_unit_ids(self, unit_ids=None):
         if unit_ids is None:
@@ -190,3 +207,34 @@ class AgreementSortingExtractor(se.SortingExtractor):
         if unit_id not in self.get_unit_ids():
             raise Exception("Unit id is invalid")
         return np.array(self._msc._spiketrains[self.get_unit_ids().index(unit_id)])
+    
+    
+def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accuracy=0.5, tollerance=10, 
+                             verbose=False):
+    '''
+    Compares multiple spike sorter outputs.
+    
+    - Pair-wise comparisons are made
+    - An agreement graph is built based on the agreement score
+    
+    It allows to return a consensus-based sorting extractor with the `get_agreement_sorting()` method.
+    
+    Parameters
+    ----------
+    sorting_list: list
+        List of sorting extractor objects to be compared
+    name_list: list
+        List of spike sorter names. If not given, sorters are named as 'sorter_0', 'sorter_1', 'sorter_2', etc.
+    delta_tp: int
+        Number of frames to consider coincident spikes (default 10)
+    min_accuracy: float
+        Minimum agreement score to match units (default 0.5)
+    verbose: bool
+        if True, output is verbose
+
+    Returns
+    -------
+    multi_sorting_comparison: MultiSortingComparison
+        MultiSortingComparison object with the multiple sorter comparison
+    '''
+    return MultiSortingComparison(sorting_list, name_list, delta_tp, min_accuracy, verbose)
