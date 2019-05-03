@@ -140,12 +140,9 @@ def test_compare_spike_trains():
     sp1 = np.array([100, 200, 300])
     sp2 = np.array([101, 201, 202, 300])
     lab_st1, lab_st2 = compare_spike_trains(sp1, sp2)
-    
-    # Note from Samuel : I copy/paste the implementation from old code.
-    # I think we should change this the 201 should be a TP but in this case it 
-    # is a FP
-    assert_array_equal(lab_st1, np.array(['TP', 'FN', 'TP']))
-    assert_array_equal(lab_st2, np.array(['TP', 'FP', 'FP', 'TP']))
+
+    assert_array_equal(lab_st1, np.array(['TP', 'TP', 'TP']))
+    assert_array_equal(lab_st2, np.array(['TP', 'TP', 'FP', 'TP']))
 
 
 if __name__ == '__main__':

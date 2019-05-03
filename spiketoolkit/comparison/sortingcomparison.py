@@ -8,17 +8,9 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
                                                 do_matching, do_score_labels, do_counting, do_confusion_matrix)
 
 
-
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
                  count=False, verbose=False):
-        """
-        TODO : doc here
-
-        the variable delta_tp should be strongly documented as it affect the match
-
-        the variable min_accuracy should be strongly documented as it affect the match
-        """
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name

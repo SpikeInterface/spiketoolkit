@@ -243,8 +243,7 @@ def do_score_labels(sorting1, sorting2, delta_tp, unit_map12):
     # copy spike trains for faster access from extractors with memmapped data
     sts1 = {u1: sorting1.get_unit_spike_train(u1) for u1 in unit1_ids}
     sts2 = {u2: sorting2.get_unit_spike_train(u2) for u2 in unit2_ids}
-    
-    # Evaluate
+
     for u1 in unit1_ids:
         lab_st1 = np.array(['UNPAIRED'] * len(sts1[u1]))
         labels_st1[u1] = lab_st1
