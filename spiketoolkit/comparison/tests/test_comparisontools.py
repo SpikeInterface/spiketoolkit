@@ -152,11 +152,8 @@ if __name__ == '__main__':
     #~ test_do_matching()
     #~ test_do_score_labels()
     test_do_counting()
-<<<<<<< HEAD
     test_do_confusion_matrix()
     test_compare_spike_trains()
-=======
-    #~ test_do_confusion_matrix()
->>>>>>> origin/master
+
 
 
