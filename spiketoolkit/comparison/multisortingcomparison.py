@@ -7,16 +7,16 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_tp=10, min_accuracy=0.5, verbose=False):
+    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
             self._name_list = name_list
         else:
             self._name_list = ['sorter' + str(i) for i in range(len(sorting_list))]
-        self._delta_tp = delta_tp
+        self._delta_frames = delta_frames
         self._min_accuracy = min_accuracy
-        self._do_matching(verbose, delta_tp)
+        self._do_matching(verbose, delta_frames)
 
     def get_sorting_list(self):
         return self._sorting_list
@@ -36,7 +36,7 @@ class MultiSortingComparison():
                     comparison_[self._name_list[j]] = SortingComparison(self._sorting_list[i], self._sorting_list[j],
                                                                         sorting1_name=self._name_list[i],
                                                                         sorting2_name=self._name_list[j],
-                                                                        delta_tp=self._delta_tp,
+                                                                        delta_frames=self._delta_frames,
                                                                         min_accuracy=self._min_accuracy,
                                                                         verbose=verbose)
             self.sorting_comparisons[self._name_list[i]] = comparison_
@@ -239,7 +239,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
         return np.array(self._msc._spiketrains[list(self._msc._new_units.keys()).index(unit_id)])
     
     
-def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accuracy=0.5, tollerance=10, 
+def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tollerance=10, 
                              verbose=False):
     '''
     Compares multiple spike sorter outputs.
@@ -255,7 +255,7 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accu
         List of sorting extractor objects to be compared
     name_list: list
         List of spike sorter names. If not given, sorters are named as 'sorter0', 'sorter1', 'sorter2', etc.
-    delta_tp: int
+    delta_frames: int
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
@@ -267,4 +267,4 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accu
     multi_sorting_comparison: MultiSortingComparison
         MultiSortingComparison object with the multiple sorter comparison
     '''
-    return MultiSortingComparison(sorting_list, name_list, delta_tp, min_accuracy, verbose)
+    return MultiSortingComparison(sorting_list, name_list, delta_frames, min_accuracy, verbose)
