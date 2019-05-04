@@ -18,7 +18,8 @@ setup(
         'scikit-learn',
         'scipy',
         'pandas',
-        'networkx'
+        'networkx',
+        'joblib'
     ],
     classifiers=(
         "Programming Language :: Python :: 3",
