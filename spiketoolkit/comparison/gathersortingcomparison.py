@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import SortingComparison, _perf_keys
+from .sortingcomparison import compare_two_sorters, _perf_keys
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """
@@ -47,26 +47,19 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     run_times.columns = ['rec_name', 'sorter_name', 'run_time']
     run_times = run_times.set_index(['rec_name', 'sorter_name',])
     out_dataframes['run_times'] = run_times
-    
-    
+
     perf_pooled_with_sum = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
 
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
-    
-    
+
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
-        #~ print()
-        #~ print(rec_name)
         for sorter_name, sorting in result_one_dataset.items():
-            #~ print(sorter_name)
-            #~ print(sorting)
-            
             gt_sorting = ground_truths[rec_name]
 
-            sorting_comp = SortingComparison(gt_sorting, sorting, count=True)
+            sorting_comp = compare_two_sorters(gt_sorting, sorting, count=True)
             
             comparisons[(rec_name, sorter_name)] = sorting_comp
             

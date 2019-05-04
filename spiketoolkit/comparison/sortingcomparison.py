@@ -250,10 +250,10 @@ class SortingComparison():
         method: str 'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
         
         output: str 'pandas' or 'dict'
-        
-        
-        
         """
+        if method != 'by_spiketrain' and method != 'pooled_with_sum' and method != 'pooled_with_average':
+            raise Exception("'method' can be 'by_spiketrain', 'pooled_with_average', or 'pooled_with_sum'")
+
         if self._mixed_counts is None:
             self._do_counting()
         if method == 'by_spiketrain':

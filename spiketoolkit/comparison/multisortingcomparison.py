@@ -62,6 +62,7 @@ class MultiSortingComparison():
                         node2_name = str(sc.sorting2_name) + '_' + str(mapped_unit)
                         if node2_name not in graph:
                             graph.add_node(node2_name)
+                        if (node1_name, node2_name) not in graph.edges:
                             if verbose:
                                 print('Adding edge: ', node1_name, node2_name)
                             graph.add_edge(node1_name, node2_name, weight=mapped_agr)
@@ -86,9 +87,7 @@ class MultiSortingComparison():
                 self._new_units[unit_id] = {'matched_number': matched_num,
                                             'avg_agreement': avg_agr,
                                             'sorter_unit_ids': sorting_idxs}
-                self._spiketrains.append(self._sorting_list[self._name_list.index(sorter)].get_unit_spike_train(unit))
                 unit_id += 1
-                # print("ADDING NODE (no match): ", n)
                 added_nodes.append(str(n))
             else:
                 # check if other nodes have edges (we should also check edges of
@@ -112,15 +111,6 @@ class MultiSortingComparison():
                         sorter2, unit2 = n2.split('_')
                         unit1 = int(unit1)
                         unit2 = int(unit2)
-                        sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
-                        sp2 = self._sorting_list[self._name_list.index(sorter2)].get_unit_spike_train(unit2)
-                        lab1, lab2 = compare_spike_trains(sp1, sp2)
-                        tp_idx1 = np.where(np.array(lab1) == 'TP')[0]
-                        tp_idx2 = np.where(np.array(lab2) == 'TP')[0]
-                        assert len(tp_idx1) == len(tp_idx2)
-                        sp_tp1 = list(np.array(sp1)[tp_idx1])
-                        sp_tp2 = list(np.array(sp2)[tp_idx2])
-                        assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
                         sorting_idxs = {sorter1: unit1, sorter2: unit2}
                         if unit_id not in self._new_units.keys():
                             self._new_units[unit_id] = {'matched_number': matched_num,
@@ -134,12 +124,45 @@ class MultiSortingComparison():
                             self._new_units[unit_id] = {'matched_number': matched_num,
                                                         'avg_agreement': avg_agr,
                                                         'sorter_unit_ids': full_sorting_idxs}
-                        if edge == max_edge:
-                            self._spiketrains.append(sp_tp1)
                         added_nodes.append(str(n))
-                        added_nodes.append(str(n1))
-                        added_nodes.append(str(n2))
+                        if n1 not in added_nodes:
+                            added_nodes.append(str(n1))
+                        if n2 not in added_nodes:
+                            added_nodes.append(str(n2))
                 unit_id += 1
+
+        # extract best matches true positive spike trains
+        for u, v in self._new_units.items():
+            if len(v['sorter_unit_ids'].keys()) == 1:
+                self._spiketrains.append(self._sorting_list[self._name_list.index(
+                    list(v['sorter_unit_ids'].keys())[0])].get_unit_spike_train(list(v['sorter_unit_ids'].values())[0]))
+            else:
+                nodes = []
+                edges = []
+                for sorter, unit in v['sorter_unit_ids'].items():
+                    nodes.append((sorter + '_' + str(unit)))
+                for n1 in nodes:
+                    for n2 in nodes:
+                        if n1 != n2:
+                            if (n1, n2) not in edges and (n2, n1) not in edges:
+                                edges.append((n1, n2))
+                max_weight = 0
+                for e in edges:
+                    w = self.graph.edges.get(e)['weight']
+                    if w > max_weight:
+                        max_weight = w
+                        max_edge = (e[0], e[1], w)
+                n1, n2, d = max_edge
+                sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
+                sp2 = self._sorting_list[self._name_list.index(sorter2)].get_unit_spike_train(unit2)
+                lab1, lab2 = compare_spike_trains(sp1, sp2)
+                tp_idx1 = np.where(np.array(lab1) == 'TP')[0]
+                tp_idx2 = np.where(np.array(lab2) == 'TP')[0]
+                assert len(tp_idx1) == len(tp_idx2)
+                sp_tp1 = list(np.array(sp1)[tp_idx1])
+                sp_tp2 = list(np.array(sp2)[tp_idx2])
+                assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
+                self._spiketrains.append(sp_tp1)
 
         self.added_nodes = added_nodes
 
@@ -213,7 +236,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
     def get_unit_spike_train(self, unit_id, start_frame=None, end_frame=None):
         if unit_id not in self.get_unit_ids():
             raise Exception("Unit id is invalid")
-        return np.array(self._msc._spiketrains[self.get_unit_ids().index(unit_id)])
+        return np.array(self._msc._spiketrains[list(self._msc._new_units.keys()).index(unit_id)])
     
     
 def compare_multiple_sorters(sorting_list, name_list=None, delta_tp=10, min_accuracy=0.5, tollerance=10, 
