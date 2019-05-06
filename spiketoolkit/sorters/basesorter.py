@@ -33,6 +33,7 @@ class BaseSorter:
     installed = False  # check at class level if isntalled or not
     SortingExtractor_Class = None  # convinience to get the extractor
     _default_params = {}
+    _gui_params = []
     installation_mesg = ""  # error message when not installed
 
     def __init__(self, recording=None, output_folder=None, debug=False,
@@ -67,6 +68,10 @@ class BaseSorter:
             if not output_folder.is_dir():
                 os.makedirs(str(output_folder))
         self.delete_folders = delete_output_folder
+
+    @classmethod
+    def gui_params(self):
+        return copy.deepcopy(self._gui_params)
 
     @classmethod
     def default_params(self):
