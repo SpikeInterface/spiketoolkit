@@ -6,11 +6,15 @@ CurationSortingExtractor to allow for excluding, merging, and splitting of units
 '''
 
 class ThresholdMinNumSpike(CurationSortingExtractor):
-    '''A SortingExtractor that automatically excludes units with num spikes
-    less than the minimum num spikethreshold number specified by the user.
 
+    preprocessor_name = 'ThresholdMinNumSpike'
+    installed = True  # check at class level if installed or not
+    _gui_params = [
+        {'name': 'sorting', 'type': 'SortingExtractor', 'title': "Sorting extractor"},
+        {'name': 'min_num_spike_threshold', 'type': 'int', 'value':50, 'default':50, 'title': "Minimum number of spikes in a unit for it to valid"},
+    ]
+    installation_mesg = "" # err
 
-    '''
     def __init__(self, sorting, min_num_spike_threshold=50):
         CurationSortingExtractor.__init__(self, parent_sorting=sorting)
         self._sorting = sorting
@@ -25,6 +29,20 @@ class ThresholdMinNumSpike(CurationSortingExtractor):
             self.exclude_units(units_to_be_excluded)
 
 def threshold_min_num_spikes(sorting, min_num_spike_threshold=50):
+    '''
+    Excludes units with number of spikes less than the min_num_spike_threshold.
+
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting extractor to be thresholded.
+
+    Returns
+    -------
+    min_num_spike_threshold: ThresholdMinNumSpike
+        The thresholded sorting extractor
+
+    '''
     return ThresholdMinNumSpike(
         sorting=sorting,
         min_num_spike_threshold=min_num_spike_threshold,
