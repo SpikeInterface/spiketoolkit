@@ -37,34 +37,38 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
     
     Parameters
     ----------
-    sorting1: SortingExtractor instance
-    
-    sorting2: SortingExtractor instance
+    sorting1: SortingExtractor
+        The first sorting extractor
+
+    sorting2: SortingExtractor
+        The second sorting extractor
     
     delta_frames: int
+        Number of frames to consider spikes coincident
     
     n_jobs: int
+        Number of jobs to run in parallel
     
-    Output
-    ----------
+    Returns
+    -------
     
-    event_counts_1:
-    
-    event_counts_2
-    
-    matching_event_counts_12:
-    
-    best_match_units_12:
-    
-    matching_event_counts_21:
-    
-    best_match_units_21:
-    
-    unit_map12:
-    
-    unit_map21:
+    event_counts_1: dict
+        Dictionary with unit as keys and number of spikes as values for sorting1
+    event_counts_2: dict
+        Dictionary with unit as keys and number of spikes as values for sorting2
+    matching_event_counts_12: dict
+        Dictionary with matching counts for each unit of sorting1 vs all units of sorting2
+    best_match_units_12: dict
+        Dictionary with best matched unit for each unit in sorting1
+    matching_event_counts_21: dict
+        Dictionary with matching counts for each unit of sorting2 vs all units of sorting1
+    best_match_units_21: dict
+        Dictionary with best matched unit of sorting2 for each unit in sorting1
+    unit_map12: dict
+        Mapped units for sorting1 to sorting2 using linear assignment. If units are not matched they are -1
+    unit_map21: dict
+        Mapped units for sorting2 to sorting1 using linear assignment. If units are not matched they are -1
 
-    
     """
     event_counts_1 = dict()
     event_counts_2 = dict()
@@ -195,9 +199,9 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
             unit_map21[u2] = -1
     
     return (event_counts_1,  event_counts_2,
-                matching_event_counts_12, best_match_units_12,
-                matching_event_counts_21,  best_match_units_21, 
-                unit_map12,  unit_map21)
+            matching_event_counts_12, best_match_units_12,
+            matching_event_counts_21,  best_match_units_21,
+            unit_map12,  unit_map21)
 
 
 def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
@@ -215,21 +219,17 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
     ----------
     sorting1: SortingExtractor instance
         The ground truth sorting.
-    
     sorting2: SortingExtractor instance
         The tested sorting.
-    
     delta_frames: int
-        
+        Number of frames to consider spikes coincident
     unit_map12: dict
         Dict of matching from sorting1 to sorting2.
 
-    Output
-    ----------
-    
+    Returns
+    -------
     labels_st1: dict of np.array of str
         Contain score labels for units of sorting 1
-    
     labels_st2: dict of np.array of str
         Contain score labels for units of sorting 2
     """
@@ -297,6 +297,7 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                 lab_st2[l_gt] = 'FP'                
     
     return labels_st1, labels_st2
+
     
 def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
@@ -313,23 +314,17 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     ----------
     sorting1: SortingExtractor instance
         The ground truth sorting.
-    
     sorting2: SortingExtractor instance
-        The tested sorting.
-
+        The tested sorting
     unit_map12: dict
-        Dict of matching from sorting1 to sorting2.
-        
-    
+        Dict of matching from sorting1 to sorting2
     labels_st1: dict of np.array of str
         Contain score labels for units of sorting 1
-    
     labels_st2: dict of np.array of str
         Contain score labels for units of sorting 2
 
-    Output
-    ----------
-    
+    Returns
+    -------
     mixed_counts: dict of dict
         A dict with a sub dict for each method.
     
@@ -381,7 +376,6 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     return mixed_counts
     
 
-
 def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
     Compute the confusion matrix between two sorting.
@@ -389,28 +383,21 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     Parameters
     ----------
     sorting1: SortingExtractor instance
-        The ground truth sorting.
-    
+        The ground truth sorting
     sorting2: SortingExtractor instance
-        The tested sorting.
-
+        The tested sorting
     unit_map12: dict
         Dict of matching from sorting1 to sorting2.
-        
 
-    Output
-    ----------
-    
-    confusion_matrix: the confusion matrix
-    
-    st1_idxs: order of units1 in confusion matrix
-    
-    
-    st2_idxs: order of units2 in confusion matrix
-    
-    
+    Returns
+    ------
+    confusion_matrix: np.array
+        The confusion matrix
+    st1_idxs: np.array
+        Array with order of units1 in confusion matrix
+    st2_idxs: np.array
+        Array with order of units2 in confusion matrix
     """
-
     unit1_ids = np.array(sorting1.get_unit_ids())
     unit2_ids = np.array(sorting2.get_unit_ids())
     N1 = len(unit1_ids)
@@ -474,13 +461,11 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     ----------
     spiketrain1,spiketrain2: numpy.array
         Times of spikes for the 2 spike trains.
-        
     
-    Output
-    ----------
-    
+    Returns
+    -------
     lab_st1, lab_st2: numpy.array
-        Label of score for each spike.
+        Label of score for each spike
     
     """
     lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
@@ -502,5 +487,3 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
             lab_st2[l_gt] = 'FP'
 
     return lab_st1, lab_st2
-    
-    

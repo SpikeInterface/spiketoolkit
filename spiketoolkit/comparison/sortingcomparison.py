@@ -56,13 +56,23 @@ class SortingComparison():
         The returned MappedSortingExtractor.get_mapped_unit_ids returns the mapped unit_ids
         of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1).
 
-        The returned MappedSortingExtractor.getUnitspikeTrains returns the the spike trains
+        The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 2 mapped to the unit_ids of sorting 1.
         """
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
 
     def get_mapped_sorting2(self):
-        # Samuel EDIT : the use case of this must documented
+        """
+        Returns a MappedSortingExtractor for sorting 2.
+
+        The returned MappedSortingExtractor.get_unit_ids returns the unit_ids of sorting 2.
+
+        The returned MappedSortingExtractor.get_mapped_unit_ids returns the mapped unit_ids
+        of sorting 1 to the units of sorting 2 (if units are not mapped they are labeled as -1).
+
+        The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
+        of sorting 1 mapped to the unit_ids of sorting 2.
+        """
         return MappedSortingExtractor(self._sorting1, self._unit_map21)
 
     def get_matching_event_count(self, unit1, unit2):
@@ -248,10 +258,15 @@ class SortingComparison():
     
         Parameters
         ----------
-        
-        method: str 'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
-        
-        output: str 'pandas' or 'dict'
+        method: str
+            'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
+        output: str
+            'pandas' or 'dict'
+
+        Returns
+        -------
+        perf: dict or pandas dataframe
+            Dictionary or dataframe (based on 'output') with performance entries
         """
         if method != 'by_spiketrain' and method != 'pooled_with_sum' and method != 'pooled_with_average':
             raise Exception("'method' can be 'by_spiketrain', 'pooled_with_average', or 'pooled_with_sum'")
