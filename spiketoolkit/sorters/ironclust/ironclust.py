@@ -2,7 +2,7 @@ from pathlib import Path
 import os
 import sys
 
-from ..tools import  _call_command_split
+from ..sorter_tools import  _call_command_split
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
 

@@ -1,9 +1,9 @@
 """
 Important note.
-For facilities 
+For facilities
 kilosort_path
 npy_matlab_path have been removed from args
-so only the 
+so only the
   klp = os.getenv('KILOSORT_PATH')
   npp = os.getenv('NPY_MATLAB_PATH')
 is left.
@@ -20,7 +20,7 @@ import numpy as np
 
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
-from ..tools import _call_command_split
+from ..sorter_tools import _call_command_split
 
 
 def check_if_installed(kilosort_path, npy_matlab_path):
@@ -50,15 +50,15 @@ else:
 
 class KilosortSorter(BaseSorter):
     """
-    
-    
+
+
     """
-    
+
     sorter_name = 'kilosort'
     installed = HAVE_KILOSORT
     kilosort_path = os.getenv('KILOSORT_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
-    
+
     _default_params = {
         'probe_file': None,
         'useGPU': True,
@@ -71,14 +71,14 @@ class KilosortSorter(BaseSorter):
     installation_mesg = """\nTo use Kilosort run:\n
         >>> git clone https://github.com/cortex-lab/KiloSort
         >>> git clone https://github.com/kwikteam/npy-matlab\n
-    and provide the installation path with the 'kilosort_path' and 
-    npy_matlab_path' arguments or by setting the KILOSORT2_PATH 
+    and provide the installation path with the 'kilosort_path' and
+    npy_matlab_path' arguments or by setting the KILOSORT2_PATH
     and NPY_MATLAB_PATH environment variables.\n\n
-    
+
     More information on KiloSort at:
         https://github.com/cortex-lab/KiloSort
     """
-    
+
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
@@ -91,9 +91,9 @@ class KilosortSorter(BaseSorter):
         KilosortSorter.npy_matlab_path = npy_matlab_path
 
     def _setup_recording(self, recording, output_folder):
-        
+
         source_dir = Path(__file__).parent
-        
+
         p = self.params
 
         if not check_if_installed(KilosortSorter.kilosort_path, KilosortSorter.npy_matlab_path):
@@ -138,7 +138,7 @@ class KilosortSorter(BaseSorter):
         kilosort_path = Path(KilosortSorter.kilosort_path).absolute()
         npy_matlab_path = Path(KilosortSorter.npy_matlab_path).absolute() / 'npy-matlab'
 
-        kilosort_master = ''.join(kilosort_master).format(ug, kilosort_path, npy_matlab_path, 
+        kilosort_master = ''.join(kilosort_master).format(ug, kilosort_path, npy_matlab_path,
                                                                              output_folder, abs_channel,
                                                           abs_config)
         kilosort_config = ''.join(kilosort_config).format(nchan, nchan, sample_rate, dat_file,
@@ -175,10 +175,10 @@ class KilosortSorter(BaseSorter):
                                 [kilosort_master, kilosort_config,
                                  kilosort_channelmap]):
             with (output_folder / fname).open('w') as f:
-                f.writelines(value)    
+                f.writelines(value)
 
     def _run(self, recording, output_folder):
-        
+
         cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort_master.m')
         if self.debug:
             print(cmd)
