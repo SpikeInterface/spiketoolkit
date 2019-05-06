@@ -1,9 +1,9 @@
 """
 Important note.
-For facilities 
+For facilities
 kilosort2_path
 npy_matlab_path have been removed from args
-so only the 
+so only the
   klp = os.getenv('KILOSORT_PATH')
   npp = os.getenv('NPY_MATLAB_PATH')
 is left.
@@ -20,13 +20,13 @@ import numpy as np
 
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
-from ..tools import _call_command_split
+from ..sorter_tools import _call_command_split
 
 
 def check_if_installed(kilosort2_path, npy_matlab_path):
     if kilosort2_path is None or npy_matlab_path is None:
         return False
-    
+
     if kilosort2_path is not None and kilosort2_path.startswith('"'):
         kilosort2_path = kilosort2_path[1:-1]
         kilosort2_path = Path(kilosort2_path).absolut()
@@ -50,16 +50,16 @@ else:
 
 class Kilosort2Sorter(BaseSorter):
     """
-    
-    
+
+
     """
-    
+
     sorter_name = 'kilosort2'
     installed = HAVE_KILOSORT2
     kilosort2_path = os.getenv('KILOSORT2_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
     SortingExtractor_Class = se.KiloSortSortingExtractor
-    
+
     _default_params = {
         'file_name': None,
         'probe_file': None,
@@ -73,14 +73,14 @@ class Kilosort2Sorter(BaseSorter):
     installation_mesg = """\nTo use Kilosort run:\n
         >>> git clone https://github.com/cortex-lab/KiloSort
         >>> git clone https://github.com/kwikteam/npy-matlab\n
-    and provide the installation path with the 'kilosort2_path' and 
-    npy_matlab_path' arguments or by setting the KILOSORT_PATH 
+    and provide the installation path with the 'kilosort2_path' and
+    npy_matlab_path' arguments or by setting the KILOSORT_PATH
     and NPY_MATLAB_PATH environment variables.\n\n
-    
+
     More information on KiloSort at:
         https://github.com/MouseLand/Kilosort2
     """
-    
+
     def __init__(self, **kargs):
         BaseSorter.__init__(self, **kargs)
 
@@ -93,9 +93,9 @@ class Kilosort2Sorter(BaseSorter):
         Kilosort2Sorter.npy_matlab_path = npy_matlab_path
 
     def _setup_recording(self, recording, output_folder):
-        
+
         source_dir = Path(__file__).parent
-        
+
         p = self.params
 
         if not check_if_installed(Kilosort2Sorter.kilosort2_path, Kilosort2Sorter.npy_matlab_path):
@@ -171,10 +171,10 @@ class Kilosort2Sorter(BaseSorter):
                                 [kilosort2_master, kilosort2_config,
                                  kilosort2_channelmap]):
             with (output_folder / fname).open('w') as f:
-                f.writelines(value)    
+                f.writelines(value)
 
     def _run(self, recording, output_folder):
-        
+
         cmd = "matlab -nosplash -nodisplay -r 'run {}; quit;'".format(output_folder / 'kilosort2_master.m')
         if self.debug:
             print(cmd)
