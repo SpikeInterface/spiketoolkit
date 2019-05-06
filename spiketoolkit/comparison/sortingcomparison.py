@@ -9,13 +9,13 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
 
 
 class SortingComparison():
-    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
                  count=False, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
-        self._delta_tp = delta_tp
+        self._delta_frames = delta_frames
         self._min_accuracy = min_accuracy
         if verbose:
             print("Matching...")
@@ -56,13 +56,23 @@ class SortingComparison():
         The returned MappedSortingExtractor.get_mapped_unit_ids returns the mapped unit_ids
         of sorting 2 to the units of sorting 1 (if units are not mapped they are labeled as -1).
 
-        The returned MappedSortingExtractor.getUnitspikeTrains returns the the spike trains
+        The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 2 mapped to the unit_ids of sorting 1.
         """
         return MappedSortingExtractor(self._sorting2, self._unit_map12)
 
     def get_mapped_sorting2(self):
-        # Samuel EDIT : the use case of this must documented
+        """
+        Returns a MappedSortingExtractor for sorting 2.
+
+        The returned MappedSortingExtractor.get_unit_ids returns the unit_ids of sorting 2.
+
+        The returned MappedSortingExtractor.get_mapped_unit_ids returns the mapped unit_ids
+        of sorting 1 to the units of sorting 2 (if units are not mapped they are labeled as -1).
+
+        The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
+        of sorting 1 mapped to the unit_ids of sorting 2.
+        """
         return MappedSortingExtractor(self._sorting1, self._unit_map21)
 
     def get_matching_event_count(self, unit1, unit2):
@@ -225,11 +235,13 @@ class SortingComparison():
         self._event_counts_1,  self._event_counts_2, self._matching_event_counts_12,\
             self._best_match_units_12, self._matching_event_counts_21,\
             self._best_match_units_21,self._unit_map12,\
-            self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_tp, self._min_accuracy)
+            self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_frames, self._min_accuracy)
 
     def _do_counting(self, verbose=False):
-        self._labels_st1, self._labels_st2 = do_score_labels(self._sorting1, self._sorting2, self._delta_tp, self._unit_map12)
-        self._mixed_counts = do_counting(self._sorting1, self._sorting2, self._unit_map12, self._labels_st1, self._labels_st2)
+        self._labels_st1, self._labels_st2 = do_score_labels(self._sorting1, self._sorting2,
+                                                             self._delta_frames, self._unit_map12)
+        self._mixed_counts = do_counting(self._sorting1, self._sorting2, self._unit_map12,
+                                         self._labels_st1, self._labels_st2)
 
     def _do_confusion(self):
         self._confusion_matrix,  st1_idxs, st2_idxs = do_confusion_matrix(self._sorting1, self._sorting2,
@@ -246,14 +258,19 @@ class SortingComparison():
     
         Parameters
         ----------
-        
-        method: str 'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
-        
-        output: str 'pandas' or 'dict'
-        
-        
-        
+        method: str
+            'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
+        output: str
+            'pandas' or 'dict'
+
+        Returns
+        -------
+        perf: dict or pandas dataframe
+            Dictionary or dataframe (based on 'output') with performance entries
         """
+        if method != 'by_spiketrain' and method != 'pooled_with_sum' and method != 'pooled_with_average':
+            raise Exception("'method' can be 'by_spiketrain', 'pooled_with_average', or 'pooled_with_sum'")
+
         if self._mixed_counts is None:
             self._do_counting()
         if method == 'by_spiketrain':
@@ -367,7 +384,7 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
-def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_tp=10, min_accuracy=0.5,
+def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
                         count=False, verbose=False):
     '''
     Compares two spike sorter outputs.
@@ -388,7 +405,7 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         The name of sorter 1
     sorting2_name: : str
         The name of sorter 2
-    delta_tp: int
+    delta_frames: int
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
@@ -403,7 +420,7 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         The SortingComparison object
 
     '''
-    return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_tp, min_accuracy,
+    return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_frames, min_accuracy,
                              count, verbose)
 
 # usefull for gathercomparison

@@ -57,6 +57,9 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_outpu
     return sortingextractor
 
 
+def available_sorters():
+    return sorted(list(sorter_dict.keys()))
+
 
 # make aliases
 # this make compatible with the old by input/output functional approach

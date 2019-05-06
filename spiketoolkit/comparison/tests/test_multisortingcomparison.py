@@ -27,13 +27,22 @@ def test_compare_multiple_sorters():
                                                  3100, 3200, 3300],
                                                 [0, 1, 2, 0, 1, 2, 0, 1, 2, 3, 3, 4, 4, 5, 5, 5],)
     msc = compare_multiple_sorters([sorting1, sorting2, sorting3])
+    msc_shuffle = compare_multiple_sorters([sorting3, sorting1, sorting2])
 
     agr = msc._do_agreement_matrix()
+    agr_shuffle = msc_shuffle._do_agreement_matrix()
+
     print(agr)
+    print(agr_shuffle)
 
     assert len(msc.get_agreement_sorting(minimum_matching=3).get_unit_ids()) == 3
     assert len(msc.get_agreement_sorting(minimum_matching=2).get_unit_ids()) == 5
     assert len(msc.get_agreement_sorting().get_unit_ids()) == 6
+    assert len(msc.get_agreement_sorting(minimum_matching=3).get_unit_ids()) == \
+           len(msc_shuffle.get_agreement_sorting(minimum_matching=3).get_unit_ids())
+    assert len(msc.get_agreement_sorting(minimum_matching=2).get_unit_ids()) == \
+           len(msc_shuffle.get_agreement_sorting(minimum_matching=2).get_unit_ids())
+    assert len(msc.get_agreement_sorting().get_unit_ids()) == len(msc_shuffle.get_agreement_sorting().get_unit_ids())
 
 
 if __name__ == '__main__':

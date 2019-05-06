@@ -34,6 +34,7 @@ class Mountainsort4Sorter(BaseSorter):
         'freq_min': 300,  # Use None for no bandpass filtering
         'freq_max': 6000,
         'filter': False,
+        'curation': True,
         'whiten': True,  # Whether to do channel whitening as part of preprocessing
         'clip_size': 50,
         'detect_threshold': 3,
@@ -58,6 +59,7 @@ class Mountainsort4Sorter(BaseSorter):
         # Sort
         # alias to params
         p = self.params
+        print(p)
 
         ind = self.recording_list.index(recording)
 
@@ -85,7 +87,8 @@ class Mountainsort4Sorter(BaseSorter):
         )
 
         # Curate
-        if p['noise_overlap_threshold'] is not None:
+        if p['noise_overlap_threshold'] is not None and p['curation'] is True:
+            print('Curating')
             sorting = ml_ms4alg.mountainsort4_curation(
                 recording=recording,
                 sorting=sorting,
