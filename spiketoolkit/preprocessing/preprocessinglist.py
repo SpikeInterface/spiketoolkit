@@ -6,6 +6,7 @@ from .resample import resample, ResampledRecording
 from .rectify import rectify, RectifyRecording
 from .remove_artifacts import remove_artifacts, RemoveArtifactsRecording
 from .scale_traces import scale_traces, ScaleTracesRecording
+from .remove_bad_channels import remove_bad_channels, RemoveBadChannelsRecording
 
 preprocessers_full_list = [
     BandpassFilterRecording,
@@ -15,6 +16,7 @@ preprocessers_full_list = [
     ResampledRecording,
     RectifyRecording,
     RemoveArtifactsRecording,
+    RemoveBadChannelsRecording,
     ScaleTracesRecording
 ]
 

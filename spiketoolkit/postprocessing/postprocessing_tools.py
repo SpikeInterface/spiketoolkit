@@ -571,7 +571,7 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
         nPC = recording.get_num_channels()
         print("Changed number of PC to number of channels: ", nPC)
     pc_scores = compute_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
-                                   frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
+                                   start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                    ms_before=ms_before, ms_after=ms_after,
                                    grouping_property=grouping_property,
                                    compute_property_from_recording=compute_property_from_recording,
