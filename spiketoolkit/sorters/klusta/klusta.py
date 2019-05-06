@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from spiketoolkit.sorters.basesorter import BaseSorter
-from spiketoolkit.sorters.tools import _run_command_and_print_output, _call_command
+from spiketoolkit.sorters.sorter_tools import _run_command_and_print_output, _call_command
 import spikeextractors as se
 
 try:
