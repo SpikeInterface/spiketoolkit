@@ -624,9 +624,10 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
     # similar_templates.npy - [nTemplates, nTemplates] single
     templates = get_unit_template(recording, sorting)
 
-    if len(templates.shape) == 2:
-        # single unit
-        templates = templates.reshape(1, templates.shape[0], templates.shape[1])
+    if not isinstance(templates, list):
+        if len(templates.shape) == 2:
+            # single unit
+            templates = templates.reshape(1, templates.shape[0], templates.shape[1])
 
     similar_templates = _compute_templates_similarity(templates)
 
