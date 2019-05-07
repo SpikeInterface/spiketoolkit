@@ -33,7 +33,7 @@ class ThresholdMaxISI(CurationSortingExtractor):
 
 def threshold_max_ISI(sorting, sampling_frequency, max_ISI_threshold=0.4):
     '''
-    Excludes units with SNR greater than or equal to the max_SNR_threshold.
+    Excludes units with ISI ratios greater than or equal to the max_ISI_threshold.
 
     Parameters
     ----------

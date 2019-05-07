@@ -432,7 +432,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
         unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
-    # concatenate all waveforms
+    # concatenat70e all waveforms
     all_waveforms = np.array([])
     nspikes = []
     idx_not_none = None
