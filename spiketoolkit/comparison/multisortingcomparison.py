@@ -242,7 +242,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
 
 
 def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tollerance=10,
-                             _n_jobs=-1, verbose=False):
+                             n_jobs=-1, verbose=False):
     '''
     Compares multiple spike sorter outputs.
 
