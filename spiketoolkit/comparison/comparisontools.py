@@ -34,7 +34,7 @@ def compute_agreement_score(num_matches, num1, num2):
 def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
     """
     This compute the matching between 2 sorters.
-    
+
     Parameters
     ----------
     sorting1: SortingExtractor
@@ -42,16 +42,16 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
 
     sorting2: SortingExtractor
         The second sorting extractor
-    
+
     delta_frames: int
         Number of frames to consider spikes coincident
-    
+
     n_jobs: int
         Number of jobs to run in parallel
-    
+
     Returns
     -------
-    
+
     event_counts_1: dict
         Dictionary with unit as keys and number of spikes as values for sorting1
     event_counts_2: dict
@@ -83,7 +83,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
     unit2_ids = sorting2.get_unit_ids()
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
-    
+
     # Compute events counts
     event_counts1 = np.zeros((N1)).astype(np.int64)
     for i1, u1 in enumerate(unit1_ids):
@@ -106,10 +106,10 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
             matching_event_counts.append(num_matches)
             scores.append(compute_agreement_score(num_matches, event_counts1, event_counts2[i2]))
         return matching_event_counts, scores
-        
+
     s2_spiketrains = [sorting2.get_unit_spike_train(u2) for u2 in unit2_ids]
-    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), s2_spiketrains, 
-                                                            unit2_ids, delta_frames, event_counts1[i1], 
+    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), s2_spiketrains,
+                                                            unit2_ids, delta_frames, event_counts1[i1],
                                                             event_counts2) for i1, u1 in enumerate(unit1_ids))
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
@@ -132,7 +132,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
                 best_match_units_12[u1] = -1
         else:
             best_match_units_12[u1] = -1
-    
+
     # Find best matches for spiketrains 2
     for i2, u2 in enumerate(unit2_ids):
         scores0 = scores[:, i2]
@@ -197,7 +197,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
             # unit_map21[u2] = k1
             # k1 = k1+1
             unit_map21[u2] = -1
-    
+
     return (event_counts_1,  event_counts_2,
             matching_event_counts_12, best_match_units_12,
             matching_event_counts_21,  best_match_units_21,
@@ -211,9 +211,9 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
       * CL: classification error
       * FN: False negative
       * FP: False positive
-      * TOT: 
-      * TOT_ST1: 
-      * TOT_ST2: 
+      * TOT:
+      * TOT_ST1:
+      * TOT_ST2:
 
     Parameters
     ----------
@@ -278,7 +278,7 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                         lab_st2 = labels_st2[u2]
                         n_sp = st1[l_gt]
                         mapped_st = sts2[u2]
-                        matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2) 
+                        matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
                         if np.sum(matches) > 0:
                             lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
                             lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
@@ -294,22 +294,22 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
         lab_st2 = labels_st2[u2]
         for l_gt, lab in enumerate(lab_st2):
             if lab == 'UNPAIRED':
-                lab_st2[l_gt] = 'FP'                
-    
+                lab_st2[l_gt] = 'FP'
+
     return labels_st1, labels_st2
 
-    
+
 def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
     Count the number of TP/FP/FN/.. with several strategies:
       * 'by_spiketrains'
       * 'pooled_with_sum'
-    
+
     Note1: the strategy of counting affect a lot.
-    
+
     Note2: 'pooled_with_average' is done outside with avering the rate (not the counting)
-    
-    
+
+
     Parameters
     ----------
     sorting1: SortingExtractor instance
@@ -327,7 +327,7 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     -------
     mixed_counts: dict of dict
         A dict with a sub dict for each method.
-    
+
     """
     unit1_ids = sorting1.get_unit_ids()
     unit2_ids = sorting2.get_unit_ids()
@@ -335,7 +335,7 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
 
     # pooled_with_sum
     # Note from Samuel: this was the previous counting method before May 2019
-    # The code is not modified but could be faster using 
+    # The code is not modified but could be faster using
     # count_by_spiketrains dict
     TOT_ST1 = sum([len(labels_st1[u1]) for u1 in unit1_ids])
     TOT_ST2 = sum([len(labels_st2[u2]) for u2 in unit2_ids])
@@ -344,10 +344,10 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     CL = sum([len([i for i, v in enumerate(labels_st1[u1]) if 'CL' in v]) for u1 in unit1_ids])
     FN = sum([len(np.where('FN' == labels_st1[u1])[0]) for u1 in unit1_ids])
     FP = sum([len(np.where('FP' == labels_st2[u2])[0]) for u2 in unit2_ids])
-    counts_pooled_with_sum = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP, 
+    counts_pooled_with_sum = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP,
                                 'TOT': total_spikes, 'TOT_ST1': TOT_ST1, 'TOT_ST2': TOT_ST2}
-    
-    
+
+
     # by_spiketrains
     count_by_spiketrains = {}
     for u1 in unit1_ids:
@@ -358,7 +358,7 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
             'FN': np.sum(labels_st1[u1] == 'FN'),
             'NB_SPIKE_1' : labels_st1[u1].size,
         }
-        
+
         if u2==-1:
             # no match
             count_by_spiketrains[u1]['FP'] = 0
@@ -366,20 +366,20 @@ def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
         else:
             count_by_spiketrains[u1]['FP'] = np.sum(labels_st2[u2] == 'FP')
             count_by_spiketrains[u1]['NB_SPIKE_2'] = labels_st2[u2].size
-    
+
     # put everything in a dict so this can be extened
     mixed_counts = {
         'by_spiketrains': count_by_spiketrains,
         'pooled_with_sum': counts_pooled_with_sum,
     }
-    
+
     return mixed_counts
-    
+
 
 def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
     Compute the confusion matrix between two sorting.
-    
+
     Parameters
     ----------
     sorting1: SortingExtractor instance
@@ -402,9 +402,9 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     unit2_ids = np.array(sorting2.get_unit_ids())
     N1 = len(unit1_ids)
     N2 = len(unit2_ids)
-    
+
     conf_matrix = np.zeros((N1 + 1, N2 + 1), dtype=int)
-    
+
     mapped_units = np.array(list(unit_map12.values()))
     idxs_matched, = np.where(mapped_units != -1)
     idxs_unmatched, = np.where(mapped_units == -1)
@@ -442,31 +442,31 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
         else:
             st2_unmatched.append(int(u2))
             conf_matrix[-1, len(idxs_matched) + len(st2_unmatched) - 1] = int(fp)
-    
+
     st2_idxs = np.hstack([st2_matched, st2_unmatched]).astype('int64')
 
     return conf_matrix,  st1_idxs, st2_idxs
-    
+
 
 def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     """
     Compare 2 spike trains.
-    
+
     Note:
       * The first spiketrain is supposed to be the ground truth.
       * this implementation do not count a TP when more than one spike
         is present around the same time in spiketrain2.
-    
+
     Parameters
     ----------
     spiketrain1,spiketrain2: numpy.array
         Times of spikes for the 2 spike trains.
-    
+
     Returns
     -------
     lab_st1, lab_st2: numpy.array
         Label of score for each spike
-    
+
     """
     lab_st1 = np.array(['UNPAIRED'] * len(spiketrain1))
     lab_st2 = np.array(['UNPAIRED'] * len(spiketrain2))
