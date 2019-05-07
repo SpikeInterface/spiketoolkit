@@ -9,18 +9,18 @@ from .sortingcomparison import compare_two_sorters, _perf_keys
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
     """
     Loop over output folder in a tree to collect sorting from
-    several sorter on several dataset and returns sythetic DataFrame with 
+    several sorter on several dataset and returns sythetic DataFrame with
     several metrics (performance, run_time, ...)
-    
+
     Use SortingComparison internally.
-    
-    
+
+
     Parameters
     ----------
     working_folder: str
         The folrder where sorter.run_sorters have done the job.
     ground_truths: dict
-        A dict where each key is the recording label and each value 
+        A dict where each key is the recording label and each value
         the SortingExtractor containing the ground truth.
     use_multi_index: bool (True by default)
         Use (or not) multi index for output dataframe.
@@ -29,19 +29,19 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     Returns
     ----------
     comparisons: a dict of SortingComparison
-    
+
     out_dataframes: a dict of DataFrame
         Return several usefull DataFrame to compare all results:
           * run_times
           * performances
     """
-    
+
     working_folder = Path(working_folder)
-    
+
     comparisons = {}
     out_dataframes = {}
-    
-    
+
+
     # get run times:
     run_times = pd.read_csv(working_folder /  'run_time.csv', sep='\t', header=None)
     run_times.columns = ['rec_name', 'sorter_name', 'run_time']
@@ -60,20 +60,18 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             gt_sorting = ground_truths[rec_name]
 
             sorting_comp = compare_two_sorters(gt_sorting, sorting, count=True)
-            
+
             comparisons[(rec_name, sorter_name)] = sorting_comp
-            
+
             perf = sorting_comp.get_performance(method='pooled_with_sum', output='pandas')
             perf_pooled_with_sum.loc[(rec_name, sorter_name), :] = perf
 
             perf = sorting_comp.get_performance(method='pooled_with_average', output='pandas')
             perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
 
-    
+
     if not use_multi_index:
         for k, df in out_dataframes.items():
             out_dataframes[k] = df.reset_index()
-    
+
     return comparisons, out_dataframes
-
-

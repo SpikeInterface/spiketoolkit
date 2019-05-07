@@ -10,13 +10,14 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
 
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                 count=False, verbose=False):
+                 count=False, n_jobs=-1, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
         self._delta_frames = delta_frames
         self._min_accuracy = min_accuracy
+        self._n_jobs = n_jobs
         if verbose:
             print("Matching...")
         self._do_matching()
@@ -235,7 +236,7 @@ class SortingComparison():
         self._event_counts_1,  self._event_counts_2, self._matching_event_counts_12,\
             self._best_match_units_12, self._matching_event_counts_21,\
             self._best_match_units_21,self._unit_map12,\
-            self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_frames, self._min_accuracy)
+            self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_frames, self._min_accuracy, self._n_jobs)
 
     def _do_counting(self, verbose=False):
         self._labels_st1, self._labels_st2 = do_score_labels(self._sorting1, self._sorting2,
@@ -248,14 +249,14 @@ class SortingComparison():
                                                 self._unit_map12, self._labels_st1, self._labels_st2)
 
         return st1_idxs, st2_idxs
-    
+
     def get_performance(self, method='by_spiketrain', output='pandas'):
         """
         Compute performance rate with several method:
           * 'by_spiketrain'
           * 'pooled_with_sum'
           * 'pooled_with_average'
-    
+
         Parameters
         ----------
         method: str
@@ -278,10 +279,10 @@ class SortingComparison():
 
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
-            
+
             for u1 in unit1_ids:
                 counts = self._mixed_counts['by_spiketrains'][u1]
-                
+
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
@@ -290,13 +291,13 @@ class SortingComparison():
                     perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2'] * 100
                 else:
                     perf.loc[u1, 'fp_rate_st2'] = np.nan
-            
+
             perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1']) * 100
             perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
             perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
             perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
             perf['false_discovery_rate'] = perf['fp_rate_st1'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
-            
+
         elif method == 'pooled_with_sum':
             counts = self._mixed_counts['pooled_with_sum']
 
@@ -323,18 +324,18 @@ class SortingComparison():
             perf = {'tp_rate': tp_rate, 'fn_rate': fn_rate, 'cl_rate': cl_rate, 'fp_rate_st1': fp_rate_st1,
                     'fp_rate_st2': fp_rate_st2, 'accuracy': accuracy, 'sensitivity': sensitivity,
                     'precision': precision, 'miss_rate': miss_rate, 'false_discovery_rate': false_discovery_rate}
-        
+
             if output == 'pandas':
                 perf = pd.Series(perf)
-            
+
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
             if output == 'dict':
                 perf = perf.to_dict()
-            
+
         return perf
-    
-    
+
+
     def print_performance(self, method='by_spiketrain'):
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
@@ -342,12 +343,12 @@ class SortingComparison():
             d = {k: perf[k].tolist() for k in perf.columns}
             txt = _template_txt_performance.format(method=method, **d)
             print(txt)
-        
+
         elif method == 'pooled_with_sum':
             perf = self.get_performance(method=method, output='dict')
             txt = _template_txt_performance.format(method=method, **perf)
             print(txt)
-        
+
         elif method == 'pooled_with_average':
             perf = self.get_performance(method=method, output='dict')
             txt = _template_txt_performance.format(method=method, **perf)
@@ -385,7 +386,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                        count=False, verbose=False):
+                        count=False, n_jobs=-1, verbose=False):
     '''
     Compares two spike sorter outputs.
 
@@ -411,9 +412,10 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         Minimum agreement score to match units (default 0.5)
     count: bool
         If True, counts are performed at initialization
+     n_jobs: int
+        Number of cores to use in parallel. Uses all availible if -1
     verbose: bool
         If True, output is verbose
-
     Returns
     -------
     sorting_comparison: SortingComparison
@@ -421,7 +423,7 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
 
     '''
     return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_frames, min_accuracy,
-                             count, verbose)
+                             count, n_jobs, verbose)
 
 # usefull for gathercomparison
 _perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'accuracy', 'sensitivity', 'precision',

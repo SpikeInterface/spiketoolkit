@@ -21,6 +21,18 @@ class HerdingspikesSorter(BaseSorter):
     installed = HAVE_HS
     SortingExtractor_Class = se.HS2SortingExtractor
 
+    _gui_params = [
+        {'name': 'clustering_bandwidth', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Meanshift bandwidth"},
+        {'name': 'clustering_alpha', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Scalar for the PC components when clustering"},
+        {'name': 'clustering_n_jobs', 'type': 'int', 'value':-1, 'default':-1,  'title': "Number of cores. Default uses all cores."},
+        {'name': 'clustering_bin_seeding', 'type': 'bool', 'value':False, 'default':False, 'title': "Clustering bin seeding"},
+        {'name': 'clustering_subset', 'type': 'int', 'value':None, 'default':None, 'title': "Number of spikes used to build clusters. All by default."},
+        {'name': 'left_cutout_time', 'type': 'float', 'value':1.0, 'default':1.0, 'title': "Cutout size before peak (ms)"},
+        {'name': 'right_cutout_time', 'type': 'float', 'value':2.2, 'default':2.2, 'title': "Cutout size after peak (ms)"},
+        {'name': 'detection_threshold', 'type': 'int', 'value':20, 'default':20, 'title': "Detection threshold"},
+        {'name': 'probe_masked_channels', 'type': 'list', 'value':[], 'default':[], 'title': "Masked channels"},
+    ]
+
     _default_params = None  # later
 
     installation_mesg = """
@@ -73,10 +85,10 @@ class HerdingspikesSorter(BaseSorter):
         else:
             C = hs.HSClustering(H)
             C.SaveHDF5(sorted_file)
+
     @staticmethod
     def get_result_from_folder(output_folder):
         return se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
-
 
 HerdingspikesSorter._default_params = {
     'clustering_bandwidth': 6.0,
@@ -112,5 +124,4 @@ HerdingspikesSorter._default_params = {
         'pca_ncomponents': 2,
         'pca_whiten': True
     },
-
 }

@@ -7,7 +7,7 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, verbose=False):
+    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, n_jobs=-1, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
@@ -16,6 +16,7 @@ class MultiSortingComparison():
             self._name_list = ['sorter' + str(i) for i in range(len(sorting_list))]
         self._delta_frames = delta_frames
         self._min_accuracy = min_accuracy
+        self._n_jobs = n_jobs
         self._do_matching(verbose, delta_frames)
 
     def get_sorting_list(self):
@@ -38,6 +39,7 @@ class MultiSortingComparison():
                                                                         sorting2_name=self._name_list[j],
                                                                         delta_frames=self._delta_frames,
                                                                         min_accuracy=self._min_accuracy,
+                                                                        n_jobs=self._n_jobs,
                                                                         verbose=verbose)
             self.sorting_comparisons[self._name_list[i]] = comparison_
 
@@ -237,18 +239,18 @@ class AgreementSortingExtractor(se.SortingExtractor):
         if unit_id not in self.get_unit_ids():
             raise Exception("Unit id is invalid")
         return np.array(self._msc._spiketrains[list(self._msc._new_units.keys()).index(unit_id)])
-    
-    
-def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tollerance=10, 
-                             verbose=False):
+
+
+def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tollerance=10,
+                             n_jobs=-1, verbose=False):
     '''
     Compares multiple spike sorter outputs.
-    
+
     - Pair-wise comparisons are made
     - An agreement graph is built based on the agreement score
-    
+
     It allows to return a consensus-based sorting extractor with the `get_agreement_sorting()` method.
-    
+
     Parameters
     ----------
     sorting_list: list
@@ -259,6 +261,8 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
+    n_jobs: int
+       Number of cores to use in parallel. Uses all availible if -1
     verbose: bool
         if True, output is verbose
 
@@ -267,4 +271,4 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_
     multi_sorting_comparison: MultiSortingComparison
         MultiSortingComparison object with the multiple sorter comparison
     '''
-    return MultiSortingComparison(sorting_list, name_list, delta_frames, min_accuracy, verbose)
+    return MultiSortingComparison(sorting_list, name_list, delta_frames, min_accuracy, n_jobs, verbose)

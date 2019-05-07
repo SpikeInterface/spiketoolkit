@@ -432,6 +432,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
         unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
+
     # concatenate all waveforms
     all_waveforms = np.array([])
     nspikes = []
@@ -452,6 +453,10 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
         if verbose:
             print("Computing waveforms")
         waveforms = get_unit_waveforms(recording, sorting)
+
+    if not isinstance(waveforms, list):
+        # single unit
+        waveforms = [waveforms]
 
     for i_w, wf in enumerate(waveforms):
         if wf is None:
@@ -482,7 +487,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     pca_scores = []
     for i_n, nsp in enumerate(nspikes):
         pcascores = scores[init: init + nsp, :]
-        init = nsp + 1
+        init = nsp
         if by_electrode:
             pca_scores.append(pcascores.reshape(nsp // recording.get_num_channels(),
                                                 recording.get_num_channels(), n_comp))
@@ -618,6 +623,11 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
 
     # similar_templates.npy - [nTemplates, nTemplates] single
     templates = get_unit_template(recording, sorting)
+
+    if len(templates.shape) == 2:
+        # single unit
+        templates = templates.reshape(1, templates.shape[0], templates.shape[1])
+
     similar_templates = _compute_templates_similarity(templates)
 
     # templates.npy
@@ -661,6 +671,7 @@ def _compute_templates_similarity(templates):
             a = np.corrcoef(t_i_lin, t_j_lin)
             similarity[i, j] = np.abs(a[0, 1])
     return similarity
+
 
 def _compute_whitening_and_inverse(recording):
     white_recording = st.preprocessing.whiten(recording)
