@@ -7,7 +7,7 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, n_jobsverbose=False):
+    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, n_jobs=-1, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
