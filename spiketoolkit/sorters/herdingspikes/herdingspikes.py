@@ -21,6 +21,55 @@ class HerdingspikesSorter(BaseSorter):
     installed = HAVE_HS
     SortingExtractor_Class = se.HS2SortingExtractor
 
+    _default_params = {
+        'clustering_bandwidth': 6.0,
+        'clustering_alpha': 6.0,
+        'clustering_n_jobs': -1,
+        'clustering_bin_seeding': False,
+        'clustering_subset': None,
+        'left_cutout_time': 1.0,
+        'right_cutout_time': 2.2,
+        'detection_threshold': 20,
+        'probe_masked_channels': [],
+
+        'extra_probe_params': {
+            'inner_radius': 50,
+            'neighbor_radius': 50,
+            'event_length': 0.5,
+            'peak_jitter': 0.2
+        },
+
+        'extra_detection_params': {
+            'to_localize': True,
+            'num_com_centers': 1,
+            'maa': 0,
+            'ahpthr': 0,
+            'out_file_name': "HS2_detected",
+            'decay_filtering': False,
+            'save_all': False,
+            'amp_evaluation_time': 0.4,
+            'spk_evaluation_time': 1.7
+        },
+
+        'extra_pca_params': {
+            'pca_ncomponents': 2,
+            'pca_whiten': True
+        },
+
+    }
+
+    _gui_params = [
+        {'name': 'clustering_bandwidth', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Meanshift bandwidth"},
+        {'name': 'clustering_alpha', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Scalar for the PC components when clustering"},
+        {'name': 'clustering_n_jobs', 'type': 'int', 'value':-1, 'default':-1,  'title': "Number of cores. Default uses all cores."},
+        {'name': 'clustering_bin_seeding', 'type': 'bool', 'value':False, 'default':False, 'title': "Clustering bin seeding"},
+        {'name': 'clustering_subset', 'type': 'int', 'value':None, 'default':None, 'title': "Number of spikes used to build clusters. All by default."},
+        {'name': 'left_cutout_time', 'type': 'float', 'value':1.0, 'default':1.0, 'title': "Cutout size before peak (ms)"},
+        {'name': 'right_cutout_time', 'type': 'float', 'value':2.2, 'default':2.2, 'title': "Cutout size after peak (ms)"},
+        {'name': 'detection_threshold', 'type': 'int', 'value':20, 'default':20, 'title': "Detection threshold"},
+        {'name': 'probe_masked_channels', 'type': 'list', 'value':[], 'default':[], 'title': "Masked channels"},
+    ]
+
     _default_params = None  # later
 
     installation_mesg = """
@@ -76,41 +125,3 @@ class HerdingspikesSorter(BaseSorter):
     @staticmethod
     def get_result_from_folder(output_folder):
         return se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
-
-
-HerdingspikesSorter._default_params = {
-    'clustering_bandwidth': 6.0,
-    'clustering_alpha': 6.0,
-    'clustering_n_jobs': -1,
-    'clustering_bin_seeding': False,
-    'clustering_subset': None,
-    'left_cutout_time': 1.0,
-    'right_cutout_time': 2.2,
-    'detection_threshold': 20,
-    'probe_masked_channels': [],
-
-    'extra_probe_params': {
-        'inner_radius': 50,
-        'neighbor_radius': 50,
-        'event_length': 0.5,
-        'peak_jitter': 0.2
-    },
-
-    'extra_detection_params': {
-        'to_localize': True,
-        'num_com_centers': 1,
-        'maa': 0,
-        'ahpthr': 0,
-        'out_file_name': "HS2_detected",
-        'decay_filtering': False,
-        'save_all': False,
-        'amp_evaluation_time': 0.4,
-        'spk_evaluation_time': 1.7
-    },
-
-    'extra_pca_params': {
-        'pca_ncomponents': 2,
-        'pca_whiten': True
-    },
-
-}
