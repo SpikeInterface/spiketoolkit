@@ -21,43 +21,6 @@ class HerdingspikesSorter(BaseSorter):
     installed = HAVE_HS
     SortingExtractor_Class = se.HS2SortingExtractor
 
-    _default_params = {
-        'clustering_bandwidth': 6.0,
-        'clustering_alpha': 6.0,
-        'clustering_n_jobs': -1,
-        'clustering_bin_seeding': False,
-        'clustering_subset': None,
-        'left_cutout_time': 1.0,
-        'right_cutout_time': 2.2,
-        'detection_threshold': 20,
-        'probe_masked_channels': [],
-
-        'extra_probe_params': {
-            'inner_radius': 50,
-            'neighbor_radius': 50,
-            'event_length': 0.5,
-            'peak_jitter': 0.2
-        },
-
-        'extra_detection_params': {
-            'to_localize': True,
-            'num_com_centers': 1,
-            'maa': 0,
-            'ahpthr': 0,
-            'out_file_name': "HS2_detected",
-            'decay_filtering': False,
-            'save_all': False,
-            'amp_evaluation_time': 0.4,
-            'spk_evaluation_time': 1.7
-        },
-
-        'extra_pca_params': {
-            'pca_ncomponents': 2,
-            'pca_whiten': True
-        },
-
-    }
-
     _gui_params = [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Meanshift bandwidth"},
         {'name': 'clustering_alpha', 'type': 'float', 'value':6.0, 'default':6.0,  'title': "Scalar for the PC components when clustering"},
@@ -122,6 +85,43 @@ class HerdingspikesSorter(BaseSorter):
         else:
             C = hs.HSClustering(H)
             C.SaveHDF5(sorted_file)
+
     @staticmethod
     def get_result_from_folder(output_folder):
         return se.HS2SortingExtractor(output_folder / 'HS2_sorted.hdf5')
+
+HerdingspikesSorter._default_params = {
+    'clustering_bandwidth': 6.0,
+    'clustering_alpha': 6.0,
+    'clustering_n_jobs': -1,
+    'clustering_bin_seeding': False,
+    'clustering_subset': None,
+    'left_cutout_time': 1.0,
+    'right_cutout_time': 2.2,
+    'detection_threshold': 20,
+    'probe_masked_channels': [],
+
+    'extra_probe_params': {
+        'inner_radius': 50,
+        'neighbor_radius': 50,
+        'event_length': 0.5,
+        'peak_jitter': 0.2
+    },
+
+    'extra_detection_params': {
+        'to_localize': True,
+        'num_com_centers': 1,
+        'maa': 0,
+        'ahpthr': 0,
+        'out_file_name': "HS2_detected",
+        'decay_filtering': False,
+        'save_all': False,
+        'amp_evaluation_time': 0.4,
+        'spk_evaluation_time': 1.7
+    },
+
+    'extra_pca_params': {
+        'pca_ncomponents': 2,
+        'pca_whiten': True
+    },
+}
