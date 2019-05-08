@@ -45,6 +45,7 @@ class BaseSorter:
         self.debug = debug
         self.grouping_property = grouping_property
         self.parallel = parallel
+        self.params = self.default_params()
 
         if output_folder is None:
             output_folder = 'test_' + self.sorter_name
@@ -78,7 +79,6 @@ class BaseSorter:
         return copy.deepcopy(self._default_params)
 
     def set_params(self, **params):
-        self.params = self.default_params()
         self.params.update(params)
 
     def run(self):
