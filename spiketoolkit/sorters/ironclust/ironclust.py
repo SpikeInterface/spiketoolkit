@@ -47,7 +47,8 @@ class IronclustSorter(BaseSorter):
         'freq_max': 6000,  # Upper frequency limit for band-pass filter
         'pc_per_chan': 3,  # Number of pc per channel
         'parallel': True,
-        'ironclust_path': None
+        'ironclust_path': None,
+        'fGpu': True
     }
 
     installation_mesg = """\nTo use Ironclust run:\n
@@ -106,6 +107,7 @@ class IronclustSorter(BaseSorter):
         txt += 'freq_max={}\n'.format(p['freq_max'])
         txt += 'pc_per_chan={}\n'.format(p['pc_per_chan'])
         txt += 'prm_template_name={}\n'.format(p['prm_template_name'])
+        txt += 'fGpu={}\n'.format(p['fGpu'])
         _write_text_file(dataset_dir / 'argfile.txt', txt)
 
     def _run(self, recording, output_folder):
