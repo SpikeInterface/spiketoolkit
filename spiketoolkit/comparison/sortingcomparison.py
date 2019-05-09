@@ -10,7 +10,7 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
 
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                 count=False, n_jobs=-1, verbose=False):
+                 count=False, n_jobs=1, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
@@ -386,7 +386,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                        count=False, n_jobs=-1, verbose=False):
+                        count=False, n_jobs=1, verbose=False):
     '''
     Compares two spike sorter outputs.
 
