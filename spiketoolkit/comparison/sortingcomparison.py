@@ -353,6 +353,13 @@ class SortingComparison():
             perf = self.get_performance(method=method, output='dict')
             txt = _template_txt_performance.format(method=method, **perf)
             print(txt)
+    
+    def get_number_units_above_threshold(self, columns='accuracy', threshold=95, ):
+        perf = self.get_performance(method='by_spiketrain', output='pandas')
+        nb = (perf[columns] > threshold).sum()
+        return nb
+        
+        
 
 
 class MappedSortingExtractor(se.SortingExtractor):
