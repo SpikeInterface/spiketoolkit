@@ -57,19 +57,19 @@ class HerdingspikesSorter(BaseSorter):
 
     def _run(self, recording, output_folder):
 
-        H = hs.HSDetection(self.Probe, file_directory_name=str(output_folder),
+        self.H = hs.HSDetection(self.Probe, file_directory_name=str(output_folder),
                            left_cutout_time=self.params['left_cutout_time'],
                            right_cutout_time=self.params['right_cutout_time'],
                            threshold=self.params['detection_threshold'],
                            **self.params['extra_detection_params'])
 
-        H.DetectFromRaw(load=True, tInc=1000000)
+        self.H.DetectFromRaw(load=True, tInc=1000000)
 
         sorted_file = str(output_folder / 'HS2_sorted.hdf5')
-        if(not H.spikes.empty):
-            C = hs.HSClustering(H)
-            C.ShapePCA(**self.params['extra_pca_params'])
-            C.CombinedClustering(alpha=self.params['clustering_alpha'],
+        if(not self.H.spikes.empty):
+            self.C = hs.HSClustering(self.H)
+            self.C.ShapePCA(**self.params['extra_pca_params'])
+            self.C.CombinedClustering(alpha=self.params['clustering_alpha'],
                                  cluster_subset=self.params['clustering_subset'],
                                  bandwidth=self.params['clustering_bandwidth'],
                                  bin_seeding=self.params['clustering_bin_seeding'],
@@ -77,10 +77,10 @@ class HerdingspikesSorter(BaseSorter):
                                  min_bin_freq=self.params['clustering_min_bin_freq']
                                  )
         else:
-            C = hs.HSClustering(H)
+            self.C = hs.HSClustering(self.H)
 
         print('Saving to '+sorted_file)
-        C.SaveHDF5(sorted_file)
+        self.C.SaveHDF5(sorted_file)
 
     @staticmethod
     def get_result_from_folder(output_folder):
