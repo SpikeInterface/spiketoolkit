@@ -42,7 +42,7 @@ def match_spikes(times1, all_times2, unit2_ids, delta_frames, event_counts1, eve
     return matching_event_counts, scores
 
 
-def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
+def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     """
     This compute the matching between 2 sorters.
 
@@ -109,14 +109,9 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=-1):
 
     # Compute matching events
     s2_spiketrains = [sorting2.get_unit_spike_train(u2) for u2 in unit2_ids]
-    args_list = ((sorting1.get_unit_spike_train(u1), s2_spiketrains, unit2_ids, delta_frames,
-                        event_counts1[i1], event_counts2) for i1, u1 in enumerate(unit1_ids))
-    if n_jobs == -1:
-        results = []
-        for args in args_list:
-            results.append(match_spikes(*args))
-    else:
-        results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(args_list))
+    results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), s2_spiketrains,
+                                                            unit2_ids, delta_frames, event_counts1[i1],
+                                                            event_counts2) for i1, u1 in enumerate(unit1_ids))    
 
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
