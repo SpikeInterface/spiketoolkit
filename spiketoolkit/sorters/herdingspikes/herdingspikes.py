@@ -23,14 +23,14 @@ class HerdingspikesSorter(BaseSorter):
 
     _gui_params = [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value':5.0, 'default':5.0,  'title': "Meanshift bandwidth"},
-        {'name': 'clustering_alpha', 'type': 'float', 'value':5.0, 'default':5.0,  'title': "Scalar for the PC components when clustering"},
+        {'name': 'clustering_alpha', 'type': 'float', 'value':8.0, 'default':8.0,  'title': "Scalar for the PC components when clustering"},
         {'name': 'clustering_n_jobs', 'type': 'int', 'value':-1, 'default':-1,  'title': "Number of cores. Default uses all cores."},
         {'name': 'clustering_bin_seeding', 'type': 'bool', 'value':True, 'default':True, 'title': "Clustering bin seeding"},
         {'name': 'clustering_min_bin_freq', 'type': 'int', 'value':8, 'default':8, 'title': "Minimum spikes per bin for bin seeding"},
         {'name': 'clustering_subset', 'type': 'int', 'value':None, 'default':None, 'title': "Number of spikes used to build clusters. All by default."},
         {'name': 'left_cutout_time', 'type': 'float', 'value':0.2, 'default':0.2, 'title': "Cutout size before peak (ms)"},
         {'name': 'right_cutout_time', 'type': 'float', 'value':1.0, 'default':1.0, 'title': "Cutout size after peak (ms)"},
-        {'name': 'detection_threshold', 'type': 'int', 'value':26, 'default':26, 'title': "Detection threshold"},
+        {'name': 'detection_threshold', 'type': 'int', 'value':20, 'default':20, 'title': "Detection threshold"},
         {'name': 'probe_masked_channels', 'type': 'list', 'value':[], 'default':[], 'title': "Masked channels"},
     ]
 
@@ -80,7 +80,7 @@ class HerdingspikesSorter(BaseSorter):
             self.C = hs.HSClustering(self.H)
 
         print('Saving to '+sorted_file)
-        self.C.SaveHDF5(sorted_file)
+        self.C.SaveHDF5(sorted_file, sampling=self.Probe.fps)
 
     @staticmethod
     def get_result_from_folder(output_folder):
@@ -88,33 +88,33 @@ class HerdingspikesSorter(BaseSorter):
 
 HerdingspikesSorter._default_params = {
     'clustering_bandwidth': 5.0,
-    'clustering_alpha': 5.0,
+    'clustering_alpha': 8.0,
     'clustering_n_jobs': -1,
     'clustering_bin_seeding': True,
     'clustering_min_bin_freq': 8,
     'clustering_subset': None,
     'left_cutout_time': 0.2,
     'right_cutout_time': 1.0,
-    'detection_threshold': 26,
+    'detection_threshold': 20,
     'probe_masked_channels': [],
 
     'extra_probe_params': {
         'inner_radius': 75,
-        'neighbor_radius': 80,
-        'event_length': 0.2,
-        'peak_jitter': 0.2
+        'neighbor_radius': 90,
+        'event_length': 0.25,
+        'peak_jitter': 0.1
     },
 
     'extra_detection_params': {
         'to_localize': True,
         'num_com_centers': 1,
-        'maa': 0,
-        'ahpthr': 0,
+        'maa': 5,
+        'ahpthr': 10,
         'out_file_name': "HS2_detected",
         'decay_filtering': False,
         'save_all': False,
-        'amp_evaluation_time': 0.05,
-        'spk_evaluation_time': 1
+        'amp_evaluation_time': 0.2,
+        'spk_evaluation_time': 1.4
     },
 
     'extra_pca_params': {
