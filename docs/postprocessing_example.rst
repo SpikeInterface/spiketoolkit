@@ -25,11 +25,9 @@ to:
     import scipy.signal as ss
     %matplotlib notebook
 
-Create toy example dataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code:: python
-
+    # Create toy example dataset
     recording, sorting = se.example_datasets.toy_example(num_channels=4, duration=30, seed=0)
 
 Assuming the ``sorting`` is the output of a spike sorter, the

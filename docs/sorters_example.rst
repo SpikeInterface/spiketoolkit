@@ -19,11 +19,8 @@ This notebook shows how to use the spiketoolkit.sorters module to:
     from pprint import pprint
 
 
-Create a toy example dataset
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 .. code:: python
-
+    # Create toy example dataset
     recording, sorting_true = se.example_datasets.toy_example(duration=60)
 
 1) Check available sorters
