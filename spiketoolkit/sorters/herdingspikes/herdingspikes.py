@@ -1,5 +1,6 @@
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
+import copy
 
 try:
     import herdingspikes as hs
