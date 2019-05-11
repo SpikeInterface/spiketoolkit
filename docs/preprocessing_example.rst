@@ -3,13 +3,13 @@ Preprocessing module
 ====================
 
 This notebook shows how to use the spiketoolkit.preprocessing module to:
-1. apply filters 2. compute LFP and MUA. 3. change reference 4. remove
-bad channels 5. remove stimulation artifacts
 
-.. code:: python
+1. apply filters
+2. compute LFP and MUA.
+3. change reference
+4. remove bad channels
+5. remove stimulation artifacts
 
-    %load_ext autoreload
-    %autoreload 2
 
 .. code:: python
 

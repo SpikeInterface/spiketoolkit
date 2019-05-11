@@ -6,8 +6,18 @@
 Welcome to spiketoolkit's documentation!
 ========================================
 
+Spiketoolkit is a python package of the SpikeInterface project.
+It is designed to ease the analysis of extracellular neural recordings, in particular spike sorting.
+With `spiketoolkit` one can:
+
+- preprocess extracellular recordings
+- run several spike sorters
+- postprocess spike sorting output
+- compare spike sorting outputs
+- validate and curate the spike sorting ouput
+
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    preprocessing_example
    sorters_example

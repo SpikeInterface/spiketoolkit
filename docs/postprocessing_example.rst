@@ -3,20 +3,15 @@ Postprocessing module
 =====================
 
 This notebook shows how to use the spiketoolkit.postprocessing module
-to: 1. compute spike waveforms 2. compute unit templates 3. compute unit
-maximum channel 4. compute pca scores 5. export sorted data to phy to
-curate the results 6. save curated sorting output
+to:
 
-.. code:: python
-
-    %load_ext autoreload
-    %autoreload 2
-
-
-.. parsed-literal::
-
-    The autoreload extension is already loaded. To reload it, use:
-      %reload_ext autoreload
+1. compute spike waveforms
+2. compute unit templates
+3. compute unit maximum channel
+4. compute pca scores
+5. automatically curate spike sorting output
+6. export sorted data to phy to curate the results
+7. save curated sorting output
 
 
 .. code:: python
@@ -325,7 +320,7 @@ electrode.
 .. image:: postprocessing_example_files/postprocessing_example_26_1.png
 
 
-5) Automatically Curate the sorted result
+5) Automatically curate the sorted result
 -----------------------------------------
 
 Before manually curating your dataset (which can be time intensive on
@@ -432,7 +427,7 @@ curated data using the ``PhySortingExtractor``:
     After manual curation:  9
 
 
-6) Save curated sorting output
+7) Save curated sorting output
 ------------------------------
 
 The curated recordings can be either saved in any other format, or the
