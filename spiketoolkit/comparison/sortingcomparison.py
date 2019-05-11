@@ -284,7 +284,7 @@ class SortingComparison():
                 counts = self._mixed_counts['by_spiketrains'][u1]
 
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1'] * 100
                 if counts['NB_SPIKE_2'] > 0:
