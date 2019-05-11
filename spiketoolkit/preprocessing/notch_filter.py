@@ -13,7 +13,6 @@ class NotchFilterRecording(FilterRecording):
     preprocessor_name = 'NotchFilterRecording'
     installed = HAVE_NFR  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
         {'name': 'freq', 'type': 'float', 'value':3000, 'default':3000, 'title': "Frequency"},
         {'name': 'q', 'type': 'int', 'value':30, 'default':30, 'title': "Quality factor"},
     ]

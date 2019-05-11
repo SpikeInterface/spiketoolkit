@@ -1,5 +1,6 @@
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
+import copy
 
 try:
     import herdingspikes as hs
@@ -21,7 +22,7 @@ class HerdingspikesSorter(BaseSorter):
     installed = HAVE_HS
     SortingExtractor_Class = se.HS2SortingExtractor
 
-    _gui_params = [
+    _extra_params= [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value':5.0, 'default':5.0,  'title': "Meanshift bandwidth"},
         {'name': 'clustering_alpha', 'type': 'float', 'value':8.0, 'default':8.0,  'title': "Scalar for the PC components when clustering"},
         {'name': 'clustering_n_jobs', 'type': 'int', 'value':-1, 'default':-1,  'title': "Number of cores. Default uses all cores."},
@@ -33,6 +34,10 @@ class HerdingspikesSorter(BaseSorter):
         {'name': 'detection_threshold', 'type': 'int', 'value':20, 'default':20, 'title': "Detection threshold"},
         {'name': 'probe_masked_channels', 'type': 'list', 'value':[], 'default':[], 'title': "Masked channels"},
     ]
+
+    _gui_params = copy.deepcopy(BaseSorter._gui_params)
+    for param in _extra_params:
+        _gui_params.append(param)
 
     _default_params = None  # later
 

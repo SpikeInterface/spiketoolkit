@@ -9,7 +9,7 @@ Reading the code do not make evident if there is a persistency on disk.
 import spiketoolkit as st
 from spiketoolkit.sorters.basesorter import BaseSorter
 import spikeextractors as se
-from copy import copy
+import copy
 
 try:
     import ml_ms4alg
@@ -42,7 +42,7 @@ class Mountainsort4Sorter(BaseSorter):
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
     }
 
-    _gui_params = [
+    _extra_params = [
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
         {'name': 'adjacency_radius', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1 to include all channels in every neighborhood"},
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
@@ -57,6 +57,9 @@ class Mountainsort4Sorter(BaseSorter):
         {'name': 'noise_overlap_threshold', 'type': 'float', 'value':0.15, 'default':0.15,  'title': "Use None for no automated curation"},
     ]
 
+    _gui_params = copy.deepcopy(BaseSorter._gui_params)
+    for param in _extra_params:
+        _gui_params.append(param)
     installation_mesg = """
        >>> pip install ml_ms4alg
 

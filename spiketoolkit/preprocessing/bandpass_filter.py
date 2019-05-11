@@ -14,7 +14,6 @@ class BandpassFilterRecording(FilterRecording):
     preprocessor_name = 'BandpassFilterRecording'
     installed = HAVE_BFR  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
         {'name': 'freq_min', 'type': 'float', 'value':300, 'default':300, 'title': "Low-pass frequency"},
         {'name': 'freq_max', 'type': 'float', 'value':6000, 'default':6000, 'title': "High-pass frequency"},
         {'name': 'freq_wid', 'type': 'float', 'value':1000, 'default':1000, 'title': "Width of the filter (when type is 'fft')"},

@@ -6,7 +6,6 @@ class ScaleTracesRecording(RecordingExtractor):
     preprocessor_name = 'ScaleTracesRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
         {'name': 'scalar', 'type': 'float', 'title': "Scalar for the traces of the recording extractor"},
     ]
     installation_mesg = ""  # err
