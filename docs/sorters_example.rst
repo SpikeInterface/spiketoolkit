@@ -1,12 +1,12 @@
 
-SORTERS MODULE
+Sorters module
 ==============
 
 This notebook shows how to use the spiketoolkit.sorters module to: 1.
 check available sorters 2. check and set sorters parameters 3. run
 sorters 4. use the spike sorter launcher 5. spike sort by property
 
-.. code:: ipython3
+.. code:: python
 
     # For development purposes, reload imported modules when source changes
     %load_ext autoreload
@@ -29,14 +29,14 @@ sorters 4. use the spike sorter launcher 5. spike sort by property
 Create a toy example dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     recording, sorting_true = se.example_datasets.toy_example(duration=60)
 
 1) Check available sorters
 --------------------------
 
-.. code:: ipython3
+.. code:: python
 
     print(st.sorters.available_sorters())
 
@@ -49,7 +49,7 @@ Create a toy example dataset
 This will list the sorters installed in the machine. Each spike sorter
 is implemented in a class. To access the class names you can run:
 
-.. code:: ipython3
+.. code:: python
 
     st.sorters.installed_sorter_list
 
@@ -75,7 +75,7 @@ is implemented in a class. To access the class names you can run:
 To check which parameters are available for each spike sorter you can
 run:
 
-.. code:: ipython3
+.. code:: python
 
     default_ms4_params = st.sorters.Mountainsort4Sorter.default_params()
     pprint(default_ms4_params)
@@ -99,7 +99,7 @@ run:
 Parameters can be changed either by passing a full dictionary, or by
 passing single arguments.
 
-.. code:: ipython3
+.. code:: python
 
     # Mountainsort4 spike sorting
     default_ms4_params['detect_threshold'] = 4
@@ -181,7 +181,7 @@ passing single arguments.
     Cleaning tmpdir::::: /tmp/tmpjxyla5jm
 
 
-.. code:: ipython3
+.. code:: python
 
     # parameters set by params dictionary
     sorting_MS4_10 = st.sorters.run_mountainsort4(recording=recording, detect_threshold=10, 
@@ -258,7 +258,7 @@ passing single arguments.
     Curating
 
 
-.. code:: ipython3
+.. code:: python
 
     print('Units found with threshold = 4:', sorting_MS4.get_unit_ids())
     print('Units found with threshold = 10:', sorting_MS4_10.get_unit_ids())
@@ -273,37 +273,37 @@ passing single arguments.
 3) Run sorters
 --------------
 
-.. code:: ipython3
+.. code:: python
 
     # SpyKING Circus spike sorting
     sorting_SC = st.sorters.run_spykingcircus(recording, output_folder='tmp_SC')
     print('Units found with Spyking Circus:', sorting_SC.get_unit_ids())
 
-.. code:: ipython3
+.. code:: python
 
     # KiloSort spike sorting (KILOSORT_PATH and NPY_MATLAB_PATH can be set as environment variables)
     sorting_KS = st.sorters.run_kilosort(recording, output_folder='tmp_KS')
     print('Units found with Kilosort:', sorting_KS.get_unit_ids())
 
-.. code:: ipython3
+.. code:: python
 
     # Kilosort2 spike sorting (KILOSORT2_PATH and NPY_MATLAB_PATH can be set as environment variables)
     sorting_KS2 = st.sorters.run_kilosort2(recording, output_folder='tmp_KS2')
     print('Units found with Kilosort2', sorting_KS2.get_unit_ids())
 
-.. code:: ipython3
+.. code:: python
 
     # Klusta spike sorting
     sorting_KL = st.sorters.run_klusta(recording, output_folder='tmp_KL')
     print('Units found with Klusta:', sorting_KL.get_unit_ids())
 
-.. code:: ipython3
+.. code:: python
 
     # IronClust spike sorting (IRONCLUST_PATH can be set as environment variables)
     sorting_IC = st.sorters.run_ironclust(recording, output_folder='tmp_IC')
     print('Units found with Ironclust:', sorting_IC.get_unit_ids())
 
-.. code:: ipython3
+.. code:: python
 
     # Tridesclous spike sorting
     sorting_TDC = st.sorters.run_tridesclous(recording, output_folder='tmp_TDC')
@@ -317,16 +317,16 @@ The launcher enables to call any spike sorter with the same functions:
 same recording extractor or a collection of them, the ``run_sorters``
 function can be used.
 
-.. code:: ipython3
+.. code:: python
 
     st.sorters.run_sorters?
 
-.. code:: ipython3
+.. code:: python
 
     recording_list = [recording]
     sorter_list = ['klusta', 'mountainsort4', 'tridesclous']
 
-.. code:: ipython3
+.. code:: python
 
     sorting_output = st.sorters.run_sorters(sorter_list, recording_list, working_folder='working')
 
@@ -428,7 +428,7 @@ function can be used.
       exec(open(probe_filename).read(), None, d)
 
 
-.. code:: ipython3
+.. code:: python
 
     for sorter, extractor in sorting_output['recording_0'].items():
         print(sorter, extractor.get_unit_ids())
@@ -459,7 +459,7 @@ to the recording channels either manually (using the
 example we will create a 16 channel recording and split it in four
 tetrodes.
 
-.. code:: ipython3
+.. code:: python
 
     recording_tetrodes, sorting_true = se.example_datasets.toy_example(duration=60, num_channels=16)
     
@@ -472,7 +472,7 @@ tetrodes.
     ['location']
 
 
-.. code:: ipython3
+.. code:: python
 
     # working in linux only
     !cat tetrode_16.prb
@@ -496,7 +496,7 @@ tetrodes.
     }
 
 
-.. code:: ipython3
+.. code:: python
 
     # load probe file to add group information
     recording_tetrodes = se.load_probe_file(recording_tetrodes, 'tetrode_16.prb')
@@ -513,7 +513,7 @@ different groups can also be sorted in parallel, and the output sorting
 extractor will have the same property used for sorting. Running in
 parallel can speed up the computations.
 
-.. code:: ipython3
+.. code:: python
 
     t_start = time.time()
     sorting_tetrodes = st.sorters.run_sorter('klusta', recording_tetrodes, output_folder='tmp_tetrodes', 
@@ -526,14 +526,14 @@ parallel can speed up the computations.
     Elapsed time:  11.47568941116333
 
 
-.. code:: ipython3
+.. code:: python
 
     t_start = time.time()
     sorting_tetrodes_p = st.sorters.run_sorter('klusta', recording_tetrodes, output_folder='tmp_tetrodes', 
                                                grouping_property='group', parallel=True)
     print('Elapsed time parallel: ', time.time() - t_start)
 
-.. code:: ipython3
+.. code:: python
 
     print('Units non parallel: ', sorting_tetrodes.get_unit_ids())
     print('Units parallel: ', sorting_tetrodes_p.get_unit_ids())

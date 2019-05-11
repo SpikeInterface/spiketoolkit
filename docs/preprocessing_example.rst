@@ -1,17 +1,17 @@
 
-PREPROCESSING MODULE
+Preprocessing module
 ====================
 
 This notebook shows how to use the spiketoolkit.preprocessing module to:
 1. apply filters 2. compute LFP and MUA. 3. change reference 4. remove
 bad channels 5. remove stimulation artifacts
 
-.. code:: ipython3
+.. code:: python
 
     %load_ext autoreload
     %autoreload 2
 
-.. code:: ipython3
+.. code:: python
 
     import spikeextractors as se
     import spiketoolkit as st
@@ -25,7 +25,7 @@ bad channels 5. remove stimulation artifacts
 Create toy example dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     recording, sorting = se.example_datasets.toy_example(num_channels=4, duration=30)
 
@@ -35,7 +35,7 @@ Create toy example dataset
 Now apply a bandpass filter and a notch filter (separately) to the
 recording extractor. Filters are also RecordingExtractor objects.
 
-.. code:: ipython3
+.. code:: python
 
     recording_bp = st.preprocessing.bandpass_filter(recording, freq_min=300, freq_max=6000)
     recording_notch = st.preprocessing.notch_filter(recording, freq=1000, q=10)
@@ -49,13 +49,13 @@ recording extractor. Filters are also RecordingExtractor objects.
 Now let's plot the power spectrum of non-filtered, bandpass filtered,
 and notch filtered recordings.
 
-.. code:: ipython3
+.. code:: python
 
     f_raw, p_raw = ss.welch(recording.get_traces(), fs=recording.get_sampling_frequency())
     f_bp, p_bp = ss.welch(recording_bp.get_traces(), fs=recording.get_sampling_frequency())
     f_notch, p_notch = ss.welch(recording_notch.get_traces(), fs=recording.get_sampling_frequency())
 
-.. code:: ipython3
+.. code:: python
 
     plt.figure()
     _ = plt.semilogy(f_raw, p_raw[0], f_bp, p_bp[0], f_notch, p_notch[0])
@@ -76,7 +76,7 @@ In ``spiketoolkit``, LFP and MUA can be extracted combining the
 ``bandpass_filter``, ``rectify`` and ``resample`` functions. In this
 example LFP and MUA are resampled at 1000 Hz.
 
-.. code:: ipython3
+.. code:: python
 
     recording_lfp = st.preprocessing.bandpass_filter(recording, freq_min=1, freq_max=300)
     recording_lfp = st.preprocessing.resample(recording_lfp, 1000)
@@ -97,7 +97,7 @@ reference (CMR) can be applied. Moreover, the average/median can be
 computed on different groups. Single channels can also be used as
 reference.
 
-.. code:: ipython3
+.. code:: python
 
     recording_car = st.preprocessing.common_reference(recording, reference='average')
     recording_cmr = st.preprocessing.common_reference(recording, reference='median')
@@ -105,7 +105,7 @@ reference.
     recording_single_groups = st.preprocessing.common_reference(recording, reference='single', groups=[[0,1], [2,3]], 
                                                                 ref_channel=[0,2])
 
-.. code:: ipython3
+.. code:: python
 
     plt.figure()
     _ = plt.plot(recording_car.get_traces()[0])
@@ -135,11 +135,11 @@ reference.
 In to remove noisy channels from the analysis, the
 ``remove_bad_channels`` function can be used.
 
-.. code:: ipython3
+.. code:: python
 
     recording_remove_bad = st.preprocessing.remove_bad_channels(recording, bad_channels=[0])
 
-.. code:: ipython3
+.. code:: python
 
     print(recording_remove_bad.get_channel_ids())
 
@@ -155,12 +155,12 @@ exceeding ``bad_threshold`` times the median standard deviation are
 removed. The standard deviations are computed on the traces with length
 ``seconds`` from the middle of the recordings.
 
-.. code:: ipython3
+.. code:: python
 
     recording_remove_bad_auto = st.preprocessing.remove_bad_channels(recording, bad_channels='auto', bad_threshold=2,
                                                                      seconds=2)
 
-.. code:: ipython3
+.. code:: python
 
     print(recording_remove_bad_auto.get_channel_ids())
 
@@ -179,19 +179,19 @@ In some applications, electrodes are used to electrically stimulate the
 tissue, generating a large artifact. In ``spiketoolkit``, the artifact
 can be zeroed-out using the ``remove_artifact`` function.
 
-.. code:: ipython3
+.. code:: python
 
     # create dummy stimulation triggers
     stimulation_trigger_frames = np.array([100000, 500000, 700000])
 
-.. code:: ipython3
+.. code:: python
 
     # large ms_before and s_after are used for plotting only
     recording_rmartifact = st.preprocessing.remove_artifacts(recording, 
                                                              triggers=stimulation_trigger_frames, 
                                                              ms_before=100, ms_after=200)
 
-.. code:: ipython3
+.. code:: python
 
     plt.figure()
     _ = plt.plot(recording.get_traces()[0])

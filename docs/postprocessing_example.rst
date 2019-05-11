@@ -1,5 +1,5 @@
 
-POSTPROCESSING MODULE
+Postprocessing module
 =====================
 
 This notebook shows how to use the spiketoolkit.postprocessing module
@@ -7,7 +7,7 @@ to: 1. compute spike waveforms 2. compute unit templates 3. compute unit
 maximum channel 4. compute pca scores 5. export sorted data to phy to
 curate the results 6. save curated sorting output
 
-.. code:: ipython3
+.. code:: python
 
     %load_ext autoreload
     %autoreload 2
@@ -19,7 +19,7 @@ curate the results 6. save curated sorting output
       %reload_ext autoreload
 
 
-.. code:: ipython3
+.. code:: python
 
     import spikeextractors as se
     import spiketoolkit as st
@@ -33,7 +33,7 @@ curate the results 6. save curated sorting output
 Create toy example dataset
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code:: ipython3
+.. code:: python
 
     recording, sorting = se.example_datasets.toy_example(num_channels=4, duration=30, seed=0)
 
@@ -51,7 +51,7 @@ object as features. The ms before and after the spike event can be
 chosen. Waveforms are returned as a list of np.arrays (n\_spikes,
 n\_channels, n\_points)
 
-.. code:: ipython3
+.. code:: python
 
     wf = st.postprocessing.get_unit_waveforms(recording, sorting, ms_before=1, ms_after=2, 
                                             save_as_features=True, verbose=True)
@@ -73,7 +73,7 @@ n\_channels, n\_points)
 
 Now ``waveforms`` is a unit spike feature!
 
-.. code:: ipython3
+.. code:: python
 
     sorting.get_unit_spike_feature_names()
     wf[0].shape
@@ -87,7 +87,7 @@ Now ``waveforms`` is a unit spike feature!
 
 
 
-.. code:: ipython3
+.. code:: python
 
     # plotting waveforms of units 0,1,2 on channel 0
     plt.figure()
@@ -108,7 +108,7 @@ with that property using the ``grouping_property`` and
 of the waveforms is in channel [0,1] it will be assigned to group 0 and
 will have 2 channels and the same for group 1.
 
-.. code:: ipython3
+.. code:: python
 
     channel_groups = [[0, 1], [2, 3]]
     for ch in recording.get_channel_ids():
@@ -123,7 +123,7 @@ will have 2 channels and the same for group 1.
     0 1
 
 
-.. code:: ipython3
+.. code:: python
 
     wf_by_group = st.postprocessing.get_unit_waveforms(recording, sorting, ms_before=1, ms_after=2, 
                                                        save_as_features=False, verbose=True,
@@ -159,7 +159,7 @@ numerous spikes, you can set the ``max_num_waveforms`` to be extracted.
 If waveforms have already been computd and stored as ``features``, those
 will be used. Templates can be saved as unit properties.
 
-.. code:: ipython3
+.. code:: python
 
     templates = st.postprocessing.get_unit_template(recording, sorting, max_num_waveforms=200,
                                                   save_as_property=True, verbose=True)
@@ -170,7 +170,7 @@ will be used. Templates can be saved as unit properties.
     Using 'waveforms' features
 
 
-.. code:: ipython3
+.. code:: python
 
     sorting.get_unit_property_names()
 
@@ -183,7 +183,7 @@ will be used. Templates can be saved as unit properties.
 
 
 
-.. code:: ipython3
+.. code:: python
 
     # plotting templates of units 0,1,2 on all four channels
     plt.figure()
@@ -202,7 +202,7 @@ will be used. Templates can be saved as unit properties.
 In the same way, one can get the ecording channel with the maximum
 amplitude and save it as a property.
 
-.. code:: ipython3
+.. code:: python
 
     max_chan = st.postprocessing.get_unit_max_channel(recording, sorting, save_as_property=True, verbose=True)
     print(max_chan)
@@ -214,7 +214,7 @@ amplitude and save it as a property.
     [0, 0, 1, 1, 1, 2, 2, 2, 2, 3]
 
 
-.. code:: ipython3
+.. code:: python
 
     sorting.get_unit_property_names()
 
@@ -233,7 +233,7 @@ amplitude and save it as a property.
 For some applications, for example validating the spike sorting output,
 PCA scores can be computed.
 
-.. code:: ipython3
+.. code:: python
 
     pca_scores = st.postprocessing.compute_pca_scores(recording, sorting, n_comp=3, verbose=True)
     
@@ -257,7 +257,7 @@ PCA scores can be computed.
     (74, 3)
 
 
-.. code:: ipython3
+.. code:: python
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -280,7 +280,7 @@ PCA scores can be computed.
 PCA scores can be also computed electrode-wise. In the previous example,
 PCA was applied to the concatenation of the waveforms over channels.
 
-.. code:: ipython3
+.. code:: python
 
     pca_scores_by_electrode = st.postprocessing.compute_pca_scores(recording, sorting, n_comp=3, by_electrode=True)
     
@@ -305,7 +305,7 @@ PCA was applied to the concatenation of the waveforms over channels.
 In this case, as expected, 3 principal components are extracted for each
 electrode.
 
-.. code:: ipython3
+.. code:: python
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
@@ -335,7 +335,7 @@ curation of the sorted result.
 Below is an example of two simple, automatic curation methods you can
 run:
 
-.. code:: ipython3
+.. code:: python
 
     snr_list = st.validation.qualitymetrics.compute_unit_SNR(recording, sorting)
     print(snr_list)
@@ -346,7 +346,7 @@ run:
     [19.321362668787952, 7.1347723790248265, 14.572200165415367, 10.3590295291215, 9.113611937904054, 9.107864682851742, 15.293601899433895, 7.666255328235154, 5.831489483534372, 18.519676449363974]
 
 
-.. code:: ipython3
+.. code:: python
 
     curated_sorting1 = st.postprocessing.threshold_min_num_spikes(sorting=sorting, min_num_spike_threshold=70)
     print("Unit spike train lengths uncurated: " + str([len(spike_train) for spike_train in [sorting.get_unit_spike_train(unit_id) for unit_id in sorting.get_unit_ids()]]))
@@ -363,7 +363,7 @@ threshold\_min\_num\_spikes automatically rejects any units with number
 of spikes lower than the given threshold. It returns a sorting extractor
 without those units
 
-.. code:: ipython3
+.. code:: python
 
     curated_sorting2 = st.postprocessing.threshold_min_SNR(recording=recording, sorting=curated_sorting1, 
                                                            min_SNR_threshold=6.0)
@@ -389,7 +389,7 @@ spike sorting. In order to do so, we interface wiht the Phy
 
 First, we need to export the data to the phy format:
 
-.. code:: ipython3
+.. code:: python
 
     st.postprocessing.export_to_phy(recording, sorting, output_folder='phy', verbose=True)
 
@@ -416,11 +416,11 @@ Or from a notebook:
 In this case, in phy, we manually merged to units. We can load back the
 curated data using the ``PhySortingExtractor``:
 
-.. code:: ipython3
+.. code:: python
 
     curated_sorting = se.PhySortingExtractor('phy/')
 
-.. code:: ipython3
+.. code:: python
 
     print('Before manual curation: ', len(sorting.get_unit_ids()))
     print('After manual curation: ', len(curated_sorting.get_unit_ids()))
@@ -438,6 +438,6 @@ curated data using the ``PhySortingExtractor``:
 The curated recordings can be either saved in any other format, or the
 PhySortingExtractor can be used reload the data from the phy format.
 
-.. code:: ipython3
+.. code:: python
 
     se.MdaSortingExtractor.write_sorting(sorting=curated_sorting, save_path='curated_results.mda')
