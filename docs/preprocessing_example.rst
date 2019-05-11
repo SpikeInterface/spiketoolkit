@@ -22,9 +22,10 @@ This notebook shows how to use the spiketoolkit.preprocessing module to:
     import scipy.signal as ss
     %matplotlib notebook
 
+First, let's create a toy example:
 
 .. code:: python
-    # Create toy example dataset
+
     recording, sorting = se.example_datasets.toy_example(num_channels=4, duration=30)
 
 1) Apply filters

@@ -18,9 +18,10 @@ This notebook shows how to use the spiketoolkit.sorters module to:
     import time
     from pprint import pprint
 
+First, let's create a toy example:
 
 .. code:: python
-    # Create toy example dataset
+
     recording, sorting_true = se.example_datasets.toy_example(duration=60)
 
 1) Check available sorters
