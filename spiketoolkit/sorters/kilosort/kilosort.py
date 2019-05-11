@@ -63,6 +63,7 @@ class KilosortSorter(BaseSorter):
         'probe_file': None,
         'useGPU': True,
         'detect_threshold': 6,
+        'car': True,
         'electrode_dimensions': None,
         'npy_matlab_path': None,
         'kilosort_path': None
@@ -125,6 +126,11 @@ class KilosortSorter(BaseSorter):
         else:
             ug = 0
 
+        if p['car']:
+            use_car = 1
+        else:
+            use_car = 0
+
         if not HAVE_KILOSORT:
             if p['kilosort_path'] is None or p['npy_matlab_path'] is None:
 
@@ -142,7 +148,7 @@ class KilosortSorter(BaseSorter):
                                                                              output_folder, abs_channel,
                                                           abs_config)
         kilosort_config = ''.join(kilosort_config).format(nchan, nchan, sample_rate, dat_file,
-                                                                                Nfilt, nsamples, kilo_thresh)
+                                                          Nfilt, nsamples, kilo_thresh, use_car)
         electrode_dimensions = p['electrode_dimensions']
 
         if 'group' in recording.get_channel_property_names():

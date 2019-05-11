@@ -22,14 +22,15 @@ def test_do_matching():
     # simple match
     sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
                                                             [101, 201, 301, ], [0, 0, 5])
-    event_counts_1,  event_counts_2, matching_event_counts_12, best_match_units_12,\
-            matching_event_counts_21, best_match_units_21, \
-            unit_map12,  unit_map21 = do_matching(sorting1, sorting2, delta_tp, min_accuracy)
-    assert event_counts_1[0] == 3
-    assert matching_event_counts_12[0][0] == 2
-    assert best_match_units_12[0] == 0
-    assert best_match_units_12[1] == 5
-    assert unit_map12[0] == 0
+    for n_jobs in [-1,1]:
+        event_counts_1,  event_counts_2, matching_event_counts_12, best_match_units_12,\
+                matching_event_counts_21, best_match_units_21, \
+                unit_map12,  unit_map21 = do_matching(sorting1, sorting2, delta_tp, min_accuracy, n_jobs=n_jobs)
+        assert event_counts_1[0] == 3
+        assert matching_event_counts_12[0][0] == 2
+        assert best_match_units_12[0] == 0
+        assert best_match_units_12[1] == 5
+        assert unit_map12[0] == 0
     
     # match when 2 units fire at same time
     sorting1, sorting2 = make_sorting([100, 100, 200, 200, 300], [0, 1, 0, 1, 0], 
@@ -146,11 +147,11 @@ def test_compare_spike_trains():
 
 
 if __name__ == '__main__':
-    #~ test_do_matching()
+    test_do_matching()
     #~ test_do_score_labels()
-    test_do_counting()
-    test_do_confusion_matrix()
-    test_compare_spike_trains()
+    #~ test_do_counting()
+    #~ test_do_confusion_matrix()
+    #~ test_compare_spike_trains()
 
 
 

@@ -45,6 +45,7 @@ class BaseSorter:
         self.debug = debug
         self.grouping_property = grouping_property
         self.parallel = parallel
+        self.params = self.default_params()
 
         if output_folder is None:
             output_folder = 'test_' + self.sorter_name
@@ -58,10 +59,10 @@ class BaseSorter:
             # several groups
             self.recording_list = se.get_sub_extractors_by_property(recording, grouping_property)
             n_group = len(self.recording_list)
-            if n_group>1:
-                self.output_folders = [Path(str(output_folder) + '_'+str(i)) for i in range(n_group)]
+            if n_group > 1:
+                self.output_folders = [output_folder / str(i) for i in range(n_group)]
             else:
-                self.output_folders = [output_folder]
+                self.output_folders = [output_folder / str(0)]
 
         # make folders
         for output_folder in self.output_folders:
@@ -78,7 +79,6 @@ class BaseSorter:
         return copy.deepcopy(self._default_params)
 
     def set_params(self, **params):
-        self.params = self.default_params()
         self.params.update(params)
 
     def run(self):
