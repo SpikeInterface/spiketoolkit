@@ -34,6 +34,7 @@ class HerdingspikesSorter(BaseSorter):
         {'name': 'probe_masked_channels', 'type': 'list', 'value':[], 'default':[], 'title': "Masked channels"},
     ]
 
+    _gui_params = copy.deepcopy(BaseSorter._gui_params)
     for param in _extra_params:
         _gui_params.append(param)
 

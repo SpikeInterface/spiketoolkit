@@ -6,7 +6,6 @@ class CommonReferenceRecording(RecordingExtractor):
     preprocessor_name = 'CommonReferenceRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
         {'name': 'reference', 'type': 'str', 'value':'median', 'default':'median', 'title': "Reference type ('median', 'average', or 'single')"},
         {'name': 'groups', 'type': 'list', 'value':None, 'default':None, 'title': "List of lists containins the channels for splitting the reference"},
         {'name': 'ref_channel', 'type': 'int/list', 'value':None, 'default':None, 'title': "All channels are referenced to 'ref_channel(s)"},
