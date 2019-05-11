@@ -33,7 +33,10 @@ class BaseSorter:
     installed = False  # check at class level if isntalled or not
     SortingExtractor_Class = None  # convinience to get the extractor
     _default_params = {}
-    _gui_params = []
+    _gui_params = [
+        {'name': 'output_folder', 'type': 'str', 'value':None, 'default':None,  'title': "Sorting output folder path"},
+        {'name': 'parallel', 'type': 'bool', 'value':False, 'default':False,  'title': "If True, then parallelize"},
+    ]
     installation_mesg = ""  # error message when not installed
 
     def __init__(self, recording=None, output_folder=None, debug=False,
