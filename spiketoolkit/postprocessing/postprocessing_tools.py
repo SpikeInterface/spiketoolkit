@@ -366,9 +366,9 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=No
                                        ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
                                        compute_property_from_recording=compute_property_from_recording,
                                        verbose=verbose)
-        max_chan = np.unravel_index(np.argmax(np.abs(template)),
+        max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                     template.shape)[0]
-        max_channel = recording.get_channel_ids()[max_chan]
+        max_channel = recording.get_channel_ids()[max_channel_idx]
         if save_as_property:
             sorting.set_unit_property(unit_id, 'max_channel', max_channel)
 
@@ -383,7 +383,7 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=No
 def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                        start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                        max_num_waveforms=np.inf, save_as_features=True, compute_property_from_recording=False,
-                       verbose=False):
+                       whiten=True, verbose=False):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
 
@@ -419,6 +419,8 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
+    whiten: bool
+        If True, PCA is run with whiten equal True
     verbose: bool
         If True output is verbose
 
@@ -466,7 +468,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
             wf = get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
                                     end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                     ms_before=ms_before, ms_after=ms_after,
-                                    grouping_property=grouping_property,
+                                    grouping_property=grouping_property, dtype=dtype,
                                     compute_property_from_recording=compute_property_from_recording,
                                     verbose=verbose)
         if by_electrode:
@@ -482,7 +484,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     if verbose:
         print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, len(all_waveforms)))
 
-    pca = PCA(n_components=n_comp, whiten=False)
+    pca = PCA(n_components=n_comp, whiten=whiten)
     pca.fit(all_waveforms)
 
     pca_scores = []

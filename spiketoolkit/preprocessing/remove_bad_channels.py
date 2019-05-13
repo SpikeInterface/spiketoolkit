@@ -10,10 +10,11 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         {'name': 'bad_channels', 'type': 'list', 'title': "List of bad channels or 'auto'"},
         {'name': 'bad_threshold', 'type': 'float', 'title': "Threshold in number of sd to remove channels ('auto')"},
         {'name': 'seconds', 'type': 'float', 'title': "Number of seconds to compute standard deviation ('auto)"},
+        {'name': 'verbose', 'type': 'bool', 'title': "If True output is verbose"},
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, bad_channels, bad_threshold, seconds):
+    def __init__(self, recording, bad_channels, bad_threshold, seconds, verbose):
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -21,6 +22,7 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         self._bad_channels = bad_channels
         self._bad_threshold = bad_threshold
         self._seconds = seconds
+        self.verbose = verbose
         self._initialize_subrecording_extractor()
         self.copy_channel_properties(recording=self._subrecording)
 
@@ -56,7 +58,8 @@ class RemoveBadChannelsRecording(RecordingExtractor):
             traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
             stds = np.std(traces, axis=1)
             bad_channels = [ch for ch, std in enumerate(stds) if std > self._bad_threshold * np.median(stds)]
-            print('Automatically removing channels:', bad_channels)
+            if self.verbose:
+                print('Automatically removing channels:', bad_channels)
             active_channels = []
             for chan in self._recording.get_channel_ids():
                 if chan not in bad_channels:
@@ -66,7 +69,8 @@ class RemoveBadChannelsRecording(RecordingExtractor):
             self._subrecording = self._recording
         self.active_channels = active_channels
 
-def remove_bad_channels(recording, bad_channels, bad_threshold=2, seconds=10):
+
+def remove_bad_channels(recording, bad_channels, bad_threshold=2, seconds=10, verbose=False):
     '''
     Remove bad channels from the recording extractor.
 
@@ -80,6 +84,8 @@ def remove_bad_channels(recording, bad_channels, bad_threshold=2, seconds=10):
         If 'auto' is used, the threshold for the standard deviation over which channels are removed
     seconds: float
         If 'auto' is used, the number of seconds used to compute standard deviations
+    verbose: bool
+        If True, output is verbose
 
     Returns
     -------
@@ -88,4 +94,4 @@ def remove_bad_channels(recording, bad_channels, bad_threshold=2, seconds=10):
 
     '''
     return RemoveBadChannelsRecording(recording=recording, bad_channels=bad_channels,
-                                      bad_threshold=bad_threshold, seconds=seconds)
+                                      bad_threshold=bad_threshold, seconds=seconds, verbose=verbose)
