@@ -383,7 +383,7 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=No
 def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                        start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                        max_num_waveforms=np.inf, save_as_features=True, compute_property_from_recording=False,
-                       whiten=True, verbose=False):
+                       whiten=False, verbose=False):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
 
