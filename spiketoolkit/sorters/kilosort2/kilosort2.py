@@ -171,8 +171,7 @@ class Kilosort2Sorter(BaseSorter):
                                                    groups,
                                                    recording.get_sampling_frequency())
         else:
-            raise Exception("Electrode dimension should bi a list of len 2")
-
+            raise Exception("Electrode dimension should be a list of len 2")
 
         for fname, value in zip(['kilosort2_master.m', 'kilosort2_config.m',
                                  'kilosort2_channelmap.m'],
