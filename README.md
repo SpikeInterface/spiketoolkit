@@ -39,11 +39,13 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 - [Mountainsort](https://github.com/flatironinstitute/mountainsort)
 - [SpyKING circus](https://github.com/spyking-circus/spyking-circus)
 - [KiloSort](https://github.com/cortex-lab/KiloSort)
+- [Kilosort2](https://github.com/MouseLand/Kilosort2)
+- [Herding Spikes 2](https://github.com/mhhennig/HS2)
 - [Klusta](https://github.com/kwikteam/klusta)
 - [Ironclust](https://github.com/jamesjun/ironclust)
-- [tridesclous](https://github.com/tridesclous/tridesclous)
+- [Tridesclous](https://github.com/tridesclous/tridesclous)
 
-SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same recordings.
+SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings.
 
 ```python
 import spikeextractors as se
@@ -55,7 +57,7 @@ recording = se.OpenEphysRecordingExtractor('path-to-open-ephys-folder')
 # run spike sorters (with default parameters)
 sorting_MS = st.sorters.run_mountainsort4(recording)
 sorting_SC = st.sorters.run_spykingcircus(recording)
-sorting_KS = st.sorters.run_kilosort(recording, kilosort_path='path-to-kilosort-matlab-installation')
+sorting_KS = st.sorters.run_kilosort(recording')
 sorting_TDC = st.sorters.run_tridesclous(recording)
 ```
 
@@ -67,11 +69,11 @@ Manual curation of spike sorting outputs is recommended for all algorithms. This
 With SpikeToolit you can export any sorting output to the  [phy](https://github.com/kwikteam/phy) template-gui, manually curate the data, and re-import the curated sorting output:
 
 ```python
-# esport Mountainsort output to phy
-st.export_to_phy(sorting_MS)
+# esport Mountainsort output to Phy template-gui
+st.postprocessing.export_to_phy(recording, sorting_MS)
 # curate the data running: phy template-gui path-to-exported-params.py
 # reimport curated sorting output
-sorting_MS_curated = se.PhysortingExtractors('path-to-created-phy-folder')
+sorting_MS_curated = se.PhySortingExtractors('path-to-created-phy-folder')
 ```
 
 **Compare sorting outputs**
@@ -79,15 +81,15 @@ sorting_MS_curated = se.PhysortingExtractors('path-to-created-phy-folder')
 SpikeToolkit is designed to make spike sorting comparison and evaluation easy and straightforward. Using the `sorting_MS`, `sorting_SC`, and `sorting_SC` output from the previous section, one can run pairwise comparisons:
 
 ```python
-comparison_MS_SC = st.comparison.SortingComparison(sorting_MS, sorting_SC)
+comparison_MS_SC = st.comparison.compare_two_sorters(sorting_MS, sorting_SC)
 ```
 
-The `SortingComparison` class finds best matching units based on the fraction of matched spikes. Units that are not matched to any other unit are assigned to -1.
+The `compare_two_sorters` function finds best matching units based on the fraction of matched spikes. Units that are not matched to any other unit are assigned to -1.
 
 Alternatively, one can run a multi-sorting comparison that finds units in agreement amongst multiple spike sorters:
 
 ```python
-multi_comparison = st.comparison.MultiSortingComparison([sorting_MS, sorting_SC, sorting_KS])
+multi_comparison = st.comparison.compare_multiple_sorters([sorting_MS, sorting_SC, sorting_KS])
 # extract units shared among all 3 spike sorting outputs
 agreement_sorting = multi_comparison.get_agreement_sorting(minimum_match=3)
 ```
@@ -111,10 +113,9 @@ pytest
 [Jeremy Magland](https://www.simonsfoundation.org/team/jeremy-magland/) - Center for Computational Biology (CCB), Flatiron Institute, New York, United States
 
 [Matthias Hennig](http://homepages.inf.ed.ac.uk/mhennig/) - The Institute for Adaptive and Neural Computation (ANC), University of Edinburgh, Edinburgh, Scotland
+
+[Samuel Garcia](https://github.com/samuelgarcia) - Centre de Recherche en Neuroscience de Lyon (CRNL), Lyon, France
+
 <br/>
 <br/>
 For any correspondence, contact Alessio Buccino at alessiop.buccino@gmail.com
-
-### Contributors
-
-[Samuel Garcia](https://github.com/samuelgarcia) - Centre de Recherche en Neuroscience de Lyon (CRNL), Lyon, France
