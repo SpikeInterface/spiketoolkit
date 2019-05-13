@@ -491,6 +491,8 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     # project waveforms on principal components
     for wf in waveforms:
         pct = np.dot(wf, pca.components_.T)
+        if whiten:
+            pct /= np.sqrt(pca.explained_variance_)
         pca_scores.append(pct)
 
     if save_as_features:
