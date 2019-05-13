@@ -151,26 +151,28 @@ class Kilosort2Sorter(BaseSorter):
             groups = [recording.get_channel_property(ch, 'group') for ch in recording.get_channel_ids()]
         else:
             groups = 'ones(1, Nchannels)'
-        if 'location' in recording.get_channel_property_names():
-            positions = np.array([recording.get_channel_property(chan, 'location') for chan in recording.get_channel_ids()])
-            if electrode_dimensions is None:
-                kilosort2_channelmap = ''.join(kilosort2_channelmap
-                                              ).format(nchan,
-                                                       list(positions[:, 0]),
-                                                       list(positions[:, 1]),
-                                                       groups,
-                                                       sample_rate)
-            elif len(electrode_dimensions) == 2:
-                kilosort2_channelmap = ''.join(kilosort2_channelmap
-                                              ).format(nchan,
-                                                       list(positions[:, electrode_dimensions[0]]),
-                                                       list(positions[:, electrode_dimensions[1]]),
-                                                       groups,
-                                                       recording.get_sampling_frequency())
-            else:
-                raise Exception("Electrode dimension should bi a list of len 2")
+        if 'location' not in recording.get_channel_property_names():
+            print("'location' information is not found. Using linear configuration")
+            for i_ch, ch in enumerate(recording.get_channel_ids()):
+                recording.set_channel_property(ch, 'location', [0, i_ch])
+        positions = np.array([recording.get_channel_property(chan, 'location') for chan in recording.get_channel_ids()])
+        if electrode_dimensions is None:
+            kilosort2_channelmap = ''.join(kilosort2_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, 0]),
+                                                   list(positions[:, 1]),
+                                                   groups,
+                                                   sample_rate)
+        elif len(electrode_dimensions) == 2:
+            kilosort2_channelmap = ''.join(kilosort2_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, electrode_dimensions[0]]),
+                                                   list(positions[:, electrode_dimensions[1]]),
+                                                   groups,
+                                                   recording.get_sampling_frequency())
         else:
-            raise Exception("'location' information is needed. Provide a probe information with a 'probe_file'")
+            raise Exception("Electrode dimension should bi a list of len 2")
+
 
         for fname, value in zip(['kilosort2_master.m', 'kilosort2_config.m',
                                  'kilosort2_channelmap.m'],

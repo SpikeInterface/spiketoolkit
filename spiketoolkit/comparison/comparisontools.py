@@ -475,8 +475,9 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     for sp_i, n_sp in enumerate(spiketrain1):
         matches = (np.abs(spiketrain2.astype(int) - n_sp) <= delta_frames // 2)
         if np.sum(matches) > 0:
-            lab_st1[sp_i] = 'TP'
-            lab_st2[np.where(matches)[0][0]] = 'TP'
+            if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
+                lab_st1[sp_i] = 'TP'
+                lab_st2[np.where(matches)[0][0]] = 'TP'
 
     for l_gt, lab in enumerate(lab_st1):
         if lab == 'UNPAIRED':
