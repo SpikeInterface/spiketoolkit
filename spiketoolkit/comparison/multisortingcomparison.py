@@ -191,7 +191,7 @@ class MultiSortingComparison():
         sorted_name_list = sorted(self._name_list)
         sorting_agr = AgreementSortingExtractor(self, minimum_matching)
         unit_ids = sorting_agr.get_unit_ids()
-        agreement_matrix = _do_agreement_matrix(minimum_matching)
+        agreement_matrix = self._do_agreement_matrix(minimum_matching)
 
         fig, ax = plt.subplots()
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.

@@ -263,8 +263,9 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
             for sp_i, n_sp in enumerate(sts1[u1]):
                 matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
                 if np.sum(matches) > 0:
-                    lab_st1[sp_i] = 'TP'
-                    lab_st2[np.where(matches)[0][0]] = 'TP'
+                    if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
+                        lab_st1[sp_i] = 'TP'
+                        lab_st2[np.where(matches)[0][0]] = 'TP'
         else:
             lab_st1 = np.array(['FN'] * len(sts1[u1]))
             labels_st1[u1] = lab_st1
@@ -282,8 +283,9 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                         mapped_st = sts2[u2]
                         matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
                         if np.sum(matches) > 0:
-                            lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
-                            lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
+                            if 'CL' not in lab_st1[l_gt] and 'CL' not in lab_st2[np.where(matches)[0][0]]:
+                                lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
+                                lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
 
 
     for u1 in unit1_ids:
@@ -477,8 +479,9 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     for sp_i, n_sp in enumerate(spiketrain1):
         matches = (np.abs(spiketrain2.astype(int) - n_sp) <= delta_frames // 2)
         if np.sum(matches) > 0:
-            lab_st1[sp_i] = 'TP'
-            lab_st2[np.where(matches)[0][0]] = 'TP'
+            if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
+                lab_st1[sp_i] = 'TP'
+                lab_st2[np.where(matches)[0][0]] = 'TP'
 
     for l_gt, lab in enumerate(lab_st1):
         if lab == 'UNPAIRED':
