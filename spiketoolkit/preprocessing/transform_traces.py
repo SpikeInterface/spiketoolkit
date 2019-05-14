@@ -11,7 +11,7 @@ class TransformTracesRecording(RecordingExtractor):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, scalar, offset):
+    def __init__(self, recording, scalar=1, offset=0):
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -40,7 +40,7 @@ class TransformTracesRecording(RecordingExtractor):
         return traces*self._scalar + self._offset
 
 
-def transform_traces(recording, scalar):
+def transform_traces(recording, scalar=1, offset=0):
     '''
     Transforms the traces from the given recording extractor with a scalar
     and offset. New traces = traces*scalar + offset.
