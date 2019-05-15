@@ -2,11 +2,18 @@
 
 import spikeextractors as se
 from .basecomparison import BaseComparison
+from .comparisontools import compute_agreement_score
 
 import numpy as np
 
 
 class SortingComparison(BaseComparison):
+    """
+    Class for comparison of two sorters when no assumption is done.
+    
+    
+    
+    """
 
 
     def get_mapped_sorting1(self):
@@ -175,7 +182,8 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
     - Individual spikes are labelled as true positives (TP), false negatives (FN), false positives 1 (FP from spike
     train 1), false positives 2 (FP from spike train 2), misclassifications (CL)
 
-    It also allows to compute_performance and confusion matrix.
+    It also allows to get confusion matrix and agreement fraction, false positive fraction and
+    false negative fraction.
 
     Parameters
     ----------

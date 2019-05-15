@@ -26,7 +26,10 @@ def test_compare_sorter_to_ground_truth():
     sc._do_confusion()
     print(sc._confusion_matrix)
     
-    methods = ['by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
+    raw_count = sc.get_raw_count()
+    print(raw_count)
+    
+    methods = ['raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
     for method in methods:
         perf = sc.get_performance(method=method)
         #~ print(perf)

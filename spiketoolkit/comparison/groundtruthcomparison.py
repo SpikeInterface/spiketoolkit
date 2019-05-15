@@ -6,15 +6,44 @@ import pandas as pd
 
 class GroundTruthComparison(BaseComparison):
     """
-    class to compare a sorter to ground truth
+    Class to compare a sorter to ground truth.
     """
+    def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
+                delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
+                count=False, n_jobs=1, verbose=False):
+        BaseComparison.__init__(self, gt_sorting, other_sorting, sorting1_name=gt_name, sorting2_name=other_name,
+                                    delta_frames=delta_frames, min_accuracy=min_accuracy, count=count, n_jobs=n_jobs, verbose=verbose)
+        self.exhaustive_gt = exhaustive_gt
 
+    
+    def get_raw_count(self):
+        """
+        Get score count with a DataFrame with 4 columns
+        ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other']
+        and one line per ground truth units
+        
+        """
 
+        unit1_ids = self._sorting1.get_unit_ids()
+        columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other']
+        df = pd.DataFrame(index=unit1_ids, columns=columns)
+        for u1 in unit1_ids:
+            counts = self._mixed_counts['by_spiketrains'][u1]
+            df.loc[u1, 'tp'] = counts['TP']
+            df.loc[u1, 'fn'] = counts['FP']
+            df.loc[u1, 'cl'] = counts['CL']
+            df.loc[u1, 'fp'] = counts['TP']
+            df.loc[u1, 'nb_gt'] = counts['NB_SPIKE_1']
+            df.loc[u1, 'nb_other'] = counts['NB_SPIKE_2']
+            
+            
+        return df
 
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
         """
         Compute performance rate with several method:
+          * 'raw_count'
           * 'by_spiketrain'
           * 'pooled_with_sum'
           * 'pooled_with_average'
@@ -31,11 +60,18 @@ class GroundTruthComparison(BaseComparison):
         perf: dict or pandas dataframe
             Dictionary or dataframe (based on 'output') with performance entries
         """
-        if method != 'by_spiketrain' and method != 'pooled_with_sum' and method != 'pooled_with_average':
-            raise Exception("'method' can be 'by_spiketrain', 'pooled_with_average', or 'pooled_with_sum'")
+        possibles = ('raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average')
+        if method not in possibles:
+            raise Exception("'method' can be " + ' or '.join(possibles))
 
         if self._mixed_counts is None:
             self._do_counting()
+        
+        if method =='raw_count':
+            assert output=='pandas', "Output must be pandas for raw_count"
+            
+            perf = self.get_raw_count()
+            
         if method == 'by_spiketrain':
             assert output=='pandas', "Output must be pandas for by_spiketrain"
 
@@ -45,35 +81,35 @@ class GroundTruthComparison(BaseComparison):
             for u1 in unit1_ids:
                 counts = self._mixed_counts['by_spiketrains'][u1]
 
-                perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1']
+                perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1']
+                perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1']
+                perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1']
                 if counts['NB_SPIKE_2'] > 0:
-                    perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2'] * 100
+                    perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2']
                 else:
                     perf.loc[u1, 'fp_rate_st2'] = np.nan
 
-            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1']) * 100
-            perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
-            perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate']) * 100
-            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
-            perf['false_discovery_rate'] = perf['fp_rate_st1'] / (perf['tp_rate'] + perf['fp_rate_st1']) * 100
+            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1'])
+            perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
+            perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
+            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate_st1'])
+            perf['false_discovery_rate'] = perf['fp_rate_st1'] / (perf['tp_rate'] + perf['fp_rate_st1'])
 
         elif method == 'pooled_with_sum':
             counts = self._mixed_counts['pooled_with_sum']
 
-            tp_rate = float(counts['TP']) / counts['TOT_ST1'] * 100
-            cl_rate = float(counts['CL']) / counts['TOT_ST1'] * 100
-            fn_rate = float(counts['FN']) / counts['TOT_ST1'] * 100
-            fp_rate_st1 = float(counts['FP']) / counts['TOT_ST1'] * 100
+            tp_rate = float(counts['TP']) / counts['TOT_ST1']
+            cl_rate = float(counts['CL']) / counts['TOT_ST1']
+            fn_rate = float(counts['FN']) / counts['TOT_ST1']
+            fp_rate_st1 = float(counts['FP']) / counts['TOT_ST1']
             if counts['TOT_ST2'] > 0:
-                fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2'] * 100
-                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1) * 100
-                sensitivity = tp_rate / (tp_rate + fn_rate) * 100
-                miss_rate = fn_rate / (tp_rate + fn_rate) * 100
-                precision = tp_rate / (tp_rate + fp_rate_st1) * 100
-                false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1) * 100
+                fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2']
+                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1)
+                sensitivity = tp_rate / (tp_rate + fn_rate)
+                miss_rate = fn_rate / (tp_rate + fn_rate)
+                precision = tp_rate / (tp_rate + fp_rate_st1)
+                false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1)
             else:
                 fp_rate_st2 = np.nan
                 accuracy = 0.
@@ -102,20 +138,24 @@ class GroundTruthComparison(BaseComparison):
     def print_performance(self, method='by_spiketrain'):
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
+            perf = perf * 100
             #~ print(perf)
             d = {k: perf[k].tolist() for k in perf.columns}
             txt = _template_txt_performance.format(method=method, **d)
             print(txt)
 
         elif method == 'pooled_with_sum':
-            perf = self.get_performance(method=method, output='dict')
-            txt = _template_txt_performance.format(method=method, **perf)
+            perf = self.get_performance(method=method, output='pandas')
+            perf = perf * 100
+            txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
 
         elif method == 'pooled_with_average':
-            perf = self.get_performance(method=method, output='dict')
-            txt = _template_txt_performance.format(method=method, **perf)
+            perf = self.get_performance(method=method, output='pandas')
+            perf = perf * 100
+            txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
+
     
     def get_number_units_above_threshold(self, columns='accuracy', threshold=95, ):
         perf = self.get_performance(method='by_spiketrain', output='pandas')
@@ -149,10 +189,10 @@ FALSE DISCOVERY RATE: {false_discovery_rate}
     
 
 
-def compare_sorter_to_ground_truth(sorting_gt, sorting2, sorting1_name=None, sorting2_name=None, 
-                delta_frames=10, min_accuracy=0.5, count=False, n_jobs=1, verbose=False):
+def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, other_name=None, 
+                delta_frames=10, min_accuracy=0.5, exhaustive_gt=False, count=False, n_jobs=1, verbose=False):
     '''
-    Compares two spike sorter outputs.
+    Compares a sorter to a ground truth.
 
     - Spike trains are matched based on their agreement scores
     - Individual spikes are labelled as true positives (TP), false negatives (FN), false positives 1 (FP from spike
@@ -162,18 +202,22 @@ def compare_sorter_to_ground_truth(sorting_gt, sorting2, sorting1_name=None, sor
 
     Parameters
     ----------
-    sorting1: SortingExtractor
+    gt_sorting: SortingExtractor
         The first sorting for the comparison
-    sorting2: SortingExtractor
+    other_sorting: SortingExtractor
         The second sorting for the comparison
-    sorting1_name: str
+    gt_name: str
         The name of sorter 1
-    sorting2_name: : str
+    other_name: : str
         The name of sorter 2
     delta_frames: int
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
+    exhaustive_gt: bool (default False)
+        Tell if the ground true is "exhaustive" or not. In other world if the
+        GT have all possible units. It allows more performance measurment.
+        For instance, MEArec simulated dataset have exhaustive_gt=True
     count: bool
         If True, counts are performed at initialization
      n_jobs: int
@@ -186,5 +230,5 @@ def compare_sorter_to_ground_truth(sorting_gt, sorting2, sorting1_name=None, sor
         The SortingComparison object
 
     '''
-    return GroundTruthComparison(sorting_gt, sorting2, sorting1_name, sorting2_name, delta_frames, min_accuracy,
-                             count, n_jobs, verbose)
+    return GroundTruthComparison(gt_sorting, other_sorting, gt_name, other_name,
+                            delta_frames, min_accuracy, exhaustive_gt, count, n_jobs, verbose)
