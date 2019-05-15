@@ -4,7 +4,7 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import compare_two_sorters, _perf_keys
+from .groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True, threshold=95):
     """
@@ -65,7 +65,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
         for sorter_name, sorting in result_one_dataset.items():
             gt_sorting = ground_truths[rec_name]
 
-            sorting_comp = compare_two_sorters(gt_sorting, sorting, count=True)
+            sorting_comp = compare_sorter_to_ground_truth(gt_sorting, sorting, count=True)
 
             comparisons[(rec_name, sorter_name)] = sorting_comp
 
