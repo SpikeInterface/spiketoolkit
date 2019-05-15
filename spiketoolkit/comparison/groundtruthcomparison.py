@@ -25,13 +25,12 @@ class GroundTruthComparison(BaseComparison):
     def get_raw_count(self):
         """
         Get score count with a DataFrame with 4 columns
-        ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other']
+        ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
         and one line per ground truth units
-        
         """
 
         unit1_ids = self._sorting1.get_unit_ids()
-        columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other']
+        columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
         df = pd.DataFrame(index=unit1_ids, columns=columns)
         for u1 in unit1_ids:
             counts = self._mixed_counts['by_spiketrains'][u1]
@@ -41,7 +40,8 @@ class GroundTruthComparison(BaseComparison):
             df.loc[u1, 'fp'] = counts['TP']
             df.loc[u1, 'nb_gt'] = counts['NB_SPIKE_1']
             df.loc[u1, 'nb_other'] = counts['NB_SPIKE_2']
-
+            df.loc[u1, 'other_id'] = self._unit_map12[u1]
+        
         return df
 
 
@@ -89,17 +89,13 @@ class GroundTruthComparison(BaseComparison):
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1']
                 perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1']
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1']
-                perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1']
-                if counts['NB_SPIKE_2'] > 0:
-                    perf.loc[u1, 'fp_rate_st2'] = counts['FP'] / counts['NB_SPIKE_2']
-                else:
-                    perf.loc[u1, 'fp_rate_st2'] = np.nan
+                perf.loc[u1, 'fp_rate'] = counts['FP'] / counts['NB_SPIKE_1']
 
-            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate_st1'])
+            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate'])
             perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
             perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate_st1'])
-            perf['false_discovery_rate'] = perf['fp_rate_st1'] / (perf['tp_rate'] + perf['fp_rate_st1'])
+            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
+            perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
 
         elif method == 'pooled_with_sum':
             counts = self._mixed_counts['pooled_with_sum']
@@ -107,16 +103,14 @@ class GroundTruthComparison(BaseComparison):
             tp_rate = float(counts['TP']) / counts['TOT_ST1']
             cl_rate = float(counts['CL']) / counts['TOT_ST1']
             fn_rate = float(counts['FN']) / counts['TOT_ST1']
-            fp_rate_st1 = float(counts['FP']) / counts['TOT_ST1']
+            fp_rate = float(counts['FP']) / counts['TOT_ST1']
             if counts['TOT_ST2'] > 0:
-                fp_rate_st2 = float(counts['FP']) / counts['TOT_ST2']
-                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate_st1)
+                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate)
                 sensitivity = tp_rate / (tp_rate + fn_rate)
                 miss_rate = fn_rate / (tp_rate + fn_rate)
-                precision = tp_rate / (tp_rate + fp_rate_st1)
-                false_discovery_rate = fp_rate_st1 / (tp_rate + fp_rate_st1)
+                precision = tp_rate / (tp_rate + fp_rate)
+                false_discovery_rate = fp_rate / (tp_rate + fp_rate)
             else:
-                fp_rate_st2 = np.nan
                 accuracy = 0.
                 sensitivity = 0.
                 miss_rate = np.nan
@@ -124,8 +118,8 @@ class GroundTruthComparison(BaseComparison):
                 false_discovery_rate = np.nan
 
 
-            perf = {'tp_rate': tp_rate, 'fn_rate': fn_rate, 'cl_rate': cl_rate, 'fp_rate_st1': fp_rate_st1,
-                    'fp_rate_st2': fp_rate_st2, 'accuracy': accuracy, 'sensitivity': sensitivity,
+            perf = {'tp_rate': tp_rate, 'fn_rate': fn_rate, 'cl_rate': cl_rate, 'fp_rate': fp_rate,
+                    'accuracy': accuracy, 'sensitivity': sensitivity,
                     'precision': precision, 'miss_rate': miss_rate, 'false_discovery_rate': false_discovery_rate}
 
             if output == 'pandas':
@@ -180,13 +174,13 @@ class GroundTruthComparison(BaseComparison):
     
     def get_number_fake_units(self):
         """
-        Get how 
+        
         """
         return len(self.get_fake_units_list())
     
     
 # usefull also for gathercomparison
-_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate_st1', 'fp_rate_st2', 'accuracy', 'sensitivity', 'precision',
+_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate',  'accuracy', 'sensitivity', 'precision',
               'miss_rate', 'false_discovery_rate']
 
 
@@ -196,8 +190,7 @@ Method : {method}
 TP : {tp_rate} %
 CL : {cl_rate} %
 FN : {fn_rate} %
-FP (%ST1): {fp_rate_st1} %
-FP (%ST2): {fp_rate_st2} %
+FP: {fp_rate} %
 
 ACCURACY: {accuracy}
 SENSITIVITY: {sensitivity}
@@ -216,8 +209,8 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
     Compares a sorter to a ground truth.
 
     - Spike trains are matched based on their agreement scores
-    - Individual spikes are labelled as true positives (TP), false negatives (FN), false positives 1 (FP from spike
-    train 1), false positives 2 (FP from spike train 2), misclassifications (CL)
+    - Individual spikes are labelled as true positives (TP), false negatives (FN),
+    false positives 1 (FP), misclassifications (CL)
 
     It also allows to compute_performance and confusion matrix.
 
