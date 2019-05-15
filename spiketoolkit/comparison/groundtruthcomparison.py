@@ -4,13 +4,19 @@ import numpy as np
 import pandas as pd
 
 
+# Note for dev,  because of  BaseComparison internally:
+#     sorting1 = gt_sorting
+#     sorting2 = other_sorting
+
 class GroundTruthComparison(BaseComparison):
     """
     Class to compare a sorter to ground truth.
     """
+    
+    
     def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
-                count=False, n_jobs=1, verbose=False):
+                count=True, n_jobs=1, verbose=False):
         BaseComparison.__init__(self, gt_sorting, other_sorting, sorting1_name=gt_name, sorting2_name=other_name,
                                     delta_frames=delta_frames, min_accuracy=min_accuracy, count=count, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
@@ -35,8 +41,7 @@ class GroundTruthComparison(BaseComparison):
             df.loc[u1, 'fp'] = counts['TP']
             df.loc[u1, 'nb_gt'] = counts['NB_SPIKE_1']
             df.loc[u1, 'nb_other'] = counts['NB_SPIKE_2']
-            
-            
+
         return df
 
 
@@ -133,8 +138,6 @@ class GroundTruthComparison(BaseComparison):
 
         return perf
 
-
-
     def print_performance(self, method='by_spiketrain'):
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
@@ -162,6 +165,24 @@ class GroundTruthComparison(BaseComparison):
         nb = (perf[columns] > threshold).sum()
         return nb
     
+    def get_fake_units_list(self):
+        """
+        Get units in other sorter that have link to ground truth
+        Need exhaustive_gt=True
+        """
+        assert self.exhaustive_gt, 'fake units list is valid only if exhaustive_gt=True'
+        fake_ids = []
+        unit2_ids = self._sorting2.get_unit_ids()
+        for u2 in unit2_ids:
+            if self._best_match_units_21[u2] == -1:
+                fake_ids.append(u2)
+        return fake_ids
+    
+    def get_number_fake_units(self):
+        """
+        Get how 
+        """
+        return len(self.get_fake_units_list())
     
     
 # usefull also for gathercomparison
@@ -190,7 +211,7 @@ FALSE DISCOVERY RATE: {false_discovery_rate}
 
 
 def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, other_name=None, 
-                delta_frames=10, min_accuracy=0.5, exhaustive_gt=False, count=False, n_jobs=1, verbose=False):
+                delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, count=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -214,7 +235,7 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
-    exhaustive_gt: bool (default False)
+    exhaustive_gt: bool (default True)
         Tell if the ground true is "exhaustive" or not. In other world if the
         GT have all possible units. It allows more performance measurment.
         For instance, MEArec simulated dataset have exhaustive_gt=True
