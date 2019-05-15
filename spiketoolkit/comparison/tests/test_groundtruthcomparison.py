@@ -4,7 +4,7 @@ from numpy.testing import assert_array_equal
 
 import spikeextractors as se
 
-from spiketoolkit.comparison import compare_two_sorters
+from spiketoolkit.comparison import compare_sorter_to_ground_truth
 
 
 
@@ -17,19 +17,26 @@ def make_sorting(times1, labels1, times2, labels2):
     
 
 
-def test_compare_two_sorters():
+def test_compare_sorter_to_ground_truth():
     # simple match
     sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
                                                             [101, 201, 301, ], [0, 0, 5])
-    sc = compare_two_sorters(sorting1, sorting2, count=True)
+    sc = compare_sorter_to_ground_truth(sorting1, sorting2, count=True)
     
     sc._do_confusion()
     print(sc._confusion_matrix)
     
+    methods = ['by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
+    for method in methods:
+        perf = sc.get_performance(method=method)
+        #~ print(perf)
+    
+    for method in methods:
+        sc.print_performance(method=method)
         
         
     
     
     
 if __name__ == '__main__':
-    test_compare_two_sorters()
+    test_compare_sorter_to_ground_truth()
