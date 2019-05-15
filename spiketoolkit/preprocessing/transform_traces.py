@@ -1,21 +1,23 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 
-class ScaleTracesRecording(RecordingExtractor):
+class TransformTracesRecording(RecordingExtractor):
 
-    preprocessor_name = 'ScaleTracesRecording'
+    preprocessor_name = 'TransformTracesRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'scalar', 'type': 'float', 'title': "Scalar for the traces of the recording extractor"},
+        {'name': 'offset', 'type': 'float', 'title': "Offset for the traces of the recording extractor"},
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, scalar):
+    def __init__(self, recording, scalar=1, offset=0):
         RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         self._scalar = scalar
+        self._offset = offset
         self.copy_channel_properties(recording=self._recording)
 
     def get_sampling_frequency(self):
@@ -34,26 +36,28 @@ class ScaleTracesRecording(RecordingExtractor):
             end_frame = self.get_num_frames()
         if channel_ids is None:
             channel_ids = self.get_channel_ids()
-        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)*self._scalar
-        return traces
+        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)
+        return traces*self._scalar + self._offset
 
 
-def scale_traces(recording, scalar):
+def transform_traces(recording, scalar=1, offset=0):
     '''
-    Scales the traces from the given recording extractor
+    Transforms the traces from the given recording extractor with a scalar
+    and offset. New traces = traces*scalar + offset.
 
     Parameters
     ----------
     recording: RecordingExtractor
-        The recording extractor to be scaled
-    scalar: int or float
+        The recording extractor to be transformed
+    scalar: float
         Scalar for the traces of the recording extractor
-
+    offset: float
+        Offset for the traces of the recording extractor
     Returns
     -------
-    scale_traces: ScaleTracesRecording
-        The scaled traces recording extractor object
+    transform_traces: TransformTracesRecording
+        The transformed traces recording extractor object
     '''
-    return ScaleTracesRecording(
-        recording=recording, scalar=scalar
+    return TransformTracesRecording(
+        recording=recording, scalar=scalar, offset=offset
     )
