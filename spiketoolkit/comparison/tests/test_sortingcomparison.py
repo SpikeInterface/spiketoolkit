@@ -23,7 +23,7 @@ def test_compare_two_sorters():
                                                             [101, 201, 301, ], [0, 0, 5])
     sc = compare_two_sorters(sorting1, sorting2)
     
-    sc._do_confusion()
+    sc._do_confusion_matrix()
     print(sc._confusion_matrix)
     
         

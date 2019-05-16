@@ -51,10 +51,10 @@ class GroundTruthComparison(BaseComparison):
     def get_performance(self, method='by_spiketrain', output='pandas'):
         """
         Get performance rate with several method:
-          * 'raw_count'
-          * 'by_spiketrain'
-          * 'pooled_with_sum'
-          * 'pooled_with_average'
+          * 'raw_count' : just render the raw count table
+          * 'by_spiketrain' : render perf as rate spiketrain by spiketrain of the GT
+          * 'pooled_with_sum' : pool all spike with a sum and compute rate
+          * 'pooled_with_average' : compute rate spiketrain by spiketrain and average
 
         Parameters
         ----------
@@ -76,8 +76,7 @@ class GroundTruthComparison(BaseComparison):
         if method =='raw_count':
             perf = self.count
             
-        if method == 'by_spiketrain':
-
+        elif method == 'by_spiketrain':
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             
@@ -125,6 +124,9 @@ class GroundTruthComparison(BaseComparison):
         return perf
 
     def print_performance(self, method='by_spiketrain'):
+        """
+        Print performance with the selected method
+        """
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
             perf = perf * 100
@@ -144,7 +146,16 @@ class GroundTruthComparison(BaseComparison):
             perf = perf * 100
             txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
-
+    
+    def print_summary(self):
+        """
+        Print a global performance summary that depend on the context:
+          * exhaustive= True/False
+          * how many gt units (one or several)
+        
+        This summary mix several performance metrics.
+        """
+        raise(NotImplementedError)
     
     def get_number_units_above_threshold(self, columns='accuracy', threshold=95, ):
         perf = self.get_performance(method='by_spiketrain', output='pandas')
