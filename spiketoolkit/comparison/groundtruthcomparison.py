@@ -3,7 +3,7 @@ from .basecomparison import BaseComparison
 import numpy as np
 import pandas as pd
 
-
+from .comparisontools import do_counting
 # Note for dev,  because of  BaseComparison internally:
 #     sorting1 = gt_sorting
 #     sorting2 = other_sorting
@@ -16,10 +16,26 @@ class GroundTruthComparison(BaseComparison):
     
     def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
-                count=True, n_jobs=1, verbose=False):
+                n_jobs=1, verbose=False):
         BaseComparison.__init__(self, gt_sorting, other_sorting, sorting1_name=gt_name, sorting2_name=other_name,
-                                    delta_frames=delta_frames, min_accuracy=min_accuracy, count=count, n_jobs=n_jobs, verbose=verbose)
+                                    delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
+
+        self._mixed_counts = None
+        self._do_counting(verbose=verbose)
+
+
+
+
+    def _do_counting(self, verbose=False):
+        self._mixed_counts = do_counting(self._sorting1, self._sorting2, self._unit_map12,
+                                         self._labels_st1, self._labels_st2)
+
+    def compute_counts(self):
+        if self._mixed_counts is None:
+            self._do_counting(verbose=False)
+
+
 
     
     def get_raw_count(self):
@@ -204,7 +220,7 @@ FALSE DISCOVERY RATE: {false_discovery_rate}
 
 
 def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, other_name=None, 
-                delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, count=True, n_jobs=1, verbose=False):
+                delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -232,8 +248,6 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
         Tell if the ground true is "exhaustive" or not. In other world if the
         GT have all possible units. It allows more performance measurment.
         For instance, MEArec simulated dataset have exhaustive_gt=True
-    count: bool
-        If True, counts are performed at initialization
      n_jobs: int
         Number of cores to use in parallel. Uses all availible if -1
     verbose: bool
@@ -245,4 +259,4 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
 
     '''
     return GroundTruthComparison(gt_sorting, other_sorting, gt_name, other_name,
-                            delta_frames, min_accuracy, exhaustive_gt, count, n_jobs, verbose)
+                            delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)

@@ -83,8 +83,7 @@ class SortingComparison(BaseComparison):
         return list(a.keys())
 
     def get_agreement_fraction(self, unit1=None, unit2=None):
-        # Samuel NOTE: I guess that this function is no more necessary
-        # please confirm this
+        # needed by MultiSortingComparison
         if (unit1 is not None) and (unit2 is None):
             if unit1 != -1:
                 unit2 = self.get_best_unit_match1(unit1)
@@ -174,7 +173,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                        count=False, n_jobs=1, verbose=False):
+                        n_jobs=1, verbose=False):
     '''
     Compares two spike sorter outputs.
 
@@ -199,8 +198,6 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         Number of frames to consider coincident spikes (default 10)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
-    count: bool
-        If True, counts are performed at initialization
      n_jobs: int
         Number of cores to use in parallel. Uses all availible if -1
     verbose: bool
@@ -212,5 +209,5 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
 
     '''
     return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_frames, min_accuracy,
-                             count, n_jobs, verbose)
+                             n_jobs, verbose)
 
