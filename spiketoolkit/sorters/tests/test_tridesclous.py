@@ -29,9 +29,9 @@ def test_run_tridesclous():
 
 
 if __name__ == '__main__':
-    #~ test_run_tridesclous()
-    #~ TridesclousCommonTestSuite().test_on_toy()
-    #~ TridesclousCommonTestSuite().test_several_groups()
+    test_run_tridesclous()
+    TridesclousCommonTestSuite().test_on_toy()
+    TridesclousCommonTestSuite().test_several_groups()
     TridesclousCommonTestSuite().test_with_BinDatRecordingExtractor()
     #~ unittest.main()
     
