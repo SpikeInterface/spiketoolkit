@@ -58,7 +58,8 @@ ops.loc_range       = [3  1];  % ranges to detect peaks; plus/minus in time and 
 ops.long_range      = [30  6]; % ranges to detect isolated peaks ([30 6])		
 ops.maskMaxChannels = 5;       % how many channels to mask up/down ([5])		
 ops.crit            = .65;     % upper criterion for discarding spike repeates (0.65)		
-ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)		
+ops.nFiltMax        = 10000;   % maximum "unique" spikes to consider (10000)
+ops.CAR             = {}       % if 1 common reference is used
 		
 % load predefined principal components (visualization only (Phy): used for features)		
 dd                  = load('PCspikes2.mat'); % you might want to recompute this from your own data		

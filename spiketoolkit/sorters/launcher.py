@@ -20,7 +20,7 @@ def _run_one(arg_list):
     if True:
         SorterClass = sorter_dict[sorter_name]
         sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
-                            parallel=True, debug=debug, delete_output_folder=False)
+                             parallel=True, debug=debug, delete_output_folder=False)
         params = SorterClass.default_params()
         sorter.set_params(**params)
 

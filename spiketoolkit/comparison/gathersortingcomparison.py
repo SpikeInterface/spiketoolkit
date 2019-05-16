@@ -6,7 +6,7 @@ import pandas as pd
 from spiketoolkit.sorters import run_sorters, collect_results
 from .sortingcomparison import compare_two_sorters, _perf_keys
 
-def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True):
+def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True, threshold=95):
     """
     Loop over output folder in a tree to collect sorting from
     several sorter on several dataset and returns sythetic DataFrame with
@@ -53,6 +53,12 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
+    
+    above_keys = ['tp_rate', 'accuracy',	'sensitivity']
+    above_columns = [ 'nb_above(with_{})'.format(k) for k in above_keys]
+    nb_units_above_threshold = pd.DataFrame(index=run_times.index, columns=above_columns)
+    out_dataframes['nb_units_above_threshold'] = nb_units_above_threshold
+    
 
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
@@ -68,6 +74,9 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
             perf = sorting_comp.get_performance(method='pooled_with_average', output='pandas')
             perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
+            
+            for k, col in zip(above_keys, above_columns):
+                nb_units_above_threshold.loc[(rec_name, sorter_name), col] = sorting_comp.get_number_units_above_threshold(columns=k, threshold=threshold)
 
 
     if not use_multi_index:

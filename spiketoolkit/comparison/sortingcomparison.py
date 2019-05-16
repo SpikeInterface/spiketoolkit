@@ -10,7 +10,7 @@ from .comparisontools import (count_matching_events, compute_agreement_score,
 
 class SortingComparison():
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                 count=False, n_jobs=-1, verbose=False):
+                 count=False, n_jobs=1, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
         self.sorting1_name = sorting1_name
@@ -284,7 +284,7 @@ class SortingComparison():
                 counts = self._mixed_counts['by_spiketrains'][u1]
 
                 perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
-                perf.loc[u1, 'cl_rate'] = counts['TP'] / counts['NB_SPIKE_1'] * 100
+                perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1'] * 100
                 perf.loc[u1, 'fp_rate_st1'] = counts['FP'] / counts['NB_SPIKE_1'] * 100
                 if counts['NB_SPIKE_2'] > 0:
@@ -353,6 +353,13 @@ class SortingComparison():
             perf = self.get_performance(method=method, output='dict')
             txt = _template_txt_performance.format(method=method, **perf)
             print(txt)
+    
+    def get_number_units_above_threshold(self, columns='accuracy', threshold=95, ):
+        perf = self.get_performance(method='by_spiketrain', output='pandas')
+        nb = (perf[columns] > threshold).sum()
+        return nb
+        
+        
 
 
 class MappedSortingExtractor(se.SortingExtractor):
@@ -386,7 +393,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                        count=False, n_jobs=-1, verbose=False):
+                        count=False, n_jobs=1, verbose=False):
     '''
     Compares two spike sorter outputs.
 

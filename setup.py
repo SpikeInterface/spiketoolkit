@@ -4,7 +4,7 @@ pkg_name = "spiketoolkit"
 
 setup(
     name=pkg_name,
-    version="0.2.0",
+    version="0.2.3",
     author="Cole Hurwitz, Jeremy Magland, Alessio Paolo Buccino, Matthias Hennig",
     author_email="alessiop.buccino@gmail.com",
     description="Python toolkit for analysis, visualization, and comparison of spike sorting output",
