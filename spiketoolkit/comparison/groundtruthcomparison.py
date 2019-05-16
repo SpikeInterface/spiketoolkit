@@ -157,14 +157,56 @@ class GroundTruthComparison(BaseComparison):
         """
         raise(NotImplementedError)
     
-    def get_number_units_above_threshold(self, columns='accuracy', threshold=95, ):
-        perf = self.get_performance(method='by_spiketrain', output='pandas')
-        nb = (perf[columns] > threshold).sum()
-        return nb
-    
-    def get_fake_units_list(self):
+    def get_well_detected_units(self, tp_thresh=0.95, accuracy_thresh=None,
+                cl_thresh=None, fp_thresh=None):
         """
-        Get units in other sorter that have link to ground truth
+        Get the units in GT that are well detected with a comninaison a treshold level
+        on some columns (tp_rate, accuracy_rate, cl_rate, fp_rate):
+        
+        If several thresh are given the the intersect of selection is kept.
+        
+        Parameters
+        ----------
+        tp_thresh:
+            Threshold tp_rate score above a units is selected
+        
+        accuracy_thresh:
+            Threshold accuracy score above a units is selected
+        
+        cl_thresh:
+            Threshold cl_rate score under a units is selected
+        
+        fp_thresh:
+            Threshold fp_rate score under a units is selected
+        
+        """
+        perf = self.get_performance(method='by_spiketrain')
+        keep = perf['tp_rate']>=0
+        
+        if tp_thresh is not None:
+            keep = keep & (perf['tp_rate'] >= tp_thresh)
+        
+        if accuracy_thresh is not None:
+            keep = keep & (perf['accuracy'] >= accuracy_thresh)
+        
+        if cl_thresh is not None:
+            keep = keep & (perf['cl_rate'] <= cl_thresh)
+        
+        if fp_thresh is not None:
+            keep = keep & (perf['fp_rate'] <= fp_thresh)
+        
+        return perf[keep].index.tolist()
+    
+    def count_well_detected_units(self, **kargs):
+        """
+        Count how many well detected units.
+        Kargs are the same as get_well_detected_units.
+        """
+        return len(self.get_well_detected_units())
+    
+    def get_fake_units_in_other(self):
+        """
+        Return units list in other sorter that have link to ground truth.
         Need exhaustive_gt=True
         """
         assert self.exhaustive_gt, 'fake units list is valid only if exhaustive_gt=True'
@@ -175,11 +217,11 @@ class GroundTruthComparison(BaseComparison):
                 fake_ids.append(u2)
         return fake_ids
     
-    def get_number_fake_units(self):
+    def count_fake_units_in_other(self):
         """
         
         """
-        return len(self.get_fake_units_list())
+        return len(self.get_fake_units_in_other())
     
     
 # usefull also for gathercomparison
