@@ -556,9 +556,6 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
         The numpy dtype of the waveforms
     max_num_waveforms: int
         The maximum number of wavefomrs to extract (default is np.inf)
-    compute_property_from_recording: bool
-        If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
-        the recording extractor channel on which the average waveform is the largest
     save_waveforms: bool
         If True, waveforms are saved as waveforms.npy
     verbose: bool

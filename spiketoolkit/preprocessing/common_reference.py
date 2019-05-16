@@ -44,7 +44,7 @@ class CommonReferenceRecording(RecordingExtractor):
             if self._groups is None:
                 return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
                        - np.median(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                             end_frame=end_frame), axis=0, keepdims=True)
+                                                              end_frame=end_frame), axis=0, keepdims=True)
             else:
                 new_groups = []
                 for g in self._groups:
