@@ -64,6 +64,7 @@ class RemoveBadChannelsRecording(RecordingExtractor):
             self._subrecording = SubRecordingExtractor(self._recording, channel_ids=active_channels)
         else:
             self._subrecording = self._recording
+        self.active_channels = self._subrecording.get_channel_ids()
 
 
 def remove_bad_channels(recording, bad_channels, bad_threshold=2, seconds=10):
