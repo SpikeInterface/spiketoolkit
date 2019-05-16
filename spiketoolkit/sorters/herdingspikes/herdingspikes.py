@@ -60,10 +60,6 @@ class HerdingspikesSorter(BaseSorter):
         BaseSorter.__init__(self, **kargs)
 
     def _setup_recording(self, recording, output_folder):
-        # reset the output folder
-        # if output_folder.is_dir():
-        #     pass
-        #     shutil.rmtree(str(output_folder))
 
         # this should have its name changed
         self.Probe = hs.probe.RecordingExtractor(
