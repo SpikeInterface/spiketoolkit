@@ -18,10 +18,9 @@ class BaseComparison:
         self._delta_frames = delta_frames
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
+        self.verbose = verbose
         
         # maching is done always
-        if verbose:
-            print("Matching...")
         self._do_matching()
         
         # make score label is done always
@@ -61,7 +60,7 @@ class BaseComparison:
         import matplotlib.pylab as plt
         
         if self._confusion_matrix is None:
-            self._do_confusion()
+            self._do_confusion_matrix()
 
         sorting1 = self._sorting1
         sorting2 = self._sorting2
@@ -110,16 +109,24 @@ class BaseComparison:
         return ax
 
     def _do_matching(self):
+        if self.verbose:
+            print("Matching...")
+        
         self._event_counts_1,  self._event_counts_2, self._matching_event_counts_12,\
             self._best_match_units_12, self._matching_event_counts_21,\
             self._best_match_units_21,self._unit_map12,\
             self._unit_map21 = do_matching(self._sorting1, self._sorting2, self._delta_frames, self._min_accuracy, self._n_jobs)
 
     def _do_score_labels(self, verbose=False):
+        if self.verbose:
+            print("do_score_labels...")
+
         self._labels_st1, self._labels_st2 = do_score_labels(self._sorting1, self._sorting2,
                                                              self._delta_frames, self._unit_map12)
 
-    def _do_confusion(self):
+    def _do_confusion_matrix(self):
+        if self.verbose:
+            print("do_confusion_matrix...")
         self._confusion_matrix,  self._st1_idxs, self._st2_idxs = do_confusion_matrix(self._sorting1, self._sorting2,
                                                 self._unit_map12, self._labels_st1, self._labels_st2)
 

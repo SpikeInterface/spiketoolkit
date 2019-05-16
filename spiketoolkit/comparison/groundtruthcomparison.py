@@ -3,7 +3,7 @@ from .basecomparison import BaseComparison
 import numpy as np
 import pandas as pd
 
-from .comparisontools import do_counting
+
 # Note for dev,  because of  BaseComparison internally:
 #     sorting1 = gt_sorting
 #     sorting2 = other_sorting
@@ -21,49 +21,36 @@ class GroundTruthComparison(BaseComparison):
                                     delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
 
-        self._mixed_counts = None
-        self._do_counting(verbose=verbose)
-
-
-
-
-    def _do_counting(self, verbose=False):
-        self._mixed_counts = do_counting(self._sorting1, self._sorting2, self._unit_map12,
-                                         self._labels_st1, self._labels_st2)
-
-    def compute_counts(self):
-        if self._mixed_counts is None:
-            self._do_counting(verbose=False)
-
-
+        self._do_count()
 
     
-    def get_raw_count(self):
+    def _do_count(self):
         """
-        Get score count with a DataFrame with 4 columns
-        ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
-        and one line per ground truth units
+        Do raw count into a dataframe.
         """
-
         unit1_ids = self._sorting1.get_unit_ids()
         columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
-        df = pd.DataFrame(index=unit1_ids, columns=columns)
+        self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         for u1 in unit1_ids:
-            counts = self._mixed_counts['by_spiketrains'][u1]
-            df.loc[u1, 'tp'] = counts['TP']
-            df.loc[u1, 'fn'] = counts['FP']
-            df.loc[u1, 'cl'] = counts['CL']
-            df.loc[u1, 'fp'] = counts['TP']
-            df.loc[u1, 'nb_gt'] = counts['NB_SPIKE_1']
-            df.loc[u1, 'nb_other'] = counts['NB_SPIKE_2']
-            df.loc[u1, 'other_id'] = self._unit_map12[u1]
-        
-        return df
+            u2 = self._unit_map12[u1]
+            
+            self.count.loc[u1, 'tp'] = np.sum(self._labels_st1[u1] == 'TP')
+            self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])
+            self.count.loc[u1, 'fn'] = np.sum(self._labels_st1[u1] == 'FN')
+            self.count.loc[u1, 'nb_gt'] = self._labels_st1[u1].size
+            self.count.loc[u1, 'other_id'] = u2
 
+            if u2==-1:
+                self.count.loc[u1, 'fp'] = 0
+                self.count.loc[u1, 'nb_other'] = 0
+            else:
+                self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
+                self.count.loc[u1, 'nb_other'] = self._labels_st2[u2].size
+            
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
         """
-        Compute performance rate with several method:
+        Get performance rate with several method:
           * 'raw_count'
           * 'by_spiketrain'
           * 'pooled_with_sum'
@@ -78,35 +65,28 @@ class GroundTruthComparison(BaseComparison):
 
         Returns
         -------
-        perf: dict or pandas dataframe
-            Dictionary or dataframe (based on 'output') with performance entries
+        perf: pandas dataframe/series (or dict)
+            dataframe/series (based on 'output') with performance entries
         """
         possibles = ('raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average')
         if method not in possibles:
             raise Exception("'method' can be " + ' or '.join(possibles))
 
-        if self._mixed_counts is None:
-            self._do_counting()
-        
+
         if method =='raw_count':
-            assert output=='pandas', "Output must be pandas for raw_count"
-            
-            perf = self.get_raw_count()
+            perf = self.count
             
         if method == 'by_spiketrain':
-            assert output=='pandas', "Output must be pandas for by_spiketrain"
 
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
-
-            for u1 in unit1_ids:
-                counts = self._mixed_counts['by_spiketrains'][u1]
-
-                perf.loc[u1, 'tp_rate'] = counts['TP'] / counts['NB_SPIKE_1']
-                perf.loc[u1, 'cl_rate'] = counts['CL'] / counts['NB_SPIKE_1']
-                perf.loc[u1, 'fn_rate'] = counts['FN'] / counts['NB_SPIKE_1']
-                perf.loc[u1, 'fp_rate'] = counts['FP'] / counts['NB_SPIKE_1']
-
+            
+            counts = self.count
+            perf['tp_rate'] = counts['tp'] / counts['nb_gt']
+            perf['cl_rate'] = counts['cl'] / counts['nb_gt']
+            perf['fn_rate'] = counts['fn'] / counts['nb_gt']
+            perf['fp_rate'] = counts['fp'] / counts['nb_gt']
+            
             perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate'])
             perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
             perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
@@ -114,37 +94,33 @@ class GroundTruthComparison(BaseComparison):
             perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
 
         elif method == 'pooled_with_sum':
-            counts = self._mixed_counts['pooled_with_sum']
-
-            tp_rate = float(counts['TP']) / counts['TOT_ST1']
-            cl_rate = float(counts['CL']) / counts['TOT_ST1']
-            fn_rate = float(counts['FN']) / counts['TOT_ST1']
-            fp_rate = float(counts['FP']) / counts['TOT_ST1']
-            if counts['TOT_ST2'] > 0:
-                accuracy = tp_rate / (tp_rate + fn_rate + fp_rate)
-                sensitivity = tp_rate / (tp_rate + fn_rate)
-                miss_rate = fn_rate / (tp_rate + fn_rate)
-                precision = tp_rate / (tp_rate + fp_rate)
-                false_discovery_rate = fp_rate / (tp_rate + fp_rate)
+            perf = pd.Series(index=_perf_keys)
+            
+            sum_nb_gt = int(self.count['nb_gt'].sum())
+            
+            perf['tp_rate'] = self.count['tp'].sum() / sum_nb_gt
+            perf['cl_rate'] = self.count['cl'].sum() / sum_nb_gt
+            perf['fn_rate'] = self.count['fn'].sum() / sum_nb_gt
+            perf['fp_rate'] = self.count['fp'].sum() / sum_nb_gt
+            
+            if (perf['tp_rate'] + perf['fn_rate']) > 0:
+                perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'] + perf['fp_rate'])
+                perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
+                perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
+                perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
+                perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
             else:
-                accuracy = 0.
-                sensitivity = 0.
-                miss_rate = np.nan
-                precision = 0.
-                false_discovery_rate = np.nan
-
-
-            perf = {'tp_rate': tp_rate, 'fn_rate': fn_rate, 'cl_rate': cl_rate, 'fp_rate': fp_rate,
-                    'accuracy': accuracy, 'sensitivity': sensitivity,
-                    'precision': precision, 'miss_rate': miss_rate, 'false_discovery_rate': false_discovery_rate}
-
-            if output == 'pandas':
-                perf = pd.Series(perf)
+                perf['accuracy'] = 0.
+                perf['sensitivity'] = 0.
+                perf['miss_rate'] = np.nan
+                perf['precision'] = 0.
+                perf['false_discovery_rate'] = np.nan
 
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
-            if output == 'dict':
-                perf = perf.to_dict()
+        
+        if output == 'dict' and isinstance(perf, pd.Series):
+            perf = perf.to_dict()
 
         return perf
 

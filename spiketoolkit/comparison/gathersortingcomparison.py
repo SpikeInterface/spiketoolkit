@@ -65,7 +65,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
         for sorter_name, sorting in result_one_dataset.items():
             gt_sorting = ground_truths[rec_name]
 
-            sorting_comp = compare_sorter_to_ground_truth(gt_sorting, sorting, count=True)
+            sorting_comp = compare_sorter_to_ground_truth(gt_sorting, sorting)
 
             comparisons[(rec_name, sorter_name)] = sorting_comp
 
