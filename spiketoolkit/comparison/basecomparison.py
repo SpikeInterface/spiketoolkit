@@ -1,4 +1,5 @@
 import spikeextractors as se
+import numpy as np
 
 from .comparisontools import (count_matching_events, compute_agreement_score,
                                                 do_matching, do_score_labels,  do_confusion_matrix)
@@ -129,6 +130,20 @@ class BaseComparison:
             print("do_confusion_matrix...")
         self._confusion_matrix,  self._st1_idxs, self._st2_idxs = do_confusion_matrix(self._sorting1, self._sorting2,
                                                 self._unit_map12, self._labels_st1, self._labels_st2)
-
+    
+    def get_confusion_matrix(self):
+        """
+        Returns
+        ------
+        confusion_matrix: np.array
+            The confusion matrix
+        st1_idxs: np.array
+            Array with order of units1 in confusion matrix
+        st2_idxs: np.array
+            Array with order of units2 in confusion matrix
+        """
+        if self._confusion_matrix is None:
+            self._do_confusion_matrix()
+        return self._confusion_matrix, self._st1_idxs, self._st2_idxs
 
     
