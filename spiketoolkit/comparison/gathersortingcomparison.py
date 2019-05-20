@@ -70,6 +70,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     out_dataframes['count_units'] = count_units
     if exhaustive_gt:
         count_units['nb_fake'] = None
+        count_units['nb_bad'] = None
 
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
@@ -91,6 +92,8 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             count_units.loc[(rec_name, sorter_name), 'nb_well_detected'] = sc.count_well_detected_units(**karg_thresh)
             if exhaustive_gt:
                 count_units.loc[(rec_name, sorter_name), 'nb_fake'] = sc.count_fake_units_in_other()
+                count_units.loc[(rec_name, sorter_name), 'nb_bad'] = sc.count_bad_units_in_other()
+                
 
     if not use_multi_index:
         for k, df in out_dataframes.items():

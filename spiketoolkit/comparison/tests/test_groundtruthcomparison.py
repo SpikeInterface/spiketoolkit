@@ -63,6 +63,10 @@ def test_compare_sorter_to_ground_truth():
     #~ print(nb_fake)
     
     
+    bad_ids = sc.get_bad_units_in_other()
+    print(bad_ids)
+    nb_bad = sc.count_bad_units_in_other()
+    
 
 
 def test_get_performance():

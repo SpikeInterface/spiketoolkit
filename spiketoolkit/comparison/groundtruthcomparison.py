@@ -223,6 +223,24 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_fake_units_in_other())
     
+    def get_bad_units_in_other(self):
+        """
+        Return a list of units in other sorter that are not the first match.
+        """
+        best_match = list(self._unit_map12.values())
+        bad_ids = []
+        unit2_ids = self._sorting2.get_unit_ids()
+        for u2 in unit2_ids:
+            if u2 not in best_match:
+                bad_ids.append(u2)
+        
+        return bad_ids
+    
+    def count_bad_units_in_other(self):
+        return len(self.get_bad_units_in_other())
+
+
+
     
 # usefull also for gathercomparison
 _perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate',  'accuracy', 'sensitivity', 'precision',
@@ -275,7 +293,7 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
         Minimum agreement score to match units (default 0.5)
     exhaustive_gt: bool (default True)
         Tell if the ground true is "exhaustive" or not. In other world if the
-        GT have all possible units. It allows more performance measurment.
+        GT have all possible units. It allows more performance measurement.
         For instance, MEArec simulated dataset have exhaustive_gt=True
      n_jobs: int
         Number of cores to use in parallel. Uses all availible if -1
