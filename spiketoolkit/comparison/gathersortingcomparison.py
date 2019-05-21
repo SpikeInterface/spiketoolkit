@@ -4,9 +4,9 @@ import pandas as pd
 
 
 from spiketoolkit.sorters import run_sorters, collect_results
-from .sortingcomparison import compare_two_sorters, _perf_keys
+from .groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
-def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True, threshold=95):
+def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True, exhaustive_gt=False, **karg_thresh):
     """
     Loop over output folder in a tree to collect sorting from
     several sorter on several dataset and returns sythetic DataFrame with
@@ -25,6 +25,14 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     use_multi_index: bool (True by default)
         Use (or not) multi index for output dataframe.
         Multiindex is composed from (rec_name, sorter_name).
+    exhaustive_gt: bool (default True)
+        Tell if the ground true is "exhaustive" or not. In other world if the
+        GT have all possible units. It allows more performance measurment.
+        For instance, MEArec simulated dataset have exhaustive_gt=True
+    **karg_thresh: 
+        Extra thresh kkargs are passed to 
+        GroundTruthComparison.get_well_detected_units for
+        See doc there.
 
     Returns
     ----------
@@ -54,30 +62,38 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
     
-    above_keys = ['tp_rate', 'accuracy',	'sensitivity']
-    above_columns = [ 'nb_above(with_{})'.format(k) for k in above_keys]
-    nb_units_above_threshold = pd.DataFrame(index=run_times.index, columns=above_columns)
-    out_dataframes['nb_units_above_threshold'] = nb_units_above_threshold
-    
+    #~ above_keys = ['tp_rate', 'accuracy',	'sensitivity']
+    #~ above_columns = [ 'nb_above(with_{})'.format(k) for k in above_keys]
+    #~ nb_units_above_threshold = pd.DataFrame(index=run_times.index, columns=above_columns)
+    #~ out_dataframes['nb_units_above_threshold'] = nb_units_above_threshold
+    count_units = pd.DataFrame(index=run_times.index, columns=['nb_gt', 'nb_sorter', 'nb_well_detected'])
+    out_dataframes['count_units'] = count_units
+    if exhaustive_gt:
+        count_units['nb_fake'] = None
+        count_units['nb_bad'] = None
 
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
         for sorter_name, sorting in result_one_dataset.items():
             gt_sorting = ground_truths[rec_name]
 
-            sorting_comp = compare_two_sorters(gt_sorting, sorting, count=True)
+            sc = compare_sorter_to_ground_truth(gt_sorting, sorting)
 
-            comparisons[(rec_name, sorter_name)] = sorting_comp
+            comparisons[(rec_name, sorter_name)] = sc
 
-            perf = sorting_comp.get_performance(method='pooled_with_sum', output='pandas')
+            perf = sc.get_performance(method='pooled_with_sum', output='pandas')
             perf_pooled_with_sum.loc[(rec_name, sorter_name), :] = perf
 
-            perf = sorting_comp.get_performance(method='pooled_with_average', output='pandas')
+            perf = sc.get_performance(method='pooled_with_average', output='pandas')
             perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
             
-            for k, col in zip(above_keys, above_columns):
-                nb_units_above_threshold.loc[(rec_name, sorter_name), col] = sorting_comp.get_number_units_above_threshold(columns=k, threshold=threshold)
-
+            count_units.loc[(rec_name, sorter_name), 'nb_gt'] = len(gt_sorting.get_unit_ids())
+            count_units.loc[(rec_name, sorter_name), 'nb_sorter'] = len(sorting.get_unit_ids())
+            count_units.loc[(rec_name, sorter_name), 'nb_well_detected'] = sc.count_well_detected_units(**karg_thresh)
+            if exhaustive_gt:
+                count_units.loc[(rec_name, sorter_name), 'nb_fake'] = sc.count_fake_units_in_other()
+                count_units.loc[(rec_name, sorter_name), 'nb_bad'] = sc.count_bad_units_in_other()
+                
 
     if not use_multi_index:
         for k, df in out_dataframes.items():

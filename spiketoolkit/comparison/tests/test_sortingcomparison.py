@@ -21,18 +21,11 @@ def test_compare_two_sorters():
     # simple match
     sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
                                                             [101, 201, 301, ], [0, 0, 5])
-    sc = compare_two_sorters(sorting1, sorting2, count=True)
+    sc = compare_two_sorters(sorting1, sorting2)
     
-    sc._do_confusion()
+    sc._do_confusion_matrix()
     print(sc._confusion_matrix)
     
-    methods = ['by_spiketrain', 'pooled_with_sum', 'pooled_with_average',]
-    for method in methods:
-        perf = sc.get_performance(method=method)
-        #~ print(perf)
-    
-    for method in methods:
-        sc.print_performance(method=method)
         
         
     
