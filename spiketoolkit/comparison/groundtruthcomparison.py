@@ -147,7 +147,7 @@ class GroundTruthComparison(BaseComparison):
             txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
     
-    def print_summary(self):
+    def print_summary(self, **kargs_well_detected):
         """
         Print a global performance summary that depend on the context:
           * exhaustive= True/False
@@ -155,15 +155,33 @@ class GroundTruthComparison(BaseComparison):
         
         This summary mix several performance metrics.
         """
-        raise(NotImplementedError)
+        txt = _template_summary_part1
+
+        d = dict(
+            nb_gt=len(self._labels_st1),
+            nb_other=len(self._labels_st2),
+            nb_well_detected = self.count_well_detected_units(**kargs_well_detected),
+            nb_bad=self.count_bad_units_in_other()
+        )
+        
+        if self.exhaustive_gt:
+            txt = txt + _template_summary_part2
+            d['nb_fake'] = self.count_fake_units_in_other()
+        
+        txt = txt.format(**d)
+
+        print(txt)
     
-    def get_well_detected_units(self, tp_thresh=0.95, accuracy_thresh=None,
+    
+    def get_well_detected_units(self, tp_thresh=None, accuracy_thresh=None,
                 cl_thresh=None, fp_thresh=None):
         """
         Get the units in GT that are well detected with a comninaison a treshold level
         on some columns (tp_rate, accuracy_rate, cl_rate, fp_rate):
         
         If several thresh are given the the intersect of selection is kept.
+        
+        if all parameters are None then default value is tp_rate=0.95
         
         Parameters
         ----------
@@ -180,6 +198,10 @@ class GroundTruthComparison(BaseComparison):
             Threshold fp_rate score under a units is selected
         
         """
+        if all(e is None for e in (tp_thresh, accuracy_thresh, cl_thresh, fp_thresh)):
+            # default value
+            tp_thresh=0.95
+        
         perf = self.get_performance(method='by_spiketrain')
         keep = perf['tp_rate']>=0
         
@@ -202,7 +224,7 @@ class GroundTruthComparison(BaseComparison):
         Count how many well detected units.
         Kargs are the same as get_well_detected_units.
         """
-        return len(self.get_well_detected_units())
+        return len(self.get_well_detected_units(**kargs))
     
     def get_fake_units_in_other(self):
         """
@@ -261,6 +283,17 @@ MISS RATE: {miss_rate}
 PRECISION: {precision}
 FALSE DISCOVERY RATE: {false_discovery_rate}
 """
+
+_template_summary_part1 = """SUMMARY
+GT nb_units: {nb_gt}
+OTHER nb_units: {nb_other}
+nb_well_detected: {nb_well_detected} 
+nb_bad: {nb_bad}
+"""
+
+_template_summary_part2 = """nb_fake_units {nb_fake}
+"""
+
 
     
     
