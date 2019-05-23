@@ -52,8 +52,8 @@ def test_compare_sorter_to_ground_truth():
     assert_array_equal(good_units, [0])
     
     # count
-    nb_ok = sc.count_well_detected_units(tp_thresh=0.95)
-    assert nb_ok == 1
+    num_ok = sc.count_well_detected_units(tp_thresh=0.95)
+    assert num_ok == 1
     
     
     # false_positive_units [11]
@@ -119,8 +119,8 @@ def test_get_performance():
     assert perf.loc[0, 'cl'] == 0
     assert perf.loc[0, 'fn'] == 0
     assert perf.loc[0, 'fp'] == 0
-    assert perf.loc[0, 'nb_gt'] == 3
-    assert perf.loc[0, 'nb_other'] == 3
+    assert perf.loc[0, 'num_gt'] == 3
+    assert perf.loc[0, 'num_other'] == 3
     
     perf = sc.get_performance('pooled_with_sum')
     assert perf['tp_rate'] == 1.
@@ -130,4 +130,4 @@ def test_get_performance():
     
 if __name__ == '__main__':
     test_compare_sorter_to_ground_truth()
-    #~ test_get_performance()
+    test_get_performance()
