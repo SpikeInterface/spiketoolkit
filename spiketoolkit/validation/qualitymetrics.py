@@ -3,7 +3,7 @@ import spiketoolkit as st
 
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
-                     seconds=10, max_num_waveforms=1000, filter=False, freq_min=300, freq_max=6000):
+                     seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
     '''
     Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel.
 
@@ -23,7 +23,7 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
         Number of seconds to compute noise level from (default 10)
     max_num_waveforms: int
         Maximum number of waveforms to cpmpute templates from (default 1000)
-    filter: bool
+    apply_filter: bool
         If True, recording is filtered before computing noise level
     freq_min: float
         High-pass frequency for optional filter (default 300 Hz)
@@ -38,7 +38,7 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
     '''
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
-    if filter:
+    if apply_filter:
         recording_f = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max,
                                                        cache=True)
     else:
