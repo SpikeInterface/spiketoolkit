@@ -173,7 +173,7 @@ class GroundTruthComparison(BaseComparison):
             num_other=len(self._labels_st2),
             num_well_detected = self.count_well_detected_units(**kargs_well_detected),
             num_bad=self.count_bad_units(),
-            num_oversplitted=self.count_oversplitted_units(),
+            num_redundant=self.count_redundant_units(),
         )
         
         if self.exhaustive_gt:
@@ -261,29 +261,29 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_false_positive_units())
     
-    def get_oversplitted_units(self):
+    def get_redundant_units(self):
         """
-        Return "oversplitted units"
+        Return "redundant units"
         
         
-        "oversplitted units" are defined as units in other
+        "redundant units" are defined as units in other
         that match a GT units but it is not the best match.
         In other world units in GT that detected twice or more.
         
         """
         best_match = list(self._unit_map12.values())
-        oversplitted_ids = []
+        redundant_ids = []
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match and self._best_match_units_21[u2] != -1:
-                oversplitted_ids.append(u2)
-        return oversplitted_ids
+                redundant_ids.append(u2)
+        return redundant_ids
     
-    def count_oversplitted_units(self):
+    def count_redundant_units(self):
         """
-        See get_oversplitted_units.
+        See get_redundant_units.
         """
-        return len(self.get_oversplitted_units())
+        return len(self.get_redundant_units())
     
     def get_bad_units(self):
         """
@@ -292,7 +292,7 @@ class GroundTruthComparison(BaseComparison):
         "bad units" are defined as units in other that are not
         in the best match list of GT units.
         
-        So it is the union of "false positive units" + "oversplitted units".
+        So it is the union of "false positive units" + "redundant units".
         
         Need exhaustive_gt=True
         """

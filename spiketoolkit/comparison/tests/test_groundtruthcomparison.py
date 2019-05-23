@@ -62,21 +62,20 @@ def test_compare_sorter_to_ground_truth():
     num_fpu = sc.count_false_positive_units()
     assert num_fpu == 1
     
-    # oversplitted_units [6]
-    oversplitted_ids = sc.get_oversplitted_units()
-    print(oversplitted_ids)
-    assert_array_equal(oversplitted_ids, [6])
+    # redundant_units [6]
+    redundant_ids = sc.get_redundant_units()
+    assert_array_equal(redundant_ids, [6])
     
     # bad_units [11]
     bad_ids = sc.get_bad_units()
     assert_array_equal(bad_ids, [6, 11])
     num_bad = sc.count_bad_units()
     
-    # bad units is union of false_positive_units + oversplitted_units
+    # bad units is union of false_positive_units + redundant_units
     fpu_ids = sc.get_false_positive_units()
-    oversplitted_ids = sc.get_oversplitted_units()
+    redundant_ids = sc.get_redundant_units()
     bad_ids = sc.get_bad_units()
-    assert_array_equal(bad_ids, sorted(fpu_ids+oversplitted_ids))
+    assert_array_equal(bad_ids, sorted(fpu_ids+redundant_ids))
     
 
 

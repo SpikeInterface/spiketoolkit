@@ -62,7 +62,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
     
-    count_units = pd.DataFrame(index=run_times.index, columns=['num_gt', 'num_sorter', 'num_well_detected', 'num_oversplitted'])
+    count_units = pd.DataFrame(index=run_times.index, columns=['num_gt', 'num_sorter', 'num_well_detected', 'num_redundant'])
     out_dataframes['count_units'] = count_units
     if exhaustive_gt:
         count_units['num_false_positive'] = None
@@ -86,7 +86,7 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             count_units.loc[(rec_name, sorter_name), 'num_gt'] = len(gt_sorting.get_unit_ids())
             count_units.loc[(rec_name, sorter_name), 'num_sorter'] = len(sorting.get_unit_ids())
             count_units.loc[(rec_name, sorter_name), 'num_well_detected'] = sc.count_well_detected_units(**karg_thresh)
-            count_units.loc[(rec_name, sorter_name), 'num_oversplitted'] = sc.count_oversplitted_units()
+            count_units.loc[(rec_name, sorter_name), 'num_redundant'] = sc.count_redundant_units()
             if exhaustive_gt:
                 count_units.loc[(rec_name, sorter_name), 'num_false_positive'] = sc.count_false_positive_units()
                 count_units.loc[(rec_name, sorter_name), 'num_bad'] = sc.count_bad_units()
