@@ -21,12 +21,14 @@ class BandpassFilterRecording(FilterRecording):
             "Width of the filter (when type is 'fft')"},
         {'name': 'type', 'type': 'str', 'value': 'fft', 'default': 'fft', 'title': "Filter type ('fft' or 'butter')"},
         {'name': 'order', 'type': 'int', 'value': 3, 'default': 3, 'title': "Order of the filter (if 'butter')"},
+        {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
+            "If True filtered traces are computed and cached"},
     ]
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
-    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3):
+    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, cache=False):
         assert HAVE_BFR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
-        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10)
+        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
         self._recording = recording
         self._freq_min = freq_min
         self._freq_max = freq_max
@@ -108,7 +110,7 @@ class BandpassFilterRecording(FilterRecording):
         return ret
 
 
-def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3):
+def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, cache=False):
     '''
     Performs a lazy filter on the recording extractor traces.
 
@@ -127,6 +129,8 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         scipy butter and filtfilt functions.
     order: int
         Order of the filter (if 'butter')
+    cache: bool
+        If True, filtered traces are computed and cached all at once (default False)
 
     Returns
     -------
@@ -139,5 +143,6 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         freq_max=freq_max,
         freq_wid=freq_wid,
         type=type,
-        order=order
+        order=order,
+        cache=cache
     )

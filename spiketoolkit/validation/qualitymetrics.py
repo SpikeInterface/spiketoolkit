@@ -39,15 +39,16 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
     if filter:
-        recording_f = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max)
+        recording_f = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max,
+                                                       cache=True)
     else:
         recording_f = recording
     channel_noise_levels = _compute_channel_noise_levels(recording=recording_f, mode=mode, seconds=seconds)
-    templates = st.postprocessing.get_unit_template(recording, sorting, unit_ids=unit_ids,
+    templates = st.postprocessing.get_unit_template(recording_f, sorting, unit_ids=unit_ids,
                                                     max_num_waveforms=max_num_waveforms,
                                                     mode='median')
     max_channels = st.postprocessing.get_unit_max_channel(recording, sorting, unit_ids=unit_ids,
-                                                          max_num_waveforms=max_num_waveforms,
+                                                          max_num_waveforms=max_num_waveforms, peak='both',
                                                           mode='median')
     snr_list = []
     for i, unit_id in enumerate(sorting.get_unit_ids()):
@@ -77,7 +78,7 @@ def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
     snr: float
         Signal-to-noise ratio for the template
     '''
-    snr = np.max(np.abs(np.min(template[max_channel_idx]))) / channel_noise_levels[max_channel_idx]
+    snr = np.max(np.abs(template[max_channel_idx])) / channel_noise_levels[max_channel_idx]
     return snr
 
 
