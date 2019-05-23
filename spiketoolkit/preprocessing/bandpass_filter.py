@@ -36,6 +36,8 @@ class BandpassFilterRecording(FilterRecording):
         self._type = type
         self._order = order
         self.copy_channel_properties(recording)
+        if cache:
+            self._traces = self.get_traces()
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000

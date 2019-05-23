@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
 
+
 class FilterRecording(se.RecordingExtractor):
     def __init__(self, recording, chunk_size=10000, cache=False):
         se.RecordingExtractor.__init__(self)
@@ -10,8 +11,7 @@ class FilterRecording(se.RecordingExtractor):
         self._filtered_chunk_cache = FilteredChunkCache()
         self._cache = cache
         self.copy_channel_properties(recording)
-        if cache:
-            self._traces = self.get_traces()
+        self._traces = None
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
@@ -29,7 +29,7 @@ class FilterRecording(se.RecordingExtractor):
             end_frame = self.get_num_frames()
         if channel_ids is None:
             channel_ids = self.get_channel_ids()
-        if self._cache:
+        if self._cache and self._traces is not None:
             return self._traces[channel_ids, start_frame:end_frame]
         else:
             ich1 = int(start_frame / self._chunk_size)
