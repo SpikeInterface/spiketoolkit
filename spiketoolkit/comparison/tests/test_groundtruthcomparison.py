@@ -98,14 +98,14 @@ def test_get_performance():
     assert perf.loc[1, 'fp'] == 0
     
     perf = sc.get_performance('pooled_with_sum')
-    assert perf['tp_rate'] == 0.75
-    assert perf['fn_rate'] == 0.25
+    assert perf['accuracy'] == 0.75
+    assert perf['miss_rate'] == 0.25
     
     perf = sc.get_performance('by_spiketrain')
-    assert perf.loc[0, 'tp_rate'] == 2 / 3.
-    assert perf.loc[0, 'cl_rate'] == 0
-    assert perf.loc[0, 'fn_rate'] == 1 / 3.
-    assert perf.loc[0, 'fp_rate'] == 0 
+    assert perf.loc[0, 'accuracy'] == 2 / 3.
+    assert perf.loc[0, 'misclassification_rate'] == 0
+    assert perf.loc[0, 'miss_rate'] == 1 / 3.
+    # assert perf.loc[0, 'fp_rate'] == 0 
     
     ######
     # match when 2 units fire at same time
@@ -122,11 +122,11 @@ def test_get_performance():
     assert perf.loc[0, 'num_tested'] == 3
     
     perf = sc.get_performance('pooled_with_sum')
-    assert perf['tp_rate'] == 1.
-    assert perf['fn_rate'] == 0.
+    assert perf['accuracy'] == 1.
+    assert perf['miss_rate'] == 0.
 
     
     
 if __name__ == '__main__':
     test_compare_sorter_to_ground_truth()
-    test_get_performance()
+    #~ test_get_performance()

@@ -91,40 +91,29 @@ class GroundTruthComparison(BaseComparison):
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             
-            counts = self.count
-            perf['tp_rate'] = counts['tp'] / counts['num_gt']
-            perf['cl_rate'] = counts['cl'] / counts['num_gt']
-            perf['fn_rate'] = counts['fn'] / counts['num_gt']
-            perf['fp_rate'] = counts['fp'] / counts['num_gt']
-            
-            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate'])
-            perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-            perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-            perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
+            # for easy readed formula
+            c = self.count
+            tp, cl, fn, fp, num_gt = c['tp'], c['cl'], c['fn'], c['fp'], c['num_gt']
+
+            perf['accuracy'] = tp / (tp + fn + fp)
+            perf['recall'] = tp / (tp + fn)
+            perf['precision'] = tp / (tp + fp)
+            perf['false_discovery_rate'] = fp / (tp + fp)
+            perf['miss_rate'] = fn / num_gt
+            perf['misclassification_rate'] = cl / num_gt
 
         elif method == 'pooled_with_sum':
             perf = pd.Series(index=_perf_keys)
             
-            sum_num_gt = int(self.count['num_gt'].sum())
-            
-            perf['tp_rate'] = self.count['tp'].sum() / sum_num_gt
-            perf['cl_rate'] = self.count['cl'].sum() / sum_num_gt
-            perf['fn_rate'] = self.count['fn'].sum() / sum_num_gt
-            perf['fp_rate'] = self.count['fp'].sum() / sum_num_gt
-            
-            if (perf['tp_rate'] + perf['fn_rate']) > 0:
-                perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'] + perf['fp_rate'])
-                perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-                perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-                perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-                perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-            else:
-                perf['accuracy'] = 0.
-                perf['sensitivity'] = 0.
-                perf['miss_rate'] = np.nan
-                perf['precision'] = 0.
-                perf['false_discovery_rate'] = np.nan
+            c = self.count
+            tp, cl, fn, fp, num_gt = c['tp'].sum(), c['cl'].sum(), c['fn'].sum(), c['fp'].sum(), c['num_gt'].sum()
+
+            perf['accuracy'] = tp / (tp + fn + fp)
+            perf['recall'] = tp / (tp + fn)
+            perf['precision'] = tp / (tp + fp)
+            perf['false_discovery_rate'] = fp / (tp + fp)
+            perf['miss_rate'] = fn / num_gt
+            perf['misclassification_rate'] = cl / num_gt
 
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
@@ -315,23 +304,18 @@ class GroundTruthComparison(BaseComparison):
 
     
 # usefull also for gathercomparison
-_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate',  'accuracy', 'sensitivity', 'precision',
-              'miss_rate', 'false_discovery_rate']
-
+_perf_keys = ['accuracy', 'recall', 'precision','false_discovery_rate',  'miss_rate', 'misclassification_rate']
 
 
 _template_txt_performance = """PERFORMANCE
 Method : {method}
-TP : {tp_rate} %
-CL : {cl_rate} %
-FN : {fn_rate} %
-FP: {fp_rate} %
 
 ACCURACY: {accuracy}
-SENSITIVITY: {sensitivity}
-MISS RATE: {miss_rate}
+RECALL: {recall}
 PRECISION: {precision}
 FALSE DISCOVERY RATE: {false_discovery_rate}
+MISS RATE: {miss_rate}
+MISS CLASSIFICATION RATE: {misclassification_rate}
 """
 
 _template_summary_part1 = """SUMMARY
