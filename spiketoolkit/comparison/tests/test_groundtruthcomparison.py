@@ -10,18 +10,18 @@ from spiketoolkit.comparison import compare_sorter_to_ground_truth
 
 def make_sorting(times1, labels1, times2, labels2):
     gt_sorting = se.NumpySortingExtractor()
-    other_sorting = se.NumpySortingExtractor()
+    tested_sorting = se.NumpySortingExtractor()
     gt_sorting.set_times_labels(np.array(times1), np.array(labels1))
-    other_sorting.set_times_labels(np.array(times2), np.array(labels2))
-    return gt_sorting, other_sorting
+    tested_sorting.set_times_labels(np.array(times2), np.array(labels2))
+    return gt_sorting, tested_sorting
     
 
 
 def test_compare_sorter_to_ground_truth():
     # simple match
-    gt_sorting, other_sorting = make_sorting([100, 200, 300, 400, 500, 600], [0, 0, 1, 0, 1, 1], 
+    gt_sorting, tested_sorting = make_sorting([100, 200, 300, 400, 500, 600], [0, 0, 1, 0, 1, 1], 
                                                             [101, 201, 301, 302, 401, 501, 900], [0, 0, 5, 6, 0, 5, 11])
-    sc = compare_sorter_to_ground_truth(gt_sorting, other_sorting, exhaustive_gt=True)
+    sc = compare_sorter_to_ground_truth(gt_sorting, tested_sorting, exhaustive_gt=True)
     
     sc._do_confusion_matrix()
     #~ print(sc._confusion_matrix)
@@ -84,9 +84,9 @@ def test_get_performance():
     
     ######
     # simple match
-    gt_sorting, other_sorting = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
+    gt_sorting, tested_sorting = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
                                                             [101, 201, 301, ], [0, 0, 5])
-    sc = compare_sorter_to_ground_truth(gt_sorting, other_sorting, exhaustive_gt=True, delta_frames=10)
+    sc = compare_sorter_to_ground_truth(gt_sorting, tested_sorting, exhaustive_gt=True, delta_frames=10)
     
     
     perf = sc.get_performance('raw_count')
@@ -109,9 +109,9 @@ def test_get_performance():
     
     ######
     # match when 2 units fire at same time
-    gt_sorting, other_sorting = make_sorting([100, 100, 200, 200, 300], [0, 1, 0, 1, 0], 
+    gt_sorting, tested_sorting = make_sorting([100, 100, 200, 200, 300], [0, 1, 0, 1, 0], 
                                                             [100, 100, 200, 200, 300], [0, 1, 0, 1, 0],)
-    sc = compare_sorter_to_ground_truth(gt_sorting, other_sorting, exhaustive_gt=True)
+    sc = compare_sorter_to_ground_truth(gt_sorting, tested_sorting, exhaustive_gt=True)
     
     perf = sc.get_performance('raw_count')
     assert perf.loc[0, 'tp'] == 3
@@ -119,7 +119,7 @@ def test_get_performance():
     assert perf.loc[0, 'fn'] == 0
     assert perf.loc[0, 'fp'] == 0
     assert perf.loc[0, 'num_gt'] == 3
-    assert perf.loc[0, 'num_other'] == 3
+    assert perf.loc[0, 'num_tested'] == 3
     
     perf = sc.get_performance('pooled_with_sum')
     assert perf['tp_rate'] == 1.

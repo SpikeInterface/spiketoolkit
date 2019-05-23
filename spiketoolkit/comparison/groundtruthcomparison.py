@@ -6,14 +6,14 @@ import pandas as pd
 
 # Note for dev,  because of  BaseComparison internally:
 #     sorting1 = gt_sorting
-#     sorting2 = other_sorting
+#     sorting2 = tested_sorting
 
 class GroundTruthComparison(BaseComparison):
     """
     Class to compare a sorter to ground truth (GT)
     
     This class can:
-      * compute a "macth between gt_sorting and other_sorting
+      * compute a "macth between gt_sorting and tested_sorting
       * compte th score label (TP, FN, CL, FP) for each spike
       * count by spiketrain of GT the total of each (TP, FN, CL, FP) into a Dataframe 
         GroundTruthComparison.count
@@ -25,10 +25,10 @@ class GroundTruthComparison(BaseComparison):
       * count units detected twice (or more)
       * summary all this
     """
-    def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
+    def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
                 n_jobs=1, verbose=False):
-        BaseComparison.__init__(self, gt_sorting, other_sorting, sorting1_name=gt_name, sorting2_name=other_name,
+        BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
                                     delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
 
@@ -40,7 +40,7 @@ class GroundTruthComparison(BaseComparison):
         Do raw count into a dataframe.
         """
         unit1_ids = self._sorting1.get_unit_ids()
-        columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_other', 'other_id']
+        columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_tested', 'tested_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         for u1 in unit1_ids:
             u2 = self._unit_map12[u1]
@@ -49,14 +49,14 @@ class GroundTruthComparison(BaseComparison):
             self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])
             self.count.loc[u1, 'fn'] = np.sum(self._labels_st1[u1] == 'FN')
             self.count.loc[u1, 'num_gt'] = self._labels_st1[u1].size
-            self.count.loc[u1, 'other_id'] = u2
+            self.count.loc[u1, 'tested_id'] = u2
 
             if u2==-1:
                 self.count.loc[u1, 'fp'] = 0
-                self.count.loc[u1, 'num_other'] = 0
+                self.count.loc[u1, 'num_tested'] = 0
             else:
                 self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
-                self.count.loc[u1, 'num_other'] = self._labels_st2[u2].size
+                self.count.loc[u1, 'num_tested'] = self._labels_st2[u2].size
             
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
@@ -170,7 +170,7 @@ class GroundTruthComparison(BaseComparison):
 
         d = dict(
             num_gt=len(self._labels_st1),
-            num_other=len(self._labels_st2),
+            num_tested=len(self._labels_st2),
             num_well_detected = self.count_well_detected_units(**kargs_well_detected),
             num_bad=self.count_bad_units(),
             num_redundant=self.count_redundant_units(),
@@ -240,9 +240,9 @@ class GroundTruthComparison(BaseComparison):
     
     def get_false_positive_units(self):
         """
-        Return units listof "false positive units" from other_sorting.
+        Return units listof "false positive units" from tested_sorting.
         
-        "false positive units" ara defined as units in other that
+        "false positive units" ara defined as units in tested that
         are not matched at all in GT units.
         
         Need exhaustive_gt=True
@@ -266,7 +266,7 @@ class GroundTruthComparison(BaseComparison):
         Return "redundant units"
         
         
-        "redundant units" are defined as units in other
+        "redundant units" are defined as units in tested
         that match a GT units but it is not the best match.
         In other world units in GT that detected twice or more.
         
@@ -289,7 +289,7 @@ class GroundTruthComparison(BaseComparison):
         """
         Return units list of "bad units".
         
-        "bad units" are defined as units in other that are not
+        "bad units" are defined as units in tested that are not
         in the best match list of GT units.
         
         So it is the union of "false positive units" + "redundant units".
@@ -336,7 +336,7 @@ FALSE DISCOVERY RATE: {false_discovery_rate}
 
 _template_summary_part1 = """SUMMARY
 GT num_units: {num_gt}
-OTHER num_units: {num_other}
+TESTED num_units: {num_tested}
 num_well_detected: {num_well_detected} 
 num_bad: {num_bad}
 """
@@ -349,7 +349,7 @@ _template_summary_part2 = """num_false_positive_units {num_false_positive_units}
     
 
 
-def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, other_name=None, 
+def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None, 
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
@@ -364,11 +364,11 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
     ----------
     gt_sorting: SortingExtractor
         The first sorting for the comparison
-    other_sorting: SortingExtractor
+    tested_sorting: SortingExtractor
         The second sorting for the comparison
     gt_name: str
         The name of sorter 1
-    other_name: : str
+    tested_name: : str
         The name of sorter 2
     delta_frames: int
         Number of frames to consider coincident spikes (default 10)
@@ -388,5 +388,5 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
         The SortingComparison object
 
     '''
-    return GroundTruthComparison(gt_sorting, other_sorting, gt_name, other_name,
+    return GroundTruthComparison(gt_sorting, tested_sorting, gt_name, tested_name,
                             delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)
