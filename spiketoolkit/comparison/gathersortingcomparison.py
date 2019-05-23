@@ -62,15 +62,11 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
     out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
     
-    #~ above_keys = ['tp_rate', 'accuracy',	'sensitivity']
-    #~ above_columns = [ 'nb_above(with_{})'.format(k) for k in above_keys]
-    #~ nb_units_above_threshold = pd.DataFrame(index=run_times.index, columns=above_columns)
-    #~ out_dataframes['nb_units_above_threshold'] = nb_units_above_threshold
-    count_units = pd.DataFrame(index=run_times.index, columns=['nb_gt', 'nb_sorter', 'nb_well_detected'])
+    count_units = pd.DataFrame(index=run_times.index, columns=['num_gt', 'num_sorter', 'num_well_detected', 'num_oversplitted'])
     out_dataframes['count_units'] = count_units
     if exhaustive_gt:
-        count_units['nb_fake'] = None
-        count_units['nb_bad'] = None
+        count_units['num_false_positive'] = None
+        count_units['num_bad'] = None
 
     results = collect_results(working_folder)
     for rec_name, result_one_dataset in results.items():
@@ -87,13 +83,13 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
             perf = sc.get_performance(method='pooled_with_average', output='pandas')
             perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
             
-            count_units.loc[(rec_name, sorter_name), 'nb_gt'] = len(gt_sorting.get_unit_ids())
-            count_units.loc[(rec_name, sorter_name), 'nb_sorter'] = len(sorting.get_unit_ids())
-            count_units.loc[(rec_name, sorter_name), 'nb_well_detected'] = sc.count_well_detected_units(**karg_thresh)
+            count_units.loc[(rec_name, sorter_name), 'num_gt'] = len(gt_sorting.get_unit_ids())
+            count_units.loc[(rec_name, sorter_name), 'num_sorter'] = len(sorting.get_unit_ids())
+            count_units.loc[(rec_name, sorter_name), 'num_well_detected'] = sc.count_well_detected_units(**karg_thresh)
+            count_units.loc[(rec_name, sorter_name), 'num_oversplitted'] = sc.get_oversplitted_units()
             if exhaustive_gt:
-                count_units.loc[(rec_name, sorter_name), 'nb_fake'] = sc.count_fake_units_in_other()
-                count_units.loc[(rec_name, sorter_name), 'nb_bad'] = sc.count_bad_units_in_other()
-                
+                count_units.loc[(rec_name, sorter_name), 'num_false_positive'] = sc.count_false_positive_units()
+                count_units.loc[(rec_name, sorter_name), 'num_bad'] = sc.count_bad_units()
 
     if not use_multi_index:
         for k, df in out_dataframes.items():

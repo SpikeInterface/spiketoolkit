@@ -10,10 +10,21 @@ import pandas as pd
 
 class GroundTruthComparison(BaseComparison):
     """
-    Class to compare a sorter to ground truth.
+    Class to compare a sorter to ground truth (GT)
+    
+    This class can:
+      * compute a "macth between gt_sorting and other_sorting
+      * compte th score label (TP, FN, CL, FP) for each spike
+      * count by spiketrain of GT the total of each (TP, FN, CL, FP) into a Dataframe 
+        GroundTruthComparison.count
+      * compute the confusion matrix .get_confusion_matrix()
+      * compute some performance metric with several strategy based on 
+        the count score by spiketrain
+      * count how much well detected units with some threshold selection
+      * count false positve detected units
+      * count units detected twice (or more)
+      * summary all this
     """
-    
-    
     def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
                 n_jobs=1, verbose=False):
@@ -29,7 +40,7 @@ class GroundTruthComparison(BaseComparison):
         Do raw count into a dataframe.
         """
         unit1_ids = self._sorting1.get_unit_ids()
-        columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
+        columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_other', 'other_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         for u1 in unit1_ids:
             u2 = self._unit_map12[u1]
@@ -37,15 +48,15 @@ class GroundTruthComparison(BaseComparison):
             self.count.loc[u1, 'tp'] = np.sum(self._labels_st1[u1] == 'TP')
             self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])
             self.count.loc[u1, 'fn'] = np.sum(self._labels_st1[u1] == 'FN')
-            self.count.loc[u1, 'nb_gt'] = self._labels_st1[u1].size
+            self.count.loc[u1, 'num_gt'] = self._labels_st1[u1].size
             self.count.loc[u1, 'other_id'] = u2
 
             if u2==-1:
                 self.count.loc[u1, 'fp'] = 0
-                self.count.loc[u1, 'nb_other'] = 0
+                self.count.loc[u1, 'num_other'] = 0
             else:
                 self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
-                self.count.loc[u1, 'nb_other'] = self._labels_st2[u2].size
+                self.count.loc[u1, 'num_other'] = self._labels_st2[u2].size
             
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
@@ -81,10 +92,10 @@ class GroundTruthComparison(BaseComparison):
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             
             counts = self.count
-            perf['tp_rate'] = counts['tp'] / counts['nb_gt']
-            perf['cl_rate'] = counts['cl'] / counts['nb_gt']
-            perf['fn_rate'] = counts['fn'] / counts['nb_gt']
-            perf['fp_rate'] = counts['fp'] / counts['nb_gt']
+            perf['tp_rate'] = counts['tp'] / counts['num_gt']
+            perf['cl_rate'] = counts['cl'] / counts['num_gt']
+            perf['fn_rate'] = counts['fn'] / counts['num_gt']
+            perf['fp_rate'] = counts['fp'] / counts['num_gt']
             
             perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate'])
             perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
@@ -95,12 +106,12 @@ class GroundTruthComparison(BaseComparison):
         elif method == 'pooled_with_sum':
             perf = pd.Series(index=_perf_keys)
             
-            sum_nb_gt = int(self.count['nb_gt'].sum())
+            sum_num_gt = int(self.count['num_gt'].sum())
             
-            perf['tp_rate'] = self.count['tp'].sum() / sum_nb_gt
-            perf['cl_rate'] = self.count['cl'].sum() / sum_nb_gt
-            perf['fn_rate'] = self.count['fn'].sum() / sum_nb_gt
-            perf['fp_rate'] = self.count['fp'].sum() / sum_nb_gt
+            perf['tp_rate'] = self.count['tp'].sum() / sum_num_gt
+            perf['cl_rate'] = self.count['cl'].sum() / sum_num_gt
+            perf['fn_rate'] = self.count['fn'].sum() / sum_num_gt
+            perf['fp_rate'] = self.count['fp'].sum() / sum_num_gt
             
             if (perf['tp_rate'] + perf['fn_rate']) > 0:
                 perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'] + perf['fp_rate'])
@@ -158,15 +169,16 @@ class GroundTruthComparison(BaseComparison):
         txt = _template_summary_part1
 
         d = dict(
-            nb_gt=len(self._labels_st1),
-            nb_other=len(self._labels_st2),
-            nb_well_detected = self.count_well_detected_units(**kargs_well_detected),
-            nb_bad=self.count_bad_units_in_other()
+            num_gt=len(self._labels_st1),
+            num_other=len(self._labels_st2),
+            num_well_detected = self.count_well_detected_units(**kargs_well_detected),
+            num_bad=self.count_bad_units(),
+            num_oversplitted=self.count_oversplitted_units(),
         )
         
         if self.exhaustive_gt:
             txt = txt + _template_summary_part2
-            d['nb_fake'] = self.count_fake_units_in_other()
+            d['num_false_positive_units'] = self.count_false_positive_units()
         
         txt = txt.format(**d)
 
@@ -226,12 +238,16 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_well_detected_units(**kargs))
     
-    def get_fake_units_in_other(self):
+    def get_false_positive_units(self):
         """
-        Return units list in other sorter that have link to ground truth.
+        Return units listof "false positive units" from other_sorting.
+        
+        "false positive units" ara defined as units in other that
+        are not matched at all in GT units.
+        
         Need exhaustive_gt=True
         """
-        assert self.exhaustive_gt, 'fake units list is valid only if exhaustive_gt=True'
+        assert self.exhaustive_gt, 'false_positive_units list is valid only if exhaustive_gt=True'
         fake_ids = []
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
@@ -239,27 +255,61 @@ class GroundTruthComparison(BaseComparison):
                 fake_ids.append(u2)
         return fake_ids
     
-    def count_fake_units_in_other(self):
+    def count_false_positive_units(self):
         """
+        See get_false_positive_units.
+        """
+        return len(self.get_false_positive_units())
+    
+    def get_oversplitted_units(self):
+        """
+        Return "oversplitted units"
+        
+        
+        "oversplitted units" are defined as units in other
+        that match a GT units but it is not the best match.
+        In other world units in GT that detected twice or more.
         
         """
-        return len(self.get_fake_units_in_other())
+        best_match = list(self._unit_map12.values())
+        oversplitted_ids = []
+        unit2_ids = self._sorting2.get_unit_ids()
+        for u2 in unit2_ids:
+            if u2 not in best_match and self._best_match_units_21[u2] != -1:
+                oversplitted_ids.append(u2)
+        return oversplitted_ids
     
-    def get_bad_units_in_other(self):
+    def count_oversplitted_units(self):
         """
-        Return a list of units in other sorter that are not the first match.
+        See get_oversplitted_units.
         """
+        return len(self.get_oversplitted_units())
+    
+    def get_bad_units(self):
+        """
+        Return units list of "bad units".
+        
+        "bad units" are defined as units in other that are not
+        in the best match list of GT units.
+        
+        So it is the union of "false positive units" + "oversplitted units".
+        
+        Need exhaustive_gt=True
+        """
+        assert self.exhaustive_gt, 'bad_units list is valid only if exhaustive_gt=True'
         best_match = list(self._unit_map12.values())
         bad_ids = []
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match:
                 bad_ids.append(u2)
-        
         return bad_ids
     
-    def count_bad_units_in_other(self):
-        return len(self.get_bad_units_in_other())
+    def count_bad_units(self):
+        """
+        See get_bad_units
+        """
+        return len(self.get_bad_units())
 
 
 
@@ -285,13 +335,13 @@ FALSE DISCOVERY RATE: {false_discovery_rate}
 """
 
 _template_summary_part1 = """SUMMARY
-GT nb_units: {nb_gt}
-OTHER nb_units: {nb_other}
-nb_well_detected: {nb_well_detected} 
-nb_bad: {nb_bad}
+GT num_units: {num_gt}
+OTHER num_units: {num_other}
+num_well_detected: {num_well_detected} 
+num_bad: {num_bad}
 """
 
-_template_summary_part2 = """nb_fake_units {nb_fake}
+_template_summary_part2 = """num_false_positive_units {num_false_positive_units}
 """
 
 

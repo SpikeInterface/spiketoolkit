@@ -19,8 +19,8 @@ def make_sorting(times1, labels1, times2, labels2):
 
 def test_compare_sorter_to_ground_truth():
     # simple match
-    gt_sorting, other_sorting = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
-                                                            [101, 201, 301, 600], [0, 0, 5, 6])
+    gt_sorting, other_sorting = make_sorting([100, 200, 300, 400, 500, 600], [0, 0, 1, 0, 1, 1], 
+                                                            [101, 201, 301, 302, 401, 501, 900], [0, 0, 5, 6, 0, 5, 11])
     sc = compare_sorter_to_ground_truth(gt_sorting, other_sorting, exhaustive_gt=True)
     
     sc._do_confusion_matrix()
@@ -39,9 +39,9 @@ def test_compare_sorter_to_ground_truth():
 
     # test well detected units depending on thresholds
     good_units = sc.get_well_detected_units() # tp_thresh=0.95 default value
-    assert_array_equal(good_units, [1])
+    assert_array_equal(good_units, [0,])
     good_units = sc.get_well_detected_units(tp_thresh=0.95)
-    assert_array_equal(good_units, [1])
+    assert_array_equal(good_units, [0,])
     good_units = sc.get_well_detected_units(accuracy_thresh=.6)
     assert_array_equal(good_units, [0, 1])
     good_units = sc.get_well_detected_units(fp_thresh=0.05)
@@ -49,24 +49,34 @@ def test_compare_sorter_to_ground_truth():
     good_units = sc.get_well_detected_units(cl_thresh=0.05)
     assert_array_equal(good_units, [0, 1])
     good_units = sc.get_well_detected_units(tp_thresh=0.95, accuracy_thresh=.6) # combine thresh
-    assert_array_equal(good_units, [1])
+    assert_array_equal(good_units, [0])
     
     # count
     nb_ok = sc.count_well_detected_units(tp_thresh=0.95)
     assert nb_ok == 1
     
     
-    # units #6 in other_osrting is fake
-    fake_ids = sc.get_fake_units_in_other()
-    assert_array_equal(fake_ids, [6])
-    nb_fake = sc.count_fake_units_in_other()
-    assert nb_fake == 1
-    #~ print(nb_fake)
+    # false_positive_units [11]
+    fpu_ids = sc.get_false_positive_units()
+    assert_array_equal(fpu_ids, [11])
+    num_fpu = sc.count_false_positive_units()
+    assert num_fpu == 1
     
+    # oversplitted_units [6]
+    oversplitted_ids = sc.get_oversplitted_units()
+    print(oversplitted_ids)
+    assert_array_equal(oversplitted_ids, [6])
     
-    bad_ids = sc.get_bad_units_in_other()
-    print(bad_ids)
-    nb_bad = sc.count_bad_units_in_other()
+    # bad_units [11]
+    bad_ids = sc.get_bad_units()
+    assert_array_equal(bad_ids, [6, 11])
+    num_bad = sc.count_bad_units()
+    
+    # bad units is union of false_positive_units + oversplitted_units
+    fpu_ids = sc.get_false_positive_units()
+    oversplitted_ids = sc.get_oversplitted_units()
+    bad_ids = sc.get_bad_units()
+    assert_array_equal(bad_ids, sorted(fpu_ids+oversplitted_ids))
     
 
 
