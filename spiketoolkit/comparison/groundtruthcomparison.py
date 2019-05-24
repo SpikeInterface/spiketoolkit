@@ -291,6 +291,12 @@ def _compute_perf(tp, cl, fn, fp, num_gt, perf):
     line by line.
     This it is internally used by perf by psiketrain and poll_with_sum.
     
+    https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+    
+    Note :
+      * we don't have TN because it do not make sens here.
+      * 'accuracy' = 'tp_rate' because TN=0
+      * 'recall' = 'sensitivity'
     """
 
     perf['accuracy'] = tp / (tp + fn + fp)
