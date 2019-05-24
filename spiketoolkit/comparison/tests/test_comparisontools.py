@@ -2,7 +2,7 @@ import pytest
 import numpy as np
 from numpy.testing import assert_array_equal
 import spikeextractors as se
-from spiketoolkit.comparison import do_matching, do_score_labels, do_counting, do_confusion_matrix, compare_spike_trains
+from spiketoolkit.comparison import do_matching, do_score_labels,  do_confusion_matrix, compare_spike_trains
 
 
 def make_sorting(times1, labels1, times2, labels2):
@@ -67,47 +67,7 @@ def test_do_score_labels():
     assert_array_equal(labels_st2[0], ['TP', 'TP', 'TP'])
     assert_array_equal(labels_st2[1], ['TP', 'TP', ])
     
-    
 
-def test_do_counting():
-    delta_tp=10
-    
-    ######
-    # simple match
-    sorting1, sorting2 = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
-                                                            [101, 201, 301, ], [0, 0, 5])
-    unit_map12 = {0: 0, 1: 5}
-    labels_st1, labels_st2 = do_score_labels(sorting1, sorting2, delta_tp, unit_map12)
-    mixed_counts = do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
-
-    assert mixed_counts['pooled_with_sum']['TP'] == 3
-    assert mixed_counts['pooled_with_sum']['FN'] == 1
-    
-    assert mixed_counts['by_spiketrains'][0]['TP'] == 2
-    assert mixed_counts['by_spiketrains'][0]['CL'] == 0
-    assert mixed_counts['by_spiketrains'][0]['FN'] == 1
-    assert mixed_counts['by_spiketrains'][0]['FP'] == 0
-    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_1'] == 3
-    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_2'] == 2
-    
-    ######
-    # match when 2 units fire at same time
-    sorting1, sorting2 = make_sorting([100, 100, 200, 200, 300], [0, 1, 0, 1, 0], 
-                                                            [100, 100, 200, 200, 300], [0, 1, 0, 1, 0],)
-    unit_map12 = {0: 0, 1: 1}
-    labels_st1, labels_st2 = do_score_labels(sorting1, sorting2, delta_tp, unit_map12)
-    mixed_counts = do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2)
-
-    assert mixed_counts['pooled_with_sum']['TP'] == 5
-    assert mixed_counts['pooled_with_sum']['FN'] == 0
-    
-    assert mixed_counts['by_spiketrains'][0]['TP'] == 3
-    assert mixed_counts['by_spiketrains'][0]['CL'] == 0
-    assert mixed_counts['by_spiketrains'][0]['FN'] == 0
-    assert mixed_counts['by_spiketrains'][0]['FP'] == 0
-    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_1'] == 3
-    assert mixed_counts['by_spiketrains'][0]['NB_SPIKE_2'] == 3
-    
 
 def test_do_confusion_matrix():
     

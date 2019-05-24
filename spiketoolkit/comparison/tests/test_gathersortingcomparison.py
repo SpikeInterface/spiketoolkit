@@ -55,7 +55,7 @@ def test_gather_sorting_comparison():
     ground_truths['toy_tetrode'] = pickle.load(open(path + 'gt_sorting0', mode='rb'))
     ground_truths['toy_probe32'] = pickle.load(open(path + 'gt_sorting1', mode='rb'))
     
-    comparisons, dataframes = gather_sorting_comparison(working_folder, ground_truths,use_multi_index=True)
+    comparisons, dataframes = gather_sorting_comparison(working_folder, ground_truths,use_multi_index=True, exhaustive_gt=True)
     
     for k, df in dataframes.items():
         print('*'*10)
@@ -69,7 +69,7 @@ def test_gather_sorting_comparison():
     
 
 if __name__ == '__main__':
-    setup_module()
+    #~ setup_module()
     test_gather_sorting_comparison() 
 
 
