@@ -90,30 +90,16 @@ class GroundTruthComparison(BaseComparison):
         elif method == 'by_spiketrain':
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
-            
-            # for easy readed formula
             c = self.count
             tp, cl, fn, fp, num_gt = c['tp'], c['cl'], c['fn'], c['fp'], c['num_gt']
-
-            perf['accuracy'] = tp / (tp + fn + fp)
-            perf['recall'] = tp / (tp + fn)
-            perf['precision'] = tp / (tp + fp)
-            perf['false_discovery_rate'] = fp / (tp + fp)
-            perf['miss_rate'] = fn / num_gt
-            perf['misclassification_rate'] = cl / num_gt
+            perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
 
         elif method == 'pooled_with_sum':
+            # here all spike from units are polled with sum.
             perf = pd.Series(index=_perf_keys)
-            
             c = self.count
             tp, cl, fn, fp, num_gt = c['tp'].sum(), c['cl'].sum(), c['fn'].sum(), c['fp'].sum(), c['num_gt'].sum()
-
-            perf['accuracy'] = tp / (tp + fn + fp)
-            perf['recall'] = tp / (tp + fn)
-            perf['precision'] = tp / (tp + fp)
-            perf['false_discovery_rate'] = fp / (tp + fp)
-            perf['miss_rate'] = fn / num_gt
-            perf['misclassification_rate'] = cl / num_gt
+            perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
 
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
@@ -174,49 +160,45 @@ class GroundTruthComparison(BaseComparison):
         print(txt)
     
     
-    def get_well_detected_units(self, tp_thresh=None, accuracy_thresh=None,
-                cl_thresh=None, fp_thresh=None):
+    def get_well_detected_units(self, **thresholds):
         """
         Get the units in GT that are well detected with a comninaison a treshold level
-        on some columns (tp_rate, accuracy_rate, cl_rate, fp_rate):
+        on some columns (accuracy, recall, precision, miss_rate, ...):
+        
+        
+        
+        By default threshold is {'accuray'=0.95} meaning that all units with
+        accuracy above 0.95 are selected.
+        
+        For some thresholds columns units are below the threshold for instance
+        'miss_rate', 'false_discovery_rate', 'misclassification_rate'
         
         If several thresh are given the the intersect of selection is kept.
         
-        if all parameters are None then default value is tp_rate=0.95
-        
+        For instance threholds = {'accuracy':0.9, 'miss_rate':0.1 }
+        give units with accuracy>0.9 AND miss<0.1
         Parameters
         ----------
-        tp_thresh:
-            Threshold tp_rate score above a units is selected
-        
-        accuracy_thresh:
-            Threshold accuracy score above a units is selected
-        
-        cl_thresh:
-            Threshold cl_rate score under a units is selected
-        
-        fp_thresh:
-            Threshold fp_rate score under a units is selected
-        
+        **thresholds : dict
+            A dict that contains some threshold of columns of perf Dataframe.
+            If sevral threhold they are combined.
         """
-        if all(e is None for e in (tp_thresh, accuracy_thresh, cl_thresh, fp_thresh)):
-            # default value
-            tp_thresh=0.95
+        if len(thresholds) == 0:
+            thresholds = {'accuracy' : 0.95 }
+        
+        _above = ['accuracy', 'recall', 'precision',]
+        _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
         
         perf = self.get_performance(method='by_spiketrain')
-        keep = perf['tp_rate']>=0
+        keep = perf['accuracy']>=0 # tale all
         
-        if tp_thresh is not None:
-            keep = keep & (perf['tp_rate'] >= tp_thresh)
-        
-        if accuracy_thresh is not None:
-            keep = keep & (perf['accuracy'] >= accuracy_thresh)
-        
-        if cl_thresh is not None:
-            keep = keep & (perf['cl_rate'] <= cl_thresh)
-        
-        if fp_thresh is not None:
-            keep = keep & (perf['fp_rate'] <= fp_thresh)
+        for col, thresh in thresholds.items():
+            if col in _above:
+                keep = keep & (perf[col] >= thresh)
+            elif col in _below:
+                keep = keep & (perf[col] <= thresh)
+            else:
+                raise(ValueError('threhold column do not exits', col))
         
         return perf[keep].index.tolist()
     
@@ -301,6 +283,25 @@ class GroundTruthComparison(BaseComparison):
         return len(self.get_bad_units())
 
 
+
+def _compute_perf(tp, cl, fn, fp, num_gt, perf):
+    """
+    This compte perf formula.
+    this trick here is that it works both on pd.Series and pd.Dataframe
+    line by line.
+    This it is internally used by perf by psiketrain and poll_with_sum.
+    
+    """
+
+    perf['accuracy'] = tp / (tp + fn + fp)
+    perf['recall'] = tp / (tp + fn)
+    perf['precision'] = tp / (tp + fp)
+    perf['false_discovery_rate'] = fp / (tp + fp)
+    perf['miss_rate'] = fn / num_gt
+    perf['misclassification_rate'] = cl / num_gt
+    
+    return perf
+    
 
     
 # usefull also for gathercomparison
