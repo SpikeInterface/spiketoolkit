@@ -29,7 +29,7 @@ class RescaleTracesRecording(RecordingExtractor):
         pre_scale = abs(loc_q2 - loc_q1)
 
         self._scalar = scale / pre_scale
-        self._offset = median - pre_median / pre_scale
+        self._offset = median - pre_median * self._scalar
         self.copy_channel_properties(recording=self._recording)
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):
