@@ -50,6 +50,8 @@ class HerdingspikesSorter(BaseSorter):
             'title': "High-pass frequency"},
         {'name': 'filter', 'type': 'bool', 'value': False, 'default': False,
             'title': "Bandpass filters the recording if True"},
+        {'name': 'pre_scale', 'type': 'bool', 'value': False, 'default': False,
+            'title': "Scales recording traces to optimize HerdingSpikes performance"},
     ]
 
     _gui_params = copy.deepcopy(BaseSorter._gui_params)
@@ -73,6 +75,11 @@ class HerdingspikesSorter(BaseSorter):
         if p['filter'] and p['freq_min'] is not None and p['freq_max'] is not None:
             recording = st.preprocessing.bandpass_filter(
                 recording=recording, freq_min=p['freq_min'], freq_max=p['freq_max'])
+
+        if p['pre_scale']:
+            recording = st.preprocessing.rescale_traces(
+                recording=recording, scale=100.0, median=0.0, q1=0.01, q2=0.99
+            )
 
         # this should have its name changed
         self.Probe = hs.probe.RecordingExtractor(
@@ -164,6 +171,10 @@ HerdingspikesSorter._default_params = {
     # bandpass filter
     'freq_min': 300.0,
     'freq_max': 6000.0,
-    'filter': False
+    'filter': False,
+
+    # rescale traces
+    'pre_scale': False  # TODO consider setting default to True
+
 
 }
