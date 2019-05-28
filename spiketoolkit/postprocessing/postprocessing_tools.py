@@ -203,7 +203,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             return waveform_list
 
 
-def get_unit_template(recording, sorting, unit_ids=None, grouping_property=None, save_as_property=True,
+def get_unit_template(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
                       start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                       max_num_waveforms=np.inf, compute_property_from_recording=False,
                       verbose=False):
@@ -219,6 +219,8 @@ def get_unit_template(recording, sorting, unit_ids=None, grouping_property=None,
         The sorting extractor
     unit_ids: list
         List of unit ids to extract templates
+    mode: str
+        Use 'mean' or 'median' to compute templates
     grouping_property: str
         Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
         'group', then waveforms are computed group-wise.
@@ -274,30 +276,34 @@ def get_unit_template(recording, sorting, unit_ids=None, grouping_property=None,
                 if verbose:
                     print("Using ", len(idx_not_none), " waveforms for unit ", unit_id)
                 waveforms = np.array(waveforms[idx_not_none])
-            template = np.mean(waveforms, axis=0)
         else:
-            template = np.mean(get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
-                                                end_frame=end_frame, max_num_waveforms=max_num_waveforms,
-                                                ms_before=ms_before, ms_after=ms_after,
-                                                grouping_property=grouping_property,
-                                                compute_property_from_recording=compute_property_from_recording,
-                                                verbose=verbose)
-                               , axis=0)
+            waveforms = get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
+                                           end_frame=end_frame, max_num_waveforms=max_num_waveforms,
+                                           ms_before=ms_before, ms_after=ms_after,
+                                           grouping_property=grouping_property, dtype=dtype,
+                                           compute_property_from_recording=compute_property_from_recording,
+                                           verbose=verbose)
+        if mode == 'mean':
+            template = np.mean(waveforms, axis=0)
+        elif mode == 'median':
+            template = np.median(waveforms, axis=0)
+        else:
+            raise Exception("'mode' can be 'mean' or 'median'")
 
         if save_as_property:
             sorting.set_unit_property(unit_id, 'template', template)
-
         template_list.append(template)
+
     if len(template_list) == 1:
         return template_list[0]
     else:
         return template_list
 
 
-def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=None,
-                        save_as_property=True, start_frame=None, end_frame=None,
-                        ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                        compute_property_from_recording=False, verbose=False):
+def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
+                         save_as_property=True, start_frame=None, end_frame=None,
+                         ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
+                         compute_property_from_recording=False, verbose=False):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
     they are computed.
@@ -310,6 +316,10 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=No
         The sorting extractor
     unit_ids: list
         List of unit ids to extract maximum channels
+    peak: str
+        If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+    mode: str
+        Use 'mean' or 'median' to compute templates
     grouping_property: str
         Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
         'group', then waveforms are computed group-wise.
@@ -361,13 +371,22 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, grouping_property=No
         if template_property:
             template = sorting.get_unit_property(unit_id, 'template')
         else:
-            template = get_unit_template(recording, sorting, unit_id, start_frame=start_frame,
-                                       end_frame=end_frame, max_num_waveforms=max_num_waveforms,
-                                       ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
-                                       compute_property_from_recording=compute_property_from_recording,
-                                       verbose=verbose)
-        max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
-                                    template.shape)[0]
+            template = get_unit_template(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
+                                         end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
+                                         ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
+                                         compute_property_from_recording=compute_property_from_recording,
+                                         verbose=verbose)
+        if peak == 'both':
+            max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                        template.shape)[0]
+        elif peak == 'neg':
+            max_channel_idx = np.unravel_index(np.argmin(template),
+                                               template.shape)[0]
+        elif peak == 'pos':
+            max_channel_idx = np.unravel_index(np.argmax(template),
+                                               template.shape)[0]
+        else:
+            raise Exception("'peak' can be 'neg', 'pos', or 'both'")
         max_channel = recording.get_channel_ids()[max_channel_idx]
         if save_as_property:
             sorting.set_unit_property(unit_id, 'max_channel', max_channel)
@@ -465,7 +484,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
 
     for i_w, wf in enumerate(waveforms):
         if wf is None:
-            wf = get_unit_waveforms(recording, sorting, unit_id, start_frame=start_frame,
+            wf = get_unit_waveforms(recording, sorting, unit_ids, start_frame=start_frame,
                                     end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                     ms_before=ms_before, ms_after=ms_after,
                                     grouping_property=grouping_property, dtype=dtype,

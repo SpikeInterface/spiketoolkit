@@ -109,37 +109,37 @@ class SortingComparison(BaseComparison):
             return 0
         return compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
 
-    def get_false_positive_fraction(self, unit1, unit2=None):
-        if unit1 is None:
-            raise Exception('get_false_positive_fraction: unit1 must not be None')
-        if unit2 is None:
-            unit2 = self.get_best_unit_match1(unit1)
-            if unit2 is None or unit2 == -1:
-                return 0
+    #~ def get_false_positive_fraction(self, unit1, unit2=None):
+        #~ if unit1 is None:
+            #~ raise Exception('get_false_positive_fraction: unit1 must not be None')
+        #~ if unit2 is None:
+            #~ unit2 = self.get_best_unit_match1(unit1)
+            #~ if unit2 is None or unit2 == -1:
+                #~ return 0
 
-        if unit1 != -1 and unit2 != -1:
-            a = self._matching_event_counts_12[unit1]
-            if unit2 not in a:
-                return 0
-        else:
-            return 0
-        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
+        #~ if unit1 != -1 and unit2 != -1:
+            #~ a = self._matching_event_counts_12[unit1]
+            #~ if unit2 not in a:
+                #~ return 0
+        #~ else:
+            #~ return 0
+        #~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
 
-    def get_false_negative_fraction(self, unit1, unit2=None):
-        if unit1 is None:
-            raise Exception('get_false_positive_fraction: unit1 must not be None')
-        if unit2 is None:
-            unit2 = self.get_best_unit_match1(unit1)
-            if unit2 is None:
-                return 0
+    #~ def get_false_negative_fraction(self, unit1, unit2=None):
+        #~ if unit1 is None:
+            #~ raise Exception('get_false_positive_fraction: unit1 must not be None')
+        #~ if unit2 is None:
+            #~ unit2 = self.get_best_unit_match1(unit1)
+            #~ if unit2 is None:
+                #~ return 0
 
-        if unit1 != -1 and unit2 != -1:
-            a = self._matching_event_counts_12[unit1]
-            if unit2 not in a:
-                return 0
-        else:
-            return 0
-        return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
+        #~ if unit1 != -1 and unit2 != -1:
+            #~ a = self._matching_event_counts_12[unit1]
+            #~ if unit2 not in a:
+                #~ return 0
+        #~ else:
+            #~ return 0
+        #~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
 
 
 class MappedSortingExtractor(se.SortingExtractor):

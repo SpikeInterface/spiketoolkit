@@ -6,18 +6,29 @@ import pandas as pd
 
 # Note for dev,  because of  BaseComparison internally:
 #     sorting1 = gt_sorting
-#     sorting2 = other_sorting
+#     sorting2 = tested_sorting
 
 class GroundTruthComparison(BaseComparison):
     """
-    Class to compare a sorter to ground truth.
+    Class to compare a sorter to ground truth (GT)
+    
+    This class can:
+      * compute a "macth between gt_sorting and tested_sorting
+      * compte th score label (TP, FN, CL, FP) for each spike
+      * count by spiketrain of GT the total of each (TP, FN, CL, FP) into a Dataframe 
+        GroundTruthComparison.count
+      * compute the confusion matrix .get_confusion_matrix()
+      * compute some performance metric with several strategy based on 
+        the count score by spiketrain
+      * count how much well detected units with some threshold selection
+      * count false positve detected units
+      * count units detected twice (or more)
+      * summary all this
     """
-    
-    
-    def __init__(self, gt_sorting, other_sorting, gt_name=None, other_name=None,
+    def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
                 n_jobs=1, verbose=False):
-        BaseComparison.__init__(self, gt_sorting, other_sorting, sorting1_name=gt_name, sorting2_name=other_name,
+        BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
                                     delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
 
@@ -29,7 +40,7 @@ class GroundTruthComparison(BaseComparison):
         Do raw count into a dataframe.
         """
         unit1_ids = self._sorting1.get_unit_ids()
-        columns = ['tp', 'fn', 'cl','fp', 'nb_gt', 'nb_other', 'other_id']
+        columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_tested', 'tested_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         for u1 in unit1_ids:
             u2 = self._unit_map12[u1]
@@ -37,15 +48,15 @@ class GroundTruthComparison(BaseComparison):
             self.count.loc[u1, 'tp'] = np.sum(self._labels_st1[u1] == 'TP')
             self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])
             self.count.loc[u1, 'fn'] = np.sum(self._labels_st1[u1] == 'FN')
-            self.count.loc[u1, 'nb_gt'] = self._labels_st1[u1].size
-            self.count.loc[u1, 'other_id'] = u2
+            self.count.loc[u1, 'num_gt'] = self._labels_st1[u1].size
+            self.count.loc[u1, 'tested_id'] = u2
 
             if u2==-1:
                 self.count.loc[u1, 'fp'] = 0
-                self.count.loc[u1, 'nb_other'] = 0
+                self.count.loc[u1, 'num_tested'] = 0
             else:
                 self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
-                self.count.loc[u1, 'nb_other'] = self._labels_st2[u2].size
+                self.count.loc[u1, 'num_tested'] = self._labels_st2[u2].size
             
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
@@ -79,41 +90,16 @@ class GroundTruthComparison(BaseComparison):
         elif method == 'by_spiketrain':
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
-            
-            counts = self.count
-            perf['tp_rate'] = counts['tp'] / counts['nb_gt']
-            perf['cl_rate'] = counts['cl'] / counts['nb_gt']
-            perf['fn_rate'] = counts['fn'] / counts['nb_gt']
-            perf['fp_rate'] = counts['fp'] / counts['nb_gt']
-            
-            perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate']+perf['fp_rate'])
-            perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-            perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-            perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-            perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
+            c = self.count
+            tp, cl, fn, fp, num_gt = c['tp'], c['cl'], c['fn'], c['fp'], c['num_gt']
+            perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
 
         elif method == 'pooled_with_sum':
+            # here all spike from units are polled with sum.
             perf = pd.Series(index=_perf_keys)
-            
-            sum_nb_gt = int(self.count['nb_gt'].sum())
-            
-            perf['tp_rate'] = self.count['tp'].sum() / sum_nb_gt
-            perf['cl_rate'] = self.count['cl'].sum() / sum_nb_gt
-            perf['fn_rate'] = self.count['fn'].sum() / sum_nb_gt
-            perf['fp_rate'] = self.count['fp'].sum() / sum_nb_gt
-            
-            if (perf['tp_rate'] + perf['fn_rate']) > 0:
-                perf['accuracy'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'] + perf['fp_rate'])
-                perf['sensitivity'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-                perf['miss_rate'] = perf['fn_rate'] / (perf['tp_rate'] + perf['fn_rate'])
-                perf['precision'] = perf['tp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-                perf['false_discovery_rate'] = perf['fp_rate'] / (perf['tp_rate'] + perf['fp_rate'])
-            else:
-                perf['accuracy'] = 0.
-                perf['sensitivity'] = 0.
-                perf['miss_rate'] = np.nan
-                perf['precision'] = 0.
-                perf['false_discovery_rate'] = np.nan
+            c = self.count
+            tp, cl, fn, fp, num_gt = c['tp'].sum(), c['cl'].sum(), c['fn'].sum(), c['fp'].sum(), c['num_gt'].sum()
+            perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
 
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
@@ -147,7 +133,7 @@ class GroundTruthComparison(BaseComparison):
             txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
     
-    def print_summary(self):
+    def print_summary(self, **kargs_well_detected):
         """
         Print a global performance summary that depend on the context:
           * exhaustive= True/False
@@ -155,45 +141,64 @@ class GroundTruthComparison(BaseComparison):
         
         This summary mix several performance metrics.
         """
-        raise(NotImplementedError)
+        txt = _template_summary_part1
+
+        d = dict(
+            num_gt=len(self._labels_st1),
+            num_tested=len(self._labels_st2),
+            num_well_detected = self.count_well_detected_units(**kargs_well_detected),
+            num_bad=self.count_bad_units(),
+            num_redundant=self.count_redundant_units(),
+        )
+        
+        if self.exhaustive_gt:
+            txt = txt + _template_summary_part2
+            d['num_false_positive_units'] = self.count_false_positive_units()
+        
+        txt = txt.format(**d)
+
+        print(txt)
     
-    def get_well_detected_units(self, tp_thresh=0.95, accuracy_thresh=None,
-                cl_thresh=None, fp_thresh=None):
+    
+    def get_well_detected_units(self, **thresholds):
         """
         Get the units in GT that are well detected with a comninaison a treshold level
-        on some columns (tp_rate, accuracy_rate, cl_rate, fp_rate):
+        on some columns (accuracy, recall, precision, miss_rate, ...):
+        
+        
+        
+        By default threshold is {'accuray'=0.95} meaning that all units with
+        accuracy above 0.95 are selected.
+        
+        For some thresholds columns units are below the threshold for instance
+        'miss_rate', 'false_discovery_rate', 'misclassification_rate'
         
         If several thresh are given the the intersect of selection is kept.
         
+        For instance threholds = {'accuracy':0.9, 'miss_rate':0.1 }
+        give units with accuracy>0.9 AND miss<0.1
         Parameters
         ----------
-        tp_thresh:
-            Threshold tp_rate score above a units is selected
-        
-        accuracy_thresh:
-            Threshold accuracy score above a units is selected
-        
-        cl_thresh:
-            Threshold cl_rate score under a units is selected
-        
-        fp_thresh:
-            Threshold fp_rate score under a units is selected
-        
+        **thresholds : dict
+            A dict that contains some threshold of columns of perf Dataframe.
+            If sevral threhold they are combined.
         """
+        if len(thresholds) == 0:
+            thresholds = {'accuracy' : 0.95 }
+        
+        _above = ['accuracy', 'recall', 'precision',]
+        _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
+        
         perf = self.get_performance(method='by_spiketrain')
-        keep = perf['tp_rate']>=0
+        keep = perf['accuracy']>=0 # tale all
         
-        if tp_thresh is not None:
-            keep = keep & (perf['tp_rate'] >= tp_thresh)
-        
-        if accuracy_thresh is not None:
-            keep = keep & (perf['accuracy'] >= accuracy_thresh)
-        
-        if cl_thresh is not None:
-            keep = keep & (perf['cl_rate'] <= cl_thresh)
-        
-        if fp_thresh is not None:
-            keep = keep & (perf['fp_rate'] <= fp_thresh)
+        for col, thresh in thresholds.items():
+            if col in _above:
+                keep = keep & (perf[col] >= thresh)
+            elif col in _below:
+                keep = keep & (perf[col] <= thresh)
+            else:
+                raise(ValueError('threhold column do not exits', col))
         
         return perf[keep].index.tolist()
     
@@ -202,14 +207,18 @@ class GroundTruthComparison(BaseComparison):
         Count how many well detected units.
         Kargs are the same as get_well_detected_units.
         """
-        return len(self.get_well_detected_units())
+        return len(self.get_well_detected_units(**kargs))
     
-    def get_fake_units_in_other(self):
+    def get_false_positive_units(self):
         """
-        Return units list in other sorter that have link to ground truth.
+        Return units listof "false positive units" from tested_sorting.
+        
+        "false positive units" ara defined as units in tested that
+        are not matched at all in GT units.
+        
         Need exhaustive_gt=True
         """
-        assert self.exhaustive_gt, 'fake units list is valid only if exhaustive_gt=True'
+        assert self.exhaustive_gt, 'false_positive_units list is valid only if exhaustive_gt=True'
         fake_ids = []
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
@@ -217,56 +226,121 @@ class GroundTruthComparison(BaseComparison):
                 fake_ids.append(u2)
         return fake_ids
     
-    def count_fake_units_in_other(self):
+    def count_false_positive_units(self):
         """
+        See get_false_positive_units.
+        """
+        return len(self.get_false_positive_units())
+    
+    def get_redundant_units(self):
+        """
+        Return "redundant units"
+        
+        
+        "redundant units" are defined as units in tested
+        that match a GT units but it is not the best match.
+        In other world units in GT that detected twice or more.
         
         """
-        return len(self.get_fake_units_in_other())
+        best_match = list(self._unit_map12.values())
+        redundant_ids = []
+        unit2_ids = self._sorting2.get_unit_ids()
+        for u2 in unit2_ids:
+            if u2 not in best_match and self._best_match_units_21[u2] != -1:
+                redundant_ids.append(u2)
+        return redundant_ids
     
-    def get_bad_units_in_other(self):
+    def count_redundant_units(self):
         """
-        Return a list of units in other sorter that are not the first match.
+        See get_redundant_units.
         """
+        return len(self.get_redundant_units())
+    
+    def get_bad_units(self):
+        """
+        Return units list of "bad units".
+        
+        "bad units" are defined as units in tested that are not
+        in the best match list of GT units.
+        
+        So it is the union of "false positive units" + "redundant units".
+        
+        Need exhaustive_gt=True
+        """
+        assert self.exhaustive_gt, 'bad_units list is valid only if exhaustive_gt=True'
         best_match = list(self._unit_map12.values())
         bad_ids = []
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match:
                 bad_ids.append(u2)
-        
         return bad_ids
     
-    def count_bad_units_in_other(self):
-        return len(self.get_bad_units_in_other())
+    def count_bad_units(self):
+        """
+        See get_bad_units
+        """
+        return len(self.get_bad_units())
 
 
+
+def _compute_perf(tp, cl, fn, fp, num_gt, perf):
+    """
+    This compte perf formula.
+    this trick here is that it works both on pd.Series and pd.Dataframe
+    line by line.
+    This it is internally used by perf by psiketrain and poll_with_sum.
+    
+    https://en.wikipedia.org/wiki/Sensitivity_and_specificity
+    
+    Note :
+      * we don't have TN because it do not make sens here.
+      * 'accuracy' = 'tp_rate' because TN=0
+      * 'recall' = 'sensitivity'
+    """
+
+    perf['accuracy'] = tp / (tp + fn + fp)
+    perf['recall'] = tp / (tp + fn)
+    perf['precision'] = tp / (tp + fp)
+    perf['false_discovery_rate'] = fp / (tp + fp)
+    perf['miss_rate'] = fn / num_gt
+    perf['misclassification_rate'] = cl / num_gt
+    
+    return perf
+    
 
     
 # usefull also for gathercomparison
-_perf_keys = ['tp_rate', 'fn_rate', 'cl_rate','fp_rate',  'accuracy', 'sensitivity', 'precision',
-              'miss_rate', 'false_discovery_rate']
-
+_perf_keys = ['accuracy', 'recall', 'precision','false_discovery_rate',  'miss_rate', 'misclassification_rate']
 
 
 _template_txt_performance = """PERFORMANCE
 Method : {method}
-TP : {tp_rate} %
-CL : {cl_rate} %
-FN : {fn_rate} %
-FP: {fp_rate} %
 
 ACCURACY: {accuracy}
-SENSITIVITY: {sensitivity}
-MISS RATE: {miss_rate}
+RECALL: {recall}
 PRECISION: {precision}
 FALSE DISCOVERY RATE: {false_discovery_rate}
+MISS RATE: {miss_rate}
+MISS CLASSIFICATION RATE: {misclassification_rate}
 """
 
+_template_summary_part1 = """SUMMARY
+GT num_units: {num_gt}
+TESTED num_units: {num_tested}
+num_well_detected: {num_well_detected} 
+num_bad: {num_bad}
+"""
+
+_template_summary_part2 = """num_false_positive_units {num_false_positive_units}
+"""
+
+
     
     
 
 
-def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, other_name=None, 
+def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None, 
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
@@ -281,11 +355,11 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
     ----------
     gt_sorting: SortingExtractor
         The first sorting for the comparison
-    other_sorting: SortingExtractor
+    tested_sorting: SortingExtractor
         The second sorting for the comparison
     gt_name: str
         The name of sorter 1
-    other_name: : str
+    tested_name: : str
         The name of sorter 2
     delta_frames: int
         Number of frames to consider coincident spikes (default 10)
@@ -305,5 +379,5 @@ def compare_sorter_to_ground_truth(gt_sorting, other_sorting, gt_name=None, othe
         The SortingComparison object
 
     '''
-    return GroundTruthComparison(gt_sorting, other_sorting, gt_name, other_name,
+    return GroundTruthComparison(gt_sorting, tested_sorting, gt_name, tested_name,
                             delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)
