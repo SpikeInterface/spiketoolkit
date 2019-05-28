@@ -98,7 +98,7 @@ class Kilosort2Sorter(BaseSorter):
         Kilosort2Sorter.installed = check_if_installed(Kilosort2Sorter.kilosort2_path, Kilosort2Sorter.npy_matlab_path)
 
     def set_params(self, **params):
-        BaseSorter.set_params(self, *params)
+        BaseSorter.set_params(self, **params)
         if params.get('npy_matlab_path', None) is not None:
             Kilosort2Sorter.set_npy_matlab_path(params['npy_matlab_path'])
         if params.get('kilosort2_path', None) is not None:
