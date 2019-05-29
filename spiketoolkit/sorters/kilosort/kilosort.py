@@ -85,11 +85,22 @@ class KilosortSorter(BaseSorter):
 
     @staticmethod
     def set_kilosort_path(kilosort_path):
+        os.environ["KILOSORT_PATH"] = kilosort_path
         KilosortSorter.kilosort_path = kilosort_path
+        KilosortSorter.installed = check_if_installed(KilosortSorter.kilosort_path, KilosortSorter.npy_matlab_path)
 
     @staticmethod
     def set_npy_matlab_path(npy_matlab_path):
+        os.environ["NPY_MATLAB_PATH"] = npy_matlab_path
         KilosortSorter.npy_matlab_path = npy_matlab_path
+        KilosortSorter.installed = check_if_installed(KilosortSorter.kilosort_path, KilosortSorter.npy_matlab_path)
+
+    def set_params(self, **params):
+        BaseSorter.set_params(self, **params)
+        if params.get('npy_matlab_path', None) is not None:
+            KilosortSorter.set_npy_matlab_path(params['npy_matlab_path'])
+        if params.get('kilosort_path', None) is not None:
+            KilosortSorter.set_kilosort_path(params['kilosort_path'])
 
     def _setup_recording(self, recording, output_folder):
 

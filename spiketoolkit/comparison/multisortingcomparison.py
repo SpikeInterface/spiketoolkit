@@ -3,6 +3,7 @@ import spikeextractors as se
 from scipy.optimize import linear_sum_assignment
 from .sortingcomparison import SortingComparison
 from .comparisontools import compare_spike_trains
+
 import networkx as nx
 
 
