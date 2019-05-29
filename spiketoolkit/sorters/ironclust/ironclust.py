@@ -70,7 +70,7 @@ class IronclustSorter(BaseSorter):
     def set_ironclust_path(ironclust_path):
         os.environ["IRONCLUST_PATH"] = ironclust_path
         IronclustSorter.ironclust_path = ironclust_path
-        IronclustSorter.installed = IronclustSorter.check_if_installed(ironclust_path)
+        IronclustSorter.installed = check_if_installed(ironclust_path)
 
     def set_params(self, **params):
         BaseSorter.set_params(self, *params)
