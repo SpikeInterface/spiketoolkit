@@ -7,7 +7,7 @@ from .rectify import rectify, RectifyRecording
 from .remove_artifacts import remove_artifacts, RemoveArtifactsRecording
 from .transform_traces import transform_traces, TransformTracesRecording
 from .remove_bad_channels import remove_bad_channels, RemoveBadChannelsRecording
-from .rescale_traces import normalize, NormalizeRecording
+from .normalize import normalize, NormalizeRecording
 
 preprocessers_full_list = [
     BandpassFilterRecording,
