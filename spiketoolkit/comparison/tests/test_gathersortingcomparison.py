@@ -24,9 +24,9 @@ def setup_module():
 def _run_sorters():
     path = 'test_TDC_vs_HS2/'
     
-    if os.path.exists(path):
-        shutil.rmtree(path)
-    os.mkdir(path)
+    #~ if os.path.exists(path):
+        #~ shutil.rmtree(path)
+    #~ os.mkdir(path)
     
     # cerate several recording/sorting and save to disk
     rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30)
@@ -39,7 +39,7 @@ def _run_sorters():
     sorter_list = ['tridesclous', 'herdingspikes']
     #~ sorter_list = ['tridesclous', 'klusta']
     t0 = time.perf_counter()
-    run_sorters(sorter_list, recording_dict, working_folder, engine=None)
+    run_sorters(sorter_list, recording_dict, working_folder, engine=None, mode='keep')
     t1 = time.perf_counter()
     print('total run time', t1-t0)
     
@@ -69,7 +69,7 @@ def test_gather_sorting_comparison():
     
 
 if __name__ == '__main__':
-    #~ setup_module()
+    setup_module()
     test_gather_sorting_comparison() 
 
 

@@ -3,7 +3,7 @@ import shutil
 import time
 
 import pytest
-from spiketoolkit.sorters import run_sorters, collect_results
+from spiketoolkit.sorters import run_sorters, collect_results, collect_run_times
 
 import spikeextractors as se
 
@@ -29,9 +29,9 @@ def test_run_sorters_with_dict():
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    sorter_list = ['tridesclous',  'klusta',]
-    #~ sorter_list = ['tridesclous', ]
-    #~ sorter_list = ['tridesclous', 'herdingspikes']
+    #~ sorter_list = ['tridesclous',  'klusta',]
+    #~ sorter_list = ['tridesclous', 'mountainsort4']
+    sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_dict'
     if os.path.exists(working_folder):
@@ -40,10 +40,15 @@ def test_run_sorters_with_dict():
     
     # simple loop
     t0 = time.perf_counter()
-    results = run_sorters(sorter_list, recording_dict, working_folder, engine=None)
+    results = run_sorters(sorter_list, recording_dict, working_folder, engine=None, shared_binary_copy=True)
     t1 = time.perf_counter()
     print(t1-t0)
     print(results)
+    
+    shutil.rmtree(working_folder+'/output_folders/toy_tetrode/tridesclous')
+    results = run_sorters(sorter_list, recording_dict, working_folder, engine=None, mode='keep')
+    
+    
 
 
 def test_run_sorters_multiprocessing():
@@ -54,7 +59,7 @@ def test_run_sorters_multiprocessing():
         recording_dict['rec_'+str(i)] = rec
     
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']
-    sorter_list = ['tridesclous',  'klusta',]
+    sorter_list = ['tridesclous',  'klusta', ]
     #~ sorter_list = ['tridesclous', 'herdingspikes']
     
     working_folder = 'test_run_sorters_mp'
@@ -72,6 +77,10 @@ def test_collect_results():
     working_folder = 'test_run_sorters_dict'
     results = collect_results(working_folder)
     print(results)
+    
+    run_times = collect_run_times(working_folder)
+    print(run_times)
+    
     
     
 if __name__ == '__main__':

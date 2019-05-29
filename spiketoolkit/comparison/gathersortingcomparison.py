@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 
 
-from spiketoolkit.sorters import run_sorters, collect_results
+from spiketoolkit.sorters import collect_results, collect_run_times
 from .groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
 def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True, exhaustive_gt=False, **karg_thresh):
@@ -51,8 +51,8 @@ def gather_sorting_comparison(working_folder, ground_truths, use_multi_index=Tru
 
 
     # get run times:
-    run_times = pd.read_csv(working_folder /  'run_time.csv', sep='\t', header=None)
-    run_times.columns = ['rec_name', 'sorter_name', 'run_time']
+    rt = collect_run_times(working_folder)
+    run_times = pd.DataFrame(rt, columns=['rec_name', 'sorter_name', 'run_time'])
     run_times = run_times.set_index(['rec_name', 'sorter_name',])
     out_dataframes['run_times'] = run_times
 
