@@ -52,6 +52,8 @@ class HerdingspikesSorter(BaseSorter):
             'title': "Bandpass filters the recording if True"},
         {'name': 'pre_scale', 'type': 'bool', 'value': False, 'default': False,
             'title': "Scales recording traces to optimize HerdingSpikes performance"},
+        {'name': 'pre_scale_value', 'type': 'float', 'value': 200.0, 'default': 200.0,
+            'title': "Scale to apply in case of pre-scaling of traces"},
     ]
 
     _gui_params = copy.deepcopy(BaseSorter._gui_params)
@@ -78,7 +80,8 @@ class HerdingspikesSorter(BaseSorter):
 
         if p['pre_scale']:
             recording = st.preprocessing.rescale_traces(
-                recording=recording, scale=100.0, median=0.0, q1=0.01, q2=0.99
+                recording=recording, scale=p['pre_scale_value'],
+                median=0.0, q1=0.01, q2=0.99
             )
 
         # this should have its name changed
@@ -174,7 +177,7 @@ HerdingspikesSorter._default_params = {
     'filter': False,
 
     # rescale traces
-    'pre_scale': False  # TODO consider setting default to True
-
+    'pre_scale': False,  # TODO consider setting default to True
+    'pre_scale_value': 200.0
 
 }
