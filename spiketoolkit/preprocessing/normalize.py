@@ -2,9 +2,9 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 
-class RescaleTracesRecording(RecordingExtractor):
+class NormalizeRecording(RecordingExtractor):
 
-    preprocessor_name = 'RescaleTracesRecording'
+    preprocessor_name = 'NormalizeTracesRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'scalar', 'type': 'float',
@@ -66,7 +66,7 @@ class RescaleTracesRecording(RecordingExtractor):
         return traces * self._scalar + self._offset
 
 
-def rescale_traces(recording, scale=1.0, median=0.0, q1=0.01, q2=0.99):
+def normalize(recording, scale=1.0, median=0.0, q1=0.01, q2=0.99):
     '''
     Rescale the traces from the given recording extractor with a scalar
     and offset. First, the median and quantiles of the distribution are estimated.
@@ -88,9 +88,9 @@ def rescale_traces(recording, scale=1.0, median=0.0, q1=0.01, q2=0.99):
         Upper quantile used for measuring the scale
     Returns
     -------
-    rescaled_traces: RescaleTracesRecording
+    rescaled_traces: NormalizeRecording
         The rescaled traces recording extractor object
     '''
-    return RescaleTracesRecording(
+    return NormalizeRecording(
         recording=recording, scale=scale, median=median, q1=q1, q2=q2
     )
