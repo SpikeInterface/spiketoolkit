@@ -42,11 +42,6 @@ def check_if_installed(kilosort_path, npy_matlab_path):
         return False
 
 
-if check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH')):
-    HAVE_KILOSORT = True
-else:
-    HAVE_KILOSORT = False
-
 
 class KilosortSorter(BaseSorter):
     """
@@ -55,7 +50,7 @@ class KilosortSorter(BaseSorter):
     """
 
     sorter_name = 'kilosort'
-    installed = HAVE_KILOSORT
+    installed = check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort_path = os.getenv('KILOSORT_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
 
@@ -99,8 +94,13 @@ class KilosortSorter(BaseSorter):
         BaseSorter.set_params(self, **params)
         if params.get('npy_matlab_path', None) is not None:
             KilosortSorter.set_npy_matlab_path(params['npy_matlab_path'])
+        else:
+            KilosortSorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
+        
         if params.get('kilosort_path', None) is not None:
             KilosortSorter.set_kilosort_path(params['kilosort_path'])
+        else:
+            KilosortSorter.set_kilosort_path(os.getenv('KILOSORT_PATH'))
 
     def _setup_recording(self, recording, output_folder):
 
@@ -141,14 +141,9 @@ class KilosortSorter(BaseSorter):
             use_car = 1
         else:
             use_car = 0
-
-        if not HAVE_KILOSORT:
-            if p['kilosort_path'] is None or p['npy_matlab_path'] is None:
-
-                raise ImportError('Kilosort is not installed\n', KilosortSorter.installation_mesg)
-            else:
-                KilosortSorter.set_kilosort_path(p['kilosort_path'])
-                KilosortSorter.set_npy_matlab_path(p['npy_matlab_path'])
+        
+        if not KilosortSorter.installed:
+            raise ImportError('Kilosort is not installed', KilosortSorter.installation_mesg)
 
         abs_channel = (output_folder / 'kilosort_channelmap.m').absolute()
         abs_config = (output_folder / 'kilosort_config.m').absolute()
