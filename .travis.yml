@@ -23,10 +23,10 @@ install:
   - pip install klusta
   - pip install klustakwik2==0.2.6
   - pip install tridesclous==1.1.0
-  - pip install https://github.com/mhhennig/HS2/archive/master.zip
+  - pip install herdingspikes==0.3.2
   - pip install spyking-circus
   - pip install pyqt5
-  - pip install ml_ms4alg
+  - pip install ml_ms4alg==0.3.0
 script:
   # py.test -s
   python -m pytest
