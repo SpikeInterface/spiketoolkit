@@ -540,8 +540,8 @@ def extract_property_from_maximum_channel(recording, sorting, property):
         sorting.set_unit_property(u, property, recording.get_channel_property(max_chans[u_i], property))
 
 
-def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode_dimensions=None,
-                  grouping_property=None, start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
+def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
+                  grouping_property=None, start_frame=None, end_frame=None, ms_before=1., ms_after=2., dtype=None,
                   max_num_waveforms=np.inf, save_waveforms=False, verbose=False):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
@@ -554,8 +554,6 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
         The sorting extractor
     output_folder: str
         The output folder where the phy template-gui files are saved
-    nPCchan: int
-        nFeaturesPerChannel in template-gui format
     nPC: int
         nPCFeatures in template-gui format
     electrode_dimensions: list
@@ -642,7 +640,8 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
     sorting_idxs = np.argsort(spike_times)
     spike_times = spike_times[sorting_idxs, np.newaxis]
     spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
-    pc_features = pc_features[sorting_idxs, :nPCchan, :]
+    # pc_features (nSpikes, nPC, nPCFeatures)
+    pc_features = pc_features[sorting_idxs].swapaxes(1, 2)
 
     # amplitudes.npy
     amplitudes = np.ones((len(spike_times), 1), dtype='int16')
@@ -679,7 +678,7 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
     if grouping_property in recording.get_channel_property_names():
         if grouping_property not in sorting.get_unit_property_names():
             extract_property_from_maximum_channel(recording, sorting, grouping_property)
-        pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
+        # pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_red = np.zeros((templates.shape[0], templates.shape[1], int(max_num_chans_in_group)))
 
@@ -699,32 +698,24 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
                 else:
                     unit_chans.append(list(channel_map).index(int(np.min(unit_chans)) - 1))
             unit_chans = np.array(unit_chans)
-            pc_feature_ind[u_i] = unit_chans
             templates_ind[u_i] = unit_chans
             templates_red[u_i, :] = templates[u_i, :, unit_chans].T
         templates = templates_red
     else:
         # pc_feature_ind.npy - [nTemplates, nPCFeatures] uint32
-        pc_feature_ind = np.tile(np.arange(nPC), (len(sorting.get_unit_ids()), 1))
         # template_ind.npy
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
+    pc_feature_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
-    # print(pc_feature_ind.shape, templates_ind.shape)
-    # print(pc_feature_ind[:, 0])
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
-    # Save .tsv metadata
-    max_amplitudes = [np.min(t) for t in templates]
+
+    # Save channel_group and second_max_channel to .tsv metadata
     second_max_channel = []
 
     for t in templates:
         second_max_channel.append(np.argsort(np.abs(np.min(t, axis=0)))[::-1][1])
 
-    with (output_folder / 'cluster_amps.tsv').open('w') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-        writer.writerow(['cluster_id', 'max_amp'])
-        for i, (u, amp) in enumerate(zip(sorting.get_unit_ids(), max_amplitudes)):
-            writer.writerow([i, amp])
     with (output_folder / 'cluster_second_max_chans.tsv').open('w') as tsvfile:
         writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
         writer.writerow(['cluster_id', 'sec_channel'])
@@ -761,8 +752,6 @@ def export_to_phy(recording, sorting, output_folder, nPCchan=3, nPC=5, electrode
     np.save(str(output_folder / 'channel_map_si.npy'), channel_map_si.astype(int))
     np.save(str(output_folder / 'channel_positions.npy'), positions)
     np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
-    # np.save(str(output_folder / 'whitening_mat.npy'), whitening_mat)
-    # np.save(str(output_folder / 'whitening_mat_inv.npy'), whitening_mat_inv)
 
     if save_waveforms:
         np.save(str(output_folder / 'waveforms.npy'), np.array(waveforms))
