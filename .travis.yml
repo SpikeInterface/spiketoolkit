@@ -17,11 +17,9 @@ addons:
 install:
   # spikeextractors and spikewidgets are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
-#  - pip install https://github.com/SpikeInterface/spikewidgets/archive/master.zip
   - pip install .
   - pip install pytest==4.3
-  - pip install Cython
-  - pip install h5py # for klusta
+  - pip install numpy scipy h5py six cython tqdm click # for klusta
   - pip install click klusta klustakwik2
   - pip install https://github.com/tridesclous/tridesclous/archive/master.zip
   - pip install https://github.com/mhhennig/HS2/archive/master.zip
