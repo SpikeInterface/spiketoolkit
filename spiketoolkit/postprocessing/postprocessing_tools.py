@@ -35,7 +35,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of wavefomrs to extract (default is np.inf)
+        The maximum number of waveforms to extract (default is np.inf)
     save_as_features: bool
         If True (default), waveforms are saved as features of the sorting extractor object
     compute_property_from_recording: bool
@@ -237,7 +237,7 @@ def get_unit_template(recording, sorting, unit_ids=None, mode='median', grouping
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of wavefomrs to extract (default is np.inf)
+        The maximum number of waveforms to extract (default is np.inf)
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -336,7 +336,7 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='m
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of wavefomrs to extract (default is np.inf)
+        The maximum number of waveforms to extract (default is np.inf)
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -401,7 +401,8 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='m
 
 def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                        start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
-                       max_num_waveforms=np.inf, save_as_features=True, compute_property_from_recording=False,
+                       max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
+                       save_as_features=True, compute_property_from_recording=False,
                        whiten=False, verbose=False):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
@@ -434,7 +435,9 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of wavefomrs to extract (default is np.inf)
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -500,11 +503,14 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
             all_waveforms = wf_reshaped
         else:
             all_waveforms = np.concatenate((all_waveforms, wf_reshaped))
-    if verbose:
-        print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, len(all_waveforms)))
 
     pca = PCA(n_components=n_comp, whiten=whiten)
-    pca.fit(all_waveforms)
+    if len(all_waveforms) < max_num_pca_waveforms:
+        max_num_pca_waveforms = len(all_waveforms)
+    if verbose:
+        print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_num_pca_waveforms))
+    pca.fit(all_waveforms[np.random.permutation(len(all_waveforms))[:max_num_pca_waveforms]])
+
 
     pca_scores = []
     # project waveforms on principal components
@@ -542,7 +548,7 @@ def extract_property_from_maximum_channel(recording, sorting, property):
 
 def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
                   grouping_property=None, start_frame=None, end_frame=None, ms_before=1., ms_after=2., dtype=None,
-                  max_num_waveforms=np.inf, save_waveforms=False, verbose=False):
+                  max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
@@ -572,7 +578,9 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of wavefomrs to extract (default is np.inf)
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
     save_waveforms: bool
         If True, waveforms are saved as waveforms.npy
     verbose: bool
@@ -612,14 +620,13 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         if verbose:
             print("Changed number of PC to number of channels: ", nPC)
     if 'waveforms' not in sorting.get_unit_spike_feature_names():
-        waveforms = get_unit_waveforms(recording, sorting,
-                                       start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
-                                       ms_before=ms_before, ms_after=ms_after, dtype=dtype,
-                                       verbose=verbose)
+        waveforms = get_unit_waveforms(recording, sorting, start_frame=start_frame, end_frame=end_frame,
+                                       max_num_waveforms=max_num_waveforms, ms_before=ms_before, ms_after=ms_after,
+                                       dtype=dtype, verbose=verbose)
     pc_scores = compute_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
                                    start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                    ms_before=ms_before, ms_after=ms_after, dtype=dtype,
-                                   verbose=verbose)
+                                   max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
 
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
