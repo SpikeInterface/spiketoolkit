@@ -6,8 +6,9 @@ I need help here because:
 Reading the code do not make evident if there is a persistency on disk.
 
 """
-import spiketoolkit as st
+
 from spiketoolkit.sorters.basesorter import BaseSorter
+from spiketoolkit.preprocessing import bandpass_filter, whiten
 import spikeextractors as se
 import copy
 
@@ -83,12 +84,12 @@ class Mountainsort4Sorter(BaseSorter):
 
         # Bandpass filter
         if p['filter'] and p['freq_min'] is not None and p['freq_max'] is not None:
-            recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=p['freq_min'],
+            recording = bandpass_filter(recording=recording, freq_min=p['freq_min'],
                                                          freq_max=p['freq_max'])
 
         # Whiten
         if p['whiten']:
-            recording = st.preprocessing.whiten(recording=recording)
+            recording = whiten(recording=recording)
 
         # Check location
         if 'location' not in recording.get_channel_property_names():

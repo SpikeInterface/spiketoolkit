@@ -42,11 +42,6 @@ def check_if_installed(kilosort2_path, npy_matlab_path):
         return False
 
 
-if check_if_installed(os.getenv('KILOSORT2_PATH'), os.getenv('NPY_MATLAB_PATH')):
-    HAVE_KILOSORT2 = True
-else:
-    HAVE_KILOSORT2 = False
-
 
 class Kilosort2Sorter(BaseSorter):
     """
@@ -55,7 +50,7 @@ class Kilosort2Sorter(BaseSorter):
     """
 
     sorter_name = 'kilosort2'
-    installed = HAVE_KILOSORT2
+    installed = check_if_installed(os.getenv('KILOSORT2_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort2_path = os.getenv('KILOSORT2_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
     SortingExtractor_Class = se.KiloSortSortingExtractor
@@ -101,8 +96,13 @@ class Kilosort2Sorter(BaseSorter):
         BaseSorter.set_params(self, **params)
         if params.get('npy_matlab_path', None) is not None:
             Kilosort2Sorter.set_npy_matlab_path(params['npy_matlab_path'])
+        else:
+            Kilosort2Sorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
+            
         if params.get('kilosort2_path', None) is not None:
             Kilosort2Sorter.set_kilosort2_path(params['kilosort2_path'])
+        else:
+            Kilosort2Sorter.set_kilosort2_path(os.getenv('KILOSORT2_PATH'))
     
     def _setup_recording(self, recording, output_folder):
 
@@ -135,12 +135,8 @@ class Kilosort2Sorter(BaseSorter):
 
         sample_rate = recording.get_sampling_frequency()
 
-        if not HAVE_KILOSORT2:
-            if p['kilosort2_path'] is None or p['npy_matlab_path'] is None:
-                raise ImportError('Kilosort2 is not installed\n', Kilosort2Sorter.installation_mesg)
-            else:
-                Kilosort2Sorter.set_kilosort2_path(p['kilosort_path'])
-                Kilosort2Sorter.set_npy_matlab_path(p['npy_matlab_path'])
+        if not Kilosort2Sorter.installed:
+            raise ImportError('Kilosort2 is not installed', Kilosort2Sorter.installation_mesg)
 
         abs_channel = (output_folder / 'kilosort2_channelmap.m').absolute()
         abs_config = (output_folder / 'kilosort2_config.m').absolute()
