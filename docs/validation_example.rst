@@ -1,23 +1,22 @@
 
-VALIDATION MODULE
+Validation module
 =================
 
 This notebook shows how to use the spiketoolkit.validation module to: 1.
 compute biophysical metrics 2. compute quality metrics
 
-.. code:: ipython3
+.. code:: python
 
     import spikeextractors as se
     import spiketoolkit as st
 
-Create toy example and spike sort it
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+First, let's create a toy example and spike sort it:
 
-.. code:: ipython3
+.. code:: python
 
     recording, sorting = se.example_datasets.toy_example(num_channels=4, duration=30)
 
-.. code:: ipython3
+.. code:: python
 
     sorting_KL = st.sorters.run_klusta(recording)
 
@@ -30,11 +29,11 @@ Create toy example and spike sort it
 1) Compute ISI ratio violations (biophysical metric)
 ----------------------------------------------------
 
-.. code:: ipython3
+.. code:: python
 
     ISI_ratios = st.validation.compute_ISI_violation_ratio(sorting_KL, recording.get_sampling_frequency())
 
-.. code:: ipython3
+.. code:: python
 
     for u_i, u in enumerate(sorting_KL.get_unit_ids()):
         print('Unit', u, 'ISI violation ratio', ISI_ratios[u_i])
@@ -55,11 +54,11 @@ Create toy example and spike sort it
 2) Compute signal-to-noise ratio (quality metric)
 -------------------------------------------------
 
-.. code:: ipython3
+.. code:: python
 
     snrs = st.validation.compute_unit_SNR(recording, sorting_KL)
 
-.. code:: ipython3
+.. code:: python
 
     for u_i, u in enumerate(sorting_KL.get_unit_ids()):
         print('Unit', u, 'SNR', snrs[u_i])
@@ -81,7 +80,7 @@ Validation metrics are saved as unit property by default. If you don’t
 want to save them as properties, you can add ``save_as_property=False``
 in the function call.
 
-.. code:: ipython3
+.. code:: python
 
     for u in sorting_KL.get_unit_ids():
         print('Unit', u, 'SNR', sorting_KL.get_unit_property(u, 'snr'), 
