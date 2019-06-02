@@ -170,8 +170,6 @@ class MultiSortingComparison():
                 sp_tp2 = list(np.array(sp2)[tp_idx2])
                 assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
                 self._spiketrains.append(sp_tp1)
-            print(u, len(self._spiketrains[-1]))
-
         self.added_nodes = added_nodes
 
     def _do_agreement_matrix(self, minimum_matching=0):
