@@ -2,8 +2,10 @@
 Validation module
 =================
 
-This notebook shows how to use the spiketoolkit.validation module to: 1.
-compute biophysical metrics 2. compute quality metrics
+This notebook shows how to use the spiketoolkit.validation module to:
+
+1. compute biophysical metrics
+2. compute quality metrics
 
 .. code:: python
 

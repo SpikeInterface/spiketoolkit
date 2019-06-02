@@ -2,10 +2,12 @@
 Comparison module
 =================
 
-This notebook shows how to use the spiketoolkit.comparison module to: 1.
-compare pair of spike sorters 2. compare multiple spike sorters 3.
-extract units in agreement with multiple sorters (consensus-based) 4.
-run systematic performance comparisons on ground truth recordings
+This notebook shows how to use the spiketoolkit.comparison module to:
+
+1. compare pair of spike sorters
+2. compare multiple spike sorters
+3. extract units in agreement with multiple sorters (consensus-based)
+4. run systematic performance comparisons on ground truth recordings
 
 .. code:: python
 
