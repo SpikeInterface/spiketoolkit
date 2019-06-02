@@ -511,11 +511,13 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
         print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_num_pca_waveforms))
     pca.fit(all_waveforms[np.random.permutation(len(all_waveforms))[:max_num_pca_waveforms]])
 
-
     pca_scores = []
     # project waveforms on principal components
     for wf in waveforms:
-        pct = np.dot(wf, pca.components_.T)
+        if by_electrode:
+            pct = np.dot(wf, pca.components_.T)
+        else:
+            pct = np.dot(wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2])), pca.components_.T)
         if whiten:
             pct /= np.sqrt(pca.explained_variance_)
         pca_scores.append(pct)

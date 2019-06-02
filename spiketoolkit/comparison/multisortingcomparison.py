@@ -156,6 +156,10 @@ class MultiSortingComparison():
                         max_weight = w
                         max_edge = (e[0], e[1], w)
                 n1, n2, d = max_edge
+                sorter1, unit1 = n1.split('_')
+                sorter2, unit2 = n2.split('_')
+                unit1 = int(unit1)
+                unit2 = int(unit2)
                 sp1 = self._sorting_list[self._name_list.index(sorter1)].get_unit_spike_train(unit1)
                 sp2 = self._sorting_list[self._name_list.index(sorter2)].get_unit_spike_train(unit2)
                 lab1, lab2 = compare_spike_trains(sp1, sp2)
@@ -166,6 +170,7 @@ class MultiSortingComparison():
                 sp_tp2 = list(np.array(sp2)[tp_idx2])
                 assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
                 self._spiketrains.append(sp_tp1)
+            print(u, len(self._spiketrains[-1]))
 
         self.added_nodes = added_nodes
 
