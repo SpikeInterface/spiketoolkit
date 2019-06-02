@@ -3,11 +3,14 @@ Sorters module
 ==============
 
 This notebook shows how to use the spiketoolkit.sorters module to:
+
+
 1. check available sorters
 2. check and set sorters parameters
 3. run sorters
 4. use the spike sorter launcher
 5. spike sort by property
+
 
 .. code:: python
 

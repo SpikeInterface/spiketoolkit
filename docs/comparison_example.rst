@@ -9,6 +9,7 @@ This notebook shows how to use the spiketoolkit.comparison module to:
 3. extract units in agreement with multiple sorters (consensus-based)
 4. run systematic performance comparisons on ground truth recordings
 
+
 .. code:: python
 
     import spiketoolkit as st
