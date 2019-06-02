@@ -28,6 +28,12 @@ python setup.py install
 
 SpikeInterface allows the user to extract data from either raw or spike sorted datasets with a RecordingExtractor or SortingExtractor, respectively.
 
+## Documentation
+
+The documentation page can be found here: https://spiketoolkit.readthedocs.io/en/latest/
+
+## Basic usage
+
 **Run spike sorting algorithms**
 
 To run spike sorting algorithm, a `RecordingExtractor` object needs to be instantiated using the `spikeextractors` package
