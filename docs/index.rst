@@ -31,3 +31,8 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+Contact
+=======
+
+If you have questions or comments, contact Alessio Buccino: alessiop.buccino@gmail.com
