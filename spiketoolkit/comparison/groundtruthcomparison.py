@@ -29,11 +29,9 @@ class GroundTruthComparison(BaseComparison):
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
                 n_jobs=1, verbose=False):
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                    delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
+                                delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
-
         self._do_count()
-
     
     def _do_count(self):
         """
@@ -57,7 +55,6 @@ class GroundTruthComparison(BaseComparison):
             else:
                 self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
                 self.count.loc[u1, 'num_tested'] = self._labels_st2[u2].size
-            
 
     def get_performance(self, method='by_spiketrain', output='pandas'):
         """
@@ -82,7 +79,6 @@ class GroundTruthComparison(BaseComparison):
         possibles = ('raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average')
         if method not in possibles:
             raise Exception("'method' can be " + ' or '.join(possibles))
-
 
         if method =='raw_count':
             perf = self.count
@@ -159,7 +155,6 @@ class GroundTruthComparison(BaseComparison):
 
         print(txt)
     
-    
     def get_well_detected_units(self, **thresholds):
         """
         Get the units in GT that are well detected with a comninaison a treshold level
@@ -190,7 +185,7 @@ class GroundTruthComparison(BaseComparison):
         _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
         
         perf = self.get_performance(method='by_spiketrain')
-        keep = perf['accuracy']>=0 # tale all
+        keep = perf['accuracy'] >= 0 # tale all
         
         for col, thresh in thresholds.items():
             if col in _above:
@@ -198,7 +193,7 @@ class GroundTruthComparison(BaseComparison):
             elif col in _below:
                 keep = keep & (perf[col] <= thresh)
             else:
-                raise(ValueError('threhold column do not exits', col))
+                raise ValueError('Threshold column do not exits', col)
         
         return perf[keep].index.tolist()
     
@@ -211,7 +206,7 @@ class GroundTruthComparison(BaseComparison):
     
     def get_false_positive_units(self):
         """
-        Return units listof "false positive units" from tested_sorting.
+        Return units list of "false positive units" from tested_sorting.
         
         "false positive units" ara defined as units in tested that
         are not matched at all in GT units.
@@ -283,7 +278,6 @@ class GroundTruthComparison(BaseComparison):
         return len(self.get_bad_units())
 
 
-
 def _compute_perf(tp, cl, fn, fp, num_gt, perf):
     """
     This compte perf formula.
@@ -307,9 +301,8 @@ def _compute_perf(tp, cl, fn, fp, num_gt, perf):
     perf['misclassification_rate'] = cl / num_gt
     
     return perf
-    
 
-    
+
 # usefull also for gathercomparison
 _perf_keys = ['accuracy', 'recall', 'precision','false_discovery_rate',  'miss_rate', 'misclassification_rate']
 
@@ -336,12 +329,8 @@ _template_summary_part2 = """num_false_positive_units {num_false_positive_units}
 """
 
 
-    
-    
-
-
 def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None, 
-                delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
+                                   delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -380,4 +369,4 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
 
     '''
     return GroundTruthComparison(gt_sorting, tested_sorting, gt_name, tested_name,
-                            delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)
+                                 delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)

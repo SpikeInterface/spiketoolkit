@@ -22,6 +22,8 @@ With `spiketoolkit` one can:
    preprocessing_example
    sorters_example
    postprocessing_example
+   comparison_example
+   validation_example
 
 Indices and tables
 ==================
