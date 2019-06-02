@@ -6,10 +6,9 @@ class RemoveArtifactsRecording(RecordingExtractor):
     preprocessor_name = 'RemoveArtifactsRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
         {'name': 'triggers', 'type': 'list', 'title': "List of int with the stimulation trigger frames"},
         {'name': 'ms_before', 'type': 'float', 'value':0.5, 'default':0.5, 'title': "Time interval in ms to remove before the trigger events"},
-        {'name': 'ms_after', 'type': 'float', 'value':3, 'default':3, 'title': "Time interval in ms to remove after the trigger events"},
+        {'name': 'ms_after', 'type': 'float', 'value':3.0, 'default':3.0, 'title': "Time interval in ms to remove after the trigger events"},
     ]
     installation_mesg = ""  # err
 

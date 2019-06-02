@@ -2,13 +2,16 @@ from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
 
+
 class FilterRecording(se.RecordingExtractor):
-    def __init__(self, recording, chunk_size=10000):
+    def __init__(self, recording, chunk_size=10000, cache=False):
         se.RecordingExtractor.__init__(self)
         self._recording = recording
         self._chunk_size = chunk_size
         self._filtered_chunk_cache = FilteredChunkCache()
+        self._cache = cache
         self.copy_channel_properties(recording)
+        self._traces = None
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
@@ -26,22 +29,25 @@ class FilterRecording(se.RecordingExtractor):
             end_frame = self.get_num_frames()
         if channel_ids is None:
             channel_ids = self.get_channel_ids()
-        ich1 = int(start_frame / self._chunk_size)
-        ich2 = int((end_frame - 1) / self._chunk_size)
-        filtered_chunk_list = []
-        for ich in range(ich1, ich2 + 1):
-            filtered_chunk0 = self._get_filtered_chunk(ich)
-            if ich == ich1:
-                start0 = start_frame - ich * self._chunk_size
-            else:
-                start0 = 0
-            if ich == ich2:
-                end0 = end_frame - ich * self._chunk_size
-            else:
-                end0 = self._chunk_size
-            chan_idx = [self.get_channel_ids().index(chan) for chan in channel_ids]
-            filtered_chunk_list.append(filtered_chunk0[chan_idx, start0:end0])
-        return np.concatenate(filtered_chunk_list, axis=1)
+        if self._cache and self._traces is not None:
+            return self._traces[channel_ids, start_frame:end_frame]
+        else:
+            ich1 = int(start_frame / self._chunk_size)
+            ich2 = int((end_frame - 1) / self._chunk_size)
+            filtered_chunk_list = []
+            for ich in range(ich1, ich2 + 1):
+                filtered_chunk0 = self._get_filtered_chunk(ich)
+                if ich == ich1:
+                    start0 = start_frame - ich * self._chunk_size
+                else:
+                    start0 = 0
+                if ich == ich2:
+                    end0 = end_frame - ich * self._chunk_size
+                else:
+                    end0 = self._chunk_size
+                chan_idx = [self.get_channel_ids().index(chan) for chan in channel_ids]
+                filtered_chunk_list.append(filtered_chunk0[chan_idx, start0:end0])
+            return np.concatenate(filtered_chunk_list, axis=1)
 
     @abstractmethod
     def filter_chunk(self, *, start_frame, end_frame):

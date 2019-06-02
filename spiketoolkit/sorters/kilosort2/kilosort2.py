@@ -42,11 +42,6 @@ def check_if_installed(kilosort2_path, npy_matlab_path):
         return False
 
 
-if check_if_installed(os.getenv('KILOSORT2_PATH'), os.getenv('NPY_MATLAB_PATH')):
-    HAVE_KILOSORT2 = True
-else:
-    HAVE_KILOSORT2 = False
-
 
 class Kilosort2Sorter(BaseSorter):
     """
@@ -55,7 +50,7 @@ class Kilosort2Sorter(BaseSorter):
     """
 
     sorter_name = 'kilosort2'
-    installed = HAVE_KILOSORT2
+    installed = check_if_installed(os.getenv('KILOSORT2_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort2_path = os.getenv('KILOSORT2_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
     SortingExtractor_Class = se.KiloSortSortingExtractor
@@ -87,12 +82,28 @@ class Kilosort2Sorter(BaseSorter):
 
     @staticmethod
     def set_kilosort2_path(kilosort2_path):
+        os.environ["KILOSORT2_PATH"] = kilosort2_path
         Kilosort2Sorter.kilosort2_path = kilosort2_path
+        Kilosort2Sorter.installed = check_if_installed(Kilosort2Sorter.kilosort2_path, Kilosort2Sorter.npy_matlab_path)
 
     @staticmethod
     def set_npy_matlab_path(npy_matlab_path):
+        os.environ["NPY_MATLAB_PATH"] = npy_matlab_path
         Kilosort2Sorter.npy_matlab_path = npy_matlab_path
+        Kilosort2Sorter.installed = check_if_installed(Kilosort2Sorter.kilosort2_path, Kilosort2Sorter.npy_matlab_path)
 
+    def set_params(self, **params):
+        BaseSorter.set_params(self, **params)
+        if params.get('npy_matlab_path', None) is not None:
+            Kilosort2Sorter.set_npy_matlab_path(params['npy_matlab_path'])
+        else:
+            Kilosort2Sorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
+            
+        if params.get('kilosort2_path', None) is not None:
+            Kilosort2Sorter.set_kilosort2_path(params['kilosort2_path'])
+        else:
+            Kilosort2Sorter.set_kilosort2_path(os.getenv('KILOSORT2_PATH'))
+    
     def _setup_recording(self, recording, output_folder):
 
         source_dir = Path(__file__).parent
@@ -124,12 +135,8 @@ class Kilosort2Sorter(BaseSorter):
 
         sample_rate = recording.get_sampling_frequency()
 
-        if not HAVE_KILOSORT2:
-            if p['kilosort2_path'] is None or p['npy_matlab_path'] is None:
-                raise ImportError('Kilosort2 is not installed\n', Kilosort2Sorter.installation_mesg)
-            else:
-                Kilosort2Sorter.set_kilosort2_path(p['kilosort_path'])
-                Kilosort2Sorter.set_npy_matlab_path(p['npy_matlab_path'])
+        if not Kilosort2Sorter.installed:
+            raise ImportError('Kilosort2 is not installed', Kilosort2Sorter.installation_mesg)
 
         abs_channel = (output_folder / 'kilosort2_channelmap.m').absolute()
         abs_config = (output_folder / 'kilosort2_config.m').absolute()
@@ -151,26 +158,27 @@ class Kilosort2Sorter(BaseSorter):
             groups = [recording.get_channel_property(ch, 'group') for ch in recording.get_channel_ids()]
         else:
             groups = 'ones(1, Nchannels)'
-        if 'location' in recording.get_channel_property_names():
-            positions = np.array([recording.get_channel_property(chan, 'location') for chan in recording.get_channel_ids()])
-            if electrode_dimensions is None:
-                kilosort2_channelmap = ''.join(kilosort2_channelmap
-                                              ).format(nchan,
-                                                       list(positions[:, 0]),
-                                                       list(positions[:, 1]),
-                                                       groups,
-                                                       sample_rate)
-            elif len(electrode_dimensions) == 2:
-                kilosort2_channelmap = ''.join(kilosort2_channelmap
-                                              ).format(nchan,
-                                                       list(positions[:, electrode_dimensions[0]]),
-                                                       list(positions[:, electrode_dimensions[1]]),
-                                                       groups,
-                                                       recording.get_sampling_frequency())
-            else:
-                raise Exception("Electrode dimension should bi a list of len 2")
+        if 'location' not in recording.get_channel_property_names():
+            print("'location' information is not found. Using linear configuration")
+            for i_ch, ch in enumerate(recording.get_channel_ids()):
+                recording.set_channel_property(ch, 'location', [0, i_ch])
+        positions = np.array([recording.get_channel_property(chan, 'location') for chan in recording.get_channel_ids()])
+        if electrode_dimensions is None:
+            kilosort2_channelmap = ''.join(kilosort2_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, 0]),
+                                                   list(positions[:, 1]),
+                                                   groups,
+                                                   sample_rate)
+        elif len(electrode_dimensions) == 2:
+            kilosort2_channelmap = ''.join(kilosort2_channelmap
+                                          ).format(nchan,
+                                                   list(positions[:, electrode_dimensions[0]]),
+                                                   list(positions[:, electrode_dimensions[1]]),
+                                                   groups,
+                                                   recording.get_sampling_frequency())
         else:
-            raise Exception("'location' information is needed. Provide a probe information with a 'probe_file'")
+            raise Exception("Electrode dimension should be a list of len 2")
 
         for fname, value in zip(['kilosort2_master.m', 'kilosort2_config.m',
                                  'kilosort2_channelmap.m'],

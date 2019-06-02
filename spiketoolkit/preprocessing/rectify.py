@@ -5,9 +5,7 @@ class RectifyRecording(RecordingExtractor):
 
     preprocessor_name = 'RectifyRecording'
     installed = True  # check at class level if installed or not
-    _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
-    ]
+    _gui_params = []
     installation_mesg = ""  # err
 
     def __init__(self, recording):

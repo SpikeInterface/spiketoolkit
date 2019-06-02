@@ -23,18 +23,13 @@ def check_if_installed(ironclust_path):
     else:
         return False
 
-if check_if_installed(os.getenv('IRONCLUST_PATH')):
-    HAVE_IRONCLUST = True
-else:
-    HAVE_IRONCLUST = False
-
 
 class IronclustSorter(BaseSorter):
     """
     """
 
     sorter_name = 'ironclust'
-    installed = HAVE_IRONCLUST
+    installed = check_if_installed(os.getenv('IRONCLUST_PATH'))
     ironclust_path = os.getenv('IRONCLUST_PATH')
 
     _default_params = {
@@ -68,7 +63,16 @@ class IronclustSorter(BaseSorter):
 
     @staticmethod
     def set_ironclust_path(ironclust_path):
+        os.environ["IRONCLUST_PATH"] = ironclust_path
         IronclustSorter.ironclust_path = ironclust_path
+        IronclustSorter.installed = check_if_installed(ironclust_path)
+
+    def set_params(self, **params):
+        BaseSorter.set_params(self, *params)
+        if params.get('ironclust_path', None) is not None:
+            IronclustSorter.set_ironclust_path(params['ironclust_path'])
+        else:
+            IronclustSorter.set_ironclust_path(os.getenv('IRONCLUST_PATH'))
 
     def _setup_recording(self, recording, output_folder):
         from mountainlab_pytools import mdaio

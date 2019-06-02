@@ -263,8 +263,9 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
             for sp_i, n_sp in enumerate(sts1[u1]):
                 matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
                 if np.sum(matches) > 0:
-                    lab_st1[sp_i] = 'TP'
-                    lab_st2[np.where(matches)[0][0]] = 'TP'
+                    if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
+                        lab_st1[sp_i] = 'TP'
+                        lab_st2[np.where(matches)[0][0]] = 'TP'
         else:
             lab_st1 = np.array(['FN'] * len(sts1[u1]))
             labels_st1[u1] = lab_st1
@@ -282,8 +283,9 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                         mapped_st = sts2[u2]
                         matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
                         if np.sum(matches) > 0:
-                            lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
-                            lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
+                            if 'CL' not in lab_st1[l_gt] and 'CL' not in lab_st2[np.where(matches)[0][0]]:
+                                lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
+                                lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
 
 
     for u1 in unit1_ids:
@@ -299,83 +301,6 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                 lab_st2[l_gt] = 'FP'
 
     return labels_st1, labels_st2
-
-
-def do_counting(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
-    """
-    Count the number of TP/FP/FN/.. with several strategies:
-      * 'by_spiketrains'
-      * 'pooled_with_sum'
-
-    Note1: the strategy of counting affect a lot.
-
-    Note2: 'pooled_with_average' is done outside with avering the rate (not the counting)
-
-
-    Parameters
-    ----------
-    sorting1: SortingExtractor instance
-        The ground truth sorting.
-    sorting2: SortingExtractor instance
-        The tested sorting
-    unit_map12: dict
-        Dict of matching from sorting1 to sorting2
-    labels_st1: dict of np.array of str
-        Contain score labels for units of sorting 1
-    labels_st2: dict of np.array of str
-        Contain score labels for units of sorting 2
-
-    Returns
-    -------
-    mixed_counts: dict of dict
-        A dict with a sub dict for each method.
-
-    """
-    unit1_ids = sorting1.get_unit_ids()
-    unit2_ids = sorting2.get_unit_ids()
-
-
-    # pooled_with_sum
-    # Note from Samuel: this was the previous counting method before May 2019
-    # The code is not modified but could be faster using
-    # count_by_spiketrains dict
-    TOT_ST1 = sum([len(labels_st1[u1]) for u1 in unit1_ids])
-    TOT_ST2 = sum([len(labels_st2[u2]) for u2 in unit2_ids])
-    total_spikes = TOT_ST1 + TOT_ST2
-    TP = sum([len(np.where('TP' == labels_st1[u1])[0]) for u1 in unit1_ids])
-    CL = sum([len([i for i, v in enumerate(labels_st1[u1]) if 'CL' in v]) for u1 in unit1_ids])
-    FN = sum([len(np.where('FN' == labels_st1[u1])[0]) for u1 in unit1_ids])
-    FP = sum([len(np.where('FP' == labels_st2[u2])[0]) for u2 in unit2_ids])
-    counts_pooled_with_sum = {'TP': TP, 'CL': CL, 'FN': FN, 'FP': FP,
-                                'TOT': total_spikes, 'TOT_ST1': TOT_ST1, 'TOT_ST2': TOT_ST2}
-
-
-    # by_spiketrains
-    count_by_spiketrains = {}
-    for u1 in unit1_ids:
-        u2 = unit_map12[u1]
-        count_by_spiketrains[u1] = {
-            'TP': np.sum(labels_st1[u1] == 'TP'),
-            'CL': sum(e.startswith('CL') for e in labels_st1[u1]),
-            'FN': np.sum(labels_st1[u1] == 'FN'),
-            'NB_SPIKE_1' : labels_st1[u1].size,
-        }
-
-        if u2==-1:
-            # no match
-            count_by_spiketrains[u1]['FP'] = 0
-            count_by_spiketrains[u1]['NB_SPIKE_2'] = 0
-        else:
-            count_by_spiketrains[u1]['FP'] = np.sum(labels_st2[u2] == 'FP')
-            count_by_spiketrains[u1]['NB_SPIKE_2'] = labels_st2[u2].size
-
-    # put everything in a dict so this can be extened
-    mixed_counts = {
-        'by_spiketrains': count_by_spiketrains,
-        'pooled_with_sum': counts_pooled_with_sum,
-    }
-
-    return mixed_counts
 
 
 def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
@@ -477,8 +402,9 @@ def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     for sp_i, n_sp in enumerate(spiketrain1):
         matches = (np.abs(spiketrain2.astype(int) - n_sp) <= delta_frames // 2)
         if np.sum(matches) > 0:
-            lab_st1[sp_i] = 'TP'
-            lab_st2[np.where(matches)[0][0]] = 'TP'
+            if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
+                lab_st1[sp_i] = 'TP'
+                lab_st2[np.where(matches)[0][0]] = 'TP'
 
     for l_gt, lab in enumerate(lab_st1):
         if lab == 'UNPAIRED':

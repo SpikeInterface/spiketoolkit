@@ -23,7 +23,20 @@ class TridesclousSorter(BaseSorter):
     sorter_name = 'tridesclous'
     installed = HAVE_TDC
 
-    _default_params = None  # later
+    _default_params = {
+        'highpass_freq': 400.,
+        'lowpass_freq': 5000.,
+        'peak_sign': '-',
+        'relative_threshold': 5.5,
+        'peak_span': 0.0002,
+        'n_left': -45,
+        'n_right': 60,
+        'nb_max': 20000,
+        'alien_value_threshold': 100.,
+        'feat_method': 'peak_max',
+        'clust_method': 'sawchaincut',
+    }
+
 
     installation_mesg = """
        >>> pip install https://github.com/tridesclous/tridesclous/archive/master.zip
@@ -92,10 +105,11 @@ class TridesclousSorter(BaseSorter):
 
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         # make catalogue
+        nested_params = make_nested_tdc_params(**self.params)
         chan_grps = list(tdc_dataio.channel_groups.keys())
         for chan_grp in chan_grps:
             cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
-            tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **self.params)
+            tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **nested_params)
             if self.debug:
                 print(cc)
             cc.make_catalogue_for_peeler()
@@ -115,40 +129,55 @@ class TridesclousSorter(BaseSorter):
         return sorting
 
 
-TridesclousSorter._default_params = {
-    'fullchain_kargs': {
-        'duration': 300.,
-        'preprocessor': {
-            'highpass_freq': 400.,
-            'lowpass_freq': 5000.,
-            'smooth_size': 0,
-            'chunksize': 1024,
-            'lostfront_chunksize': 128,
-            'signalpreprocessor_engine': 'numpy',
-            'common_ref_removal':False,
+def make_nested_tdc_params(
+        highpass_freq=400.,
+        lowpass_freq=5000.,
+        peak_sign='-',
+        relative_threshold=5.5,
+        peak_span= 0.0002,
+        n_left= -45,
+        n_right= 60,
+        nb_max=20000,
+        alien_value_threshold=100.,
+        feat_method='peak_max',
+        clust_method='sawchaincut'):
+
+    params = {
+        'fullchain_kargs': {
+            'duration': 300.,
+            'preprocessor': {
+                'highpass_freq': highpass_freq,
+                'lowpass_freq': lowpass_freq,
+                'smooth_size': 0,
+                'chunksize': 1024,
+                'lostfront_chunksize': 128,
+                'signalpreprocessor_engine': 'numpy',
+                'common_ref_removal':False,
+            },
+            'peak_detector': {
+                'peakdetector_engine': 'numpy',
+                'peak_sign': peak_sign,
+                'relative_threshold': relative_threshold,
+                'peak_span': peak_span,
+            },
+            'noise_snippet': {
+                'nb_snippet': 300,
+            },
+            'extract_waveforms': {
+                'n_left': n_left,
+                'n_right': n_right,
+                'mode': 'rand',
+                'nb_max': nb_max,
+                'align_waveform': False,
+            },
+            'clean_waveforms': {
+                'alien_value_threshold': alien_value_threshold,
+            },
         },
-        'peak_detector': {
-            'peakdetector_engine': 'numpy',
-            'peak_sign': '-',
-            'relative_threshold': 5.5,
-            'peak_span': 0.0002,
-        },
-        'noise_snippet': {
-            'nb_snippet': 300,
-        },
-        'extract_waveforms': {
-            'n_left': -45,
-            'n_right': 60,
-            'mode': 'rand',
-            'nb_max': 20000,
-            'align_waveform': False,
-        },
-        'clean_waveforms': {
-            'alien_value_threshold': 100.,
-        },
-    },
-    'feat_method': 'peak_max',
-    'feat_kargs': {},
-    'clust_method': 'sawchaincut',
-    'clust_kargs': {'kde_bandwith': 1.},
-}
+        'feat_method': feat_method,
+        'feat_kargs': {},
+        'clust_method': clust_method,
+        'clust_kargs': {'kde_bandwith': 1.},
+    }
+    
+    return params

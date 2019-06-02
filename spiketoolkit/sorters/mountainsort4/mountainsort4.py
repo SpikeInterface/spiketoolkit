@@ -6,10 +6,11 @@ I need help here because:
 Reading the code do not make evident if there is a persistency on disk.
 
 """
-import spiketoolkit as st
+
 from spiketoolkit.sorters.basesorter import BaseSorter
+from spiketoolkit.preprocessing import bandpass_filter, whiten
 import spikeextractors as se
-from copy import copy
+import copy
 
 try:
     import ml_ms4alg
@@ -42,12 +43,12 @@ class Mountainsort4Sorter(BaseSorter):
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
     }
 
-    _gui_params = [
+    _extra_params = [
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
         {'name': 'adjacency_radius', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1 to include all channels in every neighborhood"},
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
-        {'name': 'freq_min', 'type': 'float', 'value':300, 'default':300, 'title': "Low-pass frequency"},
-        {'name': 'freq_max', 'type': 'float', 'value':6000, 'default':6000, 'title': "High-pass frequency"},
+        {'name': 'freq_min', 'type': 'float', 'value':300.0, 'default':300.0, 'title': "Low-pass frequency"},
+        {'name': 'freq_max', 'type': 'float', 'value':6000.0, 'default':6000.0, 'title': "High-pass frequency"},
         {'name': 'filter', 'type': 'bool', 'value':False, 'default':False,  'title': "Bandpass filters the recording if True"},
         {'name': 'whiten', 'type': 'bool', 'value':True, 'default':True,  'title': "Whitens the recording if True"},
         {'name': 'clip_size', 'type': 'int', 'value':50, 'default':50,  'title': "Clip size"},
@@ -57,6 +58,9 @@ class Mountainsort4Sorter(BaseSorter):
         {'name': 'noise_overlap_threshold', 'type': 'float', 'value':0.15, 'default':0.15,  'title': "Use None for no automated curation"},
     ]
 
+    _gui_params = copy.deepcopy(BaseSorter._gui_params)
+    for param in _extra_params:
+        _gui_params.append(param)
     installation_mesg = """
        >>> pip install ml_ms4alg
 
@@ -80,12 +84,12 @@ class Mountainsort4Sorter(BaseSorter):
 
         # Bandpass filter
         if p['filter'] and p['freq_min'] is not None and p['freq_max'] is not None:
-            recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=p['freq_min'],
+            recording = bandpass_filter(recording=recording, freq_min=p['freq_min'],
                                                          freq_max=p['freq_max'])
 
         # Whiten
         if p['whiten']:
-            recording = st.preprocessing.whiten(recording=recording)
+            recording = whiten(recording=recording)
 
         # Check location
         if 'location' not in recording.get_channel_property_names():
