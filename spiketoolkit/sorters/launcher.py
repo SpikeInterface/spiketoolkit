@@ -203,8 +203,8 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
         pool = multiprocessing.Pool(processes)
         pool.map(_run_one, task_list)
 
-    results, run_times = collect_results(working_folder)
-    return results, run_times
+    results  = collect_results(working_folder)
+    return results
 
 
 def is_log_ok(output_folder):

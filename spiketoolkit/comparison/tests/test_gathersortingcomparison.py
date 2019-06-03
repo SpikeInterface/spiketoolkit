@@ -24,9 +24,9 @@ def setup_module():
 def _run_sorters():
     path = 'test_TDC_vs_HS2/'
     
-    #~ if os.path.exists(path):
-        #~ shutil.rmtree(path)
-    #~ os.mkdir(path)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+    os.mkdir(path)
     
     # cerate several recording/sorting and save to disk
     rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30)

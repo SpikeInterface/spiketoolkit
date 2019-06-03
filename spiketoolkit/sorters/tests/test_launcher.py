@@ -84,9 +84,9 @@ def test_collect_results():
     
     
 if __name__ == '__main__':
-    #~ test_run_sorters_with_list()
+    test_run_sorters_with_list()
     
-    test_run_sorters_with_dict()
+    #~ test_run_sorters_with_dict()
     
     #~ test_run_sorters_multiprocessing()
     
