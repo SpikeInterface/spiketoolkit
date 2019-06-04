@@ -57,7 +57,7 @@ class SpykingcircusSorter(BaseSorter):
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
             se.save_probe_file(recording, p['probe_file'], format='spyking_circus',
-                                radius=p['adjacency_radius'], dimensions=p['electrode_dimensions'])
+                               radius=p['adjacency_radius'], dimensions=p['electrode_dimensions'])
 
         # save binary file
         file_name = 'recording'

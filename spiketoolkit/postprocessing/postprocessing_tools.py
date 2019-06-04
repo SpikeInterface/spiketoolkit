@@ -736,9 +736,9 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         for i, u in enumerate(sorting.get_unit_ids()):
             writer.writerow([i, 'unsorted'])
     if 'group' in sorting.get_unit_property_names():
-        with (output_folder / 'cluster_channel_group.tsv').open('w') as tsvfile:
+        with (output_folder / 'cluster_chan_grp.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-            writer.writerow(['cluster_id', 'ch_group'])
+            writer.writerow(['cluster_id', 'chan_grp'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, sorting.get_unit_property(u, 'group')])
     else:
