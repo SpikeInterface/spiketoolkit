@@ -148,7 +148,10 @@ class MultiSortingComparison():
                     for n2 in nodes:
                         if n1 != n2:
                             if (n1, n2) not in edges and (n2, n1) not in edges:
-                                edges.append((n1, n2))
+                                if (n1, n2) in self.graph.edges:
+                                    edges.append((n1, n2))
+                                elif (n2, n1) in self.graph.edges:
+                                    edges.append((n2, n1))
                 max_weight = 0
                 for e in edges:
                     w = self.graph.edges.get(e)['weight']
