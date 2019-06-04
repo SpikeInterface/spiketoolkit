@@ -53,6 +53,7 @@ class KilosortSorter(BaseSorter):
     installed = check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort_path = os.getenv('KILOSORT_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
+    SortingExtractor_Class = se.KiloSortSortingExtractor
 
     _default_params = {
         'probe_file': None,
@@ -96,7 +97,7 @@ class KilosortSorter(BaseSorter):
             KilosortSorter.set_npy_matlab_path(params['npy_matlab_path'])
         else:
             KilosortSorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
-        
+
         if params.get('kilosort_path', None) is not None:
             KilosortSorter.set_kilosort_path(params['kilosort_path'])
         else:
@@ -141,7 +142,7 @@ class KilosortSorter(BaseSorter):
             use_car = 1
         else:
             use_car = 0
-        
+
         if not KilosortSorter.installed:
             raise ImportError('Kilosort is not installed', KilosortSorter.installation_mesg)
 

@@ -8,10 +8,9 @@ CurationSortingExtractor to allow for excluding, merging, and splitting of units
 
 class ThresholdMaxISI(CurationSortingExtractor):
 
-    preprocessor_name = 'ThresholdMaxISI'
+    postprocessor_name = 'ThresholdMaxISI'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'sorting', 'type': 'SortingExtractor', 'title': "Sorting extractor"},
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
         {'name': 'max_ISI_threshold', 'type': 'float', 'value':0.4, 'default':0.4, 'title': "Maximum ISI violation ratio of a unit for it to valid"},
     ]

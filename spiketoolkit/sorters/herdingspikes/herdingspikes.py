@@ -23,7 +23,7 @@ class HerdingspikesSorter(BaseSorter):
     installed = HAVE_HS
     SortingExtractor_Class = se.HS2SortingExtractor
 
-    _extra_params = [
+    _extra_gui_params = [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value': 5.0, 'default': 5.0,
             'title': "Meanshift bandwidth"},
         {'name': 'clustering_alpha', 'type': 'float', 'value': 8.0, 'default': 8.0,
@@ -57,7 +57,7 @@ class HerdingspikesSorter(BaseSorter):
     ]
 
     _gui_params = copy.deepcopy(BaseSorter._gui_params)
-    for param in _extra_params:
+    for param in _extra_gui_params:
         _gui_params.append(param)
 
     _default_params = None  # later
