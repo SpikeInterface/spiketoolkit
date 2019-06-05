@@ -17,14 +17,13 @@ from .sorterlist import sorter_dict, run_sorter
 
 def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
-    rec_name, recording, sorter_name, output_folder,grouping_property, debug = arg_list
-
+    rec_name, recording, sorter_name, output_folder,grouping_property, debug, params = arg_list
+    print(sorter_name, params)
     try:
     #~ if True:
         SorterClass = sorter_dict[sorter_name]
         sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                              parallel=True, debug=debug, delete_output_folder=False)
-        params = SorterClass.default_params()
         sorter.set_params(**params)
 
         run_time = sorter.run()
@@ -74,7 +73,7 @@ def copy_share_binary(working_folder, recording_dict, overwrite=False):
     return recording_dict
     
 
-def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_property=None,
+def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_params={}, grouping_property=None,
                             shared_binary_copy=False, mode='raise', engine=None, engine_kargs={}, debug=False):
     """
     This run several sorter on several recording.
@@ -108,6 +107,9 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
     
     grouping_property: str
         The property of grouping given to sorters.
+    
+    sorter_params: dict of dict with sorter_name as key
+        This allow to overwritte default params for sorter.
     
     shared_binary_copy: False default
         Before running each sorter, all recording are copied inside 
@@ -189,7 +191,8 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, grouping_p
                     continue
                 else:
                     raise(ValueError('mode not in raise, overwrite, keep'))
-            task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug,))
+            params = sorter_params.get(sorter_name, {})
+            task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug, params))
 
     if engine is None or engine == 'loop':
         # simple loop in main process

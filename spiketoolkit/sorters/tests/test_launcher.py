@@ -37,10 +37,15 @@ def test_run_sorters_with_dict():
     if os.path.exists(working_folder):
         shutil.rmtree(working_folder)
     
+    sorter_params = {
+        'tridesclous' : dict(relative_threshold=5.6),
+        'herdingspikes' : dict(detection_threshold=20.1),
+    }
     
     # simple loop
     t0 = time.perf_counter()
-    results = run_sorters(sorter_list, recording_dict, working_folder, engine=None, shared_binary_copy=True)
+    results = run_sorters(sorter_list, recording_dict, working_folder, sorter_params=sorter_params, 
+                                                                                                engine=None, shared_binary_copy=True)
     t1 = time.perf_counter()
     print(t1-t0)
     print(results)
@@ -84,9 +89,9 @@ def test_collect_results():
     
     
 if __name__ == '__main__':
-    test_run_sorters_with_list()
+    #~ test_run_sorters_with_list()
     
-    #~ test_run_sorters_with_dict()
+    test_run_sorters_with_dict()
     
     #~ test_run_sorters_multiprocessing()
     
