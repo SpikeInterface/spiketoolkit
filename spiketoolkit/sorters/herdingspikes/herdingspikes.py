@@ -78,9 +78,9 @@ class HerdingspikesSorter(BaseSorter):
                 recording=recording, freq_min=p['freq_min'], freq_max=p['freq_max'])
 
         if p['pre_scale']:
-            recording = st.preprocessing.rescale_traces(
+            recording = st.preprocessing.normalize_by_quantile(
                 recording=recording, scale=p['pre_scale_value'],
-                median=0.0, q1=0.01, q2=0.99
+                median=0.0, q1=0.05, q2=0.95
             )
 
         # this should have its name changed
