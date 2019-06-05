@@ -21,7 +21,6 @@ class HerdingspikesSorter(BaseSorter):
 
     sorter_name = 'herdingspikes'
     installed = HAVE_HS
-    SortingExtractor_Class = se.HS2SortingExtractor
 
     _extra_gui_params = [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value': 5.0, 'default': 5.0,

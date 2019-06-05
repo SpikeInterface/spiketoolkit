@@ -31,8 +31,6 @@ class IronclustSorter(BaseSorter):
     sorter_name = 'ironclust'
     installed = check_if_installed(os.getenv('IRONCLUST_PATH'))
     ironclust_path = os.getenv('IRONCLUST_PATH')
-    SortingExtractor_Class = se.MdaSortingExtractor
-
 
     _default_params = {
         'prm_template_name': None,  # Name of the template file

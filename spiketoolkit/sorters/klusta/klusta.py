@@ -31,7 +31,6 @@ class KlustaSorter(BaseSorter):
 
     sorter_name = 'klusta'
     installed = HAVE_KLUSTA
-    SortingExtractor_Class = se.KlustaSortingExtractor
 
     _default_params = {
         'probe_file': None,

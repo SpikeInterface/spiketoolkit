@@ -27,8 +27,6 @@ class Mountainsort4Sorter(BaseSorter):
     sorter_name = 'mountainsort4'
     installed = HAVE_MS4
 
-    SortingExtractor_Class = se.MdaSortingExtractor # there is not extractor !!!!!!!!!!!!!!!!!!!!!!!!
-
     _default_params = {
         'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood

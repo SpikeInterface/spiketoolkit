@@ -53,7 +53,6 @@ class KilosortSorter(BaseSorter):
     installed = check_if_installed(os.getenv('KILOSORT_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort_path = os.getenv('KILOSORT_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
-    SortingExtractor_Class = se.KiloSortSortingExtractor
 
     _default_params = {
         'probe_file': None,

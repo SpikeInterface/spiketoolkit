@@ -53,7 +53,6 @@ class Kilosort2Sorter(BaseSorter):
     installed = check_if_installed(os.getenv('KILOSORT2_PATH'), os.getenv('NPY_MATLAB_PATH'))
     kilosort2_path = os.getenv('KILOSORT2_PATH')
     npy_matlab_path = os.getenv('NPY_MATLAB_PATH')
-    SortingExtractor_Class = se.KiloSortSortingExtractor
 
     _default_params = {
         'file_name': None,
@@ -98,12 +97,12 @@ class Kilosort2Sorter(BaseSorter):
             Kilosort2Sorter.set_npy_matlab_path(params['npy_matlab_path'])
         else:
             Kilosort2Sorter.set_npy_matlab_path(os.getenv('NPY_MATLAB_PATH'))
-            
+
         if params.get('kilosort2_path', None) is not None:
             Kilosort2Sorter.set_kilosort2_path(params['kilosort2_path'])
         else:
             Kilosort2Sorter.set_kilosort2_path(os.getenv('KILOSORT2_PATH'))
-    
+
     def _setup_recording(self, recording, output_folder):
 
         source_dir = Path(__file__).parent
