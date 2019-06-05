@@ -7,10 +7,9 @@ CurationSortingExtractor to allow for excluding, merging, and splitting of units
 
 class ThresholdMinNumSpike(CurationSortingExtractor):
 
-    preprocessor_name = 'ThresholdMinNumSpike'
+    postprocessor_name = 'ThresholdMinNumSpike'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'sorting', 'type': 'SortingExtractor', 'title': "Sorting extractor"},
         {'name': 'min_num_spike_threshold', 'type': 'int', 'value':50, 'default':50, 'title': "Minimum number of spikes in a unit for it to valid"},
     ]
     installation_mesg = "" # err

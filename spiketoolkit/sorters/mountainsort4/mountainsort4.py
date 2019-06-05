@@ -27,8 +27,6 @@ class Mountainsort4Sorter(BaseSorter):
     sorter_name = 'mountainsort4'
     installed = HAVE_MS4
 
-    SortingExtractor_Class = None # there is not extractor !!!!!!!!!!!!!!!!!!!!!!!!
-
     _default_params = {
         'detect_sign': -1,  # Use -1, 0, or 1, depending on the sign of the spikes in the recording
         'adjacency_radius': -1,  # Use -1 to include all channels in every neighborhood
@@ -43,7 +41,7 @@ class Mountainsort4Sorter(BaseSorter):
         'noise_overlap_threshold': 0.15,  # Use None for no automated curation'
     }
 
-    _extra_params = [
+    _extra_gui_params = [
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
         {'name': 'adjacency_radius', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1 to include all channels in every neighborhood"},
         {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
@@ -59,7 +57,7 @@ class Mountainsort4Sorter(BaseSorter):
     ]
 
     _gui_params = copy.deepcopy(BaseSorter._gui_params)
-    for param in _extra_params:
+    for param in _extra_gui_params:
         _gui_params.append(param)
     installation_mesg = """
        >>> pip install ml_ms4alg

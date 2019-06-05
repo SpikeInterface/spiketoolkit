@@ -8,11 +8,9 @@ CurationSortingExtractor to allow for excluding, merging, and splitting of units
 
 class ThresholdMinSNR(CurationSortingExtractor):
 
-    preprocessor_name = 'ThresholdMinSNR'
-    installed = True  # check at class level if installed or not
+    postprocessor_name = 'ThresholdMinSNR'
+    installed = False  # check at class level if installed or not
     _gui_params = [
-        {'name': 'recording', 'type': 'RecordingExtractor', 'title': "Recording extractor"},
-        {'name': 'sorting', 'type': 'SortingExtractor', 'title': "Sorting extractor"},
         {'name': 'min_SNR_threshold', 'type': 'float', 'value':4.0, 'default':4.0, 'title': "Minimum SNR of a unit for it to valid"},
     ]
     installation_mesg = "" # err
