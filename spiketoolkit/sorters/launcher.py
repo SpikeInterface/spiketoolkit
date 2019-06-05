@@ -18,7 +18,6 @@ from .sorterlist import sorter_dict, run_sorter
 def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug, params = arg_list
-    print(sorter_name, params)
     try:
     #~ if True:
         SorterClass = sorter_dict[sorter_name]
@@ -157,22 +156,17 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     else:
         raise(ValueError('bad recording dict'))
 
-    # TODO when  grouping_property is not None : split in subrecording
-    assert grouping_property is None # for the moment
-    #~ for rec_name, recording in recording_dict.items():
-        #~ if grouping_property is not None:
-            #~ recording_list = se.get_sub_extractors_by_property(recording, grouping_property)
-            #~ n_group = len(recording_list)
-            #~ assert n_group == 1, 'shared_binary_copy work only when one group'
-            #~ recording = recording_list[0]
-            #~ grouping_property = None
+    # when  grouping_property is not None : split in subrecording
+    # but the subrecording must have len=1 because otherwise it break
+    # the internal organisation of folder name.
+    if grouping_property is not None:
+        for rec_name, recording in recording_dict.items():
+            recording_list = se.get_sub_extractors_by_property(recording, grouping_property)
+            n_group = len(recording_list)
+            assert n_group == 1, 'run_sorters() work only if grouping_property=None or if it split into one subrecording'
+            recording_dict[rec_name] = recording_list[0]
+        grouping_property = None
     
-    
-    for rec_name, recording in recording_dict.items():
-        for sorter_name in sorter_list:
-            output_folder = working_folder / 'output_folders' / rec_name / sorter_name
-
-
     if shared_binary_copy:
         recording_dict = copy_share_binary(working_folder, recording_dict, overwrite=(mode=='overwrite'))
 
