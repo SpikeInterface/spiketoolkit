@@ -43,7 +43,9 @@ def copy_share_binary(working_folder, recording_dict, overwrite=False):
     This copy inside a working_folder/raw_files all recording as
     BinDatRecordingExtractor
     """
-    os.makedirs(working_folder / 'raw_files')
+    if not os.path.exists(working_folder / 'raw_files'):
+        os.makedirs(working_folder / 'raw_files')
+    
     old_rec_dict = dict(recording_dict)
     recording_dict = {}
     for rec_name, recording in old_rec_dict.items():
