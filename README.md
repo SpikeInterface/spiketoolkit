@@ -51,7 +51,7 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 - [Ironclust](https://github.com/jamesjun/ironclust)
 - [Tridesclous](https://github.com/tridesclous/tridesclous)
 
-SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings.
+SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsort, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings with default parameters.
 
 ```python
 import spikeextractors as se
@@ -67,6 +67,30 @@ sorting_KS = st.sorters.run_kilosort(recording')
 sorting_TDC = st.sorters.run_tridesclous(recording)
 ```
 
+The ability to run each sorter generically is a consequence of the object-oriented approach to spike sorting that SpikeToolkit implements behind the scenes. For example, the **run_mountainsort4** function is actually implemented as:
+
+```python
+def run_mountainsort4(*args, **kargs):
+    return run_sorter('mountainsort4', *args, **kargs)
+```
+
+where the **run_sorter** function instatiates and runs sorter objects generically:
+
+```python
+def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_output_folder=False,
+               grouping_property=None, parallel=False, debug=False, **params):
+    .
+    .
+    .
+    .
+    SorterClass = st.sorters.sorter_dict[sorter_name_or_class]
+    sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
+                     parallel=parallel, debug=debug, delete_output_folder=delete_output_folder)
+    sorter.set_params(**params)
+    sorter.run()
+    sortingextractor = sorter.get_result()
+    return sortingextractor
+```
 
 **Curating spike sorting outputs**
 
