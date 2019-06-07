@@ -6,8 +6,10 @@ in an easy way.
 the all mechanism is based on an intrinsinct organisation
 into a "study_folder" with several subfolder:
   * raw_files : contain a copy in binary format of recordings
-  * sorter_outputs : contains output of sorters
-  * ground_truth : contains a copy of sorting groun truth
+  * sorter_folders : contains output of sorters
+  * ground_truth : contains a copy of sorting ground  in npz format
+  * sortings: contains light copy of all sorting in npz format
+  * tables: some table in cvs format
 """
 
 from pathlib import Path
@@ -109,33 +111,73 @@ def get_ground_truths(study_folder):
 def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
                                         engine='loop', engine_kargs={}):
     study_folder = Path(study_folder)
-    sorter_outputs = study_folder / 'sorter_outputs'
+    sorter_folders = study_folder / 'sorter_folders'
     
     recording_dict = get_recordings(study_folder)
     
-    run_sorters(sorter_list, recording_dict,  sorter_outputs, sorter_params=sorter_params,
+    run_sorters(sorter_list, recording_dict,  sorter_folders, sorter_params=sorter_params,
                     grouping_property=None, mode=mode, engine=engine, engine_kargs=engine_kargs,
                     with_output=False)
+    
+    # results are copied so the heavy sorter_folders can be removed
+    copy_sorting(study_folder)
+    collect_run_times(study_folder)
 
 
+def copy_sorting(study_folder):
+    """
+    Collect sorting and copy then in the same format to get a ligthweigth version.
+    """
+    study_folder = Path(study_folder)
+    sorter_folders = study_folder / 'sorter_folders'
+    sorting_folders = study_folder / 'sortings'
+    
+    if not os.path.exists(sorting_folders):
+        os.makedirs(sorting_folders)
+    
+    results = collect_sorting_outputs(sorter_folders)
+    for (rec_name,sorter_name), sorting in results.items():
+        se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (rec_name+'[#]'+sorter_name+'.npz'))
+
+def collect_study_sorting(study_folder):
+    """
+    Collect sorting from the copied version.
+    """
+    sorting_folder = Path(study_folder) / 'sortings'
+    
+    sortings = {}
+    for filename in os.listdir(sorting_folder):
+        if filename.endswith('.npz') and '[#]' in filename:
+            rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
+            sorting = se.NpzSortingExtractor(sorting_folder / filename)
+            sortings[(rec_name, sorter_name)] = sorting
+
+    return sortings
+    
 
 def collect_run_times(study_folder):
     """
-    Collect run times in a working folder
+    Collect run times in a working folder and sotre it in CVS files.
 
     The output is list of (rec_name, sorter_name, run_time)
     """
     study_folder = Path(study_folder)
-    sorter_outputs = study_folder / 'sorter_outputs'
+    sorter_folders = study_folder / 'sorter_folders'
+    tables_folder = study_folder / 'tables'
+
+    if not os.path.exists(tables_folder):
+        os.makedirs(tables_folder)
     
     run_times = []
-    for rec_name, sorter_name, output_folder in loop_over_folders(sorter_outputs):
+    for rec_name, sorter_name, output_folder in loop_over_folders(sorter_folders):
         if os.path.exists(output_folder / 'run_log.txt'):
             with open(output_folder / 'run_log.txt', mode='r') as logfile:
                 run_time = float(logfile.readline().replace('run_time:', ''))
             run_times.append((rec_name, sorter_name, run_time))
-    return run_times
 
+    run_times = pd.DataFrame(run_times, columns=['rec_name', 'sorter_name', 'run_time'])
+    run_times.to_csv(str(tables_folder / 'run_times.csv'), sep='\t', index=False)
+    
 
 
 
@@ -168,10 +210,10 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
     """
 
     study_folder = Path(study_folder)
-    sorter_outputs = study_folder / 'sorter_outputs'
+    sorter_folders = study_folder / 'sorter_folders'
     
     ground_truths = get_ground_truths(study_folder)
-    results = collect_sorting_outputs(sorter_outputs)
+    results = collect_study_sorting(study_folder)
     
     comparisons = {}
     for (rec_name,sorter_name), sorting in results.items():
@@ -185,12 +227,13 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
 
 def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thresh):
     study_folder = Path(study_folder)
-    sorter_outputs = study_folder / 'sorter_outputs'
+    sorter_folders = study_folder / 'sorter_folders'
+    tables_folder = study_folder / 'tables'
     
     
     comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=exhaustive_gt, **karg_thresh)
     ground_truths = get_ground_truths(study_folder)
-    results = collect_sorting_outputs(sorter_outputs)
+    results = collect_study_sorting(study_folder)
     
     study_folder = Path(study_folder)
 
@@ -198,8 +241,8 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
 
 
     # get run times:
-    rt = collect_run_times(study_folder)
-    run_times = pd.DataFrame(rt, columns=['rec_name', 'sorter_name', 'run_time'])
+    run_times = pd.read_csv(str(tables_folder / 'run_times.csv'), sep='\t')
+    run_times.columns = ['rec_name', 'sorter_name', 'run_time']
     run_times = run_times.set_index(['rec_name', 'sorter_name',])
     out_dataframes['run_times'] = run_times
 

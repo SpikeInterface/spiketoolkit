@@ -69,9 +69,7 @@ def test_aggregate_performances_table():
     
 
 if __name__ == '__main__':
-    #~ setup_module()
-    
-    #~ _run_study_sorters()
+    setup_module()
     
     test_aggregate_sorting_comparison() 
     test_aggregate_performances_table()

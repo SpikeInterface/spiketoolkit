@@ -3,7 +3,7 @@ import shutil
 import time
 
 import pytest
-from spiketoolkit.sorters import run_sorters, collect_results, collect_run_times
+from spiketoolkit.sorters import run_sorters, collect_sorting_outputs
 
 import spikeextractors as se
 
@@ -44,13 +44,12 @@ def test_run_sorters_with_dict():
     
     # simple loop
     t0 = time.perf_counter()
-    results = run_sorters(sorter_list, recording_dict, working_folder, sorter_params=sorter_params, 
-                                                                                                engine=None, shared_binary_copy=True)
+    results = run_sorters(sorter_list, recording_dict, working_folder, sorter_params=sorter_params, engine=None)
     t1 = time.perf_counter()
     print(t1-t0)
     print(results)
     
-    shutil.rmtree(working_folder+'/output_folders/toy_tetrode/tridesclous')
+    shutil.rmtree(working_folder+'/toy_tetrode/tridesclous')
     results = run_sorters(sorter_list, recording_dict, working_folder, engine=None, mode='keep')
     
     
@@ -78,22 +77,18 @@ def test_run_sorters_multiprocessing():
     print(t1-t0)
 
 
-def test_collect_results():
+def test_collect_sorting_outputs():
     working_folder = 'test_run_sorters_dict'
-    results = collect_results(working_folder)
+    results = collect_sorting_outputs(working_folder)
     print(results)
-    
-    run_times = collect_run_times(working_folder)
-    print(run_times)
-    
     
     
 if __name__ == '__main__':
     #~ test_run_sorters_with_list()
     
-    test_run_sorters_with_dict()
+    #~ test_run_sorters_with_dict()
     
     #~ test_run_sorters_multiprocessing()
     
-    #~ test_collect_results()
+    test_collect_sorting_outputs()
     

@@ -176,6 +176,7 @@ def is_log_ok(output_folder):
     return False
 
 def loop_over_folders(output_folders):
+    output_folders = Path(output_folders)
     for rec_name in os.listdir(output_folders):
         if not os.path.isdir(output_folders / rec_name):
             continue
