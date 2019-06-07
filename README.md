@@ -26,8 +26,6 @@ cd spiketoolkit
 python setup.py install
 ```
 
-SpikeInterface allows the user to extract data from either raw or spike sorted datasets with a RecordingExtractor or SortingExtractor, respectively.
-
 ## Documentation
 
 The documentation page can be found here: https://spiketoolkit.readthedocs.io/en/latest/
@@ -38,9 +36,7 @@ The documentation page can be found here: https://spiketoolkit.readthedocs.io/en
 
 To run spike sorting algorithm, a `RecordingExtractor` object needs to be instantiated using the `spikeextractors` package
 
-In this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo, we show how to run several spike sorters on a toy dataset.
-
-Each spike sorter must be installed separately. If one of the spike sorters is not installed, an error message detailing the installation procedure is given. Below is a list spike sorters we have made compatible with SpikeInterface:
+Each spike sorting algorithm must be installed separately. If one of the sorters you are trying to use is not installed, an error message detailing the installation procedure is thrown. Below is a list of sorters that we have made compatible with SpikeInterface:
 
 - [Mountainsort](https://github.com/flatironinstitute/mountainsort)
 - [SpyKING circus](https://github.com/spyking-circus/spyking-circus)
@@ -50,6 +46,8 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 - [Klusta](https://github.com/kwikteam/klusta)
 - [Ironclust](https://github.com/jamesjun/ironclust)
 - [Tridesclous](https://github.com/tridesclous/tridesclous)
+
+Although we have implemented many popular sorting algorithms, this is not an exhaustive list. Implementing new spike sorting algorithms in SpikeToolkit, however, is straightforward so we expect this list to grow in future versions.
 
 SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsort, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings with default parameters.
 
@@ -91,6 +89,8 @@ def run_sorter(sorter_name_or_class, recording, output_folder=None, delete_outpu
     sortingextractor = sorter.get_result()
     return sortingextractor
 ```
+
+For another example on running sorters, please see this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo. In it, we show how to run several spike sorters on a toy dataset.
 
 **Curating spike sorting outputs**
 
