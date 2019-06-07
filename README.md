@@ -49,7 +49,7 @@ Each spike sorting algorithm must be installed separately. If one of the sorters
 
 Although we have implemented many popular sorting algorithms, this is not an exhaustive list. Implementing new spike sorting algorithms in SpikeToolkit, however, is straightforward so we expect this list to grow in future versions.
 
-SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsort, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings with default parameters.
+SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsort, Spyking Circus, Kilosort and Tridesclous) are run with default parameters on the same Open Ephys recordings.
 
 ```python
 import spikeextractors as se
