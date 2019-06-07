@@ -38,44 +38,9 @@ def _run_one(arg_list):
             traceback.print_tb(err.__traceback__, file=f)
 
 
-def copy_share_binary(working_folder, recording_dict, overwrite=False):
-    """
-    This copy inside a working_folder/raw_files all recording as
-    BinDatRecordingExtractor
-    """
-    if not os.path.exists(working_folder / 'raw_files'):
-        os.makedirs(working_folder / 'raw_files')
-    
-    old_rec_dict = dict(recording_dict)
-    recording_dict = {}
-    for rec_name, recording in old_rec_dict.items():
-        
-        raw_filename = working_folder / 'raw_files' / (rec_name+'.raw')
-        prb_filename = working_folder / 'raw_files' / (rec_name+'.prb')
-        json_filename = working_folder / 'raw_files' / (rec_name+'.json')
-        num_chan = recording.get_num_channels()
-        chunksize = 2**24// num_chan
-        sr = recording.get_sampling_frequency()
-        
-        # save binary
-        se.write_binary_dat_format(recording, raw_filename, time_axis=0, dtype='float32', chunksize=chunksize)
-        # save location (with PRB format)
-        se.save_probe_file(recording, prb_filename, format='spyking_circus')
-        # save json info for binary format (for easy persistency)
-        with open(json_filename, 'w', encoding='utf8') as f:
-            info = dict(sample_rate=sr, num_chan=num_chan, dtype='float32', frames_first=True)
-            json.dump(info, f, indent=4)
-        
-        # make new  recording
-        new_rec = se.BinDatRecordingExtractor(raw_filename, sr, num_chan, 'float32', frames_first=True)
-        se.load_probe_file(new_rec, prb_filename)
-        recording_dict[rec_name] = new_rec
-        
-    return recording_dict
-    
 
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_params={}, grouping_property=None,
-                            shared_binary_copy=False, mode='raise', engine=None, engine_kargs={}, debug=False):
+                            mode='raise', engine=None, engine_kargs={}, debug=False, with_output=True):
     """
     This run several sorter on several recording.
     Simple implementation are nested loops or with multiprocessing.
@@ -112,13 +77,6 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     sorter_params: dict of dict with sorter_name as key
         This allow to overwritte default params for sorter.
     
-    shared_binary_copy: False default
-        Before running each sorter, all recording are copied inside 
-        the working_folder with the raw binary format (BinDatRecordingExtractor)
-        and new recording are instantiated as BinDatRecordingExtractor.
-        This avoids multiple copy inside each sorter of the same file but
-        imply a global of all files.
-    
     mode: 'raise_if_exists' or 'overwrite' or 'keep'
         The mode when the subfolder of recording/sorter already exists.
             * 'raise' : raise error if subfolder exists
@@ -135,6 +93,9 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     
     debug: bool
         default True
+        
+    with_output: bool
+        return the output.
     
     Output
     ----------
@@ -169,13 +130,11 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
             recording_dict[rec_name] = recording_list[0]
         grouping_property = None
     
-    if shared_binary_copy:
-        recording_dict = copy_share_binary(working_folder, recording_dict, overwrite=(mode=='overwrite'))
 
     task_list = []
     for rec_name, recording in recording_dict.items():
         for sorter_name in sorter_list:
-            output_folder = working_folder / 'output_folders' / rec_name / sorter_name
+            output_folder = working_folder / rec_name / sorter_name
 
             if is_log_ok(output_folder):
                 # check is output_folders exists
@@ -201,9 +160,10 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
         processes = engine_kargs.get('processes', None)
         pool = multiprocessing.Pool(processes)
         pool.map(_run_one, task_list)
-
-    results  = collect_results(working_folder)
-    return results
+    
+    if with_output:
+        results  = collect_sorting_outputs(working_folder)
+        return results
 
 
 def is_log_ok(output_folder):
@@ -214,7 +174,6 @@ def is_log_ok(output_folder):
             if 'run_time:' in line and 'ERROR' not in line:
                 return True
     return False
-
 
 def loop_over_folders(output_folders):
     for rec_name in os.listdir(output_folders):
@@ -229,37 +188,16 @@ def loop_over_folders(output_folders):
             yield rec_name, sorter_name, output_folder
     
 
-def collect_results(working_folder):
+def collect_sorting_outputs(output_folders):
     """
-    Collect results in a working_folder.
+    Collect results in a output_folders.
 
-    The output is nested dict[rec_name][sorter_name] of SortingExtrator.
+    The output is a  dict with double key acess results[(rec_name, sorter_name)] of SortingExtrator.
     """
     results = {}
-    output_folders = Path(working_folder) / 'output_folders'
-    
     for rec_name, sorter_name, output_folder in loop_over_folders(output_folders):
-        if rec_name not in results:
-            results[rec_name] = {}
         SorterClass = sorter_dict[sorter_name]
-        results[rec_name][sorter_name] = SorterClass.get_result_from_folder(output_folder)
+        results[(rec_name, sorter_name)] = SorterClass.get_result_from_folder(output_folder)
     return results
-
-def collect_run_times(working_folder):
-    """
-    Collect run times in a working folder
-
-    The output is list of (rec_name, sorter_name, run_time)
-    """
-    run_times = []
-    output_folders = Path(working_folder) / 'output_folders'
-    
-    for rec_name, sorter_name, output_folder in loop_over_folders(output_folders):
-        if os.path.exists(output_folder / 'run_log.txt'):
-            with open(output_folder / 'run_log.txt', mode='r') as logfile:
-                run_time = float(logfile.readline().replace('run_time:', ''))
-            run_times.append((rec_name, sorter_name, run_time))
-    return run_times
-
 
 

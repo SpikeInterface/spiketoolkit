@@ -1,2 +1,3 @@
 from .sorterlist import *
-from .launcher import run_sorters, collect_results, collect_run_times
+from .launcher import run_sorters, collect_sorting_outputs, loop_over_folders
+

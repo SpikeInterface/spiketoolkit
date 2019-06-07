@@ -2,6 +2,6 @@ from .comparisontools import do_matching, do_score_labels,  do_confusion_matrix,
 from .sortingcomparison import compare_two_sorters
 from .groundtruthcomparison import compare_sorter_to_ground_truth
 from .multisortingcomparison import compare_multiple_sorters
-from .gathersortingcomparison import gather_sorting_comparison
+from .groundtruthstudy import setup_comparison_study, run_study_sorters, aggregate_sorting_comparison, aggregate_performances_table
 
 
