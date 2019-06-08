@@ -7,7 +7,8 @@ This notebook shows how to use the spiketoolkit.comparison module to:
 1. compare pair of spike sorters
 2. compare multiple spike sorters
 3. extract units in agreement with multiple sorters (consensus-based)
-4. run systematic performance comparisons on ground truth recordings
+4. compare spike sprting output with ground-truth recording
+5. run "study" :  systematic performance comparisons
 
 
 .. code:: python
@@ -710,100 +711,108 @@ on accuracy is 0.95.
 
 
 
-5) Run systematic performance comparison
+5) Run "study" :  systematic performance comparisons
 ----------------------------------------
 
-This part of the notebook illustrates how to run systematic performance
-comparisons on ground truth recordings
+This part of the notebook illustrates how to run a "study".
+A study is a systematic performance comparisons several ground truth
+recordings with several sorters.
 
-This will be done with mainly with 2 functions: \*
-**spiketoolkit.sorters.run_sorters** : this run several sorters on
-serevals dataset \*
-**spiketoolkit.comparison.gather_sorting_comparison** : this run several
-all possible comparison with ground truth and results some metrics
-(accuracy, true positive rate, ..)
+The submodule groundtruthstudy propose high level tools functions
+to run many groundtruth comparison with many sorter on many recordings
+and then collect and aggregate results in an easy way.
 
-5.1 Generate several dataset with “toy_example”
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+The all mechanism is based on an intrinsinct organisation
+into a "study_folder" with several subfolder:
+  * raw_files : contain a copy in binary format of recordings
+  * sorter_folders : contains output of sorters
+  * ground_truth : contains a copy of sorting ground  in npz format
+  * sortings: contains light copy of all sorting in npz format
+  * tables: some table in cvs format
 
-We first generate two recordings to be compared.
+In order to run and re run the computation all gt_sorting anf
+recordings are copied to a fast and universal format : 
+binary (for recordings) and npz (for sortings).
+
+
+  
+
+5.1 Setup study folder and run all sorters
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+We first generate the folder
 
 .. code:: python
 
     rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30, seed=10)
     rec1, gt_sorting1 = se.example_datasets.toy_example(num_channels=4, duration=30, seed=20)
-
-To check which spike sorters are available, we can run:
-
-.. code:: python
-
-    st.sorters.available_sorters()
-
-
-
-
-.. parsed-literal::
-
-    ['herdingspikes',
-     'ironclust',
-     'kilosort',
-     'kilosort2',
-     'klusta',
-     'mountainsort4',
-     'spykingcircus',
-     'tridesclous']
-
-
-
-5.2 Run several sorters on all datasets
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code:: python
-
-    # this cell is really verbose due to some sorter so switch off output console
+    gt_dict = {
+        'rec0': (rec0, gt_sorting0),
+        'rec1': (rec1, gt_sorting1),
+    }
+    study_folder = 'a_study_folder'
+    setup_comparison_study(study_folder, gt_dict)
     
-    recording_dict = {'toy_tetrode_1' : rec0, 'toy_tetrode_2': rec1}
+
+Then just run all sorters on all recordings in one functions.
+
+.. code:: python
+
+    # sorter_list = st.sorters.available_sorters() # this get all sorters.
     sorter_list = ['klusta', 'tridesclous', 'mountainsort4']
-    path = Path('comparison_example')
-    working_folder = path / 'working_folder'
-    if working_folder.is_dir():
-        shutil.rmtree(str(working_folder))
-    
-    t0 = time.perf_counter()
-    st.sorters.run_sorters(sorter_list, recording_dict, working_folder, engine=None)
-    t1 = time.perf_counter()
-    print('total run time', t1 - t0)
+    run_study_sorters(study_folder, sorter_list)
+
+You can re run **run_study_sorters** as many time as you want.
+By default **mode='keep'** so only uncomputed sorter are rerun.
+For instance, so just remove the "sorter_folders/rec1/herdingspikes" to re run 
+only one sorter on one recording.
 
 
-.. parsed-literal::
 
-    ...
+5.2 Collect comparisons
+~~~~~~~~~~~~~~~~~~~~~~~
+
+You can collect in one shot all results and run the
+GroundTruthComparison on it.
+So you can acces finely to all individual results.
+
+Note that exhaustive_gt=True when you excatly how many
+units in ground truth (for synthetic datasets)
 
 
-5.3 Collect dataframes for comparison
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code:: python
+
+    comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=True)
+    for (rec_name, sorter_name), comp in comparisons.items():
+        print('*'*10)
+        print(rec_name, sorter_name)
+        print(comp.count) # raw counting of tp/fp/...
+        comp.print_summary()
+        perf = comp.get_performance(method='by_spiketrain')
+        perf = comp.get_performance(method='pooled_with_average')
+        m = comp.get_confusion_matrix()
+        comp.plot_confusion_matrix()
+        
+
+
+5.3 Collect synthetic dataframes and display
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 As shown previously, the performance is returned as a pandas dataframe.
-The ``gather_sorting_comparison`` function, gathers all the outputs in
-the working folder and merges them in a single dataframe.
+The ``aggregate_performances_table`` function, gathers all the outputs in
+the study folder and merges them in a single dataframe.
 
 .. code:: python
 
-    ground_truths = {'toy_tetrode_1': gt_sorting0, 'toy_tetrode_2': gt_sorting1}
-    
-    comp, dataframes = st.comparison.gather_sorting_comparison(working_folder, ground_truths, use_multi_index=True)
 
+    dataframes = aggregate_performances_table(study_folder, exhaustive_gt=True)
 
-5.4 Display comparison tables
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Pandas dataframes can be nicely displayed as tables in the notebook.
 
 .. code:: python
 
     dataframes.keys()
-
-
 
 
 .. parsed-literal::
@@ -815,8 +824,6 @@ Pandas dataframes can be nicely displayed as tables in the notebook.
 .. code:: python
 
     dataframes['perf_pooled_with_sum']
-
-
 
 
 .. raw:: html
@@ -1101,7 +1108,7 @@ Pandas dataframes can be nicely displayed as tables in the notebook.
 
 
 
-5.5 Easy plot with seaborn
+5.4 Easy plot with seaborn
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Seaborn allows to easily plot pandas dataframes. Let’s see some

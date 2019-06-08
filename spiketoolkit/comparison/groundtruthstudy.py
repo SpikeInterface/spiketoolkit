@@ -3,7 +3,7 @@ High level tools to run many groundtruth comparison with
 many sorter on many recordings and then collect and aggregate results
 in an easy way.
 
-the all mechanism is based on an intrinsinct organisation
+The all mechanism is based on an intrinsinct organisation
 into a "study_folder" with several subfolder:
   * raw_files : contain a copy in binary format of recordings
   * sorter_folders : contains output of sorters
