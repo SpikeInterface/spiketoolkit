@@ -41,9 +41,9 @@ def setup_comparison_study(study_folder, gt_dict):
     study_folder = Path(study_folder)
     assert not os.path.exists(study_folder), 'study_folder already exists'
     
-    os.makedirs(study_folder)
-    os.makedirs(study_folder / 'raw_files')
-    os.makedirs(study_folder / 'ground_truth')
+    os.makedirs(str(study_folder))
+    os.makedirs(str(study_folder / 'raw_files'))
+    os.makedirs(str(study_folder / 'ground_truth'))
     
     
     for rec_name, (recording, sorting_gt) in gt_dict.items():
@@ -206,14 +206,14 @@ def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
 
 def copy_sorting(study_folder):
     """
-    Collect sorting and copy then in the same format to get a ligthweigth version.
+    Collect sorting and copy then in the same format to get a lightweigth version.
     """
     study_folder = Path(study_folder)
     sorter_folders = study_folder / 'sorter_folders'
     sorting_folders = study_folder / 'sortings'
     
     if not os.path.exists(sorting_folders):
-        os.makedirs(sorting_folders)
+        os.makedirs(str(sorting_folders))
     
     results = collect_sorting_outputs(sorter_folders)
     for (rec_name,sorter_name), sorting in results.items():
@@ -246,7 +246,7 @@ def collect_run_times(study_folder):
     tables_folder = study_folder / 'tables'
 
     if not os.path.exists(tables_folder):
-        os.makedirs(tables_folder)
+        os.makedirs(str(tables_folder))
     
     run_times = []
     for rec_name, sorter_name, output_folder in loop_over_folders(sorter_folders):
