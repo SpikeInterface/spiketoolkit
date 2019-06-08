@@ -134,6 +134,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     task_list = []
     for rec_name, recording in recording_dict.items():
         for sorter_name in sorter_list:
+            
             output_folder = working_folder / rec_name / sorter_name
 
             if is_log_ok(output_folder):
@@ -143,12 +144,13 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
                 elif mode == 'overwrite':
                     shutil.rmtree(str(output_folder))
                 elif mode == 'keep':
+                    #~ print(rec_name, sorter_name, 'already done: skip.')
                     continue
                 else:
                     raise(ValueError('mode not in raise, overwrite, keep'))
             params = sorter_params.get(sorter_name, {})
             task_list.append((rec_name, recording, sorter_name, output_folder, grouping_property, debug, params))
-
+    
     if engine is None or engine == 'loop':
         # simple loop in main process
         for arg_list in task_list:

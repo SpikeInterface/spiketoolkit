@@ -72,12 +72,44 @@ def setup_comparison_study(study_folder, gt_dict):
 
 
 def get_rec_names(study_folder):
+    """
+    Get list of keys of recordings.
+    Read from the 'names.txt' file in stufy folder.
+    
+    Parameters
+    ----------
+    study_folder: str
+        The study folder.
+    
+    Returns
+    ----------
+    
+    rec_names: list
+        LIst of names.
+    """
     with open(study_folder / 'names.txt', mode='r', encoding='utf8') as f:
         rec_names = f.read()[:-1].split('\n')
     return rec_names
 
 
 def get_recordings(study_folder):
+    """
+    Get ground recording as a dict.
+    
+    They are read from the 'raw_files' folder with binary format.
+    
+    Parameters
+    ----------
+    study_folder: str
+        The study folder.
+    
+    Returns
+    ----------
+    
+    recording_dict: dict
+        Dict of rexording.
+        
+    """
     study_folder = Path(study_folder)
     
     rec_names = get_rec_names(study_folder)
@@ -98,6 +130,23 @@ def get_recordings(study_folder):
     return recording_dict
 
 def get_ground_truths(study_folder):
+    """
+    Get ground truth sorting extractor as a dict.
+    
+    They are read from the 'ground_truth' folder with npz format.
+    
+    Parameters
+    ----------
+    study_folder: str
+        The study folder.
+    
+    Returns
+    ----------
+    
+    ground_truths: dict
+        Dict of sorintg_gt.
+    
+    """
     study_folder = Path(study_folder)
     rec_names = get_rec_names(study_folder)
     ground_truths = {}
@@ -110,6 +159,37 @@ def get_ground_truths(study_folder):
     
 def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
                                         engine='loop', engine_kargs={}):
+    """
+    Run all sorter on all recordings.
+    
+    
+    Wrapper on top of st.sorter.run_sorters(...)
+
+
+    Parameters
+    ----------
+    study_folder: str
+        The study folder.
+    
+    sorter_params: dict of dict with sorter_name as key
+        This allow to overwritte default params for sorter.
+    
+    mode: 'raise_if_exists' or 'overwrite' or 'keep'
+        The mode when the subfolder of recording/sorter already exists.
+            * 'raise' : raise error if subfolder exists
+            * 'overwrite' : force recompute
+            * 'keep' : do not compute again if f=subfolder exists and log is OK
+
+    engine: str
+        'loop' or 'multiprocessing'
+    
+    engine_kargs: dict
+        This contains kargs specific to the launcher engine:
+            * 'loop' : no kargs
+            * 'multiprocessing' : {'processes' : } number of processes
+    
+    
+    """
     study_folder = Path(study_folder)
     sorter_folders = study_folder / 'sorter_folders'
     
@@ -189,7 +269,7 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
     Parameters
     ----------
     study_folder: str
-        The folrder where sorter.run_sorters have done the job.
+        The study folder.
     exhaustive_gt: bool (default True)
         Tell if the ground true is "exhaustive" or not. In other world if the
         GT have all possible units. It allows more performance measurment.
@@ -203,10 +283,6 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
     ----------
     comparisons: a dict of SortingComparison
 
-    out_dataframes: a dict of DataFrame
-        Return several usefull DataFrame to compare all results:
-          * run_times
-          * performances
     """
 
     study_folder = Path(study_folder)
@@ -226,6 +302,30 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
 
 
 def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thresh):
+    """
+    Aggregate some results into dataframe to have a "study" overview on all recordingXsorter.
+    
+    Tables are:
+      * run_times: run times per recordingXsorter
+      * perf_pooled_with_sum: GroundTruthComparison.see get_performance
+      * perf_pooled_with_average: GroundTruthComparison.see get_performance
+      * count_units: given some threhold count how many units : 'well_detected', 'redundant', 'false_postive_units, 'bad'
+    
+    Parameters
+    ----------
+    study_folder: str
+        The study folder.
+
+    karg_thresh: dict
+        Threholds paramerts used for the "count_units" table.
+    
+    Returns
+    ----------
+
+    out_dataframes: a dict of DataFrame
+        Return several usefull DataFrame to compare all results.
+        Note that count_units depend on karg_thresh.
+    """
     study_folder = Path(study_folder)
     sorter_folders = study_folder / 'sorter_folders'
     tables_folder = study_folder / 'tables'
