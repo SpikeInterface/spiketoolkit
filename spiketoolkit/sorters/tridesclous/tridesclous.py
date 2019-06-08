@@ -180,5 +180,5 @@ def make_nested_tdc_params(
         'clust_method': clust_method,
         'clust_kargs': {'kde_bandwith': 1.},
     }
-    
+
     return params

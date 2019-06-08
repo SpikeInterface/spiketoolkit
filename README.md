@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit)
 
 Alpha Development
-Version 0.2.3
+Version 0.3.1
 
 
 # SpikeToolkit
@@ -10,7 +10,7 @@ SpikeToolkit is a module that was designed to make running, curating, evaluating
 
 Its tools and functions are built using [spikeextractors](https://github.com/SpikeInterface/spikeextractors) objects, allowing for straightforward, standardized analysis and spike sorting.
 
-## Getting Started 
+## Getting Started
 
 To get started with SpikeToolkit, you can install it with pip:
 
@@ -27,6 +27,12 @@ python setup.py install
 ```
 
 SpikeInterface allows the user to extract data from either raw or spike sorted datasets with a RecordingExtractor or SortingExtractor, respectively.
+
+## Documentation
+
+The documentation page can be found here: https://spiketoolkit.readthedocs.io/en/latest/
+
+## Basic usage
 
 **Run spike sorting algorithms**
 
@@ -108,7 +114,7 @@ pytest
 
 [Alessio Paolo Buccino](https://www.mn.uio.no/ifi/english/people/aca/alessiob/) - Center for Inegrative Neurolasticity (CINPLA), Department of Biosciences, Physics, and Informatics, University of Oslo, Oslo, Norway
 
-[Cole Hurwitz](https://www.inf.ed.ac.uk/people/students/Cole_Hurwitz.html) - The Institute for Adaptive and Neural Computation (ANC), University of Edinburgh, Edinburgh, Scotland 
+[Cole Hurwitz](https://www.inf.ed.ac.uk/people/students/Cole_Hurwitz.html) - The Institute for Adaptive and Neural Computation (ANC), University of Edinburgh, Edinburgh, Scotland
 
 [Jeremy Magland](https://www.simonsfoundation.org/team/jeremy-magland/) - Center for Computational Biology (CCB), Flatiron Institute, New York, United States
 
