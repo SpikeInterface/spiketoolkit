@@ -91,13 +91,15 @@ class TridesclousSorter(BaseSorter):
     def _run(self, recording, output_folder):
         nb_chan = recording.get_num_channels()
 
+        nested_params = make_nested_tdc_params(**self.params)
+        
         # check params and OpenCL when many channels
         use_sparse_template = False
         use_opencl_with_sparse = False
         if nb_chan >64: # this limit depend on the platform of course
             if tdc.cltools.HAVE_PYOPENCL:
                 # force opencl
-                self.params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+                nested_params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
                 use_sparse_template = True
                 use_opencl_with_sparse = True
             else:
@@ -105,7 +107,6 @@ class TridesclousSorter(BaseSorter):
 
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         # make catalogue
-        nested_params = make_nested_tdc_params(**self.params)
         chan_grps = list(tdc_dataio.channel_groups.keys())
         for chan_grp in chan_grps:
             cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
