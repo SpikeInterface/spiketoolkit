@@ -26,7 +26,7 @@ class MultiSortingComparison():
     def get_agreement_sorting(self, minimum_matching=0):
         return AgreementSortingExtractor(self, min_agreement=minimum_matching)
 
-    def _do_matching(self, verbose, tollerance=10):
+    def _do_matching(self, verbose, tolerance=10):
         # do pairwise matching
         self.sorting_comparisons = {}
         for i in range(len(self._sorting_list)):
@@ -171,7 +171,7 @@ class MultiSortingComparison():
                 assert len(tp_idx1) == len(tp_idx2)
                 sp_tp1 = list(np.array(sp1)[tp_idx1])
                 sp_tp2 = list(np.array(sp2)[tp_idx2])
-                assert np.allclose(sp_tp1, sp_tp2, atol=tollerance)
+                assert np.allclose(sp_tp1, sp_tp2, atol=tolerance)
                 self._spiketrains.append(sp_tp1)
         self.added_nodes = added_nodes
 
@@ -248,7 +248,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
         return np.array(self._msc._spiketrains[list(self._msc._new_units.keys()).index(unit_id)])
 
 
-def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tollerance=10,
+def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tolerance=10,
                              n_jobs=-1, verbose=False):
     '''
     Compares multiple spike sorter outputs.

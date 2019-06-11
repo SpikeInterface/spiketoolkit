@@ -51,7 +51,7 @@ class HerdingspikesSorter(BaseSorter):
             'title': "Bandpass filters the recording if True"},
         {'name': 'pre_scale', 'type': 'bool', 'value': False, 'default': False,
             'title': "Scales recording traces to optimize HerdingSpikes performance"},
-        {'name': 'pre_scale_value', 'type': 'float', 'value': 200.0, 'default': 200.0,
+        {'name': 'pre_scale_value', 'type': 'float', 'value': 20.0, 'default': 20.0,
             'title': "Scale to apply in case of pre-scaling of traces"},
     ]
 
@@ -177,6 +177,6 @@ HerdingspikesSorter._default_params = {
 
     # rescale traces
     'pre_scale': False,  # TODO consider setting default to True
-    'pre_scale_value': 200.0
+    'pre_scale_value': 20.0
 
 }

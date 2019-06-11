@@ -3,6 +3,7 @@ from pathlib import Path
 from spiketoolkit.sorters.basesorter import BaseSorter
 from spiketoolkit.sorters.sorter_tools import _run_command_and_print_output, _call_command
 import spikeextractors as se
+import copy
 
 try:
     import klusta
@@ -44,6 +45,22 @@ class KlustaSorter(BaseSorter):
         'pca_n_waveforms_max': 10000,
         'num_starting_clusters': 50,
     }
+
+    _extra_gui_params = [
+        {'name': 'adjacency_radius', 'type': 'float', 'value':None, 'default':None,  'title': "Adjacency radius"},
+        {'name': 'threshold_strong_std_factor', 'type': 'int', 'value':5, 'default':5,  'title': "Threshold strong std factor"},
+        {'name': 'threshold_weak_std_factor', 'type': 'int', 'value':2, 'default':2,  'title': "Threshold weak std factor"},
+        {'name': 'detect_sign', 'type': 'int', 'value':-1, 'default':-1,  'title': "Use -1, 0, or 1, depending on the sign of the spikes in the recording"},
+        {'name': 'extract_s_before', 'type': 'int', 'value':16, 'default':16, 'title': "Frames to extract before"},
+        {'name': 'extract_s_after', 'type': 'int', 'value':32, 'default':32,  'title': "Frames to extract after"},
+        {'name': 'n_features_per_channel', 'type': 'int', 'value':3, 'default':3,  'title': "Number of features per channel"},
+        {'name': 'pca_n_waveforms_max', 'type': 'int', 'value':10000, 'default':10000,  'title': "Max number of waveforms for PCA"},
+        {'name': 'num_starting_clusters', 'type': 'int', 'value':50, 'default':50,  'title': "Starting number of clusters"},
+    ]
+
+    _gui_params = copy.deepcopy(BaseSorter._gui_params)
+    for param in _extra_gui_params:
+        _gui_params.append(param)
 
     installation_mesg = """
        >>> pip install Cython h5py tqdm
