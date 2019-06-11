@@ -94,24 +94,27 @@ class TridesclousSorter(BaseSorter):
         
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
         
-        nested_params = make_nested_tdc_params(tdc_dataio, **self.params)
-        
-        # check params and OpenCL when many channels
-        use_sparse_template = False
-        use_opencl_with_sparse = False
-        if nb_chan >64: # this limit depend on the platform of course
-            if tdc.cltools.HAVE_PYOPENCL:
-                # force opencl
-                nested_params['preprocessor']['signalpreprocessor_engine'] = 'opencl'
-                use_sparse_template = True
-                use_opencl_with_sparse = True
-            else:
-                print('OpenCL is not available processing will be slow, try install it')
 
         
         # make catalogue
         chan_grps = list(tdc_dataio.channel_groups.keys())
         for chan_grp in chan_grps:
+            
+            # parameters can change depending the group
+            nested_params = make_nested_tdc_params(tdc_dataio, chan_grp, **self.params)
+            
+            # check params and OpenCL when many channels
+            use_sparse_template = False
+            use_opencl_with_sparse = False
+            if nb_chan >64: # this limit depend on the platform of course
+                if tdc.cltools.HAVE_PYOPENCL:
+                    # force opencl
+                    nested_params['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+                    use_sparse_template = True
+                    use_opencl_with_sparse = True
+                else:
+                    print('OpenCL is not available processing will be slow, try install it')
+            
             cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
             tdc.apply_all_catalogue_steps(cc, nested_params, verbose=self.debug, )
             if self.debug:
@@ -133,7 +136,7 @@ class TridesclousSorter(BaseSorter):
         return sorting
 
 
-def make_nested_tdc_params(tdc_dataio,
+def make_nested_tdc_params(tdc_dataio, chan_grp,
         highpass_freq=400.,
         lowpass_freq=5000.,
         peak_sign='-',
@@ -146,7 +149,7 @@ def make_nested_tdc_params(tdc_dataio,
         feature_method='auto',
         cluster_method='auto'):
     
-    params = tdc.get_auto_params_for_catalogue(tdc_dataio)
+    params = tdc.get_auto_params_for_catalogue(tdc_dataio, chan_grp=chan_grp)
     
     params['preprocessor']['highpass_freq'] = highpass_freq
     params['preprocessor']['lowpass_freq'] = lowpass_freq
