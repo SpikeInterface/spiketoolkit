@@ -74,12 +74,11 @@ class KlustaSorter(BaseSorter):
                         recording._timeseries.offset==0:
             # no need to copy
             raw_filename = str(recording._datfile)
-            raw_filename = raw_filename.replace('.dat', '')
             dtype = recording._timeseries.dtype.str
             nb_chan = len(recording._channels)
         else:
             # save binary file (chunk by hcunk) into a new file
-            raw_filename = output_folder / 'recording'
+            raw_filename = output_folder / 'recording.dat'
             n_chan = recording.get_num_channels()
             chunksize = 2**24// n_chan
             dtype='int16'
