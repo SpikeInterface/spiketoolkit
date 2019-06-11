@@ -78,6 +78,9 @@ where the parameters can be easily be viewed before running:
 ```python
 print(ms4.params)
 ```
+
+Returning:
+
 ```
 {'detect_sign': -1,
  'adjacency_radius': -1,
