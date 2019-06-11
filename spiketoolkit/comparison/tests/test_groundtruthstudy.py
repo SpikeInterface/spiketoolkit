@@ -28,8 +28,8 @@ def setup_module():
 
 
 def _setup_comparison_study():
-    rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30, seed=7)
-    rec1, gt_sorting1 = se.example_datasets.toy_example(num_channels=32, duration=30, seed=7)
+    rec0, gt_sorting0 = se.example_datasets.toy_example(num_channels=4, duration=30, seed=0)
+    rec1, gt_sorting1 = se.example_datasets.toy_example(num_channels=32, duration=30, seed=0)
 
     gt_dict = {
         'toy_tetrode' : (rec0, gt_sorting0),

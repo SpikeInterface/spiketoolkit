@@ -10,21 +10,21 @@ import spikeextractors as se
 
 
 def test_run_sorters_with_list():
-    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30, seed=7)
-    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=7)
+    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30, seed=0)
+    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=0)
 
     recording_list = [rec0, rec1]
     sorter_list = ['tridesclous']
     working_folder = 'test_run_sorters_list'
     if os.path.exists(working_folder):
         shutil.rmtree(working_folder)
-    run_sorters(sorter_list, recording_list, working_folder, debug=False, seed=7)
+    run_sorters(sorter_list, recording_list, working_folder, debug=False, seed=0)
 
 
 
 def test_run_sorters_with_dict():
-    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30, seed=7)
-    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=7)
+    rec0, _ = se.example_datasets.toy_example(num_channels=4, duration=30, seed=0)
+    rec1, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=0)
 
     recording_dict = {'toy_tetrode' : rec0, 'toy_octotrode': rec1}
 
@@ -59,7 +59,7 @@ def test_run_sorters_multiprocessing():
 
     recording_dict = {}
     for i in range(8):
-        rec, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=7)
+        rec, _ = se.example_datasets.toy_example(num_channels=8, duration=30, seed=0)
         recording_dict['rec_'+str(i)] = rec
 
     # sorter_list = ['mountainsort4', 'klusta', 'tridesclous']

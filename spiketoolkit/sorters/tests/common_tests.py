@@ -14,7 +14,7 @@ class SorterCommonTestSuite:
 
     def test_on_toy(self):
 
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=60, seed=7)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=60, seed=0)
 
         params = self.SorterClass.default_params()
 
@@ -31,7 +31,7 @@ class SorterCommonTestSuite:
     def test_several_groups(self):
 
         # run sorter with several groups in paralel or not
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=8, duration=30, seed=7)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=8, duration=30, seed=0)
 
         # make 2 artificial groups
         for ch_id in range(0, 4):
@@ -54,7 +54,7 @@ class SorterCommonTestSuite:
         # some sorter (TDC, KS, KS2, ...) work by default with the raw binary
         # format as input to avoid copy when the recording is already this format
 
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=2, duration=10, seed=7)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=2, duration=10, seed=0)
 
         # create a raw dat file and prb file
         raw_filename = 'raw_file.dat'
