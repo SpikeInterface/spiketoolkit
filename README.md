@@ -26,8 +26,6 @@ cd spiketoolkit
 python setup.py install
 ```
 
-SpikeInterface allows the user to extract data from either raw or spike sorted datasets with a RecordingExtractor or SortingExtractor, respectively.
-
 ## Documentation
 
 The documentation page can be found here: https://spiketoolkit.readthedocs.io/en/latest/
@@ -38,9 +36,7 @@ The documentation page can be found here: https://spiketoolkit.readthedocs.io/en
 
 To run spike sorting algorithm, a `RecordingExtractor` object needs to be instantiated using the `spikeextractors` package
 
-In this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo, we show how to run several spike sorters on a toy dataset.
-
-Each spike sorter must be installed separately. If one of the spike sorters is not installed, an error message detailing the installation procedure is given. Below is a list spike sorters we have made compatible with SpikeInterface:
+Each spike sorting algorithm must be installed separately. If one of the sorters you are trying to use is not installed, an error message detailing the installation procedure is thrown. Below is a list of sorters that we have made compatible with SpikeInterface:
 
 - [Mountainsort](https://github.com/flatironinstitute/mountainsort)
 - [SpyKING circus](https://github.com/spyking-circus/spyking-circus)
@@ -51,7 +47,9 @@ Each spike sorter must be installed separately. If one of the spike sorters is n
 - [Ironclust](https://github.com/jamesjun/ironclust)
 - [Tridesclous](https://github.com/tridesclous/tridesclous)
 
-SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsrt, Spyking Circus, Kilosort and Tridesclous) are run on the same Open Ephys recordings.
+Although we have implemented many popular sorting algorithms, this is not an exhaustive list. Implementing new spike sorting algorithms in SpikeToolkit, however, is straightforward so we expect this list to grow in future versions.
+
+SpikeToolkit is designed to make the spike sorting procedure _painless_ and easy. In the following example, 4 spike sorters (Mountainsort, Spyking Circus, Kilosort and Tridesclous) are run with default parameters on the same Open Ephys recordings.
 
 ```python
 import spikeextractors as se
@@ -67,6 +65,35 @@ sorting_KS = st.sorters.run_kilosort(recording')
 sorting_TDC = st.sorters.run_tridesclous(recording)
 ```
 
+The ability to run each sorter generically is a consequence of the object-oriented approach to spike sorting that SpikeToolkit implements behind the scenes. To run each sorter in an object-oriented way (so parameters are easily exposed), one can run a sorter like this,
+
+```python
+ms4 = st.sorters.Mountainsort4Sorter(recording=recording)
+ms4.run()
+sorting_MS = ms4.get_result()
+```
+
+where the parameters can be easily be viewed before running:
+
+```python
+print(ms4.params)
+```
+```
+{'detect_sign': -1,
+ 'adjacency_radius': -1,
+ 'freq_min': 300,
+ 'freq_max': 6000,
+ 'filter': False,
+ 'curation': True,
+ 'whiten': True,
+ 'clip_size': 50,
+ 'detect_threshold': 3,
+ 'detect_interval': 10,
+ 'noise_overlap_threshold': 0.15}
+
+```
+
+For another example on running sorters, please see this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo. In it, we show how to run several spike sorters on a toy dataset.
 
 **Curating spike sorting outputs**
 
