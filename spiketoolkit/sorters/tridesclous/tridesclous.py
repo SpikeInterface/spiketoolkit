@@ -12,6 +12,7 @@ try:
 except ImportError:
     HAVE_TDC = False
 
+print('HAVE_TDC', HAVE_TDC)
 
 class TridesclousSorter(BaseSorter):
     """
@@ -101,7 +102,7 @@ class TridesclousSorter(BaseSorter):
         if nb_chan >64: # this limit depend on the platform of course
             if tdc.cltools.HAVE_PYOPENCL:
                 # force opencl
-                nested_params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+                nested_params['preprocessor']['signalpreprocessor_engine'] = 'opencl'
                 use_sparse_template = True
                 use_opencl_with_sparse = True
             else:
