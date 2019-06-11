@@ -90,7 +90,6 @@ print(ms4.params)
  'detect_threshold': 3,
  'detect_interval': 10,
  'noise_overlap_threshold': 0.15}
-
 ```
 
 For another example on running sorters, please see this [example](https://github.com/SpikeInterface/spiketoolkit/tree/master/examples) from the examples repo. In it, we show how to run several spike sorters on a toy dataset.
