@@ -14,7 +14,7 @@ class SorterCommonTestSuite:
 
     def test_on_toy(self):
 
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=60)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=4, duration=60, seed=7)
 
         params = self.SorterClass.default_params()
 
@@ -31,7 +31,7 @@ class SorterCommonTestSuite:
     def test_several_groups(self):
 
         # run sorter with several groups in paralel or not
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=8, duration=30)
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=8, duration=30, seed=7)
 
         # make 2 artificial groups
         for ch_id in range(0, 4):
@@ -49,12 +49,12 @@ class SorterCommonTestSuite:
             sorter.run()
             sorting = sorter.get_result()
             del sorting
-    
+
     def test_with_BinDatRecordingExtractor(self):
         # some sorter (TDC, KS, KS2, ...) work by default with the raw binary
         # format as input to avoid copy when the recording is already this format
-        
-        recording, sorting_gt = se.example_datasets.toy_example(num_channels=2, duration=10)
+
+        recording, sorting_gt = se.example_datasets.toy_example(num_channels=2, duration=10, seed=7)
 
         # create a raw dat file and prb file
         raw_filename = 'raw_file.dat'
@@ -66,13 +66,11 @@ class SorterCommonTestSuite:
             f.write(traces.T.tobytes())
 
         se.save_probe_file(recording, prb_filename, format='spyking_circus')
-
         recording = se.BinDatRecordingExtractor(raw_filename, samplerate, 2, 'float32', frames_first=True, offset=0)
         se.load_probe_file(recording, prb_filename)
-        
+
         params = self.SorterClass.default_params()
         sorter = self.SorterClass(recording=recording, output_folder=None)
         sorter.set_params(**params)
         sorter.run()
         sorting = sorter.get_result()
-        
