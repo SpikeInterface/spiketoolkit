@@ -73,13 +73,13 @@ ms4.run()
 sorting_MS = ms4.get_result()
 ```
 
-where the parameters can be easily be viewed before running:
+where the parameters can be easily be viewed before running with,
 
 ```python
 print(ms4.params)
 ```
 
-Returning:
+which returns,
 
 ```
 {'detect_sign': -1,
