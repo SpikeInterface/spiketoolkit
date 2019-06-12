@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit)
+[![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit) [![PyPI version](https://badge.fury.io/py/spiketoolkit.svg)](https://badge.fury.io/py/spiketoolkit)
 
 Alpha Development
 Version 0.3.1
