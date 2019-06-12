@@ -196,7 +196,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             return waveform_list
 
 
-def get_unit_template(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
+def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
                       start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                       max_num_waveforms=np.inf, compute_property_from_recording=False,
                       verbose=False):
@@ -284,7 +284,7 @@ def get_unit_template(recording, sorting, unit_ids=None, mode='median', grouping
         return template_list
 
 
-def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
+def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
                          save_as_property=True, start_frame=None, end_frame=None,
                          ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
                          compute_property_from_recording=False, verbose=False):
@@ -346,7 +346,7 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='m
         if 'template' in sorting.get_unit_property_names(unit_id):
             template = sorting.get_unit_property(unit_id, 'template')
         else:
-            template = get_unit_template(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
+            template = get_unit_templates(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
                                          end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
                                          ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
                                          compute_property_from_recording=compute_property_from_recording,
@@ -374,7 +374,7 @@ def get_unit_max_channel(recording, sorting, unit_ids=None, peak='both', mode='m
         return max_list
 
 
-def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
+def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                        start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                        max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
                        save_as_features=True, compute_property_from_recording=False,
@@ -513,7 +513,7 @@ def compute_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode
     return pca_scores
 
 
-def extract_property_from_maximum_channel(recording, sorting, property, unit_ids=None, peak='both',
+def set_unit_properties_by_max_channel_properties(recording, sorting, property, unit_ids=None, peak='both',
                                           mode='median',  start_frame=None, end_frame=None,
                                           ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
                                           verbose=False):
@@ -575,7 +575,7 @@ def extract_property_from_maximum_channel(recording, sorting, property, unit_ids
             if max_chan_property:
                 max_chan = sorting.get_unit_property(unit_id, 'max_channel')
             else:
-                max_chan = get_unit_max_channel(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
+                max_chan = get_unit_max_channels(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
                                                 end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
                                                 ms_before=ms_before, ms_after=ms_after, verbose=verbose)
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
@@ -658,7 +658,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         waveforms = get_unit_waveforms(recording, sorting, start_frame=start_frame, end_frame=end_frame,
                                        max_num_waveforms=max_num_waveforms, ms_before=ms_before, ms_after=ms_after,
                                        dtype=dtype, verbose=verbose)
-    pc_scores = compute_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
+    pc_scores = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
                                    start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
                                    ms_before=ms_before, ms_after=ms_after, dtype=dtype,
                                    max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
@@ -705,7 +705,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         positions[:, 1] = np.arange(recording.get_num_channels())
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    templates = get_unit_template(recording, sorting)
+    templates = get_unit_templates(recording, sorting)
 
     if not isinstance(templates, list):
         if len(templates.shape) == 2:
@@ -719,7 +719,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
 
     if grouping_property in recording.get_channel_property_names():
         if grouping_property not in sorting.get_unit_property_names():
-            extract_property_from_maximum_channel(recording, sorting, grouping_property)
+            set_unit_properties_by_max_channel_properties(recording, sorting, grouping_property)
         # pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_red = np.zeros((templates.shape[0], templates.shape[1], int(max_num_chans_in_group)))
