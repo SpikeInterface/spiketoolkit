@@ -12,7 +12,6 @@ try:
 except ImportError:
     HAVE_TDC = False
 
-print('HAVE_TDC', HAVE_TDC)
 
 class TridesclousSorter(BaseSorter):
     """
