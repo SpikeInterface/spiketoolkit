@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
 
+d = {}
+exec(open("spiketoolkit/version.py").read(), None, d)
+version = d['version']
+
 pkg_name = "spiketoolkit"
 
 setup(
