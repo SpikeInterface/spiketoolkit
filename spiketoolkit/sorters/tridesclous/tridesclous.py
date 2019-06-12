@@ -12,6 +12,7 @@ try:
 except ImportError:
     HAVE_TDC = False
 
+print('HAVE_TDC', HAVE_TDC)
 
 class TridesclousSorter(BaseSorter):
     """
@@ -27,14 +28,14 @@ class TridesclousSorter(BaseSorter):
         'highpass_freq': 400.,
         'lowpass_freq': 5000.,
         'peak_sign': '-',
-        'relative_threshold': 5.5,
-        'peak_span': 0.0002,
-        'n_left': -45,
-        'n_right': 60,
+        'relative_threshold': 5,
+        'peak_span_ms': 0.3,
+        'wf_left_ms': -2.0,
+        'wf_right_ms':  3.0,
         'nb_max': 20000,
-        'alien_value_threshold': 100.,
-        'feat_method': 'peak_max',
-        'clust_method': 'sawchaincut',
+        'alien_value_threshold': None, # in benchmark there are no artifact
+        'feature_method': 'auto',   #peak_max/global_pca/by_channel_pca
+        'cluster_method': 'auto',  #sawchaincut/dbscan/kmeans
     }
 
 
@@ -90,27 +91,32 @@ class TridesclousSorter(BaseSorter):
 
     def _run(self, recording, output_folder):
         nb_chan = recording.get_num_channels()
-
-        nested_params = make_nested_tdc_params(**self.params)
         
-        # check params and OpenCL when many channels
-        use_sparse_template = False
-        use_opencl_with_sparse = False
-        if nb_chan >64: # this limit depend on the platform of course
-            if tdc.cltools.HAVE_PYOPENCL:
-                # force opencl
-                nested_params['fullchain_kargs']['preprocessor']['signalpreprocessor_engine'] = 'opencl'
-                use_sparse_template = True
-                use_opencl_with_sparse = True
-            else:
-                print('OpenCL is not available processing will be slow, try install it')
-
         tdc_dataio = tdc.DataIO(dirname=str(output_folder))
+        
+
+        
         # make catalogue
         chan_grps = list(tdc_dataio.channel_groups.keys())
         for chan_grp in chan_grps:
+            
+            # parameters can change depending the group
+            nested_params = make_nested_tdc_params(tdc_dataio, chan_grp, **self.params)
+            
+            # check params and OpenCL when many channels
+            use_sparse_template = False
+            use_opencl_with_sparse = False
+            if nb_chan >64: # this limit depend on the platform of course
+                if tdc.cltools.HAVE_PYOPENCL:
+                    # force opencl
+                    nested_params['preprocessor']['signalpreprocessor_engine'] = 'opencl'
+                    use_sparse_template = True
+                    use_opencl_with_sparse = True
+                else:
+                    print('OpenCL is not available processing will be slow, try install it')
+            
             cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
-            tdc.apply_all_catalogue_steps(cc, verbose=self.debug, **nested_params)
+            tdc.apply_all_catalogue_steps(cc, nested_params, verbose=self.debug, )
             if self.debug:
                 print(cc)
             cc.make_catalogue_for_peeler()
@@ -130,55 +136,42 @@ class TridesclousSorter(BaseSorter):
         return sorting
 
 
-def make_nested_tdc_params(
+def make_nested_tdc_params(tdc_dataio, chan_grp,
         highpass_freq=400.,
         lowpass_freq=5000.,
         peak_sign='-',
-        relative_threshold=5.5,
-        peak_span= 0.0002,
-        n_left= -45,
-        n_right= 60,
+        relative_threshold=5,
+        peak_span_ms= 0.3,
+        wf_left_ms= -2.0,
+        wf_right_ms= 3.0,
         nb_max=20000,
-        alien_value_threshold=100.,
-        feat_method='peak_max',
-        clust_method='sawchaincut'):
+        alien_value_threshold=None,
+        feature_method='auto',
+        cluster_method='auto'):
+    
+    params = tdc.get_auto_params_for_catalogue(tdc_dataio, chan_grp=chan_grp)
+    
+    params['preprocessor']['highpass_freq'] = highpass_freq
+    params['preprocessor']['lowpass_freq'] = lowpass_freq
+    
+    params['peak_detector']['peak_sign'] = peak_sign
+    params['peak_detector']['relative_threshold'] = relative_threshold
+    params['peak_detector']['peak_span_ms'] = peak_span_ms
 
-    params = {
-        'fullchain_kargs': {
-            'duration': 300.,
-            'preprocessor': {
-                'highpass_freq': highpass_freq,
-                'lowpass_freq': lowpass_freq,
-                'smooth_size': 0,
-                'chunksize': 1024,
-                'lostfront_chunksize': 128,
-                'signalpreprocessor_engine': 'numpy',
-                'common_ref_removal':False,
-            },
-            'peak_detector': {
-                'peakdetector_engine': 'numpy',
-                'peak_sign': peak_sign,
-                'relative_threshold': relative_threshold,
-                'peak_span': peak_span,
-            },
-            'noise_snippet': {
-                'nb_snippet': 300,
-            },
-            'extract_waveforms': {
-                'n_left': n_left,
-                'n_right': n_right,
-                'mode': 'rand',
-                'nb_max': nb_max,
-                'align_waveform': False,
-            },
-            'clean_waveforms': {
-                'alien_value_threshold': alien_value_threshold,
-            },
-        },
-        'feat_method': feat_method,
-        'feat_kargs': {},
-        'clust_method': clust_method,
-        'clust_kargs': {'kde_bandwith': 1.},
-    }
-
+    params['extract_waveforms']['wf_left_ms'] = wf_left_ms
+    params['extract_waveforms']['wf_right_ms'] = wf_right_ms
+    params['extract_waveforms']['nb_max'] = nb_max
+    
+    params['clean_waveforms']['alien_value_threshold'] = alien_value_threshold
+    
+    
+    
+    if feature_method != 'auto':
+        params['feature_method'] = feature_method
+        params['feature_kargs'] = {}
+    
+    if cluster_method != 'auto':
+        params['cluster_method'] = cluster_method
+        params['cluster_kargs'] = {}
+    
     return params
