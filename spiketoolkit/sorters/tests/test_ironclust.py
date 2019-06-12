@@ -11,8 +11,6 @@ class IronclustCommonTestSuite(SorterCommonTestSuite, unittest.TestCase):
     SorterClass = IronclustSorter
 
 
-
 if __name__ == '__main__':
     IronclustCommonTestSuite().test_on_toy()
     #~ IronclustCommonTestSuite().test_several_groups()
-    
