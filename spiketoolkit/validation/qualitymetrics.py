@@ -44,10 +44,10 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
     else:
         recording_f = recording
     channel_noise_levels = _compute_channel_noise_levels(recording=recording_f, mode=mode, seconds=seconds)
-    templates = st.postprocessing.get_unit_template(recording_f, sorting, unit_ids=unit_ids,
+    templates = st.postprocessing.get_units_templates(recording_f, sorting, unit_ids=unit_ids,
                                                     max_num_waveforms=max_num_waveforms,
                                                     mode='median')
-    max_channels = st.postprocessing.get_unit_max_channel(recording, sorting, unit_ids=unit_ids,
+    max_channels = st.postprocessing.get_units_max_channels(recording, sorting, unit_ids=unit_ids,
                                                           max_num_waveforms=max_num_waveforms, peak='both',
                                                           mode='median')
     snr_list = []

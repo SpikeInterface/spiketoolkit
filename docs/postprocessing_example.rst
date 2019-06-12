@@ -38,7 +38,7 @@ from the paired recording-sorting.
 1) Compute spike waveforms
 --------------------------
 
-Waveforms are extracted with the ``get_unit_waveforms`` function by
+Waveforms are extracted with the ``get_units_waveforms`` function by
 extracting snippets of the recordings when spikes are detected. When
 waveforms are extracted, the can be loaded in the ``SortingExtractor``
 object as features. The ms before and after the spike event can be
@@ -47,7 +47,7 @@ n\_channels, n\_points)
 
 .. code:: python
 
-    wf = st.postprocessing.get_unit_waveforms(recording, sorting, ms_before=1, ms_after=2, 
+    wf = st.postprocessing.get_units_waveforms(recording, sorting, ms_before=1, ms_after=2, 
                                             save_as_features=True, verbose=True)
 
 
@@ -119,7 +119,7 @@ will have 2 channels and the same for group 1.
 
 .. code:: python
 
-    wf_by_group = st.postprocessing.get_unit_waveforms(recording, sorting, ms_before=1, ms_after=2, 
+    wf_by_group = st.postprocessing.get_units_waveforms(recording, sorting, ms_before=1, ms_after=2, 
                                                        save_as_features=False, verbose=True,
                                                        grouping_property='group', 
                                                        compute_property_from_recording=True)
@@ -148,14 +148,14 @@ will have 2 channels and the same for group 1.
 -------------------------------
 
 Similarly to waveforms, templates - average waveforms - can be easily
-extracted using the ``get_unit_templates``. When spike trains have
+extracted using the ``get_units_templatess``. When spike trains have
 numerous spikes, you can set the ``max_num_waveforms`` to be extracted.
 If waveforms have already been computd and stored as ``features``, those
 will be used. Templates can be saved as unit properties.
 
 .. code:: python
 
-    templates = st.postprocessing.get_unit_template(recording, sorting, max_num_waveforms=200,
+    templates = st.postprocessing.get_units_templates(recording, sorting, max_num_waveforms=200,
                                                   save_as_property=True, verbose=True)
 
 
@@ -198,7 +198,7 @@ amplitude and save it as a property.
 
 .. code:: python
 
-    max_chan = st.postprocessing.get_unit_max_channel(recording, sorting, save_as_property=True, verbose=True)
+    max_chan = st.postprocessing.get_units_max_channels(recording, sorting, save_as_property=True, verbose=True)
     print(max_chan)
 
 
@@ -229,7 +229,7 @@ PCA scores can be computed.
 
 .. code:: python
 
-    pca_scores = st.postprocessing.compute_pca_scores(recording, sorting, n_comp=3, verbose=True)
+    pca_scores = st.postprocessing.compute_units_pca_scores(recording, sorting, n_comp=3, verbose=True)
     
     for pc in pca_scores:
         print(pc.shape)
@@ -276,7 +276,7 @@ PCA was applied to the concatenation of the waveforms over channels.
 
 .. code:: python
 
-    pca_scores_by_electrode = st.postprocessing.compute_pca_scores(recording, sorting, n_comp=3, by_electrode=True)
+    pca_scores_by_electrode = st.postprocessing.compute_units_pca_scores(recording, sorting, n_comp=3, by_electrode=True)
     
     for pc in pca_scores_by_electrode:
         print(pc.shape)
