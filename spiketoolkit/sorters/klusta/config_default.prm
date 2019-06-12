@@ -3,7 +3,7 @@ experiment_name = r"{}"
 prb_file = r"{}"
 
 traces = dict(
-	raw_data_files=[experiment_name],
+	raw_data_files=[r"{}"],
 	voltage_gain=1.,
 	sample_rate={},
 	n_channels={},

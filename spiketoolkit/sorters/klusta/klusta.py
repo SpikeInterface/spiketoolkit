@@ -63,7 +63,9 @@ class KlustaSorter(BaseSorter):
 
         # alias to params
         p = self.params
-
+        
+        experiment_name = output_folder / 'recording'
+        
         # save prb file:
         if p['probe_file'] is None:
             p['probe_file'] = output_folder / 'probe.prb'
@@ -73,7 +75,7 @@ class KlustaSorter(BaseSorter):
         if isinstance(recording, se.BinDatRecordingExtractor) and recording._frame_first and\
                         recording._timeseries.offset==0:
             # no need to copy
-            raw_filename = str(recording._datfile)
+            raw_filename = str(Path(recording._datfile).resolve())
             dtype = recording._timeseries.dtype.str
             nb_chan = len(recording._channels)
         else:
@@ -96,8 +98,8 @@ class KlustaSorter(BaseSorter):
             klusta_config = f.readlines()
 
         # Note: should use format with dict approach here
-        klusta_config = ''.join(klusta_config).format(raw_filename,
-            p['probe_file'], float(recording.get_sampling_frequency()),
+        klusta_config = ''.join(klusta_config).format(experiment_name,
+            p['probe_file'], raw_filename, float(recording.get_sampling_frequency()),
             recording.get_num_channels(), "'{}'".format(dtype),
             p['threshold_strong_std_factor'], p['threshold_weak_std_factor'], "'" + detect_sign + "'",
             p['extract_s_before'], p['extract_s_after'], p['n_features_per_channel'],
