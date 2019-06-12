@@ -49,7 +49,7 @@ def setup_comparison_study(study_folder, gt_dict):
     for rec_name, (recording, sorting_gt) in gt_dict.items():
         
         # write recording as binary format + json + prb
-        raw_filename = study_folder / 'raw_files' / (rec_name+'.raw')
+        raw_filename = study_folder / 'raw_files' / (rec_name+'.dat')
         prb_filename = study_folder / 'raw_files' / (rec_name+'.prb')
         json_filename = study_folder / 'raw_files' / (rec_name+'.json')
         num_chan = recording.get_num_channels()
@@ -115,7 +115,7 @@ def get_recordings(study_folder):
     rec_names = get_rec_names(study_folder)
     recording_dict = {}
     for rec_name in rec_names:
-        raw_filename = study_folder / 'raw_files' / (rec_name+'.raw')
+        raw_filename = study_folder / 'raw_files' / (rec_name+'.dat')
         prb_filename = study_folder / 'raw_files' / (rec_name+'.prb')
         json_filename = study_folder / 'raw_files' / (rec_name+'.json')
         with open(json_filename, 'r', encoding='utf8') as f:
