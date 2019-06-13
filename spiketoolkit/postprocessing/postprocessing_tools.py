@@ -197,9 +197,9 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
 
 def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
-                      start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
-                      max_num_waveforms=np.inf, compute_property_from_recording=False,
-                      verbose=False):
+                       start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
+                       max_num_waveforms=np.inf, compute_property_from_recording=False,
+                       verbose=False):
     '''
     Computes the spike templates from a recording and sorting extractor. If waveforms are not found as features,
     they are computed.
@@ -217,7 +217,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
     grouping_property: str
         Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
         'group', then waveforms are computed group-wise.
-    save_as_features: bool
+    save_as_property: bool
         If True (default), templates are saved as property of the sorting extractor object
     start_frame: int
         The start frame for computing waveforms
@@ -285,9 +285,9 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
 
 
 def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
-                         save_as_property=True, start_frame=None, end_frame=None,
-                         ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                         compute_property_from_recording=False, verbose=False):
+                          save_as_property=True, start_frame=None, end_frame=None,
+                          ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
+                          compute_property_from_recording=False, verbose=False):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
     they are computed.
@@ -347,10 +347,10 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
             template = sorting.get_unit_property(unit_id, 'template')
         else:
             template = get_unit_templates(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
-                                         end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
-                                         ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
-                                         compute_property_from_recording=compute_property_from_recording,
-                                         verbose=verbose)
+                                          end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
+                                          ms_before=ms_before, ms_after=ms_after,  grouping_property=grouping_property,
+                                          compute_property_from_recording=compute_property_from_recording,
+                                          verbose=verbose)
         if peak == 'both':
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                         template.shape)[0]
@@ -375,10 +375,10 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
 
 
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
-                       start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
-                       max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
-                       save_as_features=True, compute_property_from_recording=False,
-                       whiten=False, verbose=False):
+                            start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
+                            max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
+                            save_as_features=True, compute_property_from_recording=False,
+                            whiten=False, verbose=False):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
 
@@ -514,9 +514,9 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
 
 
 def set_unit_properties_by_max_channel_properties(recording, sorting, property, unit_ids=None, peak='both',
-                                          mode='median',  start_frame=None, end_frame=None,
-                                          ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                                          verbose=False):
+                                                  mode='median',  start_frame=None, end_frame=None,
+                                                  ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
+                                                  verbose=False):
     '''
     Extracts 'property' from recording channel with largest peak for each unit and saves it as unit property.
 
@@ -576,8 +576,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
                 max_chan = sorting.get_unit_property(unit_id, 'max_channel')
             else:
                 max_chan = get_unit_max_channels(recording, sorting, unit_id, mode=mode, start_frame=start_frame,
-                                                end_frame=end_frame, max_num_waveforms=max_num_waveforms, dtype=dtype,
-                                                ms_before=ms_before, ms_after=ms_after, verbose=verbose)
+                                                 peak=peak, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
+                                                 dtype=dtype, ms_before=ms_before, ms_after=ms_after, verbose=verbose)
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 
@@ -659,9 +659,9 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
                                        max_num_waveforms=max_num_waveforms, ms_before=ms_before, ms_after=ms_after,
                                        dtype=dtype, verbose=verbose)
     pc_scores = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
-                                   start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
-                                   ms_before=ms_before, ms_after=ms_after, dtype=dtype,
-                                   max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
+                                        start_frame=start_frame, end_frame=end_frame, max_num_waveforms=max_num_waveforms,
+                                        ms_before=ms_before, ms_after=ms_after, dtype=dtype,
+                                        max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
 
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
