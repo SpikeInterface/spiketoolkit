@@ -1,6 +1,6 @@
 
-Postprocessing
-==============
+Postprocessing Tutorial
+=======================
 
 This notebook shows how to use the spiketoolkit.postprocessing module
 to:
