@@ -250,7 +250,6 @@ class GroundTruthComparison(BaseComparison):
                 num1 = self._event_counts_1[u1]
                 num2 = self._event_counts_2[u2]
                 agree_score = compute_agreement_score(num_matches, num1, num2)
-                print('agree_score', agree_score)
                 
                 if u2 != self._unit_map12[u1] and agree_score>self._min_accuracy:
                     redundant_ids.append(u2)
