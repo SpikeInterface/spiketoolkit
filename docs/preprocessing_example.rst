@@ -1,6 +1,6 @@
 
-Preprocessing
-=============
+Preprocessing Tutorial
+======================
 
 This notebook shows how to use the spiketoolkit.preprocessing module to:
 
