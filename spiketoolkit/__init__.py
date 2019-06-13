@@ -4,5 +4,4 @@ from . import sorters
 from . import comparison
 from . import validation
 
-
-__version__ = '0.3.0'
+from .version import version as __version__

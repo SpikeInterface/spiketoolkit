@@ -1,10 +1,14 @@
 from setuptools import setup, find_packages
 
+d = {}
+exec(open("spiketoolkit/version.py").read(), None, d)
+version = d['version']
+
 pkg_name = "spiketoolkit"
 
 setup(
     name=pkg_name,
-    version="0.3.1",
+    version=version,
     author="Cole Hurwitz, Jeremy Magland, Alessio Paolo Buccino, Matthias Hennig",
     author_email="alessiop.buccino@gmail.com",
     description="Python toolkit for analysis, visualization, and comparison of spike sorting output",
