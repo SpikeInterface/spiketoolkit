@@ -16,9 +16,12 @@ With `spiketoolkit` one can:
 - compare spike sorting outputs
 - validate and curate the spike sorting ouput
 
+Contents:
+
 .. toctree::
    :maxdepth: 2
    
+   overview
    preprocessing_example
    sorters_example
    postprocessing_example
