@@ -24,8 +24,3 @@ With `spiketoolkit` one can:
    postprocessing_example
    comparison_example
    validation_example
-
-Contact
-=======
-
-If you have questions or comments, contact Alessio Buccino: alessiop.buccino@gmail.com
