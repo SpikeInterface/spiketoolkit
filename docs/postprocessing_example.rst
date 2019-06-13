@@ -148,7 +148,7 @@ will have 2 channels and the same for group 1.
 -------------------------------
 
 Similarly to waveforms, templates - average waveforms - can be easily
-extracted using the ``get_unit_templatess``. When spike trains have
+extracted using the ``get_unit_templates``. When spike trains have
 numerous spikes, you can set the ``max_num_waveforms`` to be extracted.
 If waveforms have already been computd and stored as ``features``, those
 will be used. Templates can be saved as unit properties.
