@@ -45,7 +45,7 @@ SpikeToolkit supports a variety of popular spike sorting algorithms. Adding new 
 - `Tridesclous 
   <https://github.com/tridesclous/tridesclous>`_
   
-To use these sorters, one must install each one as instructed by the developers. Installed sorting algorithms will automatically be detected by SpikeToolkit and be ready for use.
+To use a sorter in SpikeToolkit, a user must still install the algorithm as instructed by the its developers. Installed sorting algorithms will automatically be detected by SpikeToolkit.
 
 Contact
 -------
