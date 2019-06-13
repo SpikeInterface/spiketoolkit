@@ -1,6 +1,6 @@
 
-Validation module
-=================
+Validation Tutorial
+===================
 
 This notebook shows how to use the spiketoolkit.validation module to:
 
