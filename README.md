@@ -42,7 +42,7 @@ Each spike sorting algorithm must be installed separately. If one of the sorters
 - [SpyKING circus](https://github.com/spyking-circus/spyking-circus)
 - [KiloSort](https://github.com/cortex-lab/KiloSort)
 - [Kilosort2](https://github.com/MouseLand/Kilosort2)
-- [Herding Spikes 2](https://github.com/mhhennig/HS2)
+- [HerdingSpikes2](https://github.com/mhhennig/HS2)
 - [Klusta](https://github.com/kwikteam/klusta)
 - [Ironclust](https://github.com/jamesjun/ironclust)
 - [Tridesclous](https://github.com/tridesclous/tridesclous)
