@@ -20,7 +20,7 @@ def make_sorting(times1, labels1, times2, labels2):
 def test_compare_sorter_to_ground_truth():
     # simple match
     gt_sorting, tested_sorting = make_sorting([100, 200, 300, 400, 500, 600], [0, 0, 1, 0, 1, 1], 
-                                                            [101, 201, 301, 302, 401, 501, 900], [0, 0, 5, 6, 0, 5, 11])
+                                                            [101, 201, 301, 302, 401, 501, 502, 900], [0, 0, 5, 6, 0, 5,6, 11])
     sc = compare_sorter_to_ground_truth(gt_sorting, tested_sorting, exhaustive_gt=True)
     
     sc._do_confusion_matrix()

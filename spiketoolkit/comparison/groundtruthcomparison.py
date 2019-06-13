@@ -1,4 +1,5 @@
 from .basecomparison import BaseComparison
+from .comparisontools import compute_agreement_score
 
 import numpy as np
 import pandas as pd
@@ -233,7 +234,8 @@ class GroundTruthComparison(BaseComparison):
         
         
         "redundant units" are defined as units in tested
-        that match a GT units but it is not the best match.
+        that match a GT units with a big agreement score
+        but it is not the best match.
         In other world units in GT that detected twice or more.
         
         """
@@ -242,7 +244,17 @@ class GroundTruthComparison(BaseComparison):
         unit2_ids = self._sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match and self._best_match_units_21[u2] != -1:
-                redundant_ids.append(u2)
+                u1 = self._best_match_units_21[u2]
+                
+                num_matches = self._matching_event_counts_12[u1].get(u2, 0)
+                num1 = self._event_counts_1[u1]
+                num2 = self._event_counts_2[u2]
+                agree_score = compute_agreement_score(num_matches, num1, num2)
+                print('agree_score', agree_score)
+                
+                if u2 != self._unit_map12[u1] and agree_score>self._min_accuracy:
+                    redundant_ids.append(u2)
+        
         return redundant_ids
     
     def count_redundant_units(self):
