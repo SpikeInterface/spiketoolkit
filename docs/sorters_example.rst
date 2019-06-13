@@ -1,6 +1,6 @@
 
-Sorters module
-==============
+Sorters
+=======
 
 This notebook shows how to use the spiketoolkit.sorters module to:
 
