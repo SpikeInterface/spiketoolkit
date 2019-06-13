@@ -1,6 +1,6 @@
 
-Comparison module
-=================
+Comparison Tutorial
+===================
 
 This notebook shows how to use the spiketoolkit.comparison module to:
 
