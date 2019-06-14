@@ -130,7 +130,7 @@ class GroundTruthComparison(BaseComparison):
             txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
     
-    def print_summary(self, **kargs_well_detected):
+    def print_summary(self, min_redundant_agreement=0.3, **kargs_well_detected):
         """
         Print a global performance summary that depend on the context:
           * exhaustive= True/False
@@ -145,7 +145,7 @@ class GroundTruthComparison(BaseComparison):
             num_tested=len(self._labels_st2),
             num_well_detected = self.count_well_detected_units(**kargs_well_detected),
             num_bad=self.count_bad_units(),
-            num_redundant=self.count_redundant_units(),
+            num_redundant=self.count_redundant_units(min_redundant_agreement=min_redundant_agreement),
         )
         
         if self.exhaustive_gt:
@@ -228,7 +228,7 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_false_positive_units())
     
-    def get_redundant_units(self):
+    def get_redundant_units(self, min_redundant_agreement=0.3):
         """
         Return "redundant units"
         
@@ -237,6 +237,12 @@ class GroundTruthComparison(BaseComparison):
         that match a GT units with a big agreement score
         but it is not the best match.
         In other world units in GT that detected twice or more.
+        
+        Parameters
+        ----------
+        min_redundant_agreement: float (default 0.3)
+            The minimum agreement between gt and tested units
+            that are best match to be counted as "redundant" units.
         
         """
         best_match = list(self._unit_map12.values())
@@ -251,16 +257,16 @@ class GroundTruthComparison(BaseComparison):
                 num2 = self._event_counts_2[u2]
                 agree_score = compute_agreement_score(num_matches, num1, num2)
                 
-                if u2 != self._unit_map12[u1] and agree_score>self._min_accuracy:
+                if u2 != self._unit_map12[u1] and agree_score > min_redundant_agreement:
                     redundant_ids.append(u2)
         
         return redundant_ids
     
-    def count_redundant_units(self):
+    def count_redundant_units(self, min_redundant_agreement=0.3):
         """
         See get_redundant_units.
         """
-        return len(self.get_redundant_units())
+        return len(self.get_redundant_units(min_redundant_agreement=min_redundant_agreement))
     
     def get_bad_units(self):
         """
