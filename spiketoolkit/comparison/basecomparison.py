@@ -55,7 +55,7 @@ class BaseComparison:
 
 
 
-    def plot_confusion_matrix(self, xlabel=None, ylabel=None):
+    def plot_confusion_matrix(self, xlabel=None, ylabel=None, ax=None):
         # Samuel EDIT
         # This must be moved in spikewidget
         import matplotlib.pylab as plt
@@ -70,7 +70,9 @@ class BaseComparison:
         N1 = len(unit1_ids)
         N2 = len(unit2_ids)
         
-        fig, ax = plt.subplots()
+        if ax is None:
+            fig, ax = plt.subplots()
+        
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.
         ax.matshow(self._confusion_matrix, cmap='Greens')
 
