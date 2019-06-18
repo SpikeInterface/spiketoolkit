@@ -41,6 +41,7 @@ class GroundTruthComparison(BaseComparison):
         unit1_ids = self._sorting1.get_unit_ids()
         columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_tested', 'tested_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
+        self.count.index.name = 'gt_unit_id'
         for u1 in unit1_ids:
             u2 = self._unit_map12[u1]
             
@@ -87,6 +88,7 @@ class GroundTruthComparison(BaseComparison):
         elif method == 'by_spiketrain':
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
+            perf.index.name = 'gt_unit_id'
             c = self.count
             tp, cl, fn, fp, num_gt = c['tp'], c['cl'], c['fn'], c['fp'], c['num_gt']
             perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
