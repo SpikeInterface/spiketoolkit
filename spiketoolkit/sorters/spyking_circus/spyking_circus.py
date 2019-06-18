@@ -25,7 +25,7 @@ class SpykingcircusSorter(BaseSorter):
     _default_params = {
         'probe_file': None,
         'detect_sign': -1,  # -1 - 1 - 0
-        'adjacency_radius': 100,  # Channel neighborhood adjacency radius corresponding to geom file
+        'adjacency_radius': 200,  # Channel neighborhood adjacency radius corresponding to geom file
         'detect_threshold': 6,  # Threshold for detection
         'template_width_ms': 3,  # Spyking circus parameter
         'filter': True,
@@ -76,7 +76,7 @@ class SpykingcircusSorter(BaseSorter):
         with (source_dir / 'config_default.params').open('r') as f:
             circus_config = f.readlines()
         if p['merge_spikes']:
-            auto = 1e-5
+            auto = 1
         else:
             auto = 0
         circus_config = ''.join(circus_config).format(sample_rate, p['probe_file'], p['template_width_ms'],
