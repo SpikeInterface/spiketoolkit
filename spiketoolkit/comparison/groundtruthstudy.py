@@ -322,7 +322,7 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
     Returns
     ----------
 
-    out_dataframes: a dict of DataFrame
+    dataframes: a dict of DataFrame
         Return several usefull DataFrame to compare all results.
         Note that count_units depend on karg_thresh.
     """
@@ -337,27 +337,28 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
     
     study_folder = Path(study_folder)
 
-    out_dataframes = {}
+    dataframes = {}
 
 
     # get run times:
     run_times = pd.read_csv(str(tables_folder / 'run_times.csv'), sep='\t')
     run_times.columns = ['rec_name', 'sorter_name', 'run_time']
     run_times = run_times.set_index(['rec_name', 'sorter_name',])
-    out_dataframes['run_times'] = run_times
+    dataframes['run_times'] = run_times
 
     perf_pooled_with_sum = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    out_dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
+    dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
 
     perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    out_dataframes['perf_pooled_with_average'] = perf_pooled_with_average
+    dataframes['perf_pooled_with_average'] = perf_pooled_with_average
     
     count_units = pd.DataFrame(index=run_times.index, columns=['num_gt', 'num_sorter', 'num_well_detected', 'num_redundant'])
-    out_dataframes['count_units'] = count_units
+    dataframes['count_units'] = count_units
     if exhaustive_gt:
         count_units['num_false_positive'] = None
         count_units['num_bad'] = None
     
+    perf_by_spiketrain = []
     
     for (rec_name, sorter_name), comp in comparisons.items():
         gt_sorting = ground_truths[rec_name]
@@ -369,6 +370,15 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
         perf = comp.get_performance(method='pooled_with_average', output='pandas')
         perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
         
+        perf = comp.get_performance(method='by_spiketrain', output='pandas')
+        perf['rec_name'] = rec_name
+        perf['sorter_name'] = sorter_name
+        perf = perf.reset_index()
+        print(perf)
+        print(perf.columns)
+        
+        perf_by_spiketrain.append(perf)
+        
         count_units.loc[(rec_name, sorter_name), 'num_gt'] = len(gt_sorting.get_unit_ids())
         count_units.loc[(rec_name, sorter_name), 'num_sorter'] = len(sorting.get_unit_ids())
         count_units.loc[(rec_name, sorter_name), 'num_well_detected'] = comp.count_well_detected_units(**karg_thresh)
@@ -377,7 +387,12 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
             count_units.loc[(rec_name, sorter_name), 'num_false_positive'] = comp.count_false_positive_units()
             count_units.loc[(rec_name, sorter_name), 'num_bad'] = comp.count_bad_units()
 
-    return out_dataframes    
+    perf_by_spiketrain = pd.concat(perf_by_spiketrain)
+    perf_by_spiketrain = perf_by_spiketrain.set_index(['rec_name', 'sorter_name', 'gt_unit_id'])
+    dataframes['perf_by_spiketrain'] = perf_by_spiketrain
+
+
+    return dataframes    
     
     
     
