@@ -100,22 +100,20 @@ class TridesclousSorter(BaseSorter):
         for chan_grp in chan_grps:
             
             # parameters can change depending the group
-            nested_params = make_nested_tdc_params(tdc_dataio, chan_grp, **self.params)
+            catalogue_nested_params = make_nested_tdc_params(tdc_dataio, chan_grp, **self.params)
+            #~ print(catalogue_nested_params)
+            
+            peeler_params = tdc.get_auto_params_for_peelers(tdc_dataio, chan_grp)
+            #~ print(peeler_params)
             
             # check params and OpenCL when many channels
             use_sparse_template = False
             use_opencl_with_sparse = False
-            if nb_chan >64: # this limit depend on the platform of course
-                if tdc.cltools.HAVE_PYOPENCL:
-                    # force opencl
-                    nested_params['preprocessor']['signalpreprocessor_engine'] = 'opencl'
-                    use_sparse_template = True
-                    use_opencl_with_sparse = True
-                else:
-                    print('OpenCL is not available processing will be slow, try install it')
+            if nb_chan >64 and not peeler_params['use_sparse_template']:
+                print('OpenCL is not available processing will be slow, try install it')
             
             cc = tdc.CatalogueConstructor(dataio=tdc_dataio, chan_grp=chan_grp)
-            tdc.apply_all_catalogue_steps(cc, nested_params, verbose=self.debug, )
+            tdc.apply_all_catalogue_steps(cc, catalogue_nested_params, verbose=self.debug, )
             if self.debug:
                 print(cc)
             cc.make_catalogue_for_peeler()
@@ -123,10 +121,7 @@ class TridesclousSorter(BaseSorter):
             # apply Peeler (template matching)
             initial_catalogue = tdc_dataio.load_catalogue(chan_grp=chan_grp)
             peeler = tdc.Peeler(tdc_dataio)
-            peeler.change_params(catalogue=initial_catalogue,
-                                 use_sparse_template=use_sparse_template,
-                                 sparse_threshold_mad=1.5,
-                                 use_opencl_with_sparse=use_opencl_with_sparse,)
+            peeler.change_params(catalogue=initial_catalogue, **peeler_params)
             peeler.run(duration=None, progressbar=self.debug)
 
     @staticmethod
