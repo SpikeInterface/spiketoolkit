@@ -633,7 +633,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
-        f.write("dat_path =" + "'" + str(output_folder / 'recording.dat') + "'" + '\n')
+        f.write("dat_path =" + "r'" + str(output_folder / 'recording.dat') + "'" + '\n')
         f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
         f.write("dtype = 'int16'\n")
         f.write('offset = 0\n')
@@ -756,7 +756,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     for t in templates:
         second_max_channel.append(np.argsort(np.abs(np.min(t, axis=0)))[::-1][1])
 
-    with (output_folder / 'cluster_second_max_chans.tsv').open('w') as tsvfile:
+    # Save .tsv metadata
+    with (output_folder / 'cluster_second_max_chan.tsv').open('w') as tsvfile:
         writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
         writer.writerow(['cluster_id', 'sec_channel'])
         for i, (u, ch) in enumerate(zip(sorting.get_unit_ids(), second_max_channel)):
@@ -778,23 +779,6 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
             writer.writerow(['cluster_id', 'ch_group'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, 0])
-
-    # Save .tsv metadata
-    max_amplitudes = [np.min(t) for t in templates]
-    second_max_channel = []
-    for t in templates:
-        second_max_channel.append(np.argsort(np.abs(np.min(t, axis=0)))[::-1][1])
-
-    with (output_folder / 'cluster_amps.tsv').open('w') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-        writer.writerow(['cluster_id', 'max_amp'])
-        for i, (u, amp) in enumerate(zip(sorting.get_unit_ids(), max_amplitudes)):
-            writer.writerow([i, amp])
-    with (output_folder / 'cluster_second_max_chan.tsv').open('w') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-        writer.writerow(['cluster_id', 'sec_channel'])
-        for i, (u, ch) in enumerate(zip(sorting.get_unit_ids(), second_max_channel)):
-            writer.writerow([i, ch])
 
     np.save(str(output_folder / 'amplitudes.npy'), amplitudes)
     np.save(str(output_folder / 'spike_times.npy'), spike_times.astype('int64'))
