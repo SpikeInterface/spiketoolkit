@@ -146,13 +146,14 @@ class GroundTruthComparison(BaseComparison):
             num_gt=len(self._labels_st1),
             num_tested=len(self._labels_st2),
             num_well_detected = self.count_well_detected_units(**kargs_well_detected),
-            num_bad=self.count_bad_units(),
             num_redundant=self.count_redundant_units(min_redundant_agreement=min_redundant_agreement),
         )
         
         if self.exhaustive_gt:
             txt = txt + _template_summary_part2
             d['num_false_positive_units'] = self.count_false_positive_units()
+            d['num_bad'] = self.count_bad_units(),
+            
         
         txt = txt.format(**d)
 
@@ -253,13 +254,17 @@ class GroundTruthComparison(BaseComparison):
         for u2 in unit2_ids:
             if u2 not in best_match and self._best_match_units_21[u2] != -1:
                 u1 = self._best_match_units_21[u2]
+                if self._unit_map12[u1] == -1:
+                    continue
+                if u2 == self._unit_map12[u1]:
+                    continue
                 
                 num_matches = self._matching_event_counts_12[u1].get(u2, 0)
                 num1 = self._event_counts_1[u1]
                 num2 = self._event_counts_2[u2]
                 agree_score = compute_agreement_score(num_matches, num1, num2)
                 
-                if u2 != self._unit_map12[u1] and agree_score > min_redundant_agreement:
+                if agree_score > min_redundant_agreement:
                     redundant_ids.append(u2)
         
         return redundant_ids
@@ -341,10 +346,11 @@ _template_summary_part1 = """SUMMARY
 GT num_units: {num_gt}
 TESTED num_units: {num_tested}
 num_well_detected: {num_well_detected} 
-num_bad: {num_bad}
+num_redundant: {num_redundant}
 """
 
 _template_summary_part2 = """num_false_positive_units {num_false_positive_units}
+num_bad: {num_bad}
 """
 
 
