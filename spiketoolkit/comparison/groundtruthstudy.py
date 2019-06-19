@@ -374,8 +374,6 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
         perf['rec_name'] = rec_name
         perf['sorter_name'] = sorter_name
         perf = perf.reset_index()
-        print(perf)
-        print(perf.columns)
         
         perf_by_spiketrain.append(perf)
         
