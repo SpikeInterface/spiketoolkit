@@ -152,7 +152,7 @@ class GroundTruthComparison(BaseComparison):
         if self.exhaustive_gt:
             txt = txt + _template_summary_part2
             d['num_false_positive_units'] = self.count_false_positive_units()
-            d['num_bad'] = self.count_bad_units(),
+            d['num_bad'] = self.count_bad_units()
             
         
         txt = txt.format(**d)
