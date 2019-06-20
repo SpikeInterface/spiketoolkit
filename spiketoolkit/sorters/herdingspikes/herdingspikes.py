@@ -25,7 +25,7 @@ class HerdingspikesSorter(BaseSorter):
     _extra_gui_params = [
         {'name': 'clustering_bandwidth', 'type': 'float', 'value': 5.0, 'default': 5.0,
             'title': "Meanshift bandwidth"},
-        {'name': 'clustering_alpha', 'type': 'float', 'value': 8.0, 'default': 8.0,
+        {'name': 'clustering_alpha', 'type': 'float', 'value': 6.0, 'default': 6.0,
             'title': "Scalar for the PC components when clustering"},
         {'name': 'clustering_n_jobs', 'type': 'int', 'value': -1, 'default': -1,
             'title': "Number of cores. Default uses all cores."},
@@ -39,7 +39,7 @@ class HerdingspikesSorter(BaseSorter):
             'title': "Cutout size before peak (ms)"},
         {'name': 'right_cutout_time', 'type': 'float', 'value': 1.0, 'default': 1.0,
             'title': "Cutout size after peak (ms)"},
-        {'name': 'detection_threshold', 'type': 'int', 'value': 20, 'default': 20,
+        {'name': 'detection_threshold', 'type': 'int', 'value': 18, 'default': 18,
             'title': "Detection threshold"},
         {'name': 'probe_masked_channels', 'type': 'list', 'value': [], 'default': [],
             'title': "Masked channels"},
@@ -47,9 +47,9 @@ class HerdingspikesSorter(BaseSorter):
             'title': "Low-pass frequency"},
         {'name': 'freq_max', 'type': 'float', 'value': 6000.0, 'default': 6000.0,
             'title': "High-pass frequency"},
-        {'name': 'filter', 'type': 'bool', 'value': False, 'default': False,
+        {'name': 'filter', 'type': 'bool', 'value': True, 'default': True,
             'title': "Bandpass filters the recording if True"},
-        {'name': 'pre_scale', 'type': 'bool', 'value': False, 'default': False,
+        {'name': 'pre_scale', 'type': 'bool', 'value': True, 'default': True,
             'title': "Scales recording traces to optimize HerdingSpikes performance"},
         {'name': 'pre_scale_value', 'type': 'float', 'value': 20.0, 'default': 20.0,
             'title': "Scale to apply in case of pre-scaling of traces"},
@@ -140,26 +140,26 @@ class HerdingspikesSorter(BaseSorter):
 HerdingspikesSorter._default_params = {
     # core params
     'clustering_bandwidth': 5.0,
-    'clustering_alpha': 8.0,
+    'clustering_alpha': 6.0,
     'clustering_n_jobs': -1,
     'clustering_bin_seeding': True,
     'clustering_min_bin_freq': 8,
     'clustering_subset': None,
     'left_cutout_time': 0.2,
     'right_cutout_time': 1.0,
-    'detection_threshold': 20,
+    'detection_threshold': 18,
 
     # extra probe params
     'probe_masked_channels': [],
     'probe_inner_radius': 75,
     'probe_neighbor_radius': 90,
-    'probe_event_length': 0.25,
+    'probe_event_length': 0.2,
     'probe_peak_jitter': 0.1,
 
     # extra detection params
     'num_com_centers': 1,
-    'maa': 5,
-    'ahpthr': 10,
+    'maa': 2,
+    'ahpthr': 0,
     'out_file_name': "HS2_detected",
     'decay_filtering': False,
     'save_all': False,
@@ -173,10 +173,10 @@ HerdingspikesSorter._default_params = {
     # bandpass filter
     'freq_min': 300.0,
     'freq_max': 6000.0,
-    'filter': False,
+    'filter': True,
 
     # rescale traces
-    'pre_scale': False,  # TODO consider setting default to True
+    'pre_scale': True,
     'pre_scale_value': 20.0
 
 }
