@@ -261,7 +261,7 @@ def collect_run_times(study_folder):
 
 
 
-def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thresh):
+def aggregate_sorting_comparison(study_folder, exhaustive_gt=False):
     """
     Loop over output folder in a tree to collect sorting output and run 
     ground_truth_comparison on them.
@@ -274,10 +274,6 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
         Tell if the ground true is "exhaustive" or not. In other world if the
         GT have all possible units. It allows more performance measurment.
         For instance, MEArec simulated dataset have exhaustive_gt=True
-    **karg_thresh: 
-        Extra thresh kkargs are passed to 
-        GroundTruthComparison.get_well_detected_units for
-        See doc there.
 
     Returns
     ----------
@@ -294,7 +290,7 @@ def aggregate_sorting_comparison(study_folder, exhaustive_gt=False, **karg_thres
     comparisons = {}
     for (rec_name,sorter_name), sorting in results.items():
         gt_sorting = ground_truths[rec_name]
-        sc = compare_sorter_to_ground_truth(gt_sorting, sorting)
+        sc = compare_sorter_to_ground_truth(gt_sorting, sorting, exhaustive_gt=exhaustive_gt)
         comparisons[(rec_name, sorter_name)] = sc
 
     return comparisons
@@ -331,7 +327,7 @@ def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thre
     tables_folder = study_folder / 'tables'
     
     
-    comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=exhaustive_gt, **karg_thresh)
+    comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=exhaustive_gt)
     ground_truths = get_ground_truths(study_folder)
     results = collect_study_sorting(study_folder)
     
