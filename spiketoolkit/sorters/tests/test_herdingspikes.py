@@ -14,6 +14,6 @@ class HerdingspikesSorterCommonTestSuite(SorterCommonTestSuite, unittest.TestCas
 
 
 if __name__ == '__main__':
-    # HerdingspikesSorterCommonTestSuite().test_on_toy()
-    #~ HerdingspikesSorterCommonTestSuite().test_several_groups()
-    HerdingspikesSorterCommonTestSuite().test_with_BinDatRecordingExtractor()
+    HerdingspikesSorterCommonTestSuite().test_on_toy()
+    #HerdingspikesSorterCommonTestSuite().test_several_groups()
+    #HerdingspikesSorterCommonTestSuite().test_with_BinDatRecordingExtractor()
