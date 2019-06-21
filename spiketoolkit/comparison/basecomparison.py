@@ -14,6 +14,10 @@ class BaseComparison:
                 n_jobs=1, verbose=False):
         self._sorting1 = sorting1
         self._sorting2 = sorting2
+        if sorting1_name is None:
+            sorting1_name = 'sorting 1'
+        if sorting2_name is None:
+            sorting2_name = 'sorting 2'
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
         self._delta_frames = delta_frames
@@ -55,7 +59,7 @@ class BaseComparison:
 
 
 
-    def plot_confusion_matrix(self, xlabel=None, ylabel=None, ax=None):
+    def plot_confusion_matrix(self, xlabel=None, ylabel=None, ax=None, count_text=True):
         # Samuel EDIT
         # This must be moved in spikewidget
         import matplotlib.pylab as plt
@@ -76,12 +80,13 @@ class BaseComparison:
         # Using matshow here just because it sets the ticks up nicely. imshow is faster.
         ax.matshow(self._confusion_matrix, cmap='Greens')
 
-        for (i, j), z in np.ndenumerate(self._confusion_matrix):
-            if z != 0:
-                if z > np.max(self._confusion_matrix) / 2.:
-                    ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
-                else:
-                    ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
+        if count_text:
+            for (i, j), z in np.ndenumerate(self._confusion_matrix):
+                if z != 0:
+                    if z > np.max(self._confusion_matrix) / 2.:
+                        ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
+                    else:
+                        ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
 
         ax.axhline(int(N1 - 1) + 0.5, color='black')
         ax.axvline(int(N2 - 1) + 0.5, color='black')
@@ -94,17 +99,12 @@ class BaseComparison:
         ax.set_xticklabels(np.append(self._st2_idxs, 'FN'), fontsize=12)
         ax.set_yticklabels(np.append(self._st1_idxs, 'FP'), fontsize=12)
 
-        if xlabel == None:
-            if self.sorting2_name is None:
-                ax.set_xlabel('Sorting 2', fontsize=15)
-            else:
-                ax.set_xlabel(self.sorting2_name, fontsize=15)
+        if xlabel is None:
+            ax.set_xlabel(self.sorting2_name, fontsize=15)
         else:
             ax.set_xlabel(xlabel, fontsize=20)
-        if ylabel == None:
-            if self.sorting1_name is None:
-                ax.set_ylabel('Sorting 1', fontsize=15)
-            else:
+        
+        if ylabel is None:
                 ax.set_ylabel(self.sorting1_name, fontsize=15)
         else:
             ax.set_ylabel(ylabel, fontsize=20)
