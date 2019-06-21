@@ -29,6 +29,10 @@ class GroundTruthComparison(BaseComparison):
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
                 n_jobs=1, verbose=False):
+        if gt_name is None:
+            gt_name = 'ground truth'
+        if tested_name is None:
+            tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
                                 delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
