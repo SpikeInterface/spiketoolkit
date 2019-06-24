@@ -7,9 +7,9 @@ class NormalizeByQuantileRecording(RecordingExtractor):
     preprocessor_name = 'NormalizeByQuantileRecording'
     installed = True  # check at class level if installed or not
     _gui_params = [
-        {'name': 'scalar', 'type': 'float',
+        {'name': 'scale', 'type': 'float',
             'title': "Scale for the output distribution"},
-        {'name': 'offset', 'type': 'float',
+        {'name': 'median', 'type': 'float',
             'title': "Median for the output distribution"},
         {'name': 'q1', 'type': 'float',
             'title': "Lower quantile used for measuring the scale"},
