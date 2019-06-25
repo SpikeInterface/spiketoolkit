@@ -12,7 +12,7 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
     recording: RecordingExtractor
         The recording extractor
     sorting: SortingExtractor
-        The sorting extraxtor
+        The sorting extractor
     unit_ids: list
         List of unit ids to compute SNR for. If not specified, all units are used
     save_as_property: bool
