@@ -17,17 +17,8 @@ addons:
 install:
   # spikeextractors and spikesorters are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
-  - pip install https://github.com/SpikeInterface/spikesorters/archive/master.zip
   - pip install .
   - pip install pytest==4.3
-  - pip install numpy==1.16.2 scipy h5py six cython tqdm click # for klusta
-  - pip install klusta
-  - pip install klustakwik2==0.2.6
-  - pip install tridesclous==1.2.1
-  - pip install herdingspikes==0.3.2
-  - pip install spyking-circus
-  - pip install pyqt5
-  - pip install ml_ms4alg==0.3.0
 script:
   # py.test -s
   python -m pytest
