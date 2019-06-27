@@ -20,8 +20,8 @@ import pandas as pd
 
 import spikeextractors as se
 
-from spiketoolkit.sorters import run_sorters, loop_over_folders, collect_sorting_outputs
-from .groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
+from spiketoolkit.sorters import run_sorters, iter_output_folders, iter_sorting_output
+from spiketoolkit.comparison.groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
 
 def setup_comparison_study(study_folder, gt_dict):
@@ -200,11 +200,11 @@ def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
                     with_output=False)
     
     # results are copied so the heavy sorter_folders can be removed
-    copy_sorting(study_folder)
+    copy_sortings_to_npz(study_folder)
     collect_run_times(study_folder)
 
 
-def copy_sorting(study_folder):
+def copy_sortings_to_npz(study_folder):
     """
     Collect sorting and copy then in the same format to get a lightweigth version.
     """
@@ -215,25 +215,28 @@ def copy_sorting(study_folder):
     if not os.path.exists(sorting_folders):
         os.makedirs(str(sorting_folders))
     
-    results = collect_sorting_outputs(sorter_folders)
-    for (rec_name,sorter_name), sorting in results.items():
+    for rec_name,sorter_name, sorting in    iter_sorting_output(sorter_folders):
         se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (rec_name+'[#]'+sorter_name+'.npz'))
 
-def collect_study_sorting(study_folder):
+
+def iter_computed_names(study_folder):
+    sorting_folder = Path(study_folder) / 'sortings'
+    for filename in os.listdir(sorting_folder):
+        if filename.endswith('.npz') and '[#]' in filename:
+            rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
+            yield rec_name, sorter_name
+
+def iter_computed_sorting(study_folder):
     """
-    Collect sorting from the copied version.
+    Iter over sorting files.
     """
     sorting_folder = Path(study_folder) / 'sortings'
-    
-    sortings = {}
     for filename in os.listdir(sorting_folder):
         if filename.endswith('.npz') and '[#]' in filename:
             rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
             sorting = se.NpzSortingExtractor(sorting_folder / filename)
-            sortings[(rec_name, sorter_name)] = sorting
+            yield rec_name, sorter_name, sorting
 
-    return sortings
-    
 
 def collect_run_times(study_folder):
     """
@@ -249,7 +252,7 @@ def collect_run_times(study_folder):
         os.makedirs(str(tables_folder))
     
     run_times = []
-    for rec_name, sorter_name, output_folder in loop_over_folders(sorter_folders):
+    for rec_name, sorter_name, output_folder in iter_output_folders(sorter_folders):
         if os.path.exists(output_folder / 'run_log.txt'):
             with open(output_folder / 'run_log.txt', mode='r') as logfile:
                 run_time = float(logfile.readline().replace('run_time:', ''))
@@ -259,137 +262,6 @@ def collect_run_times(study_folder):
     run_times.to_csv(str(tables_folder / 'run_times.csv'), sep='\t', index=False)
     
 
-
-
-def aggregate_sorting_comparison(study_folder, exhaustive_gt=False):
-    """
-    Loop over output folder in a tree to collect sorting output and run 
-    ground_truth_comparison on them.
-    
-    Parameters
-    ----------
-    study_folder: str
-        The study folder.
-    exhaustive_gt: bool (default True)
-        Tell if the ground true is "exhaustive" or not. In other world if the
-        GT have all possible units. It allows more performance measurment.
-        For instance, MEArec simulated dataset have exhaustive_gt=True
-
-    Returns
-    ----------
-    comparisons: a dict of SortingComparison
-
-    """
-
-    study_folder = Path(study_folder)
-    sorter_folders = study_folder / 'sorter_folders'
-    
-    ground_truths = get_ground_truths(study_folder)
-    results = collect_study_sorting(study_folder)
-    
-    comparisons = {}
-    for (rec_name,sorter_name), sorting in results.items():
-        gt_sorting = ground_truths[rec_name]
-        sc = compare_sorter_to_ground_truth(gt_sorting, sorting, exhaustive_gt=exhaustive_gt)
-        comparisons[(rec_name, sorter_name)] = sc
-
-    return comparisons
-
-
-
-def aggregate_performances_table(study_folder,  exhaustive_gt=False, **karg_thresh):
-    """
-    Aggregate some results into dataframe to have a "study" overview on all recordingXsorter.
-    
-    Tables are:
-      * run_times: run times per recordingXsorter
-      * perf_pooled_with_sum: GroundTruthComparison.see get_performance
-      * perf_pooled_with_average: GroundTruthComparison.see get_performance
-      * count_units: given some threhold count how many units : 'well_detected', 'redundant', 'false_postive_units, 'bad'
-    
-    Parameters
-    ----------
-    study_folder: str
-        The study folder.
-
-    karg_thresh: dict
-        Threholds paramerts used for the "count_units" table.
-    
-    Returns
-    ----------
-
-    dataframes: a dict of DataFrame
-        Return several usefull DataFrame to compare all results.
-        Note that count_units depend on karg_thresh.
-    """
-    study_folder = Path(study_folder)
-    sorter_folders = study_folder / 'sorter_folders'
-    tables_folder = study_folder / 'tables'
-    
-    
-    comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=exhaustive_gt)
-    ground_truths = get_ground_truths(study_folder)
-    results = collect_study_sorting(study_folder)
-    
-    study_folder = Path(study_folder)
-
-    dataframes = {}
-
-
-    # get run times:
-    run_times = pd.read_csv(str(tables_folder / 'run_times.csv'), sep='\t')
-    run_times.columns = ['rec_name', 'sorter_name', 'run_time']
-    run_times = run_times.set_index(['rec_name', 'sorter_name',])
-    dataframes['run_times'] = run_times
-
-    perf_pooled_with_sum = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    dataframes['perf_pooled_with_sum'] = perf_pooled_with_sum
-
-    perf_pooled_with_average = pd.DataFrame(index=run_times.index, columns=_perf_keys)
-    dataframes['perf_pooled_with_average'] = perf_pooled_with_average
-    
-    count_units = pd.DataFrame(index=run_times.index, columns=['num_gt', 'num_sorter', 'num_well_detected', 'num_redundant'])
-    dataframes['count_units'] = count_units
-    if exhaustive_gt:
-        count_units['num_false_positive'] = None
-        count_units['num_bad'] = None
-    
-    perf_by_spiketrain = []
-    
-    for (rec_name, sorter_name), comp in comparisons.items():
-        gt_sorting = ground_truths[rec_name]
-        sorting = results[(rec_name, sorter_name)]
-        
-        perf = comp.get_performance(method='pooled_with_sum', output='pandas')
-        perf_pooled_with_sum.loc[(rec_name, sorter_name), :] = perf
-
-        perf = comp.get_performance(method='pooled_with_average', output='pandas')
-        perf_pooled_with_average.loc[(rec_name, sorter_name), :] = perf
-        
-        perf = comp.get_performance(method='by_spiketrain', output='pandas')
-        perf['rec_name'] = rec_name
-        perf['sorter_name'] = sorter_name
-        perf = perf.reset_index()
-        
-        perf_by_spiketrain.append(perf)
-        
-        count_units.loc[(rec_name, sorter_name), 'num_gt'] = len(gt_sorting.get_unit_ids())
-        count_units.loc[(rec_name, sorter_name), 'num_sorter'] = len(sorting.get_unit_ids())
-        count_units.loc[(rec_name, sorter_name), 'num_well_detected'] = comp.count_well_detected_units(**karg_thresh)
-        count_units.loc[(rec_name, sorter_name), 'num_redundant'] = comp.count_redundant_units()
-        if exhaustive_gt:
-            count_units.loc[(rec_name, sorter_name), 'num_false_positive'] = comp.count_false_positive_units()
-            count_units.loc[(rec_name, sorter_name), 'num_bad'] = comp.count_bad_units()
-
-    perf_by_spiketrain = pd.concat(perf_by_spiketrain)
-    perf_by_spiketrain = perf_by_spiketrain.set_index(['rec_name', 'sorter_name', 'gt_unit_id'])
-    dataframes['perf_by_spiketrain'] = perf_by_spiketrain
-
-
-    return dataframes    
-    
-    
-    
     
     
     

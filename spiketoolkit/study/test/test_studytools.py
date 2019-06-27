@@ -6,8 +6,8 @@ import pickle
 
 import pytest
 #~ from spiketoolkit.sorters import run_sorters, collect_results
-from spiketoolkit.comparison import (setup_comparison_study, run_study_sorters,
-            aggregate_sorting_comparison, aggregate_performances_table)
+from spiketoolkit.study import (setup_comparison_study, run_study_sorters)
+from spiketoolkit.study.studytools import iter_computed_names, iter_computed_sorting
 
 import spikeextractors as se
 
@@ -44,32 +44,18 @@ def _run_study_sorters():
     run_study_sorters(study_folder, sorter_list)
 
 
-
-
-
-def test_aggregate_sorting_comparison():
-    comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=True)
-    for (rec_name, sorter_name), comp in comparisons.items():
-        print(comp.print_summary())
-
-def test_aggregate_performances_table():
-
-    dataframes = aggregate_performances_table(study_folder, exhaustive_gt=True)
-
-
-    for k, df in dataframes.items():
-        print('*'*10)
-        print(k)
-        print(df)
-
-
-
-
-
-
+def test_loops():
+    names = list(iter_computed_names(study_folder))
+    #~ print(names)
+    for rec_name, sorter_name, sorting in iter_computed_sorting(study_folder):
+        print(rec_name, sorter_name)
+        print(sorting)
+    
+    
+    
 
 if __name__ == '__main__':
-    setup_module()
+    #~ setup_module()
+    
+    test_loops()
 
-    test_aggregate_sorting_comparison()
-    test_aggregate_performances_table()
