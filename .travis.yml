@@ -15,8 +15,9 @@ addons:
     - packagekit-gtk3-module
     - libcanberra-gtk-module
 install:
-  # spikeextractors and spikewidgets are taken from github to get latest version
+  # spikeextractors and spikesorters are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+  - pip install https://github.com/SpikeInterface/spikesorters/archive/master.zip
   - pip install .
   - pip install pytest==4.3
   - pip install numpy==1.16.2 scipy h5py six cython tqdm click # for klusta
