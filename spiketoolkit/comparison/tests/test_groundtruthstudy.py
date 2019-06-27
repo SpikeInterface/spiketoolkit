@@ -44,13 +44,11 @@ def _run_study_sorters():
     run_study_sorters(study_folder, sorter_list)
 
 
-
-
-
 def test_aggregate_sorting_comparison():
     comparisons = aggregate_sorting_comparison(study_folder, exhaustive_gt=True)
     for (rec_name, sorter_name), comp in comparisons.items():
         print(comp.print_summary())
+
 
 def test_aggregate_performances_table():
 
