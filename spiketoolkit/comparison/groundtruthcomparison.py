@@ -1,8 +1,8 @@
-from .basecomparison import BaseComparison
-from .comparisontools import compute_agreement_score
-
 import numpy as np
 import pandas as pd
+
+from .basecomparison import BaseComparison
+from .comparisontools import compute_agreement_score
 
 
 # Note for dev,  because of  BaseComparison internally:
@@ -26,9 +26,10 @@ class GroundTruthComparison(BaseComparison):
       * count units detected twice (or more)
       * summary all this
     """
+
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
-                delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
-                n_jobs=1, verbose=False):
+                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
+                 n_jobs=1, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
@@ -37,25 +38,25 @@ class GroundTruthComparison(BaseComparison):
                                 delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         self._do_count()
-    
+
     def _do_count(self):
         """
         Do raw count into a dataframe.
         """
         unit1_ids = self._sorting1.get_unit_ids()
-        columns = ['tp', 'fn', 'cl','fp', 'num_gt', 'num_tested', 'tested_id']
+        columns = ['tp', 'fn', 'cl', 'fp', 'num_gt', 'num_tested', 'tested_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         self.count.index.name = 'gt_unit_id'
         for u1 in unit1_ids:
             u2 = self._unit_map12[u1]
-            
+
             self.count.loc[u1, 'tp'] = np.sum(self._labels_st1[u1] == 'TP')
             self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])
             self.count.loc[u1, 'fn'] = np.sum(self._labels_st1[u1] == 'FN')
             self.count.loc[u1, 'num_gt'] = self._labels_st1[u1].size
             self.count.loc[u1, 'tested_id'] = u2
 
-            if u2==-1:
+            if u2 == -1:
                 self.count.loc[u1, 'fp'] = 0
                 self.count.loc[u1, 'num_tested'] = 0
             else:
@@ -86,9 +87,9 @@ class GroundTruthComparison(BaseComparison):
         if method not in possibles:
             raise Exception("'method' can be " + ' or '.join(possibles))
 
-        if method =='raw_count':
+        if method == 'raw_count':
             perf = self.count
-            
+
         elif method == 'by_spiketrain':
             unit1_ids = self._sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
@@ -106,7 +107,7 @@ class GroundTruthComparison(BaseComparison):
 
         elif method == 'pooled_with_average':
             perf = self.get_performance(method='by_spiketrain').mean(axis=0)
-        
+
         if output == 'dict' and isinstance(perf, pd.Series):
             perf = perf.to_dict()
 
@@ -119,7 +120,7 @@ class GroundTruthComparison(BaseComparison):
         if method == 'by_spiketrain':
             perf = self.get_performance(method=method, output='pandas')
             perf = perf * 100
-            #~ print(perf)
+            # ~ print(perf)
             d = {k: perf[k].tolist() for k in perf.columns}
             txt = _template_txt_performance.format(method=method, **d)
             print(txt)
@@ -135,7 +136,7 @@ class GroundTruthComparison(BaseComparison):
             perf = perf * 100
             txt = _template_txt_performance.format(method=method, **perf.to_dict())
             print(txt)
-    
+
     def print_summary(self, min_redundant_agreement=0.3, **kargs_well_detected):
         """
         Print a global performance summary that depend on the context:
@@ -149,20 +150,19 @@ class GroundTruthComparison(BaseComparison):
         d = dict(
             num_gt=len(self._labels_st1),
             num_tested=len(self._labels_st2),
-            num_well_detected = self.count_well_detected_units(**kargs_well_detected),
+            num_well_detected=self.count_well_detected_units(**kargs_well_detected),
             num_redundant=self.count_redundant_units(min_redundant_agreement=min_redundant_agreement),
         )
-        
+
         if self.exhaustive_gt:
             txt = txt + _template_summary_part2
             d['num_false_positive_units'] = self.count_false_positive_units()
             d['num_bad'] = self.count_bad_units()
-            
-        
+
         txt = txt.format(**d)
 
         print(txt)
-    
+
     def get_well_detected_units(self, **thresholds):
         """
         Get the units in GT that are well detected with a comninaison a treshold level
@@ -187,14 +187,14 @@ class GroundTruthComparison(BaseComparison):
             If sevral threhold they are combined.
         """
         if len(thresholds) == 0:
-            thresholds = {'accuracy' : 0.95 }
-        
-        _above = ['accuracy', 'recall', 'precision',]
-        _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
-        
+            thresholds = {'accuracy': 0.95}
+
+        _above = ['accuracy', 'recall', 'precision', ]
+        _below = ['false_discovery_rate', 'miss_rate', 'misclassification_rate']
+
         perf = self.get_performance(method='by_spiketrain')
-        keep = perf['accuracy'] >= 0 # tale all
-        
+        keep = perf['accuracy'] >= 0  # tale all
+
         for col, thresh in thresholds.items():
             if col in _above:
                 keep = keep & (perf[col] >= thresh)
@@ -202,16 +202,16 @@ class GroundTruthComparison(BaseComparison):
                 keep = keep & (perf[col] <= thresh)
             else:
                 raise ValueError('Threshold column do not exits', col)
-        
+
         return perf[keep].index.tolist()
-    
+
     def count_well_detected_units(self, **kargs):
         """
         Count how many well detected units.
         Kargs are the same as get_well_detected_units.
         """
         return len(self.get_well_detected_units(**kargs))
-    
+
     def get_false_positive_units(self):
         """
         Return units list of "false positive units" from tested_sorting.
@@ -228,13 +228,13 @@ class GroundTruthComparison(BaseComparison):
             if self._best_match_units_21[u2] == -1:
                 fake_ids.append(u2)
         return fake_ids
-    
+
     def count_false_positive_units(self):
         """
         See get_false_positive_units.
         """
         return len(self.get_false_positive_units())
-    
+
     def get_redundant_units(self, min_redundant_agreement=0.3):
         """
         Return "redundant units"
@@ -262,23 +262,23 @@ class GroundTruthComparison(BaseComparison):
                     continue
                 if u2 == self._unit_map12[u1]:
                     continue
-                
+
                 num_matches = self._matching_event_counts_12[u1].get(u2, 0)
                 num1 = self._event_counts_1[u1]
                 num2 = self._event_counts_2[u2]
                 agree_score = compute_agreement_score(num_matches, num1, num2)
-                
+
                 if agree_score > min_redundant_agreement:
                     redundant_ids.append(u2)
-        
+
         return redundant_ids
-    
+
     def count_redundant_units(self, min_redundant_agreement=0.3):
         """
         See get_redundant_units.
         """
         return len(self.get_redundant_units(min_redundant_agreement=min_redundant_agreement))
-    
+
     def get_bad_units(self):
         """
         Return units list of "bad units".
@@ -298,7 +298,7 @@ class GroundTruthComparison(BaseComparison):
             if u2 not in best_match:
                 bad_ids.append(u2)
         return bad_ids
-    
+
     def count_bad_units(self):
         """
         See get_bad_units
@@ -327,13 +327,12 @@ def _compute_perf(tp, cl, fn, fp, num_gt, perf):
     perf['false_discovery_rate'] = fp / (tp + fp)
     perf['miss_rate'] = fn / num_gt
     perf['misclassification_rate'] = cl / num_gt
-    
+
     return perf
 
 
 # usefull also for gathercomparison
-_perf_keys = ['accuracy', 'recall', 'precision','false_discovery_rate',  'miss_rate', 'misclassification_rate']
-
+_perf_keys = ['accuracy', 'recall', 'precision', 'false_discovery_rate', 'miss_rate', 'misclassification_rate']
 
 _template_txt_performance = """PERFORMANCE
 Method : {method}
@@ -358,8 +357,8 @@ num_bad: {num_bad}
 """
 
 
-def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None, 
-                                   delta_frames=10, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
+def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None,
+                                   delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -379,8 +378,8 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
         The name of sorter 1
     tested_name: : str
         The name of sorter 2
-    delta_frames: int
-        Number of frames to consider coincident spikes (default 10)
+    delta_time: float
+        Number of ms to consider coincident spikes (default 0.3 ms)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
     exhaustive_gt: bool (default True)
@@ -398,4 +397,4 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
 
     '''
     return GroundTruthComparison(gt_sorting, tested_sorting, gt_name, tested_name,
-                                 delta_frames, min_accuracy, exhaustive_gt, n_jobs, verbose)
+                                 delta_time, min_accuracy, exhaustive_gt, n_jobs, verbose)
