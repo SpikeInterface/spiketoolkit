@@ -22,6 +22,7 @@ setup(
     install_requires=[
         'numpy',
         'spikeextractors',
+        'spikesorters',
         'scikit-learn',
         'scipy',
         'pandas',
