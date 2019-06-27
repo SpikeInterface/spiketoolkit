@@ -1,2 +1,0 @@
-from .kilosort import KilosortSorter
-
