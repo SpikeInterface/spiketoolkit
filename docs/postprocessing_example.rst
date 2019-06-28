@@ -342,7 +342,7 @@ run:
 
 .. code:: python
 
-    curated_sorting1 = st.postprocessing.threshold_min_num_spikes(sorting=sorting, min_num_spike_threshold=70)
+    curated_sorting1 = st.curation.threshold_min_num_spikes(sorting=sorting, min_num_spike_threshold=70)
     print("Unit spike train lengths uncurated: " + str([len(spike_train) for spike_train in [sorting.get_unit_spike_train(unit_id) for unit_id in sorting.get_unit_ids()]]))
     print("Unit spike train lengths curated: " + str([len(spike_train) for spike_train in [curated_sorting1.get_unit_spike_train(unit_id) for unit_id in curated_sorting1.get_unit_ids()]]))
 
@@ -359,7 +359,7 @@ without those units
 
 .. code:: python
 
-    curated_sorting2 = st.postprocessing.threshold_min_SNR(recording=recording, sorting=curated_sorting1, 
+    curated_sorting2 = st.curation.threshold_min_SNR(recording=recording, sorting=curated_sorting1, 
                                                            min_SNR_threshold=6.0)
     print("Unit SNRs uncurated: " + str(st.validation.qualitymetrics.compute_unit_SNR(recording, curated_sorting1)))
     print("Unit SNRs curated: " + str(st.validation.qualitymetrics.compute_unit_SNR(recording, curated_sorting2)))
