@@ -53,7 +53,7 @@ def test_loops():
     
     
 if __name__ == '__main__':
-    #~ setup_module()
+    setup_module()
     
     test_loops()
 

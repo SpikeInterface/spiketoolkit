@@ -49,12 +49,14 @@ def test_extract_sortings():
     print(study)
     
     for rec_name in study.rec_names:
-        gt_sorting = study.get_gt(rec_name)
+        gt_sorting = study.get_ground_truth(rec_name)
         #~ print(rec_name, gt_sorting)
     
     study.copy_sortings()
     study.run_comparisons()
     
+    run_times = study.aggregate_run_times()
+    print(run_times)
     
     perf = study.aggregate_performance_by_units()
     #~ print(perf)

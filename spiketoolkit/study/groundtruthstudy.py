@@ -1,4 +1,5 @@
 from pathlib import Path
+import os
 
 import numpy as np
 import pandas as pd
@@ -7,8 +8,9 @@ import spikeextractors as se
 
 from spiketoolkit.comparison.groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
-from .studytools import (setup_comparison_study, run_study_sorters, 
-                                get_rec_names, get_recordings, copy_sortings_to_npz, iter_computed_names, iter_computed_sorting )
+from .studytools import (setup_comparison_study, run_study_sorters, get_rec_names, 
+                                        get_recordings, copy_sortings_to_npz, iter_computed_names,
+                                        iter_computed_sorting, collect_run_times)
 
 
 
@@ -45,14 +47,14 @@ class GroundTruthStudy:
         setup_comparison_study(study_folder, gt_dict)
         return cls(study_folder)
     
-    def run_sorters(self, sorter_list):
-        run_study_sorters(self.study_folder, sorter_list)
-        
+    def run_sorters(self, sorter_list, sorter_params={}, mode='keep',
+                                        engine='loop', engine_kargs={}):
+        run_study_sorters(self.study_folder, sorter_list, sorter_params=sorter_params,
+                                    engine=engine, engine_kargs=engine_kargs)
+
     def get_ground_truth(self, rec_name):
         sorting = se.NpzSortingExtractor(self.study_folder / 'ground_truth' / (rec_name+'.npz'))
         return sorting
-    # alias
-    get_gt = get_ground_truth
     
     def copy_sortings(self):
         copy_sortings_to_npz(self.study_folder)
@@ -67,6 +69,10 @@ class GroundTruthStudy:
             self.comparisons[(rec_name, sorter_name)] = sc
         self.exhaustive_gt = exhaustive_gt
     
+    def aggregate_run_times(self):
+        return collect_run_times(self.study_folder)
+        
+    
     def aggregate_performance_by_units(self):
         assert self.comparisons is not None, 'run_comparisons first'
         
@@ -74,7 +80,7 @@ class GroundTruthStudy:
         for rec_name,sorter_name, sorting in iter_computed_sorting(self.study_folder):
             comp = self.comparisons[(rec_name, sorter_name)]
             
-            perf = comp.get_performance(method='by_spiketrain', output='pandas')
+            perf = comp.get_performance(method='by_unit', output='pandas')
             perf['rec_name'] = rec_name
             perf['sorter_name'] = sorter_name
             perf = perf.reset_index()
@@ -110,19 +116,22 @@ class GroundTruthStudy:
         
         return count_units
         
-    def aggregate_dataframes(self, **karg_thresh):
+    def aggregate_dataframes(self, copy_into_folder=True, **karg_thresh):
         dataframes = {}
+        dataframes['run_times'] = self.aggregate_run_times().reset_index()
         perfs = self.aggregate_performance_by_units()
-        dataframes['perf_by_units'] = perfs
-        dataframes['perf_pooled_with_average'] = perfs.groupby(['rec_name', 'sorter_name']).mean()
-        dataframes['count_units'] = self.aggregate_count_units(**karg_thresh)
+        dataframes['perf_by_units'] = perfs.reset_index()
+        dataframes['perf_pooled_with_average'] = perfs.groupby(['rec_name', 'sorter_name']).mean().reset_index()
+        dataframes['count_units'] = self.aggregate_count_units(**karg_thresh).reset_index()
         
-        # TODO run times
-        #~ run_times = pd.read_csv(str(tables_folder / 'run_times.csv'), sep='\t')
-        #~ run_times.columns = ['rec_name', 'sorter_name', 'run_time']
-        #~ run_times = run_times.set_index(['rec_name', 'sorter_name',])
-        #~ dataframes['run_times'] = run_times
-
+        if copy_into_folder:
+            tables_folder = self.study_folder / 'tables'
+            if not os.path.exists(tables_folder):
+                os.makedirs(str(tables_folder))
+            
+            for name, df in dataframes.items():
+                df.to_csv(str(tables_folder / (name + '.csv')), sep='\t', index=False)
+        
         return dataframes
     
     
