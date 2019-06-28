@@ -3,9 +3,7 @@ import numpy as np
 from numpy.testing import assert_array_equal
 
 import spikeextractors as se
-
 from spiketoolkit.comparison import compare_sorter_to_ground_truth
-
 
 
 def make_sorting(times1, labels1, times2, labels2):
@@ -15,7 +13,6 @@ def make_sorting(times1, labels1, times2, labels2):
     tested_sorting.set_times_labels(np.array(times2), np.array(labels2))
     return gt_sorting, tested_sorting
     
-
 
 def test_compare_sorter_to_ground_truth():
     # simple match
@@ -76,12 +73,9 @@ def test_compare_sorter_to_ground_truth():
     redundant_ids = sc.get_redundant_units()
     bad_ids = sc.get_bad_units()
     assert_array_equal(bad_ids, sorted(fpu_ids+redundant_ids))
-    
 
 
 def test_get_performance():
-    
-    
     ######
     # simple match
     gt_sorting, tested_sorting = make_sorting([100, 200, 300, 400], [0, 0, 1, 0], 
