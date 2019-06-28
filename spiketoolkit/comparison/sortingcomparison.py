@@ -22,7 +22,7 @@ class SortingComparison(BaseComparison):
         The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 2 mapped to the unit_ids of sorting 1.
         """
-        return MappedSortingExtractor(self._sorting2, self._unit_map12)
+        return MappedSortingExtractor(self.sorting2, self._unit_map12)
 
     def get_mapped_sorting2(self):
         """
@@ -36,7 +36,7 @@ class SortingComparison(BaseComparison):
         The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 1 mapped to the unit_ids of sorting 2.
         """
-        return MappedSortingExtractor(self._sorting1, self._unit_map21)
+        return MappedSortingExtractor(self.sorting1, self._unit_map21)
 
     def get_matching_event_count(self, unit1, unit2):
         if (unit1 is not None) and (unit2 is not None):
@@ -50,11 +50,6 @@ class SortingComparison(BaseComparison):
                 return 0
         else:
             raise Exception('get_matching_event_count: unit1 and unit2 must not be None.')
-
-    def _compute_safe_frac(self, numer, denom):
-        if denom == 0:
-            return 0
-        return float(numer) / denom
 
     def get_best_unit_match1(self, unit1):
         if unit1 in self._best_match_units_12:
@@ -102,38 +97,6 @@ class SortingComparison(BaseComparison):
         else:
             return 0
         return compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
-
-    # ~ def get_false_positive_fraction(self, unit1, unit2=None):
-    # ~ if unit1 is None:
-    # ~ raise Exception('get_false_positive_fraction: unit1 must not be None')
-    # ~ if unit2 is None:
-    # ~ unit2 = self.get_best_unit_match1(unit1)
-    # ~ if unit2 is None or unit2 == -1:
-    # ~ return 0
-
-    # ~ if unit1 != -1 and unit2 != -1:
-    # ~ a = self._matching_event_counts_12[unit1]
-    # ~ if unit2 not in a:
-    # ~ return 0
-    # ~ else:
-    # ~ return 0
-    # ~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
-
-    # ~ def get_false_negative_fraction(self, unit1, unit2=None):
-    # ~ if unit1 is None:
-    # ~ raise Exception('get_false_positive_fraction: unit1 must not be None')
-    # ~ if unit2 is None:
-    # ~ unit2 = self.get_best_unit_match1(unit1)
-    # ~ if unit2 is None:
-    # ~ return 0
-
-    # ~ if unit1 != -1 and unit2 != -1:
-    # ~ a = self._matching_event_counts_12[unit1]
-    # ~ if unit2 not in a:
-    # ~ return 0
-    # ~ else:
-    # ~ return 0
-    # ~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
 
 
 class MappedSortingExtractor(se.SortingExtractor):

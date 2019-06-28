@@ -28,14 +28,14 @@ class GroundTruthComparison(BaseComparison):
     """
 
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
-                 delta_frames=10, min_accuracy=0.5, exhaustive_gt=False,
+                 delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False,
                  n_jobs=1, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
             tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                delta_frames=delta_frames, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         self._do_count()
 
@@ -43,7 +43,7 @@ class GroundTruthComparison(BaseComparison):
         """
         Do raw count into a dataframe.
         """
-        unit1_ids = self._sorting1.get_unit_ids()
+        unit1_ids = self.sorting1.get_unit_ids()
         columns = ['tp', 'fn', 'cl', 'fp', 'num_gt', 'num_tested', 'tested_id']
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         self.count.index.name = 'gt_unit_id'
@@ -91,7 +91,7 @@ class GroundTruthComparison(BaseComparison):
             perf = self.count
 
         elif method == 'by_spiketrain':
-            unit1_ids = self._sorting1.get_unit_ids()
+            unit1_ids = self.sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             perf.index.name = 'gt_unit_id'
             c = self.count
@@ -223,7 +223,7 @@ class GroundTruthComparison(BaseComparison):
         """
         assert self.exhaustive_gt, 'false_positive_units list is valid only if exhaustive_gt=True'
         fake_ids = []
-        unit2_ids = self._sorting2.get_unit_ids()
+        unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if self._best_match_units_21[u2] == -1:
                 fake_ids.append(u2)
@@ -254,7 +254,7 @@ class GroundTruthComparison(BaseComparison):
         """
         best_match = list(self._unit_map12.values())
         redundant_ids = []
-        unit2_ids = self._sorting2.get_unit_ids()
+        unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match and self._best_match_units_21[u2] != -1:
                 u1 = self._best_match_units_21[u2]
@@ -293,7 +293,7 @@ class GroundTruthComparison(BaseComparison):
         assert self.exhaustive_gt, 'bad_units list is valid only if exhaustive_gt=True'
         best_match = list(self._unit_map12.values())
         bad_ids = []
-        unit2_ids = self._sorting2.get_unit_ids()
+        unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match:
                 bad_ids.append(u2)

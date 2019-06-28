@@ -23,7 +23,7 @@ class BaseComparison:
         elif sampling_frequency is None:
             raise Exception("SortingExtractors do not have sampling frequency information. Provide it with the "
                             "'sampling_frequency' argument.")
-        self._delta_frames = int(delta_time * sampling_frequency)
+        self._delta_frames = int(delta_time / 1000 * sampling_frequency)
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
         self.verbose = verbose
@@ -86,3 +86,55 @@ class BaseComparison:
         if self._confusion_matrix is None:
             self._do_confusion_matrix()
         return self._confusion_matrix, self._st1_idxs, self._st2_idxs
+
+    def plot_confusion_matrix(self, xlabel=None, ylabel=None, ax=None, count_text=True):
+        # Samuel EDIT
+        # This must be moved in spikewidget
+        import matplotlib.pylab as plt
+
+        if self._confusion_matrix is None:
+            self._do_confusion_matrix()
+
+        sorting1 = self.sorting1
+        sorting2 = self.sorting2
+        unit1_ids = sorting1.get_unit_ids()
+        unit2_ids = sorting2.get_unit_ids()
+        N1 = len(unit1_ids)
+        N2 = len(unit2_ids)
+
+        if ax is None:
+            fig, ax = plt.subplots()
+
+        # Using matshow here just because it sets the ticks up nicely. imshow is faster.
+        ax.matshow(self._confusion_matrix, cmap='Greens')
+
+        if count_text:
+            for (i, j), z in np.ndenumerate(self._confusion_matrix):
+                if z != 0:
+                    if z > np.max(self._confusion_matrix) / 2.:
+                        ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='white')
+                    else:
+                        ax.text(j, i, '{:d}'.format(z), ha='center', va='center', color='black')
+
+        ax.axhline(int(N1 - 1) + 0.5, color='black')
+        ax.axvline(int(N2 - 1) + 0.5, color='black')
+
+        # Major ticks
+        ax.set_xticks(np.arange(0, N2 + 1))
+        ax.set_yticks(np.arange(0, N1 + 1))
+        ax.xaxis.tick_bottom()
+        # Labels for major ticks
+        ax.set_xticklabels(np.append(self._st2_idxs, 'FN'), fontsize=12)
+        ax.set_yticklabels(np.append(self._st1_idxs, 'FP'), fontsize=12)
+
+        if xlabel is None:
+            ax.set_xlabel(self.sorting2_name, fontsize=15)
+        else:
+            ax.set_xlabel(xlabel, fontsize=20)
+
+        if ylabel is None:
+            ax.set_ylabel(self.sorting1_name, fontsize=15)
+        else:
+            ax.set_ylabel(ylabel, fontsize=20)
+
+        return ax
