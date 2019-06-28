@@ -1,4 +1,4 @@
-from spikeextractors import CurationSortingExtractor
+from .CurationSortingExtractor import CurationSortingExtractor
 
 '''
 Basic example of a postprocessing module. They can inherit from the

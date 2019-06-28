@@ -1,4 +1,4 @@
-from spikeextractors import CurationSortingExtractor
+from .CurationSortingExtractor import CurationSortingExtractor
 from spiketoolkit.validation.qualitymetrics import compute_unit_SNR
 
 '''

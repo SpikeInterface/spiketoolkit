@@ -9,7 +9,7 @@ import json
 import traceback
 
 import spikeextractors as se
-from spikesorters.sorterlist import sorter_dict, run_sorter
+from spikesorters import sorter_dict, run_sorter
 
 
 def _run_one(arg_list):
