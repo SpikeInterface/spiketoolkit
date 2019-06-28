@@ -30,11 +30,12 @@ class BaseComparison:
             self._delta_frames = 10
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
-        self.verbose = verbose
+        self._count = count
+        self._verbose = verbose
 
         self._do_matching()
 
-        if count:
+        if self._count:
             self._do_score_labels()
 
         # confusion matrix is compute on demand
@@ -53,7 +54,7 @@ class BaseComparison:
             raise Exception("Unit_id is not a valid unit")
 
     def _do_matching(self):
-        if self.verbose:
+        if self._verbose:
             print("Matching...")
 
         self._event_counts_1, self._event_counts_2, self._matching_event_counts_12, \
@@ -63,13 +64,13 @@ class BaseComparison:
                                        self._n_jobs)
 
     def _do_score_labels(self):
-        if self.verbose:
+        if self._verbose:
             print("Adding labels...")
         self._labels_st1, self._labels_st2 = do_score_labels(self.sorting1, self.sorting2,
                                                              self._delta_frames, self._unit_map12)
 
     def _do_confusion_matrix(self):
-        if self.verbose:
+        if self._verbose:
             print("Computing confusion matrix...")
         if not self._count:
             self._do_score_labels()
