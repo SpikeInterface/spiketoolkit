@@ -26,4 +26,4 @@ Contents:
    sorters_example
    postprocessing_example
    comparison_example
-   validation_example
+   groundtruthstudy_example

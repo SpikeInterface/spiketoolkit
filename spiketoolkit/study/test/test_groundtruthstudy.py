@@ -53,10 +53,16 @@ def test_extract_sortings():
         #~ print(rec_name, gt_sorting)
     
     study.copy_sortings()
-    study.run_comparisons()
+    study.run_comparisons(exhaustive_gt=True)
+    
+    #~ for (rec_name, sorter_name), comp in study.comparisons.items():
+        #~ print('*'*10)
+        #~ print(rec_name, sorter_name)
+        #~ print(comp.count)
+
     
     run_times = study.aggregate_run_times()
-    print(run_times)
+    #~ print(run_times)
     
     perf = study.aggregate_performance_by_units()
     #~ print(perf)
