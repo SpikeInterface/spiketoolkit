@@ -52,8 +52,6 @@ def test_loops():
         print(sorting)
     
     
-    
-
 if __name__ == '__main__':
     #~ setup_module()
     
