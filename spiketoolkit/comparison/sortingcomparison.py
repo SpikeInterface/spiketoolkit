@@ -129,8 +129,8 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
-def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=2, min_accuracy=0.5,
-                        n_jobs=1, verbose=False):
+def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
+                        n_jobs=1, count=True, verbose=False):
     '''
     Compares two spike sorter outputs.
 
@@ -156,7 +156,9 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
     n_jobs: int
-        Number of cores to use in parallel. Uses all availible if -1
+        Number of cores to use in parallel. Uses all available if -1
+    count: bool
+        If True, counts are computed at instantiation (default True)
     verbose: bool
         If True, output is verbose
     Returns
@@ -165,5 +167,6 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         The SortingComparison object
 
     '''
-    return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_time, min_accuracy,
-                             n_jobs, verbose)
+    return SortingComparison(sorting1=sorting1, sorting2=sorting2, sorting1_name=sorting1_name,
+                             sorting2_name=sorting2_name, delta_time=delta_time, min_accuracy=min_accuracy,
+                             n_jobs=n_jobs, count=count, verbose=verbose)

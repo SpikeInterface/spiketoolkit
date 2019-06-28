@@ -7,7 +7,7 @@ class BaseComparison:
     Base class shared by SortingComparison and GroundTruthComparison
     """
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
-                 n_jobs=1, verbose=False, sampling_frequency=None):
+                 n_jobs=1, verbose=False, sampling_frequency=None, count=True):
         self.sorting1 = sorting1
         self.sorting2 = sorting2
         if sorting1_name is None:
@@ -20,16 +20,22 @@ class BaseComparison:
             assert self.sorting1.get_sampling_frequency() == self.sorting2.get_sampling_frequency(), \
                 "The two sorting extractors must have the same sampling frequency"
             sampling_frequency = self.sorting1.get_sampling_frequency()
-        elif sampling_frequency is None:
-            raise Exception("SortingExtractors do not have sampling frequency information. Provide it with the "
-                            "'sampling_frequency' argument.")
-        self._delta_frames = int(delta_time / 1000 * sampling_frequency)
+        # elif sampling_frequency is None:
+        #     raise Exception("SortingExtractors do not have sampling frequency information. Provide it with the "
+        #                     "'sampling_frequency' argument.")
+        if sampling_frequency is not None:
+            self._delta_frames = int(delta_time / 1000 * sampling_frequency)
+        else:
+            print("Warning: sampling frequency information not found. Setting delta_frames to 10.")
+            self._delta_frames = 10
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
         self.verbose = verbose
 
         self._do_matching()
-        self._do_score_labels()
+
+        if count:
+            self._do_score_labels()
 
         # confusion matrix is compute on demand
         self._confusion_matrix = None
@@ -58,14 +64,15 @@ class BaseComparison:
 
     def _do_score_labels(self):
         if self.verbose:
-            print("do_score_labels...")
-
+            print("Adding labels...")
         self._labels_st1, self._labels_st2 = do_score_labels(self.sorting1, self.sorting2,
                                                              self._delta_frames, self._unit_map12)
 
     def _do_confusion_matrix(self):
         if self.verbose:
-            print("do_confusion_matrix...")
+            print("Computing confusion matrix...")
+        if not self._count:
+            self._do_score_labels()
         self._confusion_matrix, self._st1_idxs, self._st2_idxs = do_confusion_matrix(self.sorting1, self.sorting2,
                                                                                      self._unit_map12, self._labels_st1,
                                                                                      self._labels_st2)

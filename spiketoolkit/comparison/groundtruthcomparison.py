@@ -29,13 +29,14 @@ class GroundTruthComparison(BaseComparison):
 
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                  delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False,
-                 n_jobs=1, verbose=False):
+                 n_jobs=1, count=True, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
             tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, verbose=verbose)
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, count=count,
+                                verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         self._do_count()
 
@@ -358,7 +359,8 @@ num_bad: {num_bad}
 
 
 def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None,
-                                   delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1, verbose=False):
+                                   delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1,
+                                   count=True, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -386,8 +388,10 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
         Tell if the ground true is "exhaustive" or not. In other world if the
         GT have all possible units. It allows more performance measurement.
         For instance, MEArec simulated dataset have exhaustive_gt=True
-     n_jobs: int
-        Number of cores to use in parallel. Uses all availible if -1
+    n_jobs: int
+        Number of cores to use in parallel. Uses all available if -1
+    count: bool
+        If True, counts are computed at instantiation (default True)
     verbose: bool
         If True, output is verbose
     Returns
@@ -396,5 +400,6 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
         The SortingComparison object
 
     '''
-    return GroundTruthComparison(gt_sorting, tested_sorting, gt_name, tested_name,
-                                 delta_time, min_accuracy, exhaustive_gt, n_jobs, verbose)
+    return GroundTruthComparison(gt_sorting=gt_sorting, tested_sorting=tested_sorting, gt_name=gt_name,
+                                 tested_name=tested_name, delta_time=delta_time, min_accuracy=min_accuracy,
+                                 exhaustive_gt=exhaustive_gt, n_jobs=n_jobs, count=count, verbose=verbose)
