@@ -1,4 +1,4 @@
-from spikeextractors import CurationSortingExtractor
+from .CurationSortingExtractor import CurationSortingExtractor
 from spiketoolkit.validation.biophysicalmetrics import compute_ISI_violation_ratio
 
 '''
