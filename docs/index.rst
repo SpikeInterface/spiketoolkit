@@ -27,3 +27,4 @@ Contents:
    postprocessing_example
    comparison_example
    validation_example
+   curation
