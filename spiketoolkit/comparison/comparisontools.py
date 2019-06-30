@@ -3,10 +3,28 @@ Some functions internally use by SortingComparison.
 """
 
 import numpy as np
-from scipy.optimize import linear_sum_assignment
 from joblib import Parallel, delayed
+from scipy.optimize import linear_sum_assignment
+
 
 def count_matching_events(times1, times2, delta=10):
+    """
+    Counts matching events.
+
+    Parameters
+    ----------
+    times1: list
+        List of spike train 1 frames
+    times2: list
+        List of spike train 2 frames
+    delta: int
+        Number of frames for considering matching events
+
+    Returns
+    -------
+    matching_count: int
+        Number of matching events
+    """
     times_concat = np.concatenate((times1, times2))
     membership = np.concatenate((np.ones(times1.shape) * 1, np.ones(times2.shape) * 2))
     indices = times_concat.argsort()
@@ -14,16 +32,29 @@ def count_matching_events(times1, times2, delta=10):
     membership_sorted = membership[indices]
     diffs = times_concat_sorted[1:] - times_concat_sorted[:-1]
     inds = np.where((diffs <= delta) & (membership_sorted[0:-1] != membership_sorted[1:]))[0]
-    if (len(inds) == 0):
+    if len(inds) == 0:
         return 0
     inds2 = np.where(inds[:-1] + 1 != inds[1:])[0]
     return len(inds2) + 1
 
 
-
 def compute_agreement_score(num_matches, num1, num2):
     """
-    Agreement score is used as a criteria to match unit1 and unit2.
+    Computes agreement score.
+
+    Parameters
+    ----------
+    num_matches: int
+        Number of matches
+    num1: int
+        Number of events in spike train 1
+    num2: int
+        Number of events in spike train 2
+
+    Returns
+    -------
+    score: float
+        Agreement score
     """
     denom = num1 + num2 - num_matches
     if denom == 0:
@@ -32,6 +63,31 @@ def compute_agreement_score(num_matches, num1, num2):
 
 
 def match_spikes(times1, all_times2, unit2_ids, delta_frames, event_counts1, event_counts2):
+    """
+    Computes matching spikes between one spike train and a list of others.
+
+    Parameters
+    ----------
+    times1: list
+        List of spike train 1 frames
+    all_times2: list
+        Spike trains from sorting 2
+    unit2_ids: list
+        List of units for sorting 2
+    delta_frames: int
+        Number of frames to consider matching spikes
+    event_counts1:  int
+        Number of eventes for spike train 1
+    event_counts2: list
+        List of numbe of events for spike trains of sorting 2
+
+    Returns
+    -------
+    matching_events_count: list
+        List of counts of matching events
+    scores: list
+        List of scores between spike train 1 and spike trains from sorting 2
+    """
     matching_event_counts = []
     scores = []
     for i2, u2 in enumerate(unit2_ids):
@@ -44,7 +100,7 @@ def match_spikes(times1, all_times2, unit2_ids, delta_frames, event_counts1, eve
 
 def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     """
-    This compute the matching between 2 sorters.
+    Computes the matching between 2 sorters.
 
     Parameters
     ----------
@@ -111,7 +167,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     s2_spiketrains = [sorting2.get_unit_spike_train(u2) for u2 in unit2_ids]
     results = Parallel(n_jobs=n_jobs)(delayed(match_spikes)(sorting1.get_unit_spike_train(u1), s2_spiketrains,
                                                             unit2_ids, delta_frames, event_counts1[i1],
-                                                            event_counts2) for i1, u1 in enumerate(unit1_ids))    
+                                                            event_counts2) for i1, u1 in enumerate(unit1_ids))
 
     matching_event_counts = np.zeros((N1, N2)).astype(np.int64)
     scores = np.zeros((N1, N2))
@@ -123,7 +179,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     for i1, u1 in enumerate(unit1_ids):
         scores0 = scores[i1, :]
         matching_event_counts_12[u1] = dict()
-        if len(scores0)>0:
+        if len(scores0) > 0:
             if np.max(scores0) > 0:
                 inds0 = np.where(scores0 > 0)[0]
                 for i2 in inds0:
@@ -139,7 +195,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     for i2, u2 in enumerate(unit2_ids):
         scores0 = scores[:, i2]
         matching_event_counts_21[u2] = dict()
-        if len(scores0)>0:
+        if len(scores0) > 0:
             if np.max(scores0) > 0:
                 inds0 = np.where(scores0 > 0)[0]
                 for i1 in inds0:
@@ -155,7 +211,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
     [inds1, inds2] = linear_sum_assignment(-scores)
     inds1 = list(inds1)
     inds2 = list(inds2)
-    if len(unit2_ids)>0:
+    if len(unit2_ids) > 0:
         k2 = np.max(unit2_ids) + 1
     else:
         k2 = 1
@@ -177,7 +233,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
             # unit_map12[u1] = k2
             # k2 = k2+1
             unit_map12[u1] = -1
-    if len(unit1_ids)>0:
+    if len(unit1_ids) > 0:
         k1 = np.max(unit1_ids) + 1
     else:
         k1 = 1
@@ -200,15 +256,15 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
             # k1 = k1+1
             unit_map21[u2] = -1
 
-    return (event_counts_1,  event_counts_2,
+    return (event_counts_1, event_counts_2,
             matching_event_counts_12, best_match_units_12,
-            matching_event_counts_21,  best_match_units_21,
-            unit_map12,  unit_map21)
+            matching_event_counts_21, best_match_units_21,
+            unit_map12, unit_map21)
 
 
 def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
     """
-    Make the labelling at spike level for each spike train:
+    Makes the labelling at spike level for each spike train:
       * TP: true positive
       * CL: classification error
       * FN: False negative
@@ -220,13 +276,13 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
     Parameters
     ----------
     sorting1: SortingExtractor instance
-        The ground truth sorting.
+        The ground truth sorting
     sorting2: SortingExtractor instance
-        The tested sorting.
+        The tested sorting
     delta_frames: int
         Number of frames to consider spikes coincident
     unit_map12: dict
-        Dict of matching from sorting1 to sorting2.
+        Dict of matching from sorting1 to sorting2
 
     Returns
     -------
@@ -255,13 +311,13 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
 
     for u1 in unit1_ids:
         u2 = unit_map12[u1]
-        if u2 !=-1:
+        if u2 != -1:
             lab_st1 = labels_st1[u1]
             lab_st2 = labels_st2[u2]
             mapped_st = sorting2.get_unit_spike_train(u2)
             # from gtst: TP, TPO, TPSO, FN, FNO, FNSO
             for sp_i, n_sp in enumerate(sts1[u1]):
-                matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
+                matches = (np.abs(mapped_st.astype(int) - n_sp) <= delta_frames // 2)
                 if np.sum(matches) > 0:
                     if lab_st1[sp_i] != 'TP' and lab_st2[np.where(matches)[0][0]] != 'TP':
                         lab_st1[sp_i] = 'TP'
@@ -281,12 +337,11 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
                         lab_st2 = labels_st2[u2]
                         n_sp = st1[l_gt]
                         mapped_st = sts2[u2]
-                        matches = (np.abs(mapped_st.astype(int)-n_sp)<=delta_frames//2)
+                        matches = (np.abs(mapped_st.astype(int) - n_sp) <= delta_frames // 2)
                         if np.sum(matches) > 0:
                             if 'CL' not in lab_st1[l_gt] and 'CL' not in lab_st2[np.where(matches)[0][0]]:
                                 lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
                                 lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
-
 
     for u1 in unit1_ids:
         lab_st1 = labels_st1[u1]
@@ -305,7 +360,7 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
 
 def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     """
-    Compute the confusion matrix between two sorting.
+    Computes the confusion matrix between two sorting.
 
     Parameters
     ----------
@@ -337,7 +392,7 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
     idxs_unmatched, = np.where(mapped_units == -1)
     unit_map_matched = mapped_units[idxs_matched]
 
-    st1_idxs =np.hstack([unit1_ids[idxs_matched], unit1_ids[idxs_unmatched]])
+    st1_idxs = np.hstack([unit1_ids[idxs_matched], unit1_ids[idxs_unmatched]])
     st2_matched = unit_map_matched
     st2_unmatched = []
 
@@ -372,12 +427,12 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
 
     st2_idxs = np.hstack([st2_matched, st2_unmatched]).astype('int64')
 
-    return conf_matrix,  st1_idxs, st2_idxs
+    return conf_matrix, st1_idxs, st2_idxs
 
 
 def compare_spike_trains(spiketrain1, spiketrain2, delta_frames=10):
     """
-    Compare 2 spike trains.
+    Compares 2 spike trains.
 
     Note:
       * The first spiketrain is supposed to be the ground truth.
