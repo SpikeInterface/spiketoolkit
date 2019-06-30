@@ -2,13 +2,13 @@ from .CurationSortingExtractor import CurationSortingExtractor
 from spiketoolkit.validation.qualitymetrics import compute_unit_SNR
 
 '''
-Basic example of a postprocessing module. They can inherit from the
+Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
 class ThresholdMinSNR(CurationSortingExtractor):
 
-    postprocessor_name = 'ThresholdMinSNR'
+    curator_name = 'ThresholdMinSNR'
     installed = False  # check at class level if installed or not
     _gui_params = [
         {'name': 'min_SNR_threshold', 'type': 'float', 'value':4.0, 'default':4.0, 'title': "Minimum SNR of a unit for it to valid"},
