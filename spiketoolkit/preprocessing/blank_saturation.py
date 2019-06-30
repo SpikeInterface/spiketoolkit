@@ -79,7 +79,7 @@ def blank_saturation(recording, threshold=None):
     Find and remove parts of the signla with extereme values. Some arrays
     may produce these when amplifiers enter saturation, typically for
     short periods of time. To remove these artefacts, values below or above 
-    a threshold are set to the medina signal value.
+    a threshold are set to the median signal value.
     The threshold is either be estimated automatically, using the lower and upper 
     0.1 signal percentile with the largest deviation from the median, or specificed.
     Use this function with caution, as it may clip uncontaminated signals. A wanrning is
