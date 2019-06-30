@@ -2,13 +2,13 @@ from .CurationSortingExtractor import CurationSortingExtractor
 from spiketoolkit.validation.biophysicalmetrics import compute_ISI_violation_ratio
 
 '''
-Basic example of a postprocessing module. They can inherit from the
+Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
 class ThresholdMaxISI(CurationSortingExtractor):
 
-    postprocessor_name = 'ThresholdMaxISI'
+    curator_name = 'ThresholdMaxISI'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
