@@ -14,6 +14,9 @@ def make_sorting(times1, labels1, times2, labels2, times3, labels3):
     sorting1.set_times_labels(np.array(times1), np.array(labels1))
     sorting2.set_times_labels(np.array(times2), np.array(labels2))
     sorting3.set_times_labels(np.array(times3), np.array(labels3))
+    sorting1.set_sampling_frequency(30000)
+    sorting2.set_sampling_frequency(30000)
+    sorting3.set_sampling_frequency(30000)
     return sorting1, sorting2, sorting3
 
 
