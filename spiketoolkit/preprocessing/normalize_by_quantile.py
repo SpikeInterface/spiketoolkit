@@ -33,7 +33,7 @@ class NormalizeByQuantileRecording(RecordingExtractor):
         self.copy_channel_properties(recording=self._recording)
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):
-        # this was copied from the whiten filter
+        np.random.seed(0)
         N = self._recording.get_num_frames()
         list = []
         for i in range(num_chunks):
@@ -53,7 +53,6 @@ class NormalizeByQuantileRecording(RecordingExtractor):
         return self._recording.get_channel_ids()
 
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        # copied from the transform_traces filter
         if start_frame is None:
             start_frame = 0
         if end_frame is None:
