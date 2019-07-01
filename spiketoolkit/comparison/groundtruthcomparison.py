@@ -92,7 +92,7 @@ class GroundTruthComparison(BaseComparison):
             perf = self.count
             
         elif method == 'by_unit':
-            unit1_ids = self._sorting1.get_unit_ids()
+            unit1_ids = self.sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             perf.index.name = 'gt_unit_id'
             c = self.count
