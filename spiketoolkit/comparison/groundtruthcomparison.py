@@ -29,7 +29,7 @@ class GroundTruthComparison(BaseComparison):
 
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                  delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False,
-                 n_jobs=1, label=True, compute_misclassification=False, verbose=False):
+                 n_jobs=-1, label=True, compute_misclassification=False, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
@@ -359,7 +359,7 @@ num_bad: {num_bad}
 
 
 def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None,
-                                   delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=1,
+                                   delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=-1,
                                    label=True, compute_misclassification=False, verbose=False):
     '''
     Compares a sorter to a ground truth.

@@ -9,6 +9,12 @@ class SortingComparison(BaseComparison):
     """
     Class for comparison of two sorters when no assumption is done.
     """
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None,
+                 delta_time=0.3, min_accuracy=0.5, n_jobs=-1,
+                 label=False, compute_misclassification=False, verbose=False):
+        BaseComparison.__init__(self, sorting1, sorting2, sorting1_name=sorting1_name, sorting2_name=sorting2_name,
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, label=label,
+                                compute_misclassification=compute_misclassification, verbose=verbose)
 
     def get_mapped_sorting1(self):
         """
@@ -130,7 +136,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
-                        n_jobs=1, label=True, verbose=False):
+                        n_jobs=-1, label=False, verbose=False):
     '''
     Compares two spike sorter outputs.
 
