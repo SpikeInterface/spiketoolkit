@@ -7,7 +7,7 @@ class BaseComparison:
     Base class shared by SortingComparison and GroundTruthComparison
     """
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
-                 n_jobs=1, verbose=False, sampling_frequency=None, compute_label=True, compute_misclassification=False):
+                 n_jobs=1, verbose=False, sampling_frequency=None, compute_labels=True, compute_misclassification=False):
         self.sorting1 = sorting1
         self.sorting2 = sorting2
         if sorting1_name is None:
@@ -30,7 +30,7 @@ class BaseComparison:
             self._delta_frames = 10
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
-        self._compute_label = compute_label
+        self._compute_labels = compute_labels
         self._compute_misclassification = compute_misclassification
         self._verbose = verbose
 
@@ -38,7 +38,7 @@ class BaseComparison:
         
         self._labels_st1 = None
         self._labels_st2 = None
-        if self._compute_label:
+        if self._compute_labels:
             self._do_score_labels()
 
         # confusion matrix is compute on demand

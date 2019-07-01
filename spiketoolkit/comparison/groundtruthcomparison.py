@@ -29,13 +29,13 @@ class GroundTruthComparison(BaseComparison):
 
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                  delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False,
-                 n_jobs=-1, compute_label=True, compute_misclassification=True, verbose=False):
+                 n_jobs=-1, compute_labels=True, compute_misclassification=True, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
             tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, compute_label=compute_label,
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, compute_labels=compute_labels,
                                 compute_misclassification=compute_misclassification, verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         self._do_count()
@@ -368,7 +368,7 @@ num_bad: {num_bad}
 
 def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                                    delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=-1,
-                                   compute_label=True, compute_misclassification=False, verbose=False):
+                                   compute_labels=True, compute_misclassification=False, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -398,7 +398,7 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
         For instance, MEArec simulated dataset have exhaustive_gt=True
     n_jobs: int
         Number of cores to use in parallel. Uses all available if -1
-    compute_label: bool
+    compute_labels: bool
         If True, labels are computed at instantiation (default True)
     compute_misclassification: bool
         If True, misclassification errors are computed (default False)
@@ -412,5 +412,5 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
     '''
     return GroundTruthComparison(gt_sorting=gt_sorting, tested_sorting=tested_sorting, gt_name=gt_name,
                                  tested_name=tested_name, delta_time=delta_time, min_accuracy=min_accuracy,
-                                 exhaustive_gt=exhaustive_gt, n_jobs=n_jobs, compute_label=compute_label,
+                                 exhaustive_gt=exhaustive_gt, n_jobs=n_jobs, compute_labels=compute_labels,
                                  compute_misclassification=compute_misclassification, verbose=verbose)
