@@ -93,7 +93,7 @@ def test_get_performance():
     assert perf['accuracy'] == 0.75
     assert perf['miss_rate'] == 0.25
     
-    perf = sc.get_performance('by_units')
+    perf = sc.get_performance('by_unit')
     
     assert perf.loc[0, 'accuracy'] == 2 / 3.
     assert perf.loc[0, 'misclassification_rate'] == 0
@@ -121,4 +121,4 @@ def test_get_performance():
 
 if __name__ == '__main__':
     test_compare_sorter_to_ground_truth()
-    # ~ test_get_performance()
+    test_get_performance()
