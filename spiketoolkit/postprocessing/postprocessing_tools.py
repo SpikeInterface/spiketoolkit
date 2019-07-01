@@ -623,6 +623,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
+    if len(sorting.get_unit_ids()) == 0:
+	    raise Exception("No units in the sorting result, can't save to phy.")
     output_folder = Path(output_folder).absolute()
     if output_folder.is_dir():
         shutil.rmtree(output_folder)

@@ -8,17 +8,17 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, n_jobs=-1, verbose=False):
+    def __init__(self, sorting_list, name_list=None, delta_time=0.3, min_accuracy=0.5, n_jobs=-1, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
             self._name_list = name_list
         else:
             self._name_list = ['sorter' + str(i) for i in range(len(sorting_list))]
-        self._delta_frames = delta_frames
+        self._delta_time = delta_time
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
-        self._do_matching(verbose, delta_frames)
+        self._do_matching(verbose)
 
     def get_sorting_list(self):
         return self._sorting_list
@@ -26,7 +26,7 @@ class MultiSortingComparison():
     def get_agreement_sorting(self, minimum_matching=0):
         return AgreementSortingExtractor(self, min_agreement=minimum_matching)
 
-    def _do_matching(self, verbose, tolerance=10):
+    def _do_matching(self, verbose):
         # do pairwise matching
         self.sorting_comparisons = {}
         for i in range(len(self._sorting_list)):
@@ -38,11 +38,16 @@ class MultiSortingComparison():
                     comparison_[self._name_list[j]] = SortingComparison(self._sorting_list[i], self._sorting_list[j],
                                                                         sorting1_name=self._name_list[i],
                                                                         sorting2_name=self._name_list[j],
-                                                                        delta_frames=self._delta_frames,
+                                                                        delta_time=self._delta_time,
                                                                         min_accuracy=self._min_accuracy,
                                                                         n_jobs=self._n_jobs,
                                                                         verbose=verbose)
             self.sorting_comparisons[self._name_list[i]] = comparison_
+
+        assert np.all([s.get_sampling_frequency() == self._sorting_list[0].get_sampling_frequency()
+                       for s in self._sorting_list])
+
+        tolerance = int(self._delta_time / 1000 * self._sorting_list[0].get_sampling_frequency())
 
         # create graph
         agreement = {}
@@ -50,7 +55,7 @@ class MultiSortingComparison():
         for sort_name, sort_comp in self.sorting_comparisons.items():
             unit_agreement = {}
             sort_comp2 = list(sort_comp.keys())
-            units = sort_comp[sort_comp2[0]].get_sorting1().get_unit_ids()
+            units = sort_comp[sort_comp2[0]].sorting1.get_unit_ids()
             for unit in units:
                 matched_list = {}
                 matched_agreement = {}
@@ -248,7 +253,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
         return np.array(self._msc._spiketrains[list(self._msc._new_units.keys()).index(unit_id)])
 
 
-def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_accuracy=0.5, tolerance=10,
+def compare_multiple_sorters(sorting_list, name_list=None, delta_time=0.3, min_accuracy=0.5,
                              n_jobs=-1, verbose=False):
     '''
     Compares multiple spike sorter outputs.
@@ -264,8 +269,8 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_
         List of sorting extractor objects to be compared
     name_list: list
         List of spike sorter names. If not given, sorters are named as 'sorter0', 'sorter1', 'sorter2', etc.
-    delta_frames: int
-        Number of frames to consider coincident spikes (default 10)
+    delta_time: float
+        Number of ms to consider coincident spikes (default 0.3 ms)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
     n_jobs: int
@@ -278,4 +283,4 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_frames=10, min_
     multi_sorting_comparison: MultiSortingComparison
         MultiSortingComparison object with the multiple sorter comparison
     '''
-    return MultiSortingComparison(sorting_list, name_list, delta_frames, min_accuracy, n_jobs, verbose)
+    return MultiSortingComparison(sorting_list, name_list, delta_time, min_accuracy, n_jobs, verbose)

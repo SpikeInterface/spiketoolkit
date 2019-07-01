@@ -1,20 +1,20 @@
-
-
+import numpy as np
 import spikeextractors as se
+
 from .basecomparison import BaseComparison
 from .comparisontools import compute_agreement_score
-
-import numpy as np
 
 
 class SortingComparison(BaseComparison):
     """
     Class for comparison of two sorters when no assumption is done.
-    
-    
-    
     """
-
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None,
+                 delta_time=0.3, min_accuracy=0.5, n_jobs=-1,
+                 label=False, compute_misclassification=False, verbose=False):
+        BaseComparison.__init__(self, sorting1, sorting2, sorting1_name=sorting1_name, sorting2_name=sorting2_name,
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, label=label,
+                                compute_misclassification=compute_misclassification, verbose=verbose)
 
     def get_mapped_sorting1(self):
         """
@@ -28,7 +28,7 @@ class SortingComparison(BaseComparison):
         The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 2 mapped to the unit_ids of sorting 1.
         """
-        return MappedSortingExtractor(self._sorting2, self._unit_map12)
+        return MappedSortingExtractor(self.sorting2, self._unit_map12)
 
     def get_mapped_sorting2(self):
         """
@@ -42,7 +42,7 @@ class SortingComparison(BaseComparison):
         The returned MappedSortingExtractor.get_unit_spikeTrains returns the the spike trains
         of sorting 1 mapped to the unit_ids of sorting 2.
         """
-        return MappedSortingExtractor(self._sorting1, self._unit_map21)
+        return MappedSortingExtractor(self.sorting1, self._unit_map21)
 
     def get_matching_event_count(self, unit1, unit2):
         if (unit1 is not None) and (unit2 is not None):
@@ -56,11 +56,6 @@ class SortingComparison(BaseComparison):
                 return 0
         else:
             raise Exception('get_matching_event_count: unit1 and unit2 must not be None.')
-
-    def _compute_safe_frac(self, numer, denom):
-        if denom == 0:
-            return 0
-        return float(numer) / denom
 
     def get_best_unit_match1(self, unit1):
         if unit1 in self._best_match_units_12:
@@ -109,38 +104,6 @@ class SortingComparison(BaseComparison):
             return 0
         return compute_agreement_score(a[unit2], self._event_counts_1[unit1], self._event_counts_2[unit2])
 
-    #~ def get_false_positive_fraction(self, unit1, unit2=None):
-        #~ if unit1 is None:
-            #~ raise Exception('get_false_positive_fraction: unit1 must not be None')
-        #~ if unit2 is None:
-            #~ unit2 = self.get_best_unit_match1(unit1)
-            #~ if unit2 is None or unit2 == -1:
-                #~ return 0
-
-        #~ if unit1 != -1 and unit2 != -1:
-            #~ a = self._matching_event_counts_12[unit1]
-            #~ if unit2 not in a:
-                #~ return 0
-        #~ else:
-            #~ return 0
-        #~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_2[unit2])
-
-    #~ def get_false_negative_fraction(self, unit1, unit2=None):
-        #~ if unit1 is None:
-            #~ raise Exception('get_false_positive_fraction: unit1 must not be None')
-        #~ if unit2 is None:
-            #~ unit2 = self.get_best_unit_match1(unit1)
-            #~ if unit2 is None:
-                #~ return 0
-
-        #~ if unit1 != -1 and unit2 != -1:
-            #~ a = self._matching_event_counts_12[unit1]
-            #~ if unit2 not in a:
-                #~ return 0
-        #~ else:
-            #~ return 0
-        #~ return 1 - self._compute_safe_frac(a[unit2], self._event_counts_1[unit1])
-
 
 class MappedSortingExtractor(se.SortingExtractor):
     def __init__(self, sorting, unit_map):
@@ -172,8 +135,8 @@ class MappedSortingExtractor(se.SortingExtractor):
             return None
 
 
-def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_frames=10, min_accuracy=0.5,
-                        n_jobs=1, verbose=False):
+def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
+                        n_jobs=-1, label=False, verbose=False):
     '''
     Compares two spike sorter outputs.
 
@@ -194,12 +157,14 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         The name of sorter 1
     sorting2_name: : str
         The name of sorter 2
-    delta_frames: int
-        Number of frames to consider coincident spikes (default 10)
+    delta_time: float
+        Number of ms to consider coincident spikes (default 0.3 ms)
     min_accuracy: float
         Minimum agreement score to match units (default 0.5)
-     n_jobs: int
-        Number of cores to use in parallel. Uses all availible if -1
+    n_jobs: int
+        Number of cores to use in parallel. Uses all available if -1
+    label: bool
+        If True, labels are computed at instantiation (default True)
     verbose: bool
         If True, output is verbose
     Returns
@@ -208,6 +173,6 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         The SortingComparison object
 
     '''
-    return SortingComparison(sorting1, sorting2, sorting1_name, sorting2_name, delta_frames, min_accuracy,
-                             n_jobs, verbose)
-
+    return SortingComparison(sorting1=sorting1, sorting2=sorting2, sorting1_name=sorting1_name,
+                             sorting2_name=sorting2_name, delta_time=delta_time, min_accuracy=min_accuracy,
+                             n_jobs=n_jobs, label=label, verbose=verbose)

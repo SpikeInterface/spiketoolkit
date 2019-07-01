@@ -27,3 +27,5 @@ Contents:
    postprocessing_example
    comparison_example
    groundtruthstudy_example
+   validation_example
+   curation

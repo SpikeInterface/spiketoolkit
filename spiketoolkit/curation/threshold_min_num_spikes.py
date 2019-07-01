@@ -1,13 +1,13 @@
 from .CurationSortingExtractor import CurationSortingExtractor
 
 '''
-Basic example of a postprocessing module. They can inherit from the
+Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
 class ThresholdMinNumSpike(CurationSortingExtractor):
 
-    postprocessor_name = 'ThresholdMinNumSpike'
+    curator_name = 'ThresholdMinNumSpike'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'min_num_spike_threshold', 'type': 'int', 'value':50, 'default':50, 'title': "Minimum number of spikes in a unit for it to valid"},
