@@ -262,7 +262,7 @@ def do_matching(sorting1, sorting2, delta_frames, min_accuracy, n_jobs=1):
             unit_map12, unit_map21)
 
 
-def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
+def do_score_labels(sorting1, sorting2, delta_frames, unit_map12, label_misclassification=False):
     """
     Makes the labelling at spike level for each spike train:
       * TP: true positive
@@ -283,6 +283,8 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
         Number of frames to consider spikes coincident
     unit_map12: dict
         Dict of matching from sorting1 to sorting2
+    label_misclassification: bool
+        If True, misclassification errors are labelled
 
     Returns
     -------
@@ -326,34 +328,36 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12):
             lab_st1 = np.array(['FN'] * len(sts1[u1]))
             labels_st1[u1] = lab_st1
 
-    # find CL-CLO-CLSO
-    for u1 in unit1_ids:
-        lab_st1 = labels_st1[u1]
-        st1 = sts1[u1]
-        for l_gt, lab in enumerate(lab_st1):
-            if lab == 'UNPAIRED':
-                for u2 in unit2_ids:
-                    if u2 in unit_map12.values() and unit_map12[u1] != -1:
-                        lab_st2 = labels_st2[u2]
-                        n_sp = st1[l_gt]
-                        mapped_st = sts2[u2]
-                        matches = (np.abs(mapped_st.astype(int) - n_sp) <= delta_frames // 2)
-                        if np.sum(matches) > 0:
-                            if 'CL' not in lab_st1[l_gt] and 'CL' not in lab_st2[np.where(matches)[0][0]]:
-                                lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
-                                lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
+    if label_misclassification:
+        for u1 in unit1_ids:
+            lab_st1 = labels_st1[u1]
+            st1 = sts1[u1]
+            for l_gt, lab in enumerate(lab_st1):
+                if lab == 'UNPAIRED':
+                    for u2 in unit2_ids:
+                        if u2 in unit_map12.values() and unit_map12[u1] != -1:
+                            lab_st2 = labels_st2[u2]
+                            n_sp = st1[l_gt]
+                            mapped_st = sts2[u2]
+                            matches = (np.abs(mapped_st.astype(int) - n_sp) <= delta_frames // 2)
+                            if np.sum(matches) > 0:
+                                if 'CL' not in lab_st1[l_gt] and 'CL' not in lab_st2[np.where(matches)[0][0]]:
+                                    lab_st1[l_gt] = 'CL_' + str(u1) + '_' + str(u2)
+                                    lab_st2[np.where(matches)[0][0]] = 'CL_' + str(u2) + '_' + str(u1)
 
     for u1 in unit1_ids:
         lab_st1 = labels_st1[u1]
-        for l_gt, lab in enumerate(lab_st1):
-            if lab == 'UNPAIRED':
-                lab_st1[l_gt] = 'FN'
+        lab_st1[lab_st1 == 'UNPAIRED'] = 'FN'
+        # for l_gt, lab in enumerate(lab_st1):
+        #     if lab == 'UNPAIRED':
+        #         lab_st1[l_gt] = 'FN'
 
     for u2 in unit2_ids:
         lab_st2 = labels_st2[u2]
-        for l_gt, lab in enumerate(lab_st2):
-            if lab == 'UNPAIRED':
-                lab_st2[l_gt] = 'FP'
+        lab_st2[lab_st2 == 'UNPAIRED'] = 'FP'
+        # for l_gt, lab in enumerate(lab_st2):
+        #     if lab == 'UNPAIRED':
+        #         lab_st2[l_gt] = 'FP'
 
     return labels_st1, labels_st2
 

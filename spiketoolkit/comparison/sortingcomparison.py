@@ -9,6 +9,12 @@ class SortingComparison(BaseComparison):
     """
     Class for comparison of two sorters when no assumption is done.
     """
+    def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None,
+                 delta_time=0.3, min_accuracy=0.5, n_jobs=-1,
+                 label=False, compute_misclassification=False, verbose=False):
+        BaseComparison.__init__(self, sorting1, sorting2, sorting1_name=sorting1_name, sorting2_name=sorting2_name,
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, label=label,
+                                compute_misclassification=compute_misclassification, verbose=verbose)
 
     def get_mapped_sorting1(self):
         """
@@ -130,7 +136,7 @@ class MappedSortingExtractor(se.SortingExtractor):
 
 
 def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
-                        n_jobs=1, count=True, verbose=False):
+                        n_jobs=-1, label=False, verbose=False):
     '''
     Compares two spike sorter outputs.
 
@@ -157,8 +163,8 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
         Minimum agreement score to match units (default 0.5)
     n_jobs: int
         Number of cores to use in parallel. Uses all available if -1
-    count: bool
-        If True, counts are computed at instantiation (default True)
+    label: bool
+        If True, labels are computed at instantiation (default True)
     verbose: bool
         If True, output is verbose
     Returns
@@ -169,4 +175,4 @@ def compare_two_sorters(sorting1, sorting2, sorting1_name=None, sorting2_name=No
     '''
     return SortingComparison(sorting1=sorting1, sorting2=sorting2, sorting1_name=sorting1_name,
                              sorting2_name=sorting2_name, delta_time=delta_time, min_accuracy=min_accuracy,
-                             n_jobs=n_jobs, count=count, verbose=verbose)
+                             n_jobs=n_jobs, label=label, verbose=verbose)
