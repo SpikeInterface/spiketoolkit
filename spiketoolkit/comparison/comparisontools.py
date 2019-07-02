@@ -305,10 +305,10 @@ def do_score_labels(sorting1, sorting2, delta_frames, unit_map12, label_misclass
     sts2 = {u2: sorting2.get_unit_spike_train(u2) for u2 in unit2_ids}
 
     for u1 in unit1_ids:
-        lab_st1 = np.array(['UNPAIRED'] * len(sts1[u1]))
+        lab_st1 = np.array(['UNPAIRED'] * len(sts1[u1]), dtype='<U8')
         labels_st1[u1] = lab_st1
     for u2 in unit2_ids:
-        lab_st2 = np.array(['UNPAIRED'] * len(sts2[u2]))
+        lab_st2 = np.array(['UNPAIRED'] * len(sts2[u2]), dtype='<U8')
         labels_st2[u2] = lab_st2
 
     for u1 in unit1_ids:
