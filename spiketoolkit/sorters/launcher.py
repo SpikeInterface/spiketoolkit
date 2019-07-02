@@ -174,7 +174,7 @@ def is_log_ok(output_folder):
                 return True
     return False
 
-def loop_over_folders(output_folders):
+def iter_output_folders(output_folders):
     output_folders = Path(output_folders)
     for rec_name in os.listdir(output_folders):
         if not os.path.isdir(output_folders / rec_name):
@@ -186,7 +186,18 @@ def loop_over_folders(output_folders):
             if not is_log_ok(output_folder):
                 continue
             yield rec_name, sorter_name, output_folder
+
+def iter_sorting_output(output_folders):
+    """
+    Iterator over output_folder to retrieve all triplets
+    (rec_name, sorter_name, sorting)
     
+    """
+    for rec_name, sorter_name, output_folder in iter_output_folders(output_folders):
+        SorterClass = sorter_dict[sorter_name]
+        sorting = SorterClass.get_result_from_folder(output_folder)
+        yield rec_name, sorter_name, sorting
+
 
 def collect_sorting_outputs(output_folders):
     """
@@ -195,9 +206,8 @@ def collect_sorting_outputs(output_folders):
     The output is a  dict with double key acess results[(rec_name, sorter_name)] of SortingExtrator.
     """
     results = {}
-    for rec_name, sorter_name, output_folder in loop_over_folders(output_folders):
+    for rec_name, sorter_name, sorting in iter_sorting_output(output_folders):
         SorterClass = sorter_dict[sorter_name]
-        results[(rec_name, sorter_name)] = SorterClass.get_result_from_folder(output_folder)
+        results[(rec_name, sorter_name)] = sorting
     return results
-
 

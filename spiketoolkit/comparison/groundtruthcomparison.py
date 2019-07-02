@@ -16,11 +16,11 @@ class GroundTruthComparison(BaseComparison):
     This class can:
       * compute a "macth between gt_sorting and tested_sorting
       * compte th score label (TP, FN, CL, FP) for each spike
-      * count by spiketrain of GT the total of each (TP, FN, CL, FP) into a Dataframe 
+      * count by unit of GT the total of each (TP, FN, CL, FP) into a Dataframe 
         GroundTruthComparison.count
       * compute the confusion matrix .get_confusion_matrix()
       * compute some performance metric with several strategy based on 
-        the count score by spiketrain
+        the count score by unit
       * count how much well detected units with some threshold selection
       * count false positve detected units
       * count units detected twice (or more)
@@ -64,18 +64,18 @@ class GroundTruthComparison(BaseComparison):
                 self.count.loc[u1, 'fp'] = np.sum(self._labels_st2[u2] == 'FP')
                 self.count.loc[u1, 'num_tested'] = self._labels_st2[u2].size
 
-    def get_performance(self, method='by_spiketrain', output='pandas'):
+    def get_performance(self, method='by_unit', output='pandas'):
         """
         Get performance rate with several method:
           * 'raw_count' : just render the raw count table
-          * 'by_spiketrain' : render perf as rate spiketrain by spiketrain of the GT
+          * 'by_unit' : render perf as rate unit by unit of the GT
           * 'pooled_with_sum' : pool all spike with a sum and compute rate
-          * 'pooled_with_average' : compute rate spiketrain by spiketrain and average
+          * 'pooled_with_average' : compute rate unit by unit and average
 
         Parameters
         ----------
         method: str
-            'by_spiketrain', 'pooled_with_sum' or 'pooled_with_average'
+            'by_unit', 'pooled_with_sum' or 'pooled_with_average'
         output: str
             'pandas' or 'dict'
 
@@ -84,14 +84,14 @@ class GroundTruthComparison(BaseComparison):
         perf: pandas dataframe/series (or dict)
             dataframe/series (based on 'output') with performance entries
         """
-        possibles = ('raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average')
+        possibles = ('raw_count', 'by_unit', 'pooled_with_sum', 'pooled_with_average')
         if method not in possibles:
             raise Exception("'method' can be " + ' or '.join(possibles))
 
         if method == 'raw_count':
             perf = self.count
-
-        elif method == 'by_spiketrain':
+            
+        elif method == 'by_unit':
             unit1_ids = self.sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
             perf.index.name = 'gt_unit_id'
@@ -107,24 +107,24 @@ class GroundTruthComparison(BaseComparison):
             perf = _compute_perf(tp, cl, fn, fp, num_gt, perf)
 
         elif method == 'pooled_with_average':
-            perf = self.get_performance(method='by_spiketrain').mean(axis=0)
+            perf = self.get_performance(method='by_unit').mean(axis=0)
 
         if output == 'dict' and isinstance(perf, pd.Series):
             perf = perf.to_dict()
 
         return perf
 
-    def print_performance(self, method='by_spiketrain'):
+    def print_performance(self, method='by_unit'):
         """
         Print performance with the selected method
         """
-        
+
         if self._compute_misclassification:
             template_txt_performance = _template_txt_performance_with_cl
         else:
             template_txt_performance = _template_txt_performance
         
-        if method == 'by_spiketrain':
+        if method == 'by_unit':
             perf = self.get_performance(method=method, output='pandas')
             perf = perf * 100
             # ~ print(perf)
@@ -194,14 +194,14 @@ class GroundTruthComparison(BaseComparison):
             If sevral threhold they are combined.
         """
         if len(thresholds) == 0:
-            thresholds = {'accuracy': 0.95}
-
-        _above = ['accuracy', 'recall', 'precision', ]
-        _below = ['false_discovery_rate', 'miss_rate', 'misclassification_rate']
-
-        perf = self.get_performance(method='by_spiketrain')
-        keep = perf['accuracy'] >= 0  # tale all
-
+            thresholds = {'accuracy' : 0.95 }
+        
+        _above = ['accuracy', 'recall', 'precision',]
+        _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
+        
+        perf = self.get_performance(method='by_unit')
+        keep = perf['accuracy'] >= 0 # tale all
+        
         for col, thresh in thresholds.items():
             if col in _above:
                 keep = keep & (perf[col] >= thresh)

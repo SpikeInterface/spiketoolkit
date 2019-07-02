@@ -12,15 +12,18 @@ into a "study_folder" with several subfolder:
   * tables: some table in cvs format
 """
 
+from pathlib import Path
+import shutil
 import json
 import os
-from pathlib import Path
 
 import pandas as pd
 import spikeextractors as se
-from spiketoolkit.sorters import run_sorters, loop_over_folders, collect_sorting_outputs
 
-from .groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
+from spikesorters.sorterlist import sorter_dict
+
+from spiketoolkit.sorters import run_sorters, iter_output_folders, iter_sorting_output
+from spiketoolkit.comparison.groundtruthcomparison import compare_sorter_to_ground_truth, _perf_keys
 
 
 def setup_comparison_study(study_folder, gt_dict):
@@ -43,6 +46,10 @@ def setup_comparison_study(study_folder, gt_dict):
     os.makedirs(str(study_folder))
     os.makedirs(str(study_folder / 'raw_files'))
     os.makedirs(str(study_folder / 'ground_truth'))
+    os.makedirs(str(study_folder / 'sortings'))
+    os.makedirs(str(study_folder / 'sortings/run_log' ))
+    
+    
 
     for rec_name, (recording, sorting_gt) in gt_dict.items():
         # write recording as binary format + json + prb
@@ -197,13 +204,13 @@ def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
                 with_output=False)
 
     # results are copied so the heavy sorter_folders can be removed
-    copy_sorting(study_folder)
-    collect_run_times(study_folder)
+    copy_sortings_to_npz(study_folder)
 
-
-def copy_sorting(study_folder):
+def copy_sortings_to_npz(study_folder):
     """
-    Collect sorting and copy then in the same format to get a lightweigth version.
+    Collect sorting and copy then in npz format into a separate folder.
+    Also copy 
+    
     """
     study_folder = Path(study_folder)
     sorter_folders = study_folder / 'sorter_folders'
@@ -212,25 +219,32 @@ def copy_sorting(study_folder):
     if not os.path.exists(sorting_folders):
         os.makedirs(str(sorting_folders))
 
-    results = collect_sorting_outputs(sorter_folders)
-    for (rec_name, sorter_name), sorting in results.items():
-        se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (rec_name + '[#]' + sorter_name + '.npz'))
+    for rec_name,sorter_name, output_folder in iter_output_folders(sorter_folders):
+        SorterClass = sorter_dict[sorter_name]
+        sorting = SorterClass.get_result_from_folder(output_folder)
+        fname = rec_name+'[#]'+sorter_name
+        se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (fname +'.npz'))
+        if os.path.exists(output_folder / 'run_log.txt'):
+            shutil.copyfile(output_folder / 'run_log.txt', sorting_folders / 'run_log' / (fname +'.txt'))
 
 
-def collect_study_sorting(study_folder):
+def iter_computed_names(study_folder):
+    sorting_folder = Path(study_folder) / 'sortings'
+    for filename in os.listdir(sorting_folder):
+        if filename.endswith('.npz') and '[#]' in filename:
+            rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
+            yield rec_name, sorter_name
+
+def iter_computed_sorting(study_folder):
     """
-    Collect sorting from the copied version.
+    Iter over sorting files.
     """
     sorting_folder = Path(study_folder) / 'sortings'
-
-    sortings = {}
     for filename in os.listdir(sorting_folder):
         if filename.endswith('.npz') and '[#]' in filename:
             rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
             sorting = se.NpzSortingExtractor(sorting_folder / filename)
-            sortings[(rec_name, sorter_name)] = sorting
-
-    return sortings
+            yield rec_name, sorter_name, sorting
 
 
 def collect_run_times(study_folder):
@@ -240,21 +254,26 @@ def collect_run_times(study_folder):
     The output is list of (rec_name, sorter_name, run_time)
     """
     study_folder = Path(study_folder)
-    sorter_folders = study_folder / 'sorter_folders'
+    sorting_folders = study_folder / 'sortings'
+    log_folder = sorting_folders / 'run_log'
     tables_folder = study_folder / 'tables'
 
     if not os.path.exists(tables_folder):
         os.makedirs(str(tables_folder))
 
     run_times = []
-    for rec_name, sorter_name, output_folder in loop_over_folders(sorter_folders):
-        if os.path.exists(output_folder / 'run_log.txt'):
-            with open(output_folder / 'run_log.txt', mode='r') as logfile:
+    for filename in os.listdir(log_folder):
+        if filename.endswith('.txt') and '[#]' in filename:
+            rec_name, sorter_name = filename.replace('.txt', '').split('[#]')
+            with open(log_folder / filename, mode='r') as logfile:
                 run_time = float(logfile.readline().replace('run_time:', ''))
             run_times.append((rec_name, sorter_name, run_time))
-
+        
     run_times = pd.DataFrame(run_times, columns=['rec_name', 'sorter_name', 'run_time'])
-    run_times.to_csv(str(tables_folder / 'run_times.csv'), sep='\t', index=False)
+    run_times = run_times.set_index(['rec_name', 'sorter_name'])
+    
+    return run_times
+    
 
 
 def aggregate_sorting_comparison(study_folder, exhaustive_gt=False):

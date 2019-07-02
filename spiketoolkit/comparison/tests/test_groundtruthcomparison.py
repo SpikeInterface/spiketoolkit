@@ -21,9 +21,10 @@ def test_compare_sorter_to_ground_truth():
     sc = compare_sorter_to_ground_truth(gt_sorting, tested_sorting, exhaustive_gt=True)
 
     sc._do_confusion_matrix()
-    # ~ print(sc._confusion_matrix)
-
-    methods = ['raw_count', 'by_spiketrain', 'pooled_with_sum', 'pooled_with_average', ]
+    #~ print(sc._confusion_matrix)
+    
+    
+    methods = ['raw_count', 'by_unit', 'pooled_with_sum', 'pooled_with_average',]
     for method in methods:
         perf = sc.get_performance(method=method)
         # ~ print(perf)
@@ -91,8 +92,9 @@ def test_get_performance():
     perf = sc.get_performance('pooled_with_sum')
     assert perf['accuracy'] == 0.75
     assert perf['miss_rate'] == 0.25
-
-    perf = sc.get_performance('by_spiketrain')
+    
+    perf = sc.get_performance('by_unit')
+    
     assert perf.loc[0, 'accuracy'] == 2 / 3.
     assert perf.loc[0, 'misclassification_rate'] == 0
     assert perf.loc[0, 'miss_rate'] == 1 / 3.
@@ -119,4 +121,4 @@ def test_get_performance():
 
 if __name__ == '__main__':
     test_compare_sorter_to_ground_truth()
-    # ~ test_get_performance()
+    test_get_performance()
