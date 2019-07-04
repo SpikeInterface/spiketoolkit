@@ -18,7 +18,7 @@ class ResampledRecording(RecordingExtractor):
 
 
     def __init__(self, recording, resample_rate):
-        assert HAVE_RR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
+        assert HAVE_RR, "To use the ResampledRecording, install scipy: \n\n pip install scipy\n\n"
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate
