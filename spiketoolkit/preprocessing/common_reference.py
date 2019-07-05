@@ -7,8 +7,8 @@ class CommonReferenceRecording(RecordingExtractor):
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'reference', 'type': 'str', 'value':'median', 'default':'median', 'title': "Reference type ('median', 'average', or 'single')"},
-        {'name': 'groups', 'type': 'list', 'value':None, 'default':None, 'title': "List of lists containins the channels for splitting the reference"},
-        {'name': 'ref_channel', 'type': 'int/list', 'value':None, 'default':None, 'title': "All channels are referenced to 'ref_channel(s)"},
+        {'name': 'groups', 'type': 'int_list', 'value':None, 'default':None, 'title': "List of lists containins the channels for splitting the reference"},
+        {'name': 'ref_channel', 'type': 'int/int_list', 'value':None, 'default':None, 'title': "All channels are referenced to 'ref_channel(s)"},
         {'name': 'verbose', 'type': 'bool', 'value':False, 'default':False, 'title': "If True, then the function will be verbose"}
     ]
     installation_mesg = ""  # err
