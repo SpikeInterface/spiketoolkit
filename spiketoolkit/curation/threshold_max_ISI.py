@@ -13,6 +13,7 @@ class ThresholdMaxISI(CurationSortingExtractor):
     _gui_params = [
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
         {'name': 'max_ISI_threshold', 'type': 'float', 'value':0.4, 'default':0.4, 'title': "Maximum ISI violation ratio of a unit for it to valid"},
+        {'name': 'export_to_phy', 'type': 'bool', 'title': "If True, will save out results to Phy, otherwise, it won't save."}
     ]
     installation_mesg = "" # err
 

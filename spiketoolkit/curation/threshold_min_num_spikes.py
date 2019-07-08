@@ -11,6 +11,7 @@ class ThresholdMinNumSpike(CurationSortingExtractor):
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'min_num_spike_threshold', 'type': 'int', 'value':50, 'default':50, 'title': "Minimum number of spikes in a unit for it to valid"},
+        {'name': 'export_to_phy', 'type': 'bool', 'title': "If True, will save out results to Phy, otherwise, it won't save."}
     ]
     installation_mesg = "" # err
 

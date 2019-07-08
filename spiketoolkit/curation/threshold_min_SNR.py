@@ -17,6 +17,7 @@ class ThresholdMinSNR(CurationSortingExtractor):
         {'name': 'apply_filter', 'type': 'bool', 'value':False, 'default':False, 'title': "If true, applies bandpass filter to the data"},
         {'name': 'freq_min', 'type': 'float', 'value':300.0, 'default':300.0, 'title': "Minimum bandpass filter frequency"},
         {'name': 'freq_max', 'type': 'float', 'value':6000.0, 'default':6000.0, 'title': "Maximum bandpass filter frequency"},
+        {'name': 'export_to_phy', 'type': 'bool', 'title': "If True, will save out results to Phy, otherwise, it won't save."}
     ]
     installation_mesg = "" # err
 
