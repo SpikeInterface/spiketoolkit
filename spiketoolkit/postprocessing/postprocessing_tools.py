@@ -377,7 +377,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                             start_frame=None, end_frame=None, ms_before=3., ms_after=3., dtype=None,
                             max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
-                            save_as_features=True, compute_property_from_recording=False,
+                            save_as_features=False, save_waveforms_as_features=False,
+                            compute_property_from_recording=False,
                             whiten=False, verbose=False):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
@@ -399,6 +400,8 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         'group', then waveforms are computed group-wise.
     save_as_features: bool
         If True (default), pca scores are saved as features of the sorting extractor object
+    save_waveforms_as_features: bool
+        If True, waveforms are saved as features
     start_frame: int
         The start frame for computing waveforms
     end_frame: int
@@ -454,20 +457,19 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     else:
         if verbose:
             print("Computing waveforms")
-        waveforms = get_unit_waveforms(recording, sorting)
+        waveforms = get_unit_waveforms(recording, sorting, unit_ids, start_frame=start_frame,
+                                       end_frame=end_frame, max_num_waveforms=max_num_waveforms,
+                                       ms_before=ms_before, ms_after=ms_after,
+                                       grouping_property=grouping_property, dtype=dtype,
+                                       compute_property_from_recording=compute_property_from_recording,
+                                       save_as_features=save_waveforms_as_features,
+                                       verbose=verbose)
 
     if not isinstance(waveforms, list):
         # single unit
         waveforms = [waveforms]
 
     for i_w, wf in enumerate(waveforms):
-        if wf is None:
-            wf = get_unit_waveforms(recording, sorting, unit_ids, start_frame=start_frame,
-                                    end_frame=end_frame, max_num_waveforms=max_num_waveforms,
-                                    ms_before=ms_before, ms_after=ms_after,
-                                    grouping_property=grouping_property, dtype=dtype,
-                                    compute_property_from_recording=compute_property_from_recording,
-                                    verbose=verbose)
         if by_electrode:
             wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
             nspikes.append(len(wf) * recording.get_num_channels())
