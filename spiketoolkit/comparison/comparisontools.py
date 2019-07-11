@@ -405,7 +405,6 @@ def do_confusion_matrix(sorting1, sorting2, unit_map12, labels_st1, labels_st2):
         tp = len(np.where('TP' == lab_st1)[0])
         conf_matrix[u_i, u_i] = int(tp)
         for u_j, u2 in enumerate(unit2_ids):
-            lab_st2 = labels_st2[u2]
             cl_str = str(u1) + '_' + str(u2)
             cl = len([i for i, v in enumerate(lab_st1) if 'CL' in v and cl_str in v])
             if cl != 0:
