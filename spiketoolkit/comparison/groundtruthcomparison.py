@@ -35,8 +35,9 @@ class GroundTruthComparison(BaseComparison):
         if tested_name is None:
             tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, compute_labels=compute_labels,
-                                compute_misclassification=compute_misclassification, verbose=verbose)
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs,
+                                compute_labels=compute_labels, compute_misclassification=compute_misclassification,
+                                verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         self._do_count()
 
@@ -197,13 +198,13 @@ class GroundTruthComparison(BaseComparison):
             If sevral threhold they are combined.
         """
         if len(thresholds) == 0:
-            thresholds = {'accuracy' : 0.95 }
+            thresholds = {'accuracy': 0.95}
         
-        _above = ['accuracy', 'recall', 'precision',]
+        _above = ['accuracy', 'recall', 'precision']
         _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
         
         perf = self.get_performance(method='by_unit')
-        keep = perf['accuracy'] >= 0 # tale all
+        keep = perf['accuracy'] >= 0  # tale all
         
         for col, thresh in thresholds.items():
             if col in _above:
@@ -222,7 +223,7 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_well_detected_units(**kargs))
 
-    def get_false_positive_units(self):
+    def get_false_positive_units(self, min_redundant_agreement=0.3):
         """
         Return units list of "false positive units" from tested_sorting.
         
@@ -230,14 +231,23 @@ class GroundTruthComparison(BaseComparison):
         are not matched at all in GT units.
         
         Need exhaustive_gt=True
+
+        Parameters
+        ----------
+        min_redundant_agreement: float (default 0.3)
+            The minimum agreement between gt and tested units
+            that are best match to be counted as "redundant" units and not "bad".
+
         """
         assert self.exhaustive_gt, 'false_positive_units list is valid only if exhaustive_gt=True'
-        fake_ids = []
+        best_match = list(self._unit_map12.values())
+        false_positive_ids = []
         unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
-            if self._best_match_units_21[u2] == -1:
-                fake_ids.append(u2)
-        return fake_ids
+            if u2 not in best_match:
+                if u2 not in self.get_redundant_units(min_redundant_agreement):
+                    false_positive_ids.append(u2)
+        return false_positive_ids
 
     def count_false_positive_units(self):
         """
@@ -266,7 +276,7 @@ class GroundTruthComparison(BaseComparison):
         redundant_ids = []
         unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
-            if u2 not in best_match and self._best_match_units_21[u2] != -1:
+            if u2 not in best_match:
                 u1 = self._best_match_units_21[u2]
                 if self._unit_map12[u1] == -1:
                     continue

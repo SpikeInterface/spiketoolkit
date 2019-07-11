@@ -37,7 +37,7 @@ def _run_one(arg_list):
 
 
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_params={}, grouping_property=None,
-                            mode='raise', engine=None, engine_kargs={}, debug=False, with_output=True):
+                mode='raise', engine=None, engine_kargs={}, debug=False, with_output=True):
     """
     This run several sorter on several recording.
     Simple implementation are nested loops or with multiprocessing.

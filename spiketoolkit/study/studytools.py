@@ -162,7 +162,7 @@ def get_ground_truths(study_folder):
 
 
 def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
-                      engine='loop', engine_kargs={}):
+                      engine='loop', engine_kargs={}, debug=False):
     """
     Run all sorter on all recordings.
     
@@ -201,7 +201,7 @@ def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
 
     run_sorters(sorter_list, recording_dict, sorter_folders, sorter_params=sorter_params,
                 grouping_property=None, mode=mode, engine=engine, engine_kargs=engine_kargs,
-                with_output=False)
+                with_output=False, debug=debug)
 
     # results are copied so the heavy sorter_folders can be removed
     copy_sortings_to_npz(study_folder)

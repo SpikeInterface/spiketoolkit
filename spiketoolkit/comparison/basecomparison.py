@@ -7,7 +7,8 @@ class BaseComparison:
     Base class shared by SortingComparison and GroundTruthComparison
     """
     def __init__(self, sorting1, sorting2, sorting1_name=None, sorting2_name=None, delta_time=0.3, min_accuracy=0.5,
-                 n_jobs=1, verbose=False, sampling_frequency=None, compute_labels=True, compute_misclassification=False):
+                 n_jobs=1, verbose=False, sampling_frequency=None, compute_labels=True,
+                 compute_misclassification=False):
         self.sorting1 = sorting1
         self.sorting2 = sorting2
         if sorting1_name is None:
@@ -20,9 +21,7 @@ class BaseComparison:
             assert self.sorting1.get_sampling_frequency() == self.sorting2.get_sampling_frequency(), \
                 "The two sorting extractors must have the same sampling frequency"
             sampling_frequency = self.sorting1.get_sampling_frequency()
-        # elif sampling_frequency is None:
-        #     raise Exception("SortingExtractors do not have sampling frequency information. Provide it with the "
-        #                     "'sampling_frequency' argument.")
+
         if sampling_frequency is not None:
             self._delta_frames = int(delta_time / 1000 * sampling_frequency)
         else:
