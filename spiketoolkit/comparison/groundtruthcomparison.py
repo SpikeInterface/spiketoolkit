@@ -276,7 +276,7 @@ class GroundTruthComparison(BaseComparison):
         redundant_ids = []
         unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
-            if u2 not in best_match:
+            if u2 not in best_match and self._best_match_units_21[u2] != -1:
                 u1 = self._best_match_units_21[u2]
                 if self._unit_map12[u1] == -1:
                     continue
