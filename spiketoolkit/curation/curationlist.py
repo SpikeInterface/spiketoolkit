@@ -11,3 +11,4 @@ curation_full_list = [
 ]
 
 installed_curation_list = [c for c in curation_full_list if c.installed]
+curation_dict = {c_class.curator_name: c_class for c_class in curation_full_list}

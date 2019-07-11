@@ -49,7 +49,10 @@ class GroundTruthComparison(BaseComparison):
         self.count = pd.DataFrame(index=unit1_ids, columns=columns)
         self.count.index.name = 'gt_unit_id'
         for u1 in unit1_ids:
-            u2 = self._unit_map12[u1]
+            ## this was the previous count based on hungarian match:
+            ## u2 = self._unit_map12[u1] 
+            # now we use the best match wich is more natural for GT
+            u2 = self._best_match_units_12[u1]
 
             self.count.loc[u1, 'tp'] = np.sum(self._labels_st1[u1] == 'TP')
             self.count.loc[u1, 'cl'] = sum(e.startswith('CL') for e in self._labels_st1[u1])

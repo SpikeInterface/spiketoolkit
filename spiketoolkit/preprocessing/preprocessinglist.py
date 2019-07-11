@@ -27,3 +27,5 @@ preprocessers_full_list = [
 ]
 
 installed_preprocessers_list = [pp for pp in preprocessers_full_list if pp.installed]
+preprocesser_dict = {pp_class.preprocessor_name: pp_class for pp_class in preprocessers_full_list}
+
