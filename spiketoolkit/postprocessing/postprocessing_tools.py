@@ -563,63 +563,15 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 
-def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
-                  grouping_property=None, ms_before=1., ms_after=2., dtype=None,
-                  max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
-    '''
-    Exports paired recording and sorting extractors to phy template-gui format.
+def get_phy_information(recording, sorting, nPC=3, electrode_dimensions=None, grouping_property=None, 
+                        ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, 
+                        max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
 
-    Parameters
-    ----------
-    recording: RecordingExtractor
-        The recording extractor
-    sorting: SortingExtractor
-        The sorting extractor
-    output_folder: str
-        The output folder where the phy template-gui files are saved
-    nPC: int
-        nPCFeatures in template-gui format
-    electrode_dimensions: list
-        If electrode locations are 3D, it indicates the 2D dimensions to use as channel location
-    grouping_property: str
-        Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
-        'group', then waveforms are computed group-wise.
-    ms_before: float
-        Time period in ms to cut waveforms before the spike events
-    ms_after: float
-        Time period in ms to cut waveforms after the spike events
-    dtype: dtype
-        The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
-    verbose: bool
-        If True output is verbose
-    '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't save to phy.")
-    output_folder = Path(output_folder).absolute()
-    if output_folder.is_dir():
-        shutil.rmtree(output_folder)
-    output_folder.mkdir()
-
-    # save dat file
-    se.write_binary_dat_format(recording, output_folder / 'recording.dat', dtype='int16')
-
-    # write params.py
-    with (output_folder / 'params.py').open('w') as f:
-        f.write("dat_path =" + "r'" + str(output_folder / 'recording.dat') + "'" + '\n')
-        f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
-        f.write("dtype = 'int16'\n")
-        f.write('offset = 0\n')
-        f.write('sample_rate = ' + str(recording.get_sampling_frequency()) + '\n')
-        f.write('hp_filtered = False')
-
+                        
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
     if grouping_property in recording.get_channel_property_names():
         groups, num_chans_in_group = np.unique([recording.get_channel_property(ch, grouping_property)
@@ -638,6 +590,11 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         waveforms = get_unit_waveforms(recording, sorting, max_num_waveforms=max_num_waveforms,
                                        ms_before=ms_before, ms_after=ms_after,
                                        dtype=dtype, verbose=verbose)
+    else:
+        waveforms = []
+        for unit_id in sorting.get_unit_ids():
+            waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+
     pc_scores = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
                                         max_num_waveforms=max_num_waveforms,
                                         ms_before=ms_before, ms_after=ms_after, dtype=dtype,
@@ -729,6 +686,73 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
+
+    return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind,  waveforms,\
+           spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, positions
+
+
+def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
+                  grouping_property=None, ms_before=1., ms_after=2., dtype=None,
+                  max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
+    '''
+    Exports paired recording and sorting extractors to phy template-gui format.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    output_folder: str
+        The output folder where the phy template-gui files are saved
+    nPC: int
+        nPCFeatures in template-gui format
+    electrode_dimensions: list
+        If electrode locations are 3D, it indicates the 2D dimensions to use as channel location
+    grouping_property: str
+        Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
+        'group', then waveforms are computed group-wise.
+    ms_before: float
+        Time period in ms to cut waveforms before the spike events
+    ms_after: float
+        Time period in ms to cut waveforms after the spike events
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_waveforms: int
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    save_waveforms: bool
+        If True, waveforms are saved as waveforms.npy
+    verbose: bool
+        If True output is verbose
+    '''
+    if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
+        raise AttributeError()
+    if len(sorting.get_unit_ids()) == 0:
+        raise Exception("No units in the sorting result, can't save to phy.")
+    output_folder = Path(output_folder).absolute()
+    if output_folder.is_dir():
+        shutil.rmtree(output_folder)
+    output_folder.mkdir()
+
+    # save dat file
+    se.write_binary_dat_format(recording, output_folder / 'recording.dat', dtype='int16')
+
+    # write params.py
+    with (output_folder / 'params.py').open('w') as f:
+        f.write("dat_path =" + "r'" + str(output_folder / 'recording.dat') + "'" + '\n')
+        f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
+        f.write("dtype = 'int16'\n")
+        f.write('offset = 0\n')
+        f.write('sample_rate = ' + str(recording.get_sampling_frequency()) + '\n')
+        f.write('hp_filtered = False')
+
+
+    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind,  waveforms, \
+    spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
+    positions = get_phy_information(recording, sorting, nPC, electrode_dimensions, grouping_property, ms_before, \
+                                    ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, save_waveforms, verbose)
 
     # Save channel_group and second_max_channel to .tsv metadata
     second_max_channel = []
