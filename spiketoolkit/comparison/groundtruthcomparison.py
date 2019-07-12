@@ -40,7 +40,8 @@ class GroundTruthComparison(BaseComparison):
                                 verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
         if bad_redundant_threshold is None:
-            self._bad_redundant_threshold = bad_redundant_threshold
+            bad_redundant_threshold = 0.2
+        self._bad_redundant_threshold = bad_redundant_threshold
         self._do_count()
 
     def _do_count(self):
@@ -164,7 +165,7 @@ class GroundTruthComparison(BaseComparison):
             num_gt=len(self._labels_st1),
             num_tested=len(self._labels_st2),
             num_well_detected=self.count_well_detected_units(**kargs_well_detected),
-            num_redundant=self.count_redundant_units(min_redundant_agreement=min_redundant_agreement),
+            num_redundant=self.count_redundant_units(),
         )
 
         if self.exhaustive_gt:
@@ -445,4 +446,5 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
     return GroundTruthComparison(gt_sorting=gt_sorting, tested_sorting=tested_sorting, gt_name=gt_name,
                                  tested_name=tested_name, delta_time=delta_time, min_accuracy=min_accuracy,
                                  exhaustive_gt=exhaustive_gt, n_jobs=n_jobs, compute_labels=compute_labels,
+                                 bad_redundant_threshold=bad_redundant_threshold,
                                  compute_misclassification=compute_misclassification, verbose=verbose)

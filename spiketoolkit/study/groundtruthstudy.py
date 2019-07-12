@@ -17,10 +17,12 @@ class GroundTruthStudy:
     def __init__(self, study_folder=None):
         self.study_folder = Path(study_folder)
         self._is_scanned = False
-        self.scan_folder()
         self.computed_names = None
         self.rec_names = None
         self.sorter_names = None
+
+        self.scan_folder()
+
         self.comparisons = None
         self.exhaustive_gt = None
 
