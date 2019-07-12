@@ -16,10 +16,11 @@ from .studytools import (setup_comparison_study, run_study_sorters, get_rec_name
 class GroundTruthStudy:
     def __init__(self, study_folder=None):
         self.study_folder = Path(study_folder)
-
+        self._is_scanned = False
         self.scan_folder()
-        self.computed_names = []
-
+        self.computed_names = None
+        self.rec_names = None
+        self.sorter_names = None
         self.comparisons = None
         self.exhaustive_gt = None
 
@@ -37,9 +38,10 @@ class GroundTruthStudy:
         # scan computed names
         self.computed_names = list(iter_computed_names(self.study_folder))  # list of pair (rec_name, sorter_name)
         self.sorter_names = np.unique([e for _, e in iter_computed_names(self.study_folder)]).tolist()
+        self._is_scanned = True
 
     @classmethod
-    def setup(cls, study_folder, gt_dict):
+    def create(cls, study_folder, gt_dict):
         setup_comparison_study(study_folder, gt_dict)
         return cls(study_folder)
 
@@ -49,7 +51,8 @@ class GroundTruthStudy:
                           engine=engine, engine_kargs=engine_kargs, debug=debug)
 
     def get_ground_truth(self, rec_name=None):
-        self.scan_folder()
+        if not self._is_scanned:
+            self.scan_folder()
         if len(self.rec_names) > 1 and rec_name is None:
             raise Exception("Pass 'rec_name' parameter to select which recording to use.")
         else:
@@ -58,7 +61,8 @@ class GroundTruthStudy:
         return sorting
 
     def get_sorting(self, sort_name, rec_name=None):
-        self.scan_folder()
+        if not self._is_scanned:
+            self.scan_folder()
         if len(self.rec_names) > 1 and rec_name is None:
             raise Exception("Pass 'rec_name' parameter to select which recording to use.")
         selected_sorting = None
@@ -72,11 +76,11 @@ class GroundTruthStudy:
         copy_sortings_to_npz(self.study_folder)
         self.scan_folder()
 
-    def run_comparisons(self, exhaustive_gt=False):
+    def run_comparisons(self, exhaustive_gt=False, **kwargs):
         self.comparisons = {}
         for rec_name, sorter_name, sorting in iter_computed_sorting(self.study_folder):
             gt_sorting = self.get_ground_truth(rec_name)
-            sc = compare_sorter_to_ground_truth(gt_sorting, sorting, exhaustive_gt=exhaustive_gt)
+            sc = compare_sorter_to_ground_truth(gt_sorting, sorting, exhaustive_gt=exhaustive_gt, **kwargs)
             self.comparisons[(rec_name, sorter_name)] = sc
         self.exhaustive_gt = exhaustive_gt
 

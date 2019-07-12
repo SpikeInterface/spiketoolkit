@@ -47,9 +47,7 @@ def setup_comparison_study(study_folder, gt_dict):
     os.makedirs(str(study_folder / 'raw_files'))
     os.makedirs(str(study_folder / 'ground_truth'))
     os.makedirs(str(study_folder / 'sortings'))
-    os.makedirs(str(study_folder / 'sortings/run_log' ))
-    
-    
+    os.makedirs(str(study_folder / 'sortings/run_log'))
 
     for rec_name, (recording, sorting_gt) in gt_dict.items():
         # write recording as binary format + json + prb
@@ -206,6 +204,7 @@ def run_study_sorters(study_folder, sorter_list, sorter_params={}, mode='keep',
     # results are copied so the heavy sorter_folders can be removed
     copy_sortings_to_npz(study_folder)
 
+
 def copy_sortings_to_npz(study_folder):
     """
     Collect sorting and copy then in npz format into a separate folder.
@@ -219,13 +218,13 @@ def copy_sortings_to_npz(study_folder):
     if not os.path.exists(sorting_folders):
         os.makedirs(str(sorting_folders))
 
-    for rec_name,sorter_name, output_folder in iter_output_folders(sorter_folders):
+    for rec_name, sorter_name, output_folder in iter_output_folders(sorter_folders):
         SorterClass = sorter_dict[sorter_name]
         sorting = SorterClass.get_result_from_folder(output_folder)
-        fname = rec_name+'[#]'+sorter_name
-        se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (fname +'.npz'))
+        fname = rec_name + '[#]' + sorter_name
+        se.NpzSortingExtractor.write_sorting(sorting, sorting_folders / (fname + '.npz'))
         if os.path.exists(output_folder / 'run_log.txt'):
-            shutil.copyfile(output_folder / 'run_log.txt', sorting_folders / 'run_log' / (fname +'.txt'))
+            shutil.copyfile(output_folder / 'run_log.txt', sorting_folders / 'run_log' / (fname + '.txt'))
 
 
 def iter_computed_names(study_folder):
@@ -234,6 +233,7 @@ def iter_computed_names(study_folder):
         if filename.endswith('.npz') and '[#]' in filename:
             rec_name, sorter_name = filename.replace('.npz', '').split('[#]')
             yield rec_name, sorter_name
+
 
 def iter_computed_sorting(study_folder):
     """
@@ -268,12 +268,11 @@ def collect_run_times(study_folder):
             with open(log_folder / filename, mode='r') as logfile:
                 run_time = float(logfile.readline().replace('run_time:', ''))
             run_times.append((rec_name, sorter_name, run_time))
-        
+
     run_times = pd.DataFrame(run_times, columns=['rec_name', 'sorter_name', 'run_time'])
     run_times = run_times.set_index(['rec_name', 'sorter_name'])
-    
+
     return run_times
-    
 
 
 def aggregate_sorting_comparison(study_folder, exhaustive_gt=False):
