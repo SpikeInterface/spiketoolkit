@@ -96,7 +96,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     ----------
     
     results : dict
-        The output is nested dict[rec_name][sorter_name] of SortingExtractor.
+        The output is nested dict[(rec_name, sorter_name)] of SortingExtractor.
 
     """
     if mode == 'raise':
@@ -205,8 +205,6 @@ def collect_sorting_outputs(output_folders):
     """
     results = {}
     for rec_name, sorter_name, sorting in iter_sorting_output(output_folders):
-        if rec_name not in results.keys():
-            results[rec_name] = {}
-        results[rec_name][sorter_name] = sorting
+        results[(rec_name, sorter_name)] = sorting
     return results
 
