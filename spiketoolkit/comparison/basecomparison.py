@@ -17,10 +17,17 @@ class BaseComparison:
             sorting2_name = 'sorting 2'
         self.sorting1_name = sorting1_name
         self.sorting2_name = sorting2_name
+        assert self.sorting1.get_sampling_frequency() is not None or self.sorting2.get_sampling_frequency() is not \
+               None or sampling_frequency is not None, "Could not find sampling frequency. " \
+                                                       "Use the 'sampling_frequency' argument"
+
         if self.sorting1.get_sampling_frequency() is not None:
-            assert self.sorting1.get_sampling_frequency() == self.sorting2.get_sampling_frequency(), \
-                "The two sorting extractors must have the same sampling frequency"
+            if self.sorting2.get_sampling_frequency() is not None:
+                assert self.sorting1.get_sampling_frequency() == self.sorting2.get_sampling_frequency(), \
+                    "The two sorting extractors must have the same sampling frequency"
             sampling_frequency = self.sorting1.get_sampling_frequency()
+        else:
+            sampling_frequency = self.sorting2.get_sampling_frequency()
 
         if sampling_frequency is not None:
             self._delta_frames = int(delta_time / 1000 * sampling_frequency)
