@@ -617,9 +617,9 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                               verbose=verbose)
     return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind 
 
-def get_phy_information(recording, sorting, nPC=3, electrode_dimensions=None, grouping_property=None, 
-                        ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, 
-                        max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
+def get_phy_data(recording, sorting, nPC=3, electrode_dimensions=None, grouping_property=None, 
+                 ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, 
+                 max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
     '''
     Computes and returns phy template-gui format using paired recording and sorting extractors
 
@@ -822,8 +822,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
 
     spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind,  waveforms, \
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
-    positions = get_phy_information(recording, sorting, nPC, electrode_dimensions, grouping_property, ms_before, \
-                                    ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, save_waveforms, verbose)
+    positions = get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_property, ms_before, \
+                             ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, save_waveforms, verbose)
 
     # Save channel_group and second_max_channel to .tsv metadata
     second_max_channel = []
