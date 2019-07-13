@@ -562,15 +562,123 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
                                                  ms_before=ms_before, ms_after=ms_after, verbose=verbose)
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
+def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
+                            max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 
+                            verbose=False):
+    '''
+    Computes and returns all data needed to compute the quality metrics from SpikeMetrics
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    nPC: int
+        nPCFeatures in template-gui format
+    ms_before: float
+        Time period in ms to cut waveforms before the spike events
+    ms_after: float
+        Time period in ms to cut waveforms after the spike events
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_waveforms: int
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    save_waveforms: bool
+        If True, waveforms are saved as waveforms.npy
+    verbose: bool
+        If True output is verbose
+
+    Returns
+    -------
+    spike_times: numpy.ndarray (num_spikes x 0)
+        Spike times in frames
+    spike_clusters: numpy.ndarray (num_spikes x 0)
+        Cluster IDs for each spike time
+    amplitudes: numpy.ndarray (num_spikes x 0)
+        Amplitude value for each spike time
+    channel_map: numpy.ndarray (num_units x 0)
+        Original data channel for pc_feature_ind array
+    pc_features: numpy.ndarray (num_spikes x num_pcs x num_channels)
+        Pre-computed PCs for blocks of channels around each spike
+    pc_feature_ind: numpy.ndarray (num_units x num_channels)
+        Channel indices of PCs for each unit
+    '''
+    if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
+        raise AttributeError()
+    if len(sorting.get_unit_ids()) == 0:
+        raise Exception("No units in the sorting result, can't compute any metric information.")
+
+    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, _ = \
+        _get_quality_metric_data_and_waveforms(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after, dtype=dtype, \
+                                              max_num_waveforms=max_num_waveforms, max_num_pca_waveforms=max_num_pca_waveforms, \
+                                              verbose=verbose)
+    return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind 
 
 def get_phy_information(recording, sorting, nPC=3, electrode_dimensions=None, grouping_property=None, 
                         ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, 
                         max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False):
+    '''
+    Computes and returns phy template-gui format using paired recording and sorting extractors
 
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    nPC: int
+        nPCFeatures in template-gui format
+    electrode_dimensions: list
+        If electrode locations are 3D, it indicates the 2D dimensions to use as channel location
+    grouping_property: str
+        Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
+        'group', then waveforms are computed group-wise.
+    ms_before: float
+        Time period in ms to cut waveforms before the spike events
+    ms_after: float
+        Time period in ms to cut waveforms after the spike events
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_waveforms: int
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    save_waveforms: bool
+        If True, waveforms are saved as waveforms.npy
+    verbose: bool
+        If True output is verbose
+
+    Returns
+    -------
+    spike_times: numpy.ndarray (num_spikes x 0)
+        Spike times in frames
+    spike_clusters: numpy.ndarray (num_spikes x 0)
+        Cluster IDs for each spike time
+    amplitudes: numpy.ndarray (num_spikes x 0)
+        Amplitude value for each spike time
+    channel_map: numpy.ndarray (num_units x 0)
+        Original data channel for pc_feature_ind array
+    pc_features: numpy.ndarray (num_spikes x num_pcs x num_channels)
+        Pre-computed PCs for blocks of channels around each spike
+    pc_feature_ind: numpy.ndarray (num_units x num_channels)
+        Channel indices of PCs for each unit
+    waveforms
+    spike_templates 
+    templates 
+    templates_ind 
+    similar_templates 
+    channel_map_si 
+    channel_groups 
+    positions
+    '''
+    
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
-        raise Exception("No units in the sorting result, can't save to phy.")
+        raise Exception("No units in the sorting result, can't compute phy information.")
                         
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
     if grouping_property in recording.get_channel_property_names():
@@ -582,51 +690,15 @@ def get_phy_information(recording, sorting, nPC=3, electrode_dimensions=None, gr
     else:
         max_num_chans_in_group = recording.get_num_channels()
         channel_groups = np.array([0] * recording.get_num_channels())
-    if nPC > max_num_chans_in_group:
-        nPC = max_num_chans_in_group
-        if verbose:
-            print("Changed number of PC to number of channels: ", nPC)
-    if 'waveforms' not in sorting.get_unit_spike_feature_names():
-        waveforms = get_unit_waveforms(recording, sorting, max_num_waveforms=max_num_waveforms,
-                                       ms_before=ms_before, ms_after=ms_after,
-                                       dtype=dtype, verbose=verbose)
-    else:
-        waveforms = []
-        for unit_id in sorting.get_unit_ids():
-            waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+    # if nPC > max_num_chans_in_group:
+    #     nPC = max_num_chans_in_group
+    #     if verbose:
+    #         print("Changed number of PC to number of channels: ", nPC)
 
-    pc_scores = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
-                                        max_num_waveforms=max_num_waveforms,
-                                        ms_before=ms_before, ms_after=ms_after, dtype=dtype,
-                                        max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
-
-    # spike times.npy and spike clusters.npy
-    spike_times = np.array([])
-    spike_clusters = np.array([])
-    pc_features = np.array([])
-
-    for i_u, id in enumerate(sorting.get_unit_ids()):
-        st = sorting.get_unit_spike_train(id)
-        cl = [i_u] * len(sorting.get_unit_spike_train(id))
-        pc = pc_scores[i_u]
-        spike_times = np.concatenate((spike_times, np.array(st)))
-        spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
-        if i_u == 0:
-            pc_features = np.array(pc)
-        else:
-            pc_features = np.vstack((pc_features, np.array(pc)))
-
-    sorting_idxs = np.argsort(spike_times)
-    spike_times = spike_times[sorting_idxs, np.newaxis]
-    spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
-    # pc_features (nSpikes, nPC, nPCFeatures)
-    pc_features = pc_features[sorting_idxs].swapaxes(1, 2)
-
-    # amplitudes.npy
-    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
-
-    # channel_map.npy
-    channel_map = np.arange(recording.get_num_channels())
+    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms \
+                   = _get_quality_metric_data_and_waveforms(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after, dtype=dtype, \
+                                                            max_num_waveforms=max_num_waveforms, max_num_pca_waveforms=max_num_pca_waveforms, \
+                                                            save_waveforms=save_waveforms, verbose=verbose)
     channel_map_si = np.array(recording.get_channel_ids())
 
     # channel_positions.npy
@@ -682,7 +754,6 @@ def get_phy_information(recording, sorting, nPC=3, electrode_dimensions=None, gr
         templates = templates_red
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
-    pc_feature_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
@@ -836,3 +907,52 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, 
                                     snippet_len=snippet_len, channel_ids=channels)
     spikes = np.dstack(tuple(spikes))
     return spikes, event_indices
+
+def _get_quality_metric_data_and_waveforms(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
+                                          max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 
+                                          verbose=False):
+
+    if 'waveforms' not in sorting.get_unit_spike_feature_names():
+        waveforms = get_unit_waveforms(recording, sorting, max_num_waveforms=max_num_waveforms,
+                                       ms_before=ms_before, ms_after=ms_after,
+                                       dtype=dtype, verbose=verbose)
+    else:
+        waveforms = []
+        for unit_id in sorting.get_unit_ids():
+            waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+
+    pc_scores = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
+                                        max_num_waveforms=max_num_waveforms,
+                                        ms_before=ms_before, ms_after=ms_after, dtype=dtype,
+                                        max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose)
+
+    # spike times.npy and spike clusters.npy
+    spike_times = np.array([])
+    spike_clusters = np.array([])
+    pc_features = np.array([])
+
+    for i_u, id in enumerate(sorting.get_unit_ids()):
+        st = sorting.get_unit_spike_train(id)
+        cl = [i_u] * len(sorting.get_unit_spike_train(id))
+        pc = pc_scores[i_u]
+        spike_times = np.concatenate((spike_times, np.array(st)))
+        spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
+        if i_u == 0:
+            pc_features = np.array(pc)
+        else:
+            pc_features = np.vstack((pc_features, np.array(pc)))
+
+    sorting_idxs = np.argsort(spike_times)
+    spike_times = spike_times[sorting_idxs, np.newaxis]
+    spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
+    # pc_features (nSpikes, nPC, nPCFeatures)
+    pc_features = pc_features[sorting_idxs].swapaxes(1, 2)
+
+    # amplitudes.npy
+    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
+
+    # channel_map.npy
+    channel_map = np.arange(recording.get_num_channels())
+    pc_feature_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
+
+    return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms
