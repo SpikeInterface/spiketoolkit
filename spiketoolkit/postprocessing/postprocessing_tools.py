@@ -563,6 +563,26 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 def get_non_pc_quality_metric_data(recording, sorting):
+    '''
+    Computes and returns all data needed to compute the non-pc quality metrics from SpikeMetrics
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+
+    Returns
+    -------
+    spike_times: numpy.ndarray (num_spikes x 0)
+        Spike times in frames
+    spike_clusters: numpy.ndarray (num_spikes x 0)
+        Cluster IDs for each spike time
+    channel_map: numpy.ndarray (num_units x 0)
+        Original data channel for pc_feature_ind array
+    '''
+
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
     spike_clusters = np.array([])
@@ -586,7 +606,7 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                             max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 
                             verbose=False):
     '''
-    Computes and returns all data needed to compute the quality metrics from SpikeMetrics
+    Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
     Parameters
     ----------
