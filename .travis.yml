@@ -15,13 +15,9 @@ addons:
     - packagekit-gtk3-module
     - libcanberra-gtk-module
 install:
-  - pip install requests
-  # spikeextractors and spikesorters are taken from github to get latest version
+  # spikeextractors is taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
-  - pip install https://github.com/SpikeInterface/spikesorters/archive/master.zip
   - pip install .
-  - pip install tridesclous==1.2.1
-  - pip install herdingspikes==0.3.2
   - pip install pytest==4.3
 script:
   # py.test -s
