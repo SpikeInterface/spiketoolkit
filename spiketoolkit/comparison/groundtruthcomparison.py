@@ -28,16 +28,20 @@ class GroundTruthComparison(BaseComparison):
     """
 
     def __init__(self, gt_sorting, tested_sorting, gt_name=None, tested_name=None,
-                 delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False,
+                 delta_time=0.3, min_accuracy=0.5, exhaustive_gt=False, bad_redundant_threshold=None,
                  n_jobs=-1, compute_labels=True, compute_misclassification=True, verbose=False):
         if gt_name is None:
             gt_name = 'ground truth'
         if tested_name is None:
             tested_name = 'tested'
         BaseComparison.__init__(self, gt_sorting, tested_sorting, sorting1_name=gt_name, sorting2_name=tested_name,
-                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs, compute_labels=compute_labels,
-                                compute_misclassification=compute_misclassification, verbose=verbose)
+                                delta_time=delta_time, min_accuracy=min_accuracy, n_jobs=n_jobs,
+                                compute_labels=compute_labels, compute_misclassification=compute_misclassification,
+                                verbose=verbose)
         self.exhaustive_gt = exhaustive_gt
+        if bad_redundant_threshold is None:
+            bad_redundant_threshold = 0.2
+        self._bad_redundant_threshold = bad_redundant_threshold
         self._do_count()
 
     def _do_count(self):
@@ -93,7 +97,7 @@ class GroundTruthComparison(BaseComparison):
 
         if method == 'raw_count':
             perf = self.count
-            
+
         elif method == 'by_unit':
             unit1_ids = self.sorting1.get_unit_ids()
             perf = pd.DataFrame(index=unit1_ids, columns=_perf_keys)
@@ -126,7 +130,7 @@ class GroundTruthComparison(BaseComparison):
             template_txt_performance = _template_txt_performance_with_cl
         else:
             template_txt_performance = _template_txt_performance
-        
+
         if method == 'by_unit':
             perf = self.get_performance(method=method, output='pandas')
             perf = perf * 100
@@ -161,7 +165,7 @@ class GroundTruthComparison(BaseComparison):
             num_gt=len(self._labels_st1),
             num_tested=len(self._labels_st2),
             num_well_detected=self.count_well_detected_units(**kargs_well_detected),
-            num_redundant=self.count_redundant_units(min_redundant_agreement=min_redundant_agreement),
+            num_redundant=self.count_redundant_units(),
         )
 
         if self.exhaustive_gt:
@@ -197,14 +201,14 @@ class GroundTruthComparison(BaseComparison):
             If sevral threhold they are combined.
         """
         if len(thresholds) == 0:
-            thresholds = {'accuracy' : 0.95 }
-        
-        _above = ['accuracy', 'recall', 'precision',]
-        _below = ['false_discovery_rate',  'miss_rate', 'misclassification_rate']
-        
+            thresholds = {'accuracy': 0.95}
+
+        _above = ['accuracy', 'recall', 'precision']
+        _below = ['false_discovery_rate', 'miss_rate', 'misclassification_rate']
+
         perf = self.get_performance(method='by_unit')
-        keep = perf['accuracy'] >= 0 # tale all
-        
+        keep = perf['accuracy'] >= 0  # tale all
+
         for col, thresh in thresholds.items():
             if col in _above:
                 keep = keep & (perf[col] >= thresh)
@@ -222,7 +226,7 @@ class GroundTruthComparison(BaseComparison):
         """
         return len(self.get_well_detected_units(**kargs))
 
-    def get_false_positive_units(self):
+    def get_false_positive_units(self, bad_redundant_threshold=None):
         """
         Return units list of "false positive units" from tested_sorting.
         
@@ -230,22 +234,45 @@ class GroundTruthComparison(BaseComparison):
         are not matched at all in GT units.
         
         Need exhaustive_gt=True
+
+        Parameters
+        ----------
+        bad_redundant_threshold: float (default 0.2)
+            The minimum agreement between gt and tested units
+            that are best match to be counted as "false positive" units and not "redundant".
+
         """
         assert self.exhaustive_gt, 'false_positive_units list is valid only if exhaustive_gt=True'
-        fake_ids = []
+
+        if bad_redundant_threshold is not None:
+            self._bad_redundant_threshold = bad_redundant_threshold
+
+        best_match = list(self._unit_map12.values())
+        false_positive_ids = []
         unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
-            if self._best_match_units_21[u2] == -1:
-                fake_ids.append(u2)
-        return fake_ids
+            if u2 not in best_match:
+                if self._best_match_units_21[u2] == -1:
+                    false_positive_ids.append(u2)
+                else:
+                    u1 = self._best_match_units_21[u2]
+                    num_matches = self._matching_event_counts_12[u1].get(u2, 0)
+                    num1 = self._event_counts_1[u1]
+                    num2 = self._event_counts_2[u2]
+                    agree_score = compute_agreement_score(num_matches, num1, num2)
 
-    def count_false_positive_units(self):
+                    if agree_score < self._bad_redundant_threshold:
+                        false_positive_ids.append(u2)
+
+        return false_positive_ids
+
+    def count_false_positive_units(self, bad_redundant_threshold=None):
         """
         See get_false_positive_units.
         """
-        return len(self.get_false_positive_units())
+        return len(self.get_false_positive_units(bad_redundant_threshold))
 
-    def get_redundant_units(self, min_redundant_agreement=0.3):
+    def get_redundant_units(self, bad_redundant_threshold=None):
         """
         Return "redundant units"
         
@@ -257,37 +284,37 @@ class GroundTruthComparison(BaseComparison):
         
         Parameters
         ----------
-        min_redundant_agreement: float (default 0.3)
+        bad_redundant_threshold=None: float (default 0.2)
             The minimum agreement between gt and tested units
-            that are best match to be counted as "redundant" units.
+            that are best match to be counted as "redundant" unit and not "false positive".
         
         """
+        if bad_redundant_threshold is not None:
+            self._bad_redundant_threshold = bad_redundant_threshold
         best_match = list(self._unit_map12.values())
         redundant_ids = []
         unit2_ids = self.sorting2.get_unit_ids()
         for u2 in unit2_ids:
             if u2 not in best_match and self._best_match_units_21[u2] != -1:
+                # a redundant unit is not a best match
                 u1 = self._best_match_units_21[u2]
-                if self._unit_map12[u1] == -1:
-                    continue
-                if u2 == self._unit_map12[u1]:
-                    continue
+                if u2 != self._best_match_units_12[u1]:
 
-                num_matches = self._matching_event_counts_12[u1].get(u2, 0)
-                num1 = self._event_counts_1[u1]
-                num2 = self._event_counts_2[u2]
-                agree_score = compute_agreement_score(num_matches, num1, num2)
+                    num_matches = self._matching_event_counts_12[u1].get(u2, 0)
+                    num1 = self._event_counts_1[u1]
+                    num2 = self._event_counts_2[u2]
+                    agree_score = compute_agreement_score(num_matches, num1, num2)
 
-                if agree_score > min_redundant_agreement:
-                    redundant_ids.append(u2)
+                    if agree_score > self._bad_redundant_threshold:
+                        redundant_ids.append(u2)
 
         return redundant_ids
 
-    def count_redundant_units(self, min_redundant_agreement=0.3):
+    def count_redundant_units(self, bad_redundant_threshold=None):
         """
         See get_redundant_units.
         """
-        return len(self.get_redundant_units(min_redundant_agreement=min_redundant_agreement))
+        return len(self.get_redundant_units(bad_redundant_threshold=bad_redundant_threshold))
 
     def get_bad_units(self):
         """
@@ -356,7 +383,6 @@ MISS RATE: {miss_rate}
 
 _template_txt_performance_with_cl = _template_txt_performance + 'MISS CLASSIFICATION RATE: {misclassification_rate}\n'
 
-
 _template_summary_part1 = """SUMMARY
 GT num_units: {num_gt}
 TESTED num_units: {num_tested}
@@ -371,7 +397,8 @@ num_bad: {num_bad}
 
 def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tested_name=None,
                                    delta_time=0.3, min_accuracy=0.5, exhaustive_gt=True, n_jobs=-1,
-                                   compute_labels=True, compute_misclassification=False, verbose=False):
+                                   bad_redundant_threshold=0.2, compute_labels=True,
+                                   compute_misclassification=False, verbose=False):
     '''
     Compares a sorter to a ground truth.
 
@@ -401,6 +428,9 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
         For instance, MEArec simulated dataset have exhaustive_gt=True
     n_jobs: int
         Number of cores to use in parallel. Uses all available if -1
+    bad_redundant_threshold: float
+        Agreement threshold below which a unit is considered 'false positive' and above
+        which is considered 'redundant' (default 0.2)
     compute_labels: bool
         If True, labels are computed at instantiation (default True)
     compute_misclassification: bool
@@ -416,4 +446,5 @@ def compare_sorter_to_ground_truth(gt_sorting, tested_sorting, gt_name=None, tes
     return GroundTruthComparison(gt_sorting=gt_sorting, tested_sorting=tested_sorting, gt_name=gt_name,
                                  tested_name=tested_name, delta_time=delta_time, min_accuracy=min_accuracy,
                                  exhaustive_gt=exhaustive_gt, n_jobs=n_jobs, compute_labels=compute_labels,
+                                 bad_redundant_threshold=bad_redundant_threshold,
                                  compute_misclassification=compute_misclassification, verbose=verbose)

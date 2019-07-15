@@ -1,5 +1,5 @@
 """
-Utils functions to launch several sorter on several recording in parralelle or not.
+Utils functions to launch several sorter on several recording in parralell or not.
 """
 import os
 from pathlib import Path
@@ -16,7 +16,6 @@ def _run_one(arg_list):
     # the multiprocessing python module force to have one unique tuple argument
     rec_name, recording, sorter_name, output_folder,grouping_property, debug, params = arg_list
     try:
-    #~ if True:
         SorterClass = sorter_dict[sorter_name]
         sorter = SorterClass(recording=recording, output_folder=output_folder, grouping_property=grouping_property,
                              parallel=True, debug=debug, delete_output_folder=False)
@@ -35,9 +34,8 @@ def _run_one(arg_list):
             traceback.print_tb(err.__traceback__, file=f)
 
 
-
 def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_params={}, grouping_property=None,
-                            mode='raise', engine=None, engine_kargs={}, debug=False, with_output=True):
+                mode='raise', engine=None, engine_kargs={}, debug=False, with_output=True):
     """
     This run several sorter on several recording.
     Simple implementation are nested loops or with multiprocessing.
@@ -66,13 +64,13 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     
     working_folder: str
         The working directory.
-        This must not exists before calling this function.
+        This must not exist before calling this function.
     
     grouping_property: str
         The property of grouping given to sorters.
     
     sorter_params: dict of dict with sorter_name as key
-        This allow to overwritte default params for sorter.
+        This allow to overwrite default params for sorter.
     
     mode: 'raise_if_exists' or 'overwrite' or 'keep'
         The mode when the subfolder of recording/sorter already exists.
@@ -98,7 +96,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
     ----------
     
     results : dict
-        The output is nested dict[rec_name][sorter_name] of SortingExtrator.
+        The output is nested dict[(rec_name, sorter_name)] of SortingExtractor.
 
     """
     if mode == 'raise':
@@ -161,7 +159,7 @@ def run_sorters(sorter_list, recording_dict_or_list,  working_folder, sorter_par
         pool.map(_run_one, task_list)
     
     if with_output:
-        results  = collect_sorting_outputs(working_folder)
+        results = collect_sorting_outputs(working_folder)
         return results
 
 
@@ -207,7 +205,6 @@ def collect_sorting_outputs(output_folders):
     """
     results = {}
     for rec_name, sorter_name, sorting in iter_sorting_output(output_folders):
-        SorterClass = sorter_dict[sorter_name]
         results[(rec_name, sorter_name)] = sorting
     return results
 

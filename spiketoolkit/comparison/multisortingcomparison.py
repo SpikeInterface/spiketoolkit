@@ -8,7 +8,8 @@ import networkx as nx
 
 
 class MultiSortingComparison():
-    def __init__(self, sorting_list, name_list=None, delta_time=0.3, min_accuracy=0.5, n_jobs=-1, verbose=False):
+    def __init__(self, sorting_list, name_list=None, delta_time=0.3, min_accuracy=0.5, n_jobs=-1,
+                 sampling_frequency=None, verbose=False):
         if len(sorting_list) > 1 and np.all(isinstance(s, se.SortingExtractor) for s in sorting_list):
             self._sorting_list = sorting_list
         if name_list is not None and len(name_list) == len(sorting_list):
@@ -18,6 +19,7 @@ class MultiSortingComparison():
         self._delta_time = delta_time
         self._min_accuracy = min_accuracy
         self._n_jobs = n_jobs
+        self._sampling_frequency = sampling_frequency,
         self._do_matching(verbose)
 
     def get_sorting_list(self):
@@ -29,10 +31,13 @@ class MultiSortingComparison():
     def _do_matching(self, verbose):
         # do pairwise matching
         self.sorting_comparisons = {}
+        comparison_list = []
         for i in range(len(self._sorting_list)):
             comparison_ = {}
             for j in range(len(self._sorting_list)):
                 if i != j:
+                    # and [self._name_list[i], self._name_list[j]] not in comparison_list \
+                    #     and [self._name_list[j], self._name_list[i]] not in comparison_list:
                     if verbose:
                         print("Comparing: ", self._name_list[i], " and ", self._name_list[j])
                     comparison_[self._name_list[j]] = SortingComparison(self._sorting_list[i], self._sorting_list[j],
@@ -42,12 +47,23 @@ class MultiSortingComparison():
                                                                         min_accuracy=self._min_accuracy,
                                                                         n_jobs=self._n_jobs,
                                                                         verbose=verbose)
+                    comparison_list.append([self._name_list[i], self._name_list[j]])
             self.sorting_comparisons[self._name_list[i]] = comparison_
+        print('Comparison list:', comparison_list)
 
-        assert np.all([s.get_sampling_frequency() == self._sorting_list[0].get_sampling_frequency()
-                       for s in self._sorting_list])
+        sampling_freqs_not_none = [s.get_sampling_frequency() for s in self._sorting_list
+                          if s.get_sampling_frequency() is not None]
+        assert len(sampling_freqs_not_none) != 0 or self._sampling_frequency is not None, \
+            "Sampling frequency information not found. Pass it with the 'sampling_frequency' argument"
 
-        tolerance = int(self._delta_time / 1000 * self._sorting_list[0].get_sampling_frequency())
+        if len(sampling_freqs_not_none) > 0:
+            assert np.all([s == sampling_freqs_not_none[0] for s in sampling_freqs_not_none]), "Inconsintent " \
+                                                                                               "sampling frequency"
+            sampling_freq = sampling_freqs_not_none[0]
+        else:
+            sampling_freq = self._sampling_frequency
+
+        tolerance = int(self._delta_time / 1000 * sampling_freq)
 
         # create graph
         agreement = {}
@@ -89,11 +105,9 @@ class MultiSortingComparison():
             sorter, unit = (str(n)).split('_')
             unit = int(unit)
             if len(edges) == 0:
-                matched_num = 1
                 avg_agr = 0
                 sorting_idxs = {sorter: unit}
-                self._new_units[unit_id] = {'matched_number': matched_num,
-                                            'avg_agreement': avg_agr,
+                self._new_units[unit_id] = {'avg_agreement': avg_agr,
                                             'sorter_unit_ids': sorting_idxs}
                 unit_id += 1
                 added_nodes.append(str(n))
@@ -108,7 +122,6 @@ class MultiSortingComparison():
                             n_n1, n_n2, d = e_n
                             if sorted([n_n1, n_n2]) not in [sorted([u, v]) for u, v, _ in all_edges]:
                                 all_edges.append(e_n)
-                matched_num = len(all_edges) + 1
                 avg_agr = np.mean([d['weight'] for u, v, d in all_edges])
                 max_edge = list(all_edges)[np.argmax([d['weight'] for u, v, d in all_edges])]
 
@@ -121,16 +134,14 @@ class MultiSortingComparison():
                         unit2 = int(unit2)
                         sorting_idxs = {sorter1: unit1, sorter2: unit2}
                         if unit_id not in self._new_units.keys():
-                            self._new_units[unit_id] = {'matched_number': matched_num,
-                                                        'avg_agreement': avg_agr,
+                            self._new_units[unit_id] = {'avg_agreement': avg_agr,
                                                         'sorter_unit_ids': sorting_idxs}
                         else:
                             full_sorting_idxs = self._new_units[unit_id]['sorter_unit_ids']
                             for s, u in sorting_idxs.items():
                                 if s not in full_sorting_idxs:
                                     full_sorting_idxs[s] = u
-                            self._new_units[unit_id] = {'matched_number': matched_num,
-                                                        'avg_agreement': avg_agr,
+                            self._new_units[unit_id] = {'avg_agreement': avg_agr,
                                                         'sorter_unit_ids': full_sorting_idxs}
                         added_nodes.append(str(n))
                         if n1 not in added_nodes:
@@ -141,6 +152,11 @@ class MultiSortingComparison():
 
         # extract best matches true positive spike trains
         for u, v in self._new_units.items():
+            # count matched number
+            matched_num = len(v['sorter_unit_ids'].keys())
+            v['matched_number'] = matched_num
+            self._new_units[u] = v
+
             if len(v['sorter_unit_ids'].keys()) == 1:
                 self._spiketrains.append(self._sorting_list[self._name_list.index(
                     list(v['sorter_unit_ids'].keys())[0])].get_unit_spike_train(list(v['sorter_unit_ids'].values())[0]))
@@ -227,7 +243,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
     def __init__(self, multisortingcomparison, min_agreement=0):
         se.SortingExtractor.__init__(self)
         self._msc = multisortingcomparison
-        if min_agreement == 0:
+        if min_agreement == 0 or min_agreement == 1:
             self._unit_ids = list(self._msc._new_units.keys())
         else:
             self._unit_ids = list(u for u in self._msc._new_units.keys()
@@ -254,7 +270,7 @@ class AgreementSortingExtractor(se.SortingExtractor):
 
 
 def compare_multiple_sorters(sorting_list, name_list=None, delta_time=0.3, min_accuracy=0.5,
-                             n_jobs=-1, verbose=False):
+                             n_jobs=-1, sampling_frequency=None, verbose=False):
     '''
     Compares multiple spike sorter outputs.
 
@@ -275,6 +291,8 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_time=0.3, min_a
         Minimum agreement score to match units (default 0.5)
     n_jobs: int
        Number of cores to use in parallel. Uses all availible if -1
+    sampling_frequency: float
+        Sampling frequency (used if information is not in the sorting extractors)
     verbose: bool
         if True, output is verbose
 
@@ -283,4 +301,6 @@ def compare_multiple_sorters(sorting_list, name_list=None, delta_time=0.3, min_a
     multi_sorting_comparison: MultiSortingComparison
         MultiSortingComparison object with the multiple sorter comparison
     '''
-    return MultiSortingComparison(sorting_list, name_list, delta_time, min_accuracy, n_jobs, verbose)
+    return MultiSortingComparison(sorting_list=sorting_list, name_list=name_list, delta_time=delta_time,
+                                  min_accuracy=min_accuracy, n_jobs=n_jobs, sampling_frequency=sampling_frequency,
+                                  verbose=verbose)
