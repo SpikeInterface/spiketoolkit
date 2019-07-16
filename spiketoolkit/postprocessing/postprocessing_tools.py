@@ -363,6 +363,58 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
     else:
         return max_list
 
+def get_unit_amplitudes(recording, sorting, unit_ids=None, grouping_property=None, channels=None,
+                       ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
+                       save_as_features=True, compute_property_from_recording=False, verbose=False):
+    '''
+    Computes the spike amplitudes from a recording and sorting extractor.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    unit_ids: list
+        List of unit ids to extract waveforms
+    grouping_property: str
+        Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
+        'group', then waveforms are computed group-wise.
+    channels: list
+        List of channels to compute waveforms from
+    ms_before: float
+        Time period in ms to cut waveforms before the spike events
+    ms_after: float
+        Time period in ms to cut waveforms after the spike events
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_waveforms: int
+        The maximum number of waveforms to extract (default is np.inf)
+    save_as_features: bool
+        If True (default), waveforms are saved as features of the sorting extractor object
+    compute_property_from_recording: bool
+        If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
+        the recording extractor channel on which the average waveform is the largest
+    verbose: bool
+        If True output is verbose  
+
+    Returns
+    -------
+    amplitudes: np.array
+        List of np.array (n_spikes, 1) containing extracted amplitudes for each spike
+    '''  
+
+    spike_times = np.array([])
+
+    for i_u, id in enumerate(sorting.get_unit_ids()):
+        st = sorting.get_unit_spike_train(id)
+        spike_times = np.concatenate((spike_times, np.array(st)))
+
+    #Dummy amps for now
+    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
+
+    return amplitudes                    
+
 
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                             ms_before=3., ms_after=3., dtype=None,
@@ -656,7 +708,7 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                               max_num_waveforms=max_num_waveforms, max_num_pca_waveforms=max_num_pca_waveforms, \
                                               save_waveforms=save_waveforms, verbose=verbose)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
-           channel_map, pc_features, pc_feature_ind 
+           amplitudes.flatten('F'), channel_map, pc_features, pc_feature_ind 
 
 def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None,
@@ -845,7 +897,12 @@ def _get_quality_metric_data_and_waveforms(recording, sorting, nPC, ms_before, m
     pc_features = pc_features[sorting_idxs].swapaxes(1, 2)
 
     # amplitudes.npy
-    amplitudes = np.ones((len(spike_times), 1), dtype='int16')
+    amplitudes = get_unit_amplitudes(recording, sorting, unit_ids=None, grouping_property=None, channels=None,
+                                     ms_before=ms_before, ms_after=ms_after, dtype=dtype, \
+                                     max_num_waveforms=max_num_waveforms, save_as_features=False, 
+                                     compute_property_from_recording=False, verbose=False)
+    
+    # amplitudes = np.ones((len(spike_times), 1), dtype='int16')
 
     # channel_map.npy
     channel_map = np.arange(recording.get_num_channels())
