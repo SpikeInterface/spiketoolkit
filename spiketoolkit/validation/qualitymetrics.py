@@ -27,30 +27,60 @@ def compute_firing_rates(sorting, sampling_frequency, unit_ids=None, epoch_tuple
     firing_rates: np.array
         The firing rates of the sorted units.
     '''
-
     if unit_ids is None or unit_ids == []:
         unit_ids = sorting.get_unit_ids()
         unit_indices = np.arange(len(unit_ids))
     else:
-        unit_indices = []
-        sorting_unit_ids = np.asarray(sorting.get_unit_ids())
-        for unit_id in unit_ids:
-            index, = np.where(sorting_unit_ids == unit_id)
-            if len(index) != 0:
-                unit_indices.append(index[0])
+        unit_indices = _get_unit_indices(sorting, unit_ids)
+
     spike_times, spike_clusters  = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
     total_units = len(sorting.get_unit_ids()) 
-    if epoch_tuple is None:
-        epoch = (0, np.inf)
-    else:
-        epoch = (epoch_tuple[0]/sampling_frequency, epoch_tuple[1]/sampling_frequency)
-    in_epoch = np.logical_and(spike_times > epoch[0], spike_times < epoch[1])
-    firing_rates_all, _ = metrics.calculate_firing_rate(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
+    in_epoch = _get_in_epoch(spike_times, epoch_tuple, sampling_frequency)
+    firing_rates_all, _ = metrics.calculate_firing_rate_and_spikes(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
     firing_rates_list = []
     for i in unit_indices:
         firing_rates_list.append(firing_rates_all[i])
     firing_rates = np.asarray(firing_rates_list)
+
     return firing_rates
+
+def compute_num_spikes(sorting, sampling_frequency, unit_ids=None, epoch_tuple=None):
+    '''
+    Computes and returns the spike times in seconds and also returns 
+    the cluster_ids needed for quality metrics (all within given epoch)
+    
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting extractor.
+    sampling_frequency: float
+        The sampling frequency of the recording.
+    unit_ids: list
+        List of unit ids to compute firing rates for. If not specified, all units are used
+    epoch_tuple: int tuple
+        A tuple with a start and end frame for the epoch in question.
+
+    Returns
+    ----------
+    num_spikes: np.array
+        The spike counts of the sorted units.
+    '''
+    if unit_ids is None or unit_ids == []:
+        unit_ids = sorting.get_unit_ids()
+        unit_indices = np.arange(len(unit_ids))
+    else:
+        unit_indices = _get_unit_indices(sorting, unit_ids)
+
+    spike_times, spike_clusters  = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
+    total_units = len(sorting.get_unit_ids()) 
+    in_epoch = _get_in_epoch(spike_times, epoch_tuple, sampling_frequency)
+    _, num_spikes_all = metrics.calculate_firing_rate_and_spikes(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
+    num_spikes_list = []
+    for i in unit_indices:
+        num_spikes_list.append(num_spikes_all[i])
+    num_spikes = np.asarray(num_spikes_list)
+
+    return num_spikes
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
                      seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
@@ -171,3 +201,20 @@ def _compute_channel_noise_levels(recording, mode='mad', seconds=10):
             raise Exception("'mode' can be 'std' or 'mad'")
         noise_levels.append(noise_level)
     return noise_levels
+
+def _get_unit_indices(sorting, unit_ids):
+    unit_indices = []
+    sorting_unit_ids = np.asarray(sorting.get_unit_ids())
+    for unit_id in unit_ids:
+        index, = np.where(sorting_unit_ids == unit_id)
+        if len(index) != 0:
+            unit_indices.append(index[0])
+    return unit_indices
+
+def _get_in_epoch(spike_times, epoch_tuple, sampling_frequency):
+    if epoch_tuple is None:
+        epoch = (0, np.inf)
+    else:
+        epoch = (epoch_tuple[0]/sampling_frequency, epoch_tuple[1]/sampling_frequency)
+    in_epoch = np.logical_and(spike_times > epoch[0], spike_times < epoch[1])
+    return in_epoch
