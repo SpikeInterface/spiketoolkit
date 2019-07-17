@@ -1,7 +1,7 @@
 import numpy as np
 import spiketoolkit as st
 import spikemetrics.metrics as metrics
-from spikemetrics.common import Epoch 
+from spikemetrics.utils import Epoch 
 
 #Quality metrics from Allen Institute can't do individual units so we calculate metrics all units to get 
 #the metrics for only a few units.

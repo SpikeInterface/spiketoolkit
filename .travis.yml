@@ -19,6 +19,7 @@ install:
   # spikeextractors and spikesorters are taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
   - pip install https://github.com/SpikeInterface/spikesorters/archive/master.zip
+  - pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
   - pip install .
   - pip install tridesclous==1.2.1
   - pip install herdingspikes==0.3.2
