@@ -18,14 +18,14 @@ def compute_firing_rates(sorting, sampling_frequency, unit_ids=None, epoch_tuple
     sampling_frequency: float
         The sampling frequency of the recording.
     unit_ids: list
-        List of unit ids to compute firing rates for. If not specified, all units are used
+        List of unit ids to compute metric for. If not specified, all units are used
     epoch_tuple: int tuple
         A tuple with a start and end frame for the epoch in question.
 
     Returns
     ----------
     firing_rates: np.array
-        The firing rates of the sorted units.
+        The firing rates of the sorted units in the given epoch.
     '''
     if unit_ids is None or unit_ids == []:
         unit_ids = sorting.get_unit_ids()
@@ -56,14 +56,14 @@ def compute_num_spikes(sorting, sampling_frequency, unit_ids=None, epoch_tuple=N
     sampling_frequency: float
         The sampling frequency of the recording.
     unit_ids: list
-        List of unit ids to compute firing rates for. If not specified, all units are used
+        List of unit ids to compute metric for. If not specified, all units are used
     epoch_tuple: int tuple
         A tuple with a start and end frame for the epoch in question.
 
     Returns
     ----------
     num_spikes: np.array
-        The spike counts of the sorted units.
+        The spike counts of the sorted units in the given epoch.
     '''
     if unit_ids is None or unit_ids == []:
         unit_ids = sorting.get_unit_ids()
@@ -84,6 +84,29 @@ def compute_num_spikes(sorting, sampling_frequency, unit_ids=None, epoch_tuple=N
 
 def compute_isi_violations(sorting, sampling_frequency, isi_threshold=0.0015, min_isi=0.000166, \
                            unit_ids=None, epoch_tuple=None):
+    '''
+    Computes and returns the ISI violations for the given units and parameters.
+    
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting extractor.
+    sampling_frequency: float
+        The sampling frequency of the recording.
+    isi_threshold: float
+        The isi threshold for calculating isi violations.
+    min_isi: float
+        The minimum expected isi value.
+    unit_ids: list
+        List of unit ids to compute metric for. If not specified, all units are used
+    epoch_tuple: int tuple
+        A tuple with a start and end frame for the epoch in question.
+
+    Returns
+    ----------
+    isi_violations: np.array
+        The isi violations of the sorted units in the given epoch.
+    '''
     if unit_ids is None or unit_ids == []:
         unit_ids = sorting.get_unit_ids()
         unit_indices = np.arange(len(unit_ids))
@@ -102,6 +125,44 @@ def compute_isi_violations(sorting, sampling_frequency, isi_threshold=0.0015, mi
 
     return isi_violations
 
+def compute_presence_ratios(sorting, sampling_frequency, unit_ids=None, epoch_tuple=None):
+    '''
+    Computes and returns the presence ratios for the given units.
+    
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting extractor.
+    sampling_frequency: float
+        The sampling frequency of the recording.
+    unit_ids: list
+        List of unit ids to compute metric for. If not specified, all units are used
+    epoch_tuple: int tuple
+        A tuple with a start and end frame for the epoch in question.
+
+    Returns
+    ----------
+    presence_ratios: np.array
+        The presence ratios violations of the sorted units in the given epoch.
+        calculate_presence_ratio
+    '''
+
+    if unit_ids is None or unit_ids == []:
+        unit_ids = sorting.get_unit_ids()
+        unit_indices = np.arange(len(unit_ids))
+    else:
+        unit_indices = _get_unit_indices(sorting, unit_ids)
+
+    spike_times, spike_clusters  = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
+    total_units = len(sorting.get_unit_ids()) 
+    in_epoch = _get_in_epoch(spike_times, epoch_tuple, sampling_frequency)
+    presence_ratios_all = metrics.calculate_presence_ratio(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
+    presence_ratios_list = []
+    for i in unit_indices:
+        presence_ratios_list.append(presence_ratios_all[i])
+    presence_ratios = np.asarray(presence_ratios_list)
+
+    return presence_ratios
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
                      seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
