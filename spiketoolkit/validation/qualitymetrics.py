@@ -82,6 +82,27 @@ def compute_num_spikes(sorting, sampling_frequency, unit_ids=None, epoch_tuple=N
 
     return num_spikes
 
+def compute_isi_violations(sorting, sampling_frequency, isi_threshold=0.0015, min_isi=0.000166, \
+                           unit_ids=None, epoch_tuple=None):
+    if unit_ids is None or unit_ids == []:
+        unit_ids = sorting.get_unit_ids()
+        unit_indices = np.arange(len(unit_ids))
+    else:
+        unit_indices = _get_unit_indices(sorting, unit_ids)
+
+    spike_times, spike_clusters  = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
+    total_units = len(sorting.get_unit_ids()) 
+    in_epoch = _get_in_epoch(spike_times, epoch_tuple, sampling_frequency)
+    isi_violations_all = metrics.calculate_isi_violations(spike_times[in_epoch], spike_clusters[in_epoch], total_units, \
+                                                          isi_threshold=isi_threshold, min_isi=min_isi)
+    isi_violations_list = []
+    for i in unit_indices:
+        isi_violations_list.append(isi_violations_all[i])
+    isi_violations = np.asarray(isi_violations_list)
+
+    return isi_violations
+
+
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
                      seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
     '''
