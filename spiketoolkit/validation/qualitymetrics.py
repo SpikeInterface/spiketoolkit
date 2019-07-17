@@ -38,23 +38,18 @@ def compute_firing_rates(sorting, sampling_frequency, unit_ids=None, epoch_tuple
             index, = np.where(sorting_unit_ids == unit_id)
             if len(index) != 0:
                 unit_indices.append(index[0])
-
-    firing_info = st.postprocessing.get_firing_times_ids(sorting, sampling_frequency)
-    spike_times = firing_info[0]
-    spike_clusters = firing_info[1]
-    total_units = np.max(spike_clusters) + 1 
+    spike_times, spike_clusters  = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
+    total_units = len(sorting.get_unit_ids()) 
     if epoch_tuple is None:
         epoch = (0, np.inf)
     else:
         epoch = (epoch_tuple[0]/sampling_frequency, epoch_tuple[1]/sampling_frequency)
     in_epoch = np.logical_and(spike_times > epoch[0], spike_times < epoch[1])
     firing_rates_all, _ = metrics.calculate_firing_rate(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
-    
     firing_rates_list = []
     for i in unit_indices:
         firing_rates_list.append(firing_rates_all[i])
     firing_rates = np.asarray(firing_rates_list)
-
     return firing_rates
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',

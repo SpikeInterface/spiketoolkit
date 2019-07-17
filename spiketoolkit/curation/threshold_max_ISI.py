@@ -1,5 +1,5 @@
 from .CurationSortingExtractor import CurationSortingExtractor
-from spiketoolkit.validation.biophysicalmetrics import compute_ISI_violation_ratio
+# from spiketoolkit.validation.biophysicalmetrics import compute_ISI_violation_ratio
 
 '''
 Basic example of a curation module. They can inherit from the
@@ -18,12 +18,13 @@ class ThresholdMaxISI(CurationSortingExtractor):
 
     def __init__(self, sorting, sampling_frequency, max_ISI_threshold=0.4):
         CurationSortingExtractor.__init__(self, parent_sorting=sorting)
+        raise AssertionError("Disabled")
         self._sorting = sorting
         self._sampling_frequency = sampling_frequency
         self._max_ISI_threshold = max_ISI_threshold
 
         units_to_be_excluded = []
-        isi_ratio_list = compute_ISI_violation_ratio(self._sorting, self._sampling_frequency)
+        isi_ratio_list = [0]#compute_ISI_violation_ratio(self._sorting, self._sampling_frequency)
         for i, unit_id in enumerate(self._sorting.get_unit_ids()):
             if isi_ratio_list[i] >= self._max_ISI_threshold:
                 units_to_be_excluded.append(unit_id)
