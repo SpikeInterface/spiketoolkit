@@ -364,8 +364,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         return max_list
 
 def get_unit_amplitudes(recording, sorting, unit_ids=None, grouping_property=None, channels=None,
-                       ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                       save_as_features=True, compute_property_from_recording=False, verbose=False):
+                        ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
+                        save_as_features=True, compute_property_from_recording=False, verbose=False):
     '''
     Computes the spike amplitudes from a recording and sorting extractor.
 
@@ -614,16 +614,17 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
                                                  ms_before=ms_before, ms_after=ms_after, verbose=verbose)
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
-def get_non_pc_quality_metric_data(recording, sorting):
+def get_firing_times_ids(sorting, sampling_frequency):
     '''
-    Computes and returns all data needed to compute the non-pc quality metrics from SpikeMetrics
-
+    Computes and returns the spike times in seconds and also returns 
+    along with cluster_ids needed for quality metrics
+    
     Parameters
     ----------
-    recording: RecordingExtractor
-        The recording extractor
     sorting: SortingExtractor
         The sorting extractor
+    sampling_frequency: float
+        The sampling frequency of the recording
 
     Returns
     -------
@@ -649,10 +650,10 @@ def get_non_pc_quality_metric_data(recording, sorting):
     spike_times = spike_times[sorting_idxs, np.newaxis]
     spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
 
-    # channel_map.npy
-    channel_map = np.arange(recording.get_num_channels())
+    spike_times = (spike_times/sampling_frequency).flatten('F')
+    spike_clusters = spike_clusters.astype(int).flatten('F')
 
-    return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), channel_map
+    return spike_times, spike_clusters
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
                             max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 

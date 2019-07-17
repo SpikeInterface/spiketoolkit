@@ -1,2 +1,1 @@
-from .biophysicalmetrics import compute_ISI_violation_ratio
-from .qualitymetrics import compute_unit_SNR
+from .qualitymetrics import compute_unit_SNR, compute_firing_rates

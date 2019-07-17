@@ -1,6 +1,61 @@
 import numpy as np
 import spiketoolkit as st
+import spikemetrics.metrics as metrics
+from spikemetrics.common import Epoch 
 
+#Quality metrics from Allen Institute can't do individual units so we calculate metrics all units to get 
+#the metrics for only a few units.
+
+def compute_firing_rates(sorting, sampling_frequency, unit_ids=None, epoch_tuple=None):
+    '''
+    Computes and returns the spike times in seconds and also returns 
+    the cluster_ids needed for quality metrics (all within given epoch)
+    
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting extractor.
+    sampling_frequency: float
+        The sampling frequency of the recording.
+    unit_ids: list
+        List of unit ids to compute firing rates for. If not specified, all units are used
+    epoch_tuple: int tuple
+        A tuple with a start and end frame for the epoch in question.
+
+    Returns
+    ----------
+    firing_rates: np.array
+        The firing rates of the sorted units.
+    '''
+
+    if unit_ids is None or unit_ids == []:
+        unit_ids = sorting.get_unit_ids()
+        unit_indices = np.arange(len(unit_ids))
+    else:
+        unit_indices = []
+        sorting_unit_ids = np.asarray(sorting.get_unit_ids())
+        for unit_id in unit_ids:
+            index, = np.where(sorting_unit_ids == unit_id)
+            if len(index) != 0:
+                unit_indices.append(index[0])
+
+    firing_info = st.postprocessing.get_firing_times_ids(sorting, sampling_frequency)
+    spike_times = firing_info[0]
+    spike_clusters = firing_info[1]
+    total_units = np.max(spike_clusters) + 1 
+    if epoch_tuple is None:
+        epoch = (0, np.inf)
+    else:
+        epoch = (epoch_tuple[0]/sampling_frequency, epoch_tuple[1]/sampling_frequency)
+    in_epoch = np.logical_and(spike_times > epoch[0], spike_times < epoch[1])
+    firing_rates_all, _ = metrics.calculate_firing_rate(spike_times[in_epoch], spike_clusters[in_epoch], total_units)
+    
+    firing_rates_list = []
+    for i in unit_indices:
+        firing_rates_list.append(firing_rates_all[i])
+    firing_rates = np.asarray(firing_rates_list)
+
+    return firing_rates
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
                      seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
@@ -32,7 +87,7 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
 
     Returns
     -------
-    snr_list: list
+    snr_list: np.array
         List of computed SNRs
 
     '''
@@ -57,7 +112,7 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
         if save_as_property:
             sorting.set_unit_property(unit_id, 'snr', snr)
         snr_list.append(snr)
-    return snr_list
+    return np.asarray(snr_list)
 
 
 def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
