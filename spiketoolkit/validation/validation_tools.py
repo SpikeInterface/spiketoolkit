@@ -49,7 +49,7 @@ def get_firing_times_ids(sorting, sampling_frequency):
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
                             max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 
-                            verbose=False):
+                            verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -101,6 +101,6 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                                                                       ms_before=ms_before, ms_after=ms_after, \
                                                                                       dtype=dtype, max_num_waveforms=max_num_waveforms, \
                                                                                       max_num_pca_waveforms=max_num_pca_waveforms, \
-                                                                                      save_waveforms=save_waveforms, verbose=verbose)
+                                                                                      save_waveforms=save_waveforms, verbose=verbose, seed=seed)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
            amplitudes.flatten('F'), channel_map, pc_features, pc_feature_ind 
