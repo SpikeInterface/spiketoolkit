@@ -245,7 +245,7 @@ def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000
                              ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, 
                              save_waveforms=False, unit_ids=None, epoch_tuple=None):
     '''
-    Computes and returns the drift metrics for the sorted dataset.
+    Computes and returns the silhouette scores for each unit in the sorted dataset.
 
     Parameters
     ----------
@@ -315,7 +315,7 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
                                  ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
                                  save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
     '''
-    Computes and returns the drift metrics for the sorted dataset.
+    Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
 
     Parameters
     ----------
@@ -392,7 +392,7 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
                      ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
                      save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
     '''
-    Computes and returns the drift metrics for the sorted dataset.
+    Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
     Parameters
     ----------
@@ -463,6 +463,82 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
         l_ratios_list.append(l_ratios_all[i])
     l_ratios = np.asarray(l_ratios_list)
     return l_ratios
+
+def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, \
+                     ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
+                     save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
+    '''
+    Computes and returns the lda-based metric, d prime, for the sorted dataset.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    num_channels_to_compare: int
+        The number of channels to be used for the PC extraction and comparison
+    max_spikes_for_unit: int
+        Max spikes to be used from each unit
+    nPC: int 
+        nPCFeatures in template-gui format
+    ms_before: float
+        Time period in ms to cut waveforms before the spike events
+    ms_after: float
+        Time period in ms to cut waveforms after the spike events
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_waveforms: int
+        The maximum number of waveforms to extract (default is np.inf)
+    max_num_pca_waveforms: int
+        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    save_waveforms: bool
+        If True, waveforms are saved as waveforms.npy
+    verbose: bool
+        If True output is verbose
+    unit_ids: list
+        List of unit ids to compute metric for. If not specified, all units are used
+    epoch_tuple: int tuple
+        A tuple with a start and end frame for the epoch in question.
+    seed: int
+        Random seed for extracting pc features.
+
+    Returns
+    ----------
+    d_primes: np.array
+        Returns the d primes of each specified unit
+    '''
+
+    if unit_ids is None or unit_ids == []:
+        unit_ids = sorting.get_unit_ids()
+        unit_indices = np.arange(len(unit_ids))
+    else:
+        unit_indices = _get_unit_indices(sorting, unit_ids)
+
+    spike_times, spike_clusters, amplitudes, channel_map, \
+    pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
+                                                                                          ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
+                                                                                          max_num_pca_waveforms=max_num_waveforms, \
+                                                                                          save_waveforms=save_waveforms)
+    total_units = len(sorting.get_unit_ids()) 
+    in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
+    
+    d_primes_all = metrics.calculate_pc_metrics(spike_clusters=spike_clusters[in_epoch],
+                                                total_units=total_units,   
+                                                channel_map=channel_map,
+                                                pc_features=pc_features[in_epoch,:,:],
+                                                pc_feature_ind=pc_feature_ind,
+                                                num_channels_to_compare=num_channels_to_compare,
+                                                max_spikes_for_cluster=max_spikes_for_unit,
+                                                spikes_for_nn=None,
+                                                n_neighbors=None,
+                                                metric_names=['d_prime'],
+                                                seed=seed)[2]
+    d_primes_list = []
+    for i in unit_indices:
+        d_primes_list.append(d_primes_all[i])
+    d_primes = np.asarray(d_primes_list)
+    return d_primes
 
 def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, mode='mad',
                      seconds=10, max_num_waveforms=1000, apply_filter=False, freq_min=300, freq_max=6000):
