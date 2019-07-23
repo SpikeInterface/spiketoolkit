@@ -215,7 +215,7 @@ def compute_drift_metrics(recording, sorting, drift_metrics_interval_s=51, drift
     else:
         unit_indices = _get_unit_indices(sorting, unit_ids)
 
-    spike_times, spike_clusters, amplitudes, channel_map, \
+    spike_times, spike_clusters, amplitudes, \
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
@@ -290,7 +290,7 @@ def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000
     else:
         unit_indices = _get_unit_indices(sorting, unit_ids)
 
-    spike_times, spike_clusters, amplitudes, channel_map, \
+    spike_times, spike_clusters, amplitudes, \
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
@@ -362,7 +362,7 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
     else:
         unit_indices = _get_unit_indices(sorting, unit_ids)
 
-    spike_times, spike_clusters, amplitudes, channel_map, \
+    spike_times, spike_clusters, amplitudes, \
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
@@ -372,7 +372,6 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
     
     isolation_distances_all = metrics.calculate_pc_metrics(spike_clusters=spike_clusters[in_epoch],
                                                            total_units=total_units,   
-                                                           channel_map=channel_map,
                                                            pc_features=pc_features[in_epoch,:,:],
                                                            pc_feature_ind=pc_feature_ind,
                                                            num_channels_to_compare=num_channels_to_compare,
@@ -439,7 +438,7 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
     else:
         unit_indices = _get_unit_indices(sorting, unit_ids)
 
-    spike_times, spike_clusters, amplitudes, channel_map, \
+    spike_times, spike_clusters, amplitudes, \
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
@@ -449,7 +448,6 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
     
     l_ratios_all = metrics.calculate_pc_metrics(spike_clusters=spike_clusters[in_epoch],
                                                 total_units=total_units,   
-                                                channel_map=channel_map,
                                                 pc_features=pc_features[in_epoch,:,:],
                                                 pc_feature_ind=pc_feature_ind,
                                                 num_channels_to_compare=num_channels_to_compare,
@@ -515,7 +513,7 @@ def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_
     else:
         unit_indices = _get_unit_indices(sorting, unit_ids)
 
-    spike_times, spike_clusters, amplitudes, channel_map, \
+    spike_times, spike_clusters, amplitudes, \
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
@@ -525,7 +523,6 @@ def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_
     
     d_primes_all = metrics.calculate_pc_metrics(spike_clusters=spike_clusters[in_epoch],
                                                 total_units=total_units,   
-                                                channel_map=channel_map,
                                                 pc_features=pc_features[in_epoch,:,:],
                                                 pc_feature_ind=pc_feature_ind,
                                                 num_channels_to_compare=num_channels_to_compare,

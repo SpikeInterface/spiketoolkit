@@ -20,8 +20,6 @@ def get_firing_times_ids(sorting, sampling_frequency):
         Spike times in frames
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
-    channel_map: numpy.ndarray (num_units x 0)
-        Original data channel for pc_feature_ind array
     '''
     if not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
@@ -86,8 +84,6 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         Cluster IDs for each spike time
     amplitudes: numpy.ndarray (num_spikes x 0)
         Amplitude value for each spike time
-    channel_map: numpy.ndarray (num_units x 0)
-        Original data channel for pc_feature_ind array
     pc_features: numpy.ndarray (num_spikes x num_pcs x num_channels)
         Pre-computed PCs for blocks of channels around each spike
     pc_feature_ind: numpy.ndarray (num_units x num_channels)
@@ -98,7 +94,7 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, _ = \
+    spike_times, spike_clusters, amplitudes, _, pc_features, pc_feature_ind, _ = \
         st.postprocessing.postprocessing_tools._get_quality_metric_data_and_waveforms(recording, sorting, nPC=nPC, 
                                                                                       ms_before=ms_before, ms_after=ms_after, \
                                                                                       dtype=dtype, max_num_waveforms=max_num_waveforms, \
@@ -107,4 +103,4 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                                                                       save_features_props=save_features_props, verbose=verbose, \
                                                                                       seed=seed)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
-           amplitudes.flatten('F'), channel_map, pc_features, pc_feature_ind 
+           amplitudes.flatten('F'), pc_features, pc_feature_ind 
