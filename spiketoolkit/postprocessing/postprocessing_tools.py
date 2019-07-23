@@ -180,7 +180,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                              max_num=max_num_waveforms,
                                                              snippet_len=n_pad,
                                                              channels=channels,
-                                                             seed=0)
+                                                             seed=seed)
             waveforms = waveforms.swapaxes(0, 2)
             waveforms = waveforms.swapaxes(1, 2)
             waveforms = waveforms.astype(dtype)
@@ -507,7 +507,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
                                        grouping_property=grouping_property, dtype=dtype,
                                        compute_property_from_recording=compute_property_from_recording,
                                        save_as_features=save_waveforms_as_features,
-                                       verbose=verbose)
+                                       verbose=verbose, seed=seed)
 
     if not isinstance(waveforms, list):
         # single unit
@@ -525,7 +525,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         else:
             all_waveforms = np.concatenate((all_waveforms, wf_reshaped))
 
-    pca = PCA(n_components=n_comp, whiten=whiten)
+    pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
     if len(all_waveforms) < max_num_pca_waveforms:
         max_num_pca_waveforms = len(all_waveforms)
     if verbose:
