@@ -179,7 +179,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                              unit=unit_id,
                                                              max_num=max_num_waveforms,
                                                              snippet_len=n_pad,
-                                                             channels=channels)
+                                                             channels=channels,
+                                                             seed=0)
             waveforms = waveforms.swapaxes(0, 2)
             waveforms = waveforms.swapaxes(1, 2)
             waveforms = waveforms.astype(dtype)
@@ -465,6 +466,8 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         If True, PCA is run with whiten equal True
     verbose: bool
         If True output is verbose
+    seed: int
+        Random seed for reproducibility
 
     Returns
     -------
@@ -620,8 +623,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None,
-                  max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, verbose=False,
-                  seed=0):
+                  max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, recompute_waveform_info=True,
+                  save_features_props=False, write_waveforms=False, verbose=False, seed=0):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
@@ -650,7 +653,11 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
+    recompute_waveform_info: bool
+        If True, will always re-extract waveforms and templates.
+    save_features_props: bool
+        If True, will store all calculated features and properties
+    write_waveforms: bool
         If True, waveforms are saved as waveforms.npy
     verbose: bool
         If True output is verbose
@@ -682,8 +689,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind,  waveforms, \
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
     positions = _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_property, ms_before, \
-                              ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, save_waveforms, verbose,
-                              seed)
+                              ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, recompute_waveform_info, \
+                              save_features_props, verbose, seed)
 
     # Save channel_group and second_max_channel to .tsv metadata
     second_max_channel = []
@@ -729,7 +736,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     np.save(str(output_folder / 'channel_positions.npy'), positions)
     np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
 
-    if save_waveforms:
+    if write_waveforms:
         np.save(str(output_folder / 'waveforms.npy'), np.array(waveforms))
 
     if verbose:
@@ -769,12 +776,15 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, 
     return spikes, event_indices
 
 def _get_quality_metric_data_and_waveforms(recording, sorting, nPC, ms_before, ms_after, dtype, 
-                                           max_num_waveforms, max_num_pca_waveforms, save_waveforms, 
-                                           verbose, seed):
+                                           max_num_waveforms, max_num_pca_waveforms, recompute_waveform_info, \
+                                           save_features_props, verbose, seed):
+
+    if recompute_waveform_info:
+        sorting.clear_units_spike_features(feature_name='waveforms')
 
     if 'waveforms' not in sorting.get_unit_spike_feature_names():
         waveforms = get_unit_waveforms(recording, sorting, unit_ids=None, max_num_waveforms=max_num_waveforms,
-                                       ms_before=ms_before, ms_after=ms_after,
+                                       ms_before=ms_before, ms_after=ms_after, save_as_features=save_features_props,
                                        dtype=dtype, verbose=verbose, seed=seed)
     else:
         waveforms = []
@@ -782,8 +792,8 @@ def _get_quality_metric_data_and_waveforms(recording, sorting, nPC, ms_before, m
             waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
 
     pc_scores = compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=nPC, by_electrode=True,
-                                        max_num_waveforms=max_num_waveforms,
-                                        ms_before=ms_before, ms_after=ms_after, dtype=dtype,
+                                        max_num_waveforms=max_num_waveforms, ms_before=ms_before, 
+                                        ms_after=ms_after, dtype=dtype, save_as_features=save_features_props,
                                         max_num_pca_waveforms=max_num_pca_waveforms, verbose=verbose,
                                         seed=seed)
 
@@ -812,7 +822,7 @@ def _get_quality_metric_data_and_waveforms(recording, sorting, nPC, ms_before, m
     # amplitudes.npy
     amplitudes = get_unit_amplitudes(recording, sorting, unit_ids=None, grouping_property=None, channels=None,
                                      ms_before=ms_before, ms_after=ms_after, dtype=dtype, \
-                                     max_num_waveforms=max_num_waveforms, save_as_features=False, 
+                                     max_num_waveforms=max_num_waveforms, save_as_features=save_features_props, 
                                      compute_property_from_recording=False, verbose=False)
     
     # amplitudes = np.ones((len(spike_times), 1), dtype='int16')
@@ -826,13 +836,16 @@ def _get_quality_metric_data_and_waveforms(recording, sorting, nPC, ms_before, m
 
 def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_property, 
                  ms_before, ms_after, dtype, max_num_waveforms, max_num_pca_waveforms, 
-                 save_waveforms, verbose, seed):
+                 recompute_waveform_info, save_features_props, verbose, seed):
     
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute phy information.")
-                        
+
+    if recompute_waveform_info:
+        sorting.clear_units_property(property_name='template')
+
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
     if grouping_property in recording.get_channel_property_names():
         groups, num_chans_in_group = np.unique([recording.get_channel_property(ch, grouping_property)
@@ -851,7 +864,8 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
     spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms \
                    = _get_quality_metric_data_and_waveforms(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after, dtype=dtype, \
                                                             max_num_waveforms=max_num_waveforms, max_num_pca_waveforms=max_num_pca_waveforms, \
-                                                            save_waveforms=save_waveforms, verbose=verbose, seed=seed)
+                                                            save_features_props=save_features_props, recompute_waveform_info=recompute_waveform_info, \
+                                                            verbose=verbose, seed=seed)
     channel_map_si = np.array(recording.get_channel_ids())
 
     # channel_positions.npy
@@ -867,7 +881,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
         positions[:, 1] = np.arange(recording.get_num_channels())
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    templates = get_unit_templates(recording, sorting)
+    templates = get_unit_templates(recording, sorting, save_as_property=save_features_props)
 
     if not isinstance(templates, list):
         if len(templates.shape) == 2:

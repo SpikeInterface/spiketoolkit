@@ -48,8 +48,8 @@ def get_firing_times_ids(sorting, sampling_frequency):
     return spike_times, spike_clusters
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
-                            max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, save_waveforms=False, 
-                            verbose=False, seed=0):
+                            max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, recompute_waveform_info=True, \
+                            save_features_props=False, verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -71,8 +71,10 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    recompute_waveform_info: bool
+        If True, will always re-extract waveforms.
+    save_features_props: bool
+        If True, save all features and properties in the sorting extractor.
     verbose: bool
         If True output is verbose
 
@@ -101,6 +103,8 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                                                                       ms_before=ms_before, ms_after=ms_after, \
                                                                                       dtype=dtype, max_num_waveforms=max_num_waveforms, \
                                                                                       max_num_pca_waveforms=max_num_pca_waveforms, \
-                                                                                      save_waveforms=save_waveforms, verbose=verbose, seed=seed)
+                                                                                      recompute_waveform_info=recompute_waveform_info,
+                                                                                      save_features_props=save_features_props, verbose=verbose, \
+                                                                                      seed=seed)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
            amplitudes.flatten('F'), channel_map, pc_features, pc_feature_ind 

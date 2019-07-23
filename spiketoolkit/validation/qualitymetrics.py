@@ -166,7 +166,7 @@ def compute_presence_ratios(sorting, sampling_frequency, unit_ids=None, epoch_tu
 
 def compute_drift_metrics(recording, sorting, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
                           nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
-                          max_num_pca_waveforms=np.inf, save_waveforms=False, unit_ids=None, epoch_tuple=None):
+                          max_num_pca_waveforms=np.inf, save_features_props=False, unit_ids=None, epoch_tuple=None):
     '''
     Computes and returns the drift metrics for the sorted dataset.
 
@@ -192,8 +192,8 @@ def compute_drift_metrics(recording, sorting, drift_metrics_interval_s=51, drift
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    save_features_props: bool
+        If True, waveforms and properties are stored in the sorting extractor.
     verbose: bool
         If True output is verbose
     unit_ids: list
@@ -219,7 +219,7 @@ def compute_drift_metrics(recording, sorting, drift_metrics_interval_s=51, drift
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
-                                                                                          save_waveforms=save_waveforms)
+                                                                                          save_features_props=save_features_props)
     total_units = len(sorting.get_unit_ids()) 
     in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
     
@@ -243,7 +243,7 @@ def compute_drift_metrics(recording, sorting, drift_metrics_interval_s=51, drift
 
 def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000, nPC=3, ms_before=1., 
                              ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, 
-                             save_waveforms=False, unit_ids=None, epoch_tuple=None):
+                             save_features_props=False, unit_ids=None, epoch_tuple=None):
     '''
     Computes and returns the silhouette scores for each unit in the sorted dataset.
 
@@ -267,8 +267,8 @@ def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    save_features_props: bool
+        If True, features and properties are stored in the sorting extractor.
     verbose: bool
         If True output is verbose
     unit_ids: list
@@ -294,7 +294,7 @@ def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
-                                                                                          save_waveforms=save_waveforms)    
+                                                                                          save_features_props=save_features_props)    
     total_units = len(sorting.get_unit_ids()) 
     in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
     spikes_in_epoch = np.sum(in_epoch)
@@ -313,7 +313,7 @@ def compute_silhouette_score(recording, sorting, max_spikes_for_silhouette=10000
 
 def compute_isolations_distances(recording, sorting, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, \
                                  ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
-                                 save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
+                                 save_features_props=False, unit_ids=None, epoch_tuple=None, seed=0):
     '''
     Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
 
@@ -339,8 +339,8 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    save_features_props: bool
+        If True, features and properties are stored in the sorting extractor.
     verbose: bool
         If True output is verbose
     unit_ids: list
@@ -366,7 +366,7 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
-                                                                                          save_waveforms=save_waveforms)
+                                                                                          save_features_props=save_features_props)
     total_units = len(sorting.get_unit_ids()) 
     in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
     
@@ -390,7 +390,7 @@ def compute_isolations_distances(recording, sorting, num_channels_to_compare=13,
 
 def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, \
                      ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
-                     save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
+                     save_features_props=False, unit_ids=None, epoch_tuple=None, seed=0):
     '''
     Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
@@ -416,8 +416,8 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    save_features_props: bool
+        If True, features and properties are stored in the sorting extractor.
     verbose: bool
         If True output is verbose
     unit_ids: list
@@ -443,7 +443,7 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
-                                                                                          save_waveforms=save_waveforms)
+                                                                                          save_features_props=save_features_props)
     total_units = len(sorting.get_unit_ids()) 
     in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
     
@@ -466,7 +466,7 @@ def compute_l_ratios(recording, sorting, num_channels_to_compare=13, max_spikes_
 
 def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, \
                      ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
-                     save_waveforms=False, unit_ids=None, epoch_tuple=None, seed=0):
+                     save_features_props=False, unit_ids=None, epoch_tuple=None, seed=0):
     '''
     Computes and returns the lda-based metric, d prime, for the sorted dataset.
 
@@ -492,8 +492,8 @@ def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
-    save_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
+    save_features_props: bool
+        If True, features and properties are stored in the sorting extractor.
     verbose: bool
         If True output is verbose
     unit_ids: list
@@ -519,7 +519,7 @@ def compute_d_primes(recording, sorting, num_channels_to_compare=13, max_spikes_
     pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, \
                                                                                           ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
                                                                                           max_num_pca_waveforms=max_num_waveforms, \
-                                                                                          save_waveforms=save_waveforms)
+                                                                                          save_features_props=save_features_props)
     total_units = len(sorting.get_unit_ids()) 
     in_epoch = _get_in_epoch(spike_times, epoch_tuple, recording.get_sampling_frequency())
     
