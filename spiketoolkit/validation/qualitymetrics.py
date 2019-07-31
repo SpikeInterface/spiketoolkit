@@ -2,6 +2,8 @@ import numpy as np
 import spiketoolkit as st
 import spikemetrics.metrics as metrics
 from spikemetrics.utils import Epoch 
+from collections import defaultdict
+import copy
 
 class MetricCalculator:
     def __init__(self):
@@ -14,8 +16,10 @@ class MetricCalculator:
         self._amplitudes = None
         self._pc_features = None
         self._pc_feature_ind = None
+        #Dictionary of caching computed metrics
+        self.metrics = {}
 
-    def setup_spike_based_metric_data(self, sorting, sampling_frequency):
+    def store_spike_based_metric_data(self, sorting, sampling_frequency):
         '''
         Computes and stores spike-based data for all spiking metrics
         '''
@@ -26,8 +30,8 @@ class MetricCalculator:
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
         self._total_units = len(sorting.get_unit_ids())
-
-    def setup_all_metric_data(self, recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
+        
+    def store_all_metric_data(self, recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
                               max_num_pca_waveforms=np.inf, save_features_props=False):
         '''
         Computes and stores data for all metrics
@@ -48,7 +52,7 @@ class MetricCalculator:
         self._pc_features = pc_features
         self._pc_feature_ind = pc_feature_ind
 
-    def compute_firing_rates(self, unit_ids=None, epoch_tuples=None):
+    def compute_firing_rates(self, unit_ids=None, epoch_tuples=None, epoch_names=None):
         '''
         Computes and returns the spike times in seconds and also returns 
         the cluster_ids needed for quality metrics (all within given epoch)
@@ -58,7 +62,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
 
         Returns
         ----------
@@ -74,9 +80,9 @@ class MetricCalculator:
         else:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
         firings_rates_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._sampling_frequency)
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             firing_rates_all, _ = metrics.calculate_firing_rate_and_spikes(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units)
             firing_rates_list = []
             for i in unit_indices:
@@ -84,11 +90,14 @@ class MetricCalculator:
             firing_rates = np.asarray(firing_rates_list)
             firings_rates_epochs.append(firing_rates)
 
+        self.metrics['firing_rate'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['firing_rate'].append((epoch, firings_rates_epochs[i]))
         if len(firings_rates_epochs) == 1:
             firings_rates_epochs = firings_rates_epochs[0]
         return firings_rates_epochs
 
-    def compute_num_spikes(self, unit_ids=None, epoch_tuples=None):
+    def compute_num_spikes(self, unit_ids=None, epoch_tuples=None, epoch_names=None):
         '''
         Computes and returns the spike times in seconds and also returns 
         the cluster_ids needed for quality metrics (all within given epoch)
@@ -98,7 +107,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
 
         Returns
         ----------
@@ -115,20 +126,24 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         num_spikes_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._sampling_frequency)
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             _, num_spikes_all = metrics.calculate_firing_rate_and_spikes(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units)
             num_spikes_list = []
             for i in unit_indices:
                 num_spikes_list.append(num_spikes_all[i])
             num_spikes = np.asarray(num_spikes_list)
             num_spikes_epochs.append(num_spikes)
+
+        self.metrics['num_spikes'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['num_spikes'].append((epoch, num_spikes_epochs[i]))
         if len(num_spikes_epochs) == 1:
             num_spikes_epochs = num_spikes_epochs[0]
         return num_spikes_epochs
 
-    def compute_isi_violations(self, isi_threshold=0.0015, min_isi=0.000166, unit_ids=None, epoch_tuples=None):
+    def compute_isi_violations(self, isi_threshold=0.0015, min_isi=0.000166, unit_ids=None, epoch_tuples=None, epoch_names=None):
         '''
         Computes and returns the ISI violations for the given units and parameters.
         
@@ -141,7 +156,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
             
         Returns
         ----------
@@ -158,9 +175,9 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         isi_violations_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._sampling_frequency)
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             isi_violations_all = metrics.calculate_isi_violations(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units, \
                                                                   isi_threshold=isi_threshold, min_isi=min_isi)
             isi_violations_list = []
@@ -168,11 +185,15 @@ class MetricCalculator:
                 isi_violations_list.append(isi_violations_all[i])
             isi_violations = np.asarray(isi_violations_list)
             isi_violations_epochs.append(isi_violations)
+
+        self.metrics['isi_viol'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['isi_viol'].append((epoch, isi_violations_epochs[i]))
         if len(isi_violations_epochs) == 1:
             isi_violations_epochs = isi_violations_epochs[0]
         return isi_violations_epochs
 
-    def compute_presence_ratios(self, unit_ids=None, epoch_tuples=None):
+    def compute_presence_ratios(self, unit_ids=None, epoch_tuples=None, epoch_names=None):
         '''
         Computes and returns the presence ratios for the given units.
         
@@ -181,7 +202,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
 
         Returns
         ----------
@@ -198,21 +221,25 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         presence_ratios_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._sampling_frequency)
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             presence_ratios_all = metrics.calculate_presence_ratio(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units)
             presence_ratios_list = []
             for i in unit_indices:
                 presence_ratios_list.append(presence_ratios_all[i])
             presence_ratios = np.asarray(presence_ratios_list)
             presence_ratios_epochs.append(presence_ratios)
+
+        self.metrics['presence_ratio'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['presence_ratio'].append((epoch, presence_ratios_epochs[i]))
         if len(presence_ratios_epochs) == 1:
             presence_ratios_epochs = presence_ratios_epochs[0]
         return presence_ratios_epochs
 
     def compute_drift_metrics(self, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
-                              unit_ids=None, epoch_tuples=None):
+                              unit_ids=None, epoch_tuples=None, epoch_names=None):
         '''
         Computes and returns the drift metrics for the sorted dataset.
 
@@ -225,7 +252,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
 
         Returns
         ----------
@@ -244,9 +273,9 @@ class MetricCalculator:
 
         max_drifts_epochs = []
         cumulative_drifts_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             max_drifts_all, cumulative_drifts_all = metrics.calculate_drift_metrics(self._spike_times[in_epoch],
                                                                                     self._spike_clusters[in_epoch],
                                                                                     self._total_units,
@@ -264,12 +293,18 @@ class MetricCalculator:
             cumulative_drifts = np.asarray(cumulative_drifts_list)
             max_drifts_epochs.append(max_drifts)
             cumulative_drifts_epochs.append(cumulative_drifts)
+        
+        self.metrics['max_drift'] = []
+        self.metrics['cumulative_drift'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['max_drift'].append((epoch, max_drifts_epochs[i]))
+            self.metrics['cumulative_drift'].append((epoch, cumulative_drifts_epochs[i]))
         if len(max_drifts_epochs) == 1:
             max_drifts_epochs = max_drifts_epochs[0]
             cumulative_drifts_epochs = cumulative_drifts_epochs[0]
         return max_drifts_epochs, cumulative_drifts_epochs
 
-    def compute_silhouette_score(self, max_spikes_for_silhouette=10000, unit_ids=None, epoch_tuples=None, seed=0):
+    def compute_silhouette_score(self, max_spikes_for_silhouette=10000, unit_ids=None, epoch_tuples=None, epoch_names=None, seed=0):
         '''
         Computes and returns the silhouette scores for each unit in the sorted dataset.
 
@@ -280,7 +315,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
         seed: int
             A random seed for reproducibility
 
@@ -298,9 +335,9 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         silhouette_scores_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             spikes_in_epoch = np.sum(in_epoch)
             spikes_for_silhouette = min(spikes_in_epoch, max_spikes_for_silhouette)
             
@@ -315,12 +352,16 @@ class MetricCalculator:
                 silhouette_scores_list.append(silhouette_scores_all[i])
             silhouette_scores = np.asarray(silhouette_scores_list)
             silhouette_scores_epochs.append(silhouette_scores)
+
+        self.metrics['silhouette_score'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['silhouette_score'].append((epoch, silhouette_scores_epochs[i]))
         if len(silhouette_scores_epochs) == 1:
             silhouette_scores_epochs = silhouette_scores_epochs[0]    
         return silhouette_scores_epochs
 
-    def compute_isolations_distances(self, num_channels_to_compare=13, max_spikes_for_unit=500, unit_ids=None, \
-                                     epoch_tuples=None, seed=0):
+    def compute_isolation_distances(self, num_channels_to_compare=13, max_spikes_for_unit=500, unit_ids=None, \
+                                     epoch_tuples=None, epoch_names=None, seed=0):
         '''
         Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
 
@@ -333,7 +374,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
         seed: int
             Random seed for extracting pc features.
 
@@ -351,9 +394,9 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         isolation_distances_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             isolation_distances_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
                                                                    total_units=self._total_units,   
                                                                    pc_features=self._pc_features[in_epoch,:,:],
@@ -369,13 +412,17 @@ class MetricCalculator:
                 isolation_distances_list.append(isolation_distances_all[i])
             isolation_distances = np.asarray(isolation_distances_list)
             isolation_distances_epochs.append(isolation_distances)
+
+        self.metrics['isolation_distance'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['isolation_distance'].append((epoch, isolation_distances_epochs[i]))
         if len(isolation_distances_epochs) == 1:
-            isolation_distances_epochs = isolation_distances_epochs[0]    
+            isolation_distances_epochs = isolation_distances_epochs[0]  
         return isolation_distances_epochs
 
 
     def compute_l_ratios(self, num_channels_to_compare=13, max_spikes_for_unit=500, unit_ids=None, \
-                         epoch_tuples=None, seed=0):
+                         epoch_tuples=None, epoch_names=None, seed=0):
         '''
         Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
@@ -386,7 +433,9 @@ class MetricCalculator:
         max_spikes_for_unit: int
             Max spikes to be used from each unit
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
         seed: int
             Random seed for extracting pc features.
 
@@ -404,9 +453,9 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         l_ratios_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
             l_ratios_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
                                                         total_units=self._total_units,   
                                                         pc_features=self._pc_features[in_epoch,:,:],
@@ -422,12 +471,16 @@ class MetricCalculator:
                 l_ratios_list.append(l_ratios_all[i])
             l_ratios = np.asarray(l_ratios_list)
             l_ratios_epochs.append(l_ratios)
+
+        self.metrics['l_ratio'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['l_ratio'].append((epoch, l_ratios_epochs[i]))
         if len(l_ratios_epochs) == 1:
             l_ratios_epochs = l_ratios_epochs[0]
         return l_ratios_epochs
 
     def compute_d_primes(self, num_channels_to_compare=13, max_spikes_for_unit=500, unit_ids=None, \
-                         epoch_tuples=None, seed=0):
+                         epoch_tuples=None, epoch_names=None, seed=0):
         '''
         Computes and returns the lda-based metric, d prime, for the sorted dataset.
 
@@ -440,7 +493,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
         seed: int
             Random seed for extracting pc features.
 
@@ -458,9 +513,9 @@ class MetricCalculator:
             unit_indices = _get_unit_indices(self._sorting, unit_ids)
 
         d_primes_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])    
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])    
             d_primes_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
                                                         total_units=self._total_units,   
                                                         pc_features=self._pc_features[in_epoch,:,:],
@@ -476,12 +531,16 @@ class MetricCalculator:
                 d_primes_list.append(d_primes_all[i])
             d_primes = np.asarray(d_primes_list)
             d_primes_epochs.append(d_primes)
+
+        self.metrics['d_prime'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['d_prime'].append((epoch, d_primes_epochs[i]))
         if len(d_primes_epochs) == 1:
             d_primes_epochs = d_primes_epochs[0]
         return d_primes_epochs
 
     def compute_nn_metrics(self, num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
-                           n_neighbors=4, unit_ids=None, epoch_tuples=None, seed=0):
+                           n_neighbors=4, unit_ids=None, epoch_tuples=None, epoch_names=None, seed=0):
         '''
         Computes and returns the lda-based metric, d prime, for the sorted dataset.
 
@@ -496,7 +555,9 @@ class MetricCalculator:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end frame for the epoch in question.
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
         seed: int
             Random seed for extracting pc features.
 
@@ -517,9 +578,9 @@ class MetricCalculator:
 
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
-        epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
+        epochs = _get_epochs(epoch_tuples, epoch_names)
         for epoch in epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])  
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2]) 
             spikes_in_epoch = np.sum(in_epoch)
             spikes_for_nn = min(spikes_in_epoch, max_spikes_for_nn)
             
@@ -542,6 +603,12 @@ class MetricCalculator:
             nn_miss_rates = np.asarray(nn_miss_rates_list)
             nn_hit_rates_epochs.append(nn_hit_rates)
             nn_miss_rates_epochs.append(nn_miss_rates)
+
+        self.metrics['nn_hit_rate'] = []
+        self.metrics['nn_miss_rate'] = []
+        for i, epoch in enumerate(epochs):
+            self.metrics['nn_hit_rate'].append((epoch, nn_hit_rates_epochs[i]))
+            self.metrics['nn_miss_rate'].append((epoch, nn_miss_rates_epochs[i]))
         if len(nn_hit_rates_epochs) == 1:
             nn_hit_rates_epochs = nn_hit_rates_epochs[0]
             nn_miss_rates_epochs = nn_miss_rates_epochs[0]
@@ -550,7 +617,7 @@ class MetricCalculator:
     # def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, drift_metrics_interval_s=51, \
     #                     drift_metrics_min_spikes_per_interval=10, max_spikes_for_silhouette=10000, \
     #                     num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
-    #                     n_neighbors=4, unit_ids=None, epoch_tuples=None, seed=0):
+    #                     n_neighbors=4, unit_ids=None, epoch_tuples=None, epoch_names=None, seed=0):
     #     '''
     #     Computes and returns the lda-based metric, d prime, for the sorted dataset.
 
@@ -575,7 +642,9 @@ class MetricCalculator:
     #     unit_ids: list
     #         List of unit ids to compute metric for. If not specified, all units are used
     #     epoch_tuples: list
-    #         A list of tuples with a start and end frame for the epoch in question.
+    #         A list of tuples with a start and end time for each epoch
+    #     epoch_names: list
+    #         A list of strings for the names of the given epochs.
     #     seed: int
     #         Random seed for extracting pc features.
 
@@ -587,53 +656,51 @@ class MetricCalculator:
     #     '''
     #     assert self._recording is not None, "Compute data for all metrics first"
 
-    #     if unit_ids is None or unit_ids == []:
-    #         unit_ids = self._sorting.get_unit_ids()
-    #         unit_indices = np.arange(len(unit_ids))
-    #     else:
-    #         unit_indices = _get_unit_indices(self._sorting, unit_ids)
+    #     compute_drift_metrics(self, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
+    #                           unit_ids=None, epoch_tuples=None, epoch_names=None):
 
-    #     nn_hit_rates_epochs = []
-    #     nn_miss_rates_epochs = []
-    #     epochs = _get_epochs(epoch_tuples, self._recording.get_sampling_frequency())
-    #     for epoch in epochs:
-    #         in_epoch = np.logical_and(self._spike_times > epoch[0], self._spike_times < epoch[1])  
-    #         spikes_in_epoch = np.sum(in_epoch)
-    #         spikes_for_nn = min(spikes_in_epoch, max_spikes_for_nn)
+    #     silhouette_scores_epochs = self.compute_silhouette_score(max_spikes_for_silhouette=max_spikes_for_silhouette, unit_ids=unit_ids, epoch_tuples=epoch_tuples, \
+    #                                                              epoch_names=epoch_names, seed=seed):
+
+    #     isolation_distances_epochs = self.compute_isolation_distances(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
+    #                                                                   unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed):
+
+    #     l_ratios_epochs =  self.compute_l_ratios(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
+    #                                              epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+
+    #     d_primes_epochs =  self.compute_d_primes(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
+    #                                              epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+        
+    #     nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_nn_metrics(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
+    #                                                                         max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors, unit_ids=unit_ids, \
+    #                                                                         epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+
+                    
+
             
-    #         nn_hit_rates_all, nn_miss_rates_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
-    #                                                                            total_units=self._total_units,   
-    #                                                                            pc_features=self._pc_features[in_epoch,:,:],
-    #                                                                            pc_feature_ind=self._pc_feature_ind,
-    #                                                                            num_channels_to_compare=num_channels_to_compare,
-    #                                                                            max_spikes_for_cluster=max_spikes_for_unit,
-    #                                                                            spikes_for_nn=spikes_for_nn,
-    #                                                                            n_neighbors=n_neighbors,
-    #                                                                            metric_names=['nearest_neighbor'],
-    #                                                                            seed=seed)[3:5]
-    #         nn_hit_rates_list = []
-    #         nn_miss_rates_list = []
-    #         for i in unit_indices:
-    #             nn_hit_rates_list.append(nn_hit_rates_all[i])
-    #             nn_miss_rates_list.append(nn_miss_rates_all[i])
-    #         nn_hit_rates = np.asarray(nn_hit_rates_list)
-    #         nn_miss_rates = np.asarray(nn_miss_rates_list)
-    #         nn_hit_rates_epochs.append(nn_hit_rates)
-    #         nn_miss_rates_epochs.append(nn_miss_rates)
-    #     if len(nn_hit_rates_epochs) == 1:
-    #         nn_hit_rates_epochs = nn_hit_rates_epochs[0]
-    #         nn_miss_rates_epochs = nn_miss_rates_epochs[0]
     #     return nn_hit_rates_epochs, nn_miss_rates_epochs
+    
+    def get_metrics_dict(self):
+        '''
+        Return a copy of the cached metric dictionary
 
+        Returns
+        ----------
+        metrics_copy: dict
+            A copy of the metrics dictionary
+        '''
+        metrics_copy = copy.deepcopy(self.metrics)
+
+        return metrics_copy
 
     def get_default_params_dict(self):
         '''
-        Computes and returns the default params for all quality metrics.
+        Returns the default params for all quality metrics.
 
         Returns
         ----------
         quality_metrics_params: dict
-        The default params for all quality metrics.
+            The default params for all quality metrics.
         '''
         self._quality_metrics_params = {
                                         "isi_threshold" : 0.0015,
@@ -779,12 +846,20 @@ def _get_unit_indices(sorting, unit_ids):
             unit_indices.append(index[0])
     return unit_indices
 
-def _get_epochs(epoch_tuples, sampling_frequency):
-    if epoch_tuples is None:
-        epochs = [(0, np.inf)]
-    else:
+def _get_epochs(epoch_tuples, epoch_names):
+    if epoch_tuples is None and epoch_names is None:
+        epochs = [("complete_session", 0, np.inf)]
+    elif epoch_tuples is None and epoch_names is not None:
+        raise ValueError("No epoch tuples specified, but names given.")
+    elif epoch_tuples is not None and epoch_names is None:
         epochs = []
-        for epoch_tuple in epoch_tuples:
-            epoch = (epoch_tuple[0]/sampling_frequency, epoch_tuple[1]/sampling_frequency)
+        for i, epoch_tuple in enumerate(epoch_tuples):
+            epoch = (str(i), epoch_tuple[0], epoch_tuple[1])
+            epochs.append(epoch)
+    elif epoch_tuples is not None and epoch_names is not None:
+        assert len(epoch_names) == len(epoch_tuples), "Make sure the name and epoch lists are equal in length,"
+        epochs = []
+        for i, epoch_tuple in enumerate(epoch_tuples):
+            epoch = (str(epoch_names[i]), epoch_tuple[0], epoch_tuple[1])
             epochs.append(epoch)
     return epochs
