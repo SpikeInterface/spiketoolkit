@@ -2,6 +2,7 @@ import numpy as np
 import spiketoolkit as st
 import spikemetrics.metrics as metrics
 from spikemetrics.utils import Epoch 
+import pandas as pd
 from collections import defaultdict
 import copy
 
@@ -92,7 +93,7 @@ class MetricCalculator:
 
         self.metrics['firing_rate'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['firing_rate'].append((epoch, firings_rates_epochs[i]))
+            self.metrics['firing_rate'].append((epoch, unit_ids, firings_rates_epochs[i]))
         if len(firings_rates_epochs) == 1:
             firings_rates_epochs = firings_rates_epochs[0]
         return firings_rates_epochs
@@ -138,7 +139,7 @@ class MetricCalculator:
 
         self.metrics['num_spikes'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['num_spikes'].append((epoch, num_spikes_epochs[i]))
+            self.metrics['num_spikes'].append((epoch, unit_ids, num_spikes_epochs[i]))
         if len(num_spikes_epochs) == 1:
             num_spikes_epochs = num_spikes_epochs[0]
         return num_spikes_epochs
@@ -188,7 +189,7 @@ class MetricCalculator:
 
         self.metrics['isi_viol'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['isi_viol'].append((epoch, isi_violations_epochs[i]))
+            self.metrics['isi_viol'].append((epoch, unit_ids, isi_violations_epochs[i]))
         if len(isi_violations_epochs) == 1:
             isi_violations_epochs = isi_violations_epochs[0]
         return isi_violations_epochs
@@ -233,7 +234,7 @@ class MetricCalculator:
 
         self.metrics['presence_ratio'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['presence_ratio'].append((epoch, presence_ratios_epochs[i]))
+            self.metrics['presence_ratio'].append((epoch, unit_ids, presence_ratios_epochs[i]))
         if len(presence_ratios_epochs) == 1:
             presence_ratios_epochs = presence_ratios_epochs[0]
         return presence_ratios_epochs
@@ -297,8 +298,8 @@ class MetricCalculator:
         self.metrics['max_drift'] = []
         self.metrics['cumulative_drift'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['max_drift'].append((epoch, max_drifts_epochs[i]))
-            self.metrics['cumulative_drift'].append((epoch, cumulative_drifts_epochs[i]))
+            self.metrics['max_drift'].append((epoch, unit_ids, max_drifts_epochs[i]))
+            self.metrics['cumulative_drift'].append((epoch, unit_ids, cumulative_drifts_epochs[i]))
         if len(max_drifts_epochs) == 1:
             max_drifts_epochs = max_drifts_epochs[0]
             cumulative_drifts_epochs = cumulative_drifts_epochs[0]
@@ -355,7 +356,7 @@ class MetricCalculator:
 
         self.metrics['silhouette_score'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['silhouette_score'].append((epoch, silhouette_scores_epochs[i]))
+            self.metrics['silhouette_score'].append((epoch, unit_ids, silhouette_scores_epochs[i]))
         if len(silhouette_scores_epochs) == 1:
             silhouette_scores_epochs = silhouette_scores_epochs[0]    
         return silhouette_scores_epochs
@@ -415,7 +416,7 @@ class MetricCalculator:
 
         self.metrics['isolation_distance'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['isolation_distance'].append((epoch, isolation_distances_epochs[i]))
+            self.metrics['isolation_distance'].append((epoch, unit_ids, isolation_distances_epochs[i]))
         if len(isolation_distances_epochs) == 1:
             isolation_distances_epochs = isolation_distances_epochs[0]  
         return isolation_distances_epochs
@@ -474,7 +475,7 @@ class MetricCalculator:
 
         self.metrics['l_ratio'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['l_ratio'].append((epoch, l_ratios_epochs[i]))
+            self.metrics['l_ratio'].append((epoch, unit_ids, l_ratios_epochs[i]))
         if len(l_ratios_epochs) == 1:
             l_ratios_epochs = l_ratios_epochs[0]
         return l_ratios_epochs
@@ -534,7 +535,7 @@ class MetricCalculator:
 
         self.metrics['d_prime'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['d_prime'].append((epoch, d_primes_epochs[i]))
+            self.metrics['d_prime'].append((epoch, unit_ids, d_primes_epochs[i]))
         if len(d_primes_epochs) == 1:
             d_primes_epochs = d_primes_epochs[0]
         return d_primes_epochs
@@ -552,6 +553,8 @@ class MetricCalculator:
             Max spikes to be used from each unit.
         max_spikes_for_nn: int
             Max spikes to be used for nearest-neighbors calculation.
+        n_neighbors: int
+            Number of neighbors to compare.
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
@@ -607,78 +610,113 @@ class MetricCalculator:
         self.metrics['nn_hit_rate'] = []
         self.metrics['nn_miss_rate'] = []
         for i, epoch in enumerate(epochs):
-            self.metrics['nn_hit_rate'].append((epoch, nn_hit_rates_epochs[i]))
-            self.metrics['nn_miss_rate'].append((epoch, nn_miss_rates_epochs[i]))
+            self.metrics['nn_hit_rate'].append((epoch, unit_ids, nn_hit_rates_epochs[i]))
+            self.metrics['nn_miss_rate'].append((epoch, unit_ids, nn_miss_rates_epochs[i]))
         if len(nn_hit_rates_epochs) == 1:
             nn_hit_rates_epochs = nn_hit_rates_epochs[0]
             nn_miss_rates_epochs = nn_miss_rates_epochs[0]
         return nn_hit_rates_epochs, nn_miss_rates_epochs
 
-    # def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, drift_metrics_interval_s=51, \
-    #                     drift_metrics_min_spikes_per_interval=10, max_spikes_for_silhouette=10000, \
-    #                     num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
-    #                     n_neighbors=4, unit_ids=None, epoch_tuples=None, epoch_names=None, seed=0):
-    #     '''
-    #     Computes and returns the lda-based metric, d prime, for the sorted dataset.
+    def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, drift_metrics_interval_s=51, \
+                        drift_metrics_min_spikes_per_interval=10, max_spikes_for_silhouette=10000, \
+                        num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
+                        n_neighbors=4, metric_names=['firing_rate', 'num_spikes', 'isi_viol', 'presence_ratio', 'max_drift', \
+                        'cumulative_drift', 'silhouette_score', 'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', 'nn_miss_rate'], \
+                        unit_ids=None, epoch_tuples=None, epoch_names=None, seed=0):
+        '''
+        Computes and returns the lda-based metric, d prime, for the sorted dataset.
 
-    #     Parameters
-    #     ----------
-    #     isi_threshold: float
-    #         The isi threshold for calculating isi violations.
-    #     min_isi: float
-    #         The minimum expected isi value.
-    #     drift_metrics_interval_s: float
-    #         Time period for evaluating drift.
-    #     drift_metrics_min_spikes_per_interval: int
-    #         Minimum number of spikes for evaluating drift metrics per interval. 
-    #     max_spikes_for_silhouette: int
-    #         Max spikes to be used for silhouette metric
-    #     num_channels_to_compare: int
-    #         The number of channels to be used for the PC extraction and comparison.
-    #     max_spikes_for_unit: int
-    #         Max spikes to be used from each unit.
-    #     max_spikes_for_nn: int
-    #         Max spikes to be used for nearest-neighbors calculation.
-    #     unit_ids: list
-    #         List of unit ids to compute metric for. If not specified, all units are used
-    #     epoch_tuples: list
-    #         A list of tuples with a start and end time for each epoch
-    #     epoch_names: list
-    #         A list of strings for the names of the given epochs.
-    #     seed: int
-    #         Random seed for extracting pc features.
+        Parameters
+        ----------
+        isi_threshold: float
+            The isi threshold for calculating isi violations.
+        min_isi: float
+            The minimum expected isi value.
+        drift_metrics_interval_s: float
+            Time period for evaluating drift.
+        drift_metrics_min_spikes_per_interval: int
+            Minimum number of spikes for evaluating drift metrics per interval. 
+        max_spikes_for_silhouette: int
+            Max spikes to be used for silhouette metric
+        num_channels_to_compare: int
+            The number of channels to be used for the PC extraction and comparison.
+        max_spikes_for_unit: int
+            Max spikes to be used from each unit.
+        max_spikes_for_nn: int
+            Max spikes to be used for nearest-neighbors calculation.
+        n_neighbors: int
+            Number of neighbors to compare for  nearest-neighbors calculation.
+        unit_ids: list
+            List of unit ids to compute metric for. If not specified, all units are used
+        epoch_tuples: list
+            A list of tuples with a start and end time for each epoch
+        epoch_names: list
+            A list of strings for the names of the given epochs.
+        seed: int
+            Random seed for extracting pc features.
 
-    #     Returns
-    #     ----------
-    #     metrics : pandas.DataFrame
-    #     one column for each metric
-    #     one row per unit per epoch
-    #     '''
-    #     assert self._recording is not None, "Compute data for all metrics first"
+        Returns
+        ----------
+        metrics_epochs : list
+            List of metrics data. The list consists of lists of metric data for each given epoch.
+        '''
+        metrics_epochs = []
+        if 'firing_rate' in metric_names:
+            firing_rates_epochs = self.compute_firing_rates(unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+            metrics_epochs.append(firing_rates_epochs)
 
-    #     compute_drift_metrics(self, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
-    #                           unit_ids=None, epoch_tuples=None, epoch_names=None):
+        if 'num_spikes' in metric_names:
+            num_spikes_epochs = self.compute_num_spikes(unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+            metrics_epochs.append(num_spikes_epochs)
 
-    #     silhouette_scores_epochs = self.compute_silhouette_score(max_spikes_for_silhouette=max_spikes_for_silhouette, unit_ids=unit_ids, epoch_tuples=epoch_tuples, \
-    #                                                              epoch_names=epoch_names, seed=seed):
+        if 'isi_viol' in metric_names:
+            isi_violations_epochs = self.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi, unit_ids=unit_ids, epoch_tuples=epoch_tuples, \
+                                                                epoch_names=epoch_names)
+            metrics_epochs.append(isi_violations_epochs)
 
-    #     isolation_distances_epochs = self.compute_isolation_distances(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
-    #                                                                   unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed):
-
-    #     l_ratios_epochs =  self.compute_l_ratios(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
-    #                                              epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
-
-    #     d_primes_epochs =  self.compute_d_primes(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
-    #                                              epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+        if 'presence_ratio' in metric_names:
+            presence_ratios_epochs = self.compute_presence_ratios(unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+            metrics_epochs.append(presence_ratios_epochs)
         
-    #     nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_nn_metrics(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
-    #                                                                         max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors, unit_ids=unit_ids, \
-    #                                                                         epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+        if 'max_drift' in metric_names or 'cumulative_drift' in metric_names:
+            max_drifts_epochs, cumulative_drifts_epochs = self.compute_drift_metrics(drift_metrics_interval_s=drift_metrics_interval_s, \
+                                                                                     drift_metrics_min_spikes_per_interval=drift_metrics_min_spikes_per_interval, \
+                                                                                     unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+            if 'max_drift' in metric_names:
+                metrics_epochs.append(max_drifts_epochs)
+            if 'cumulative_drift' in metric_names:
+                metrics_epochs.append(cumulative_drifts_epochs)
 
-                    
+        if 'silhouette_score' in metric_names:
+            silhouette_scores_epochs = self.compute_silhouette_score(max_spikes_for_silhouette=max_spikes_for_silhouette, unit_ids=unit_ids, epoch_tuples=epoch_tuples, \
+                                                                    epoch_names=epoch_names, seed=seed)
+            metrics_epochs.append(silhouette_scores_epochs)
 
+        if 'isolation_distance' in metric_names:
+            isolation_distances_epochs = self.compute_isolation_distances(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
+                                                                        unit_ids=unit_ids, epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+            metrics_epochs.append(isolation_distances_epochs)
+
+        if 'l_ratio' in metric_names:
+            l_ratios_epochs =  self.compute_l_ratios(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
+                                                    epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+            metrics_epochs.append(l_ratios_epochs)
+
+        if 'l_ratio' in metric_names:
+            d_primes_epochs =  self.compute_d_primes(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, unit_ids=unit_ids, \
+                                                    epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+            metrics_epochs.append(d_primes_epochs)
+        
+        if 'nn_hit_rate' in metric_names or 'nn_miss_rate' in metric_names:
+            nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_nn_metrics(num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit, \
+                                                                                max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors, unit_ids=unit_ids, \
+                                                                                epoch_tuples=epoch_tuples, epoch_names=epoch_names, seed=seed)
+            if 'nn_hit_rate' in metric_names:
+                metrics_epochs.append(nn_hit_rates_epochs)
+            if 'nn_miss_rate' in metric_names:
+                metrics_epochs.append(nn_miss_rates_epochs)
             
-    #     return nn_hit_rates_epochs, nn_miss_rates_epochs
+        return metrics_epochs
     
     def get_metrics_dict(self):
         '''
@@ -692,6 +730,26 @@ class MetricCalculator:
         metrics_copy = copy.deepcopy(self.metrics)
 
         return metrics_copy
+
+    # def get_metrics_df(self):
+    #     '''
+    #     Return a dataframe of the cached metric dictionary
+
+    #     Returns
+    #     ----------
+    #     metrics_copy: dict
+    #         A copy of the metrics dictionary
+    #     '''
+
+    #     metrics_df = pd.DataFrame()
+
+    #     for metric_name in self.metrics.keys():
+    #         metric = self.metrics[metric_name]
+    #         for metric_epoch in metric:
+                
+
+
+    #     return metrics_copy
 
     def get_default_params_dict(self):
         '''
@@ -760,11 +818,11 @@ def compute_unit_SNR(recording, sorting, unit_ids=None, save_as_property=True, m
         recording_f = recording
     channel_noise_levels = _compute_channel_noise_levels(recording=recording_f, mode=mode, seconds=seconds)
     templates = st.postprocessing.get_unit_templates(recording_f, sorting, unit_ids=unit_ids,
-                                                    max_num_waveforms=max_num_waveforms,
-                                                    mode='median')
+                                                     max_num_waveforms=max_num_waveforms,
+                                                     mode='median')
     max_channels = st.postprocessing.get_unit_max_channels(recording, sorting, unit_ids=unit_ids,
-                                                          max_num_waveforms=max_num_waveforms, peak='both',
-                                                          mode='median')
+                                                           max_num_waveforms=max_num_waveforms, peak='both',
+                                                           mode='median')
     snr_list = []
     for i, unit_id in enumerate(sorting.get_unit_ids()):
         max_channel_idx = recording.get_channel_ids().index(max_channels[i])
