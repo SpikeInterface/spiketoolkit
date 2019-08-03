@@ -421,6 +421,101 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, grouping_property=Non
     amplitudes = np.ones((len(spike_times), 1), dtype='int16')
     return amplitudes                    
 
+def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', save_as_features=True, peak='both',
+                        frames_before=3, frames_after=3,  max_num_amplitudes=np.inf, verbose=False):
+    '''
+    Computes the spike amplitudes from a recording and sorting extractor. Amplitudes can be computed
+    in absolute value (uV) or relative to the template amplitude.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    unit_ids: list
+        List of unit ids to extract maximum channels
+    method: str
+        If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+        If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+    peak: str
+        If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+    save_as_features: bool
+        If True (default), amplitudes are saved as features of the sorting extractor object
+    frames_before: int
+        Frames before peak to compute amplitude
+    frames_after: float
+        Frames after peak to compute amplitude
+    dtype: dtype
+        The numpy dtype of the waveforms
+    max_num_amplitudes: int
+        The maximum number of amplitudes to extract (default is np.inf)
+    verbose: bool
+        If True output is verbose
+
+    Returns
+    -------
+    amplitudes: list
+        List of int containing extracted amplitudes for each unit
+    '''
+    if isinstance(unit_ids, (int, np.integer)):
+        unit_ids = [unit_ids]
+    elif unit_ids is None:
+        unit_ids = sorting.get_unit_ids()
+    elif not isinstance(unit_ids, (list, np.ndarray)):
+        raise Exception("unit_ids is not a valid in valid")
+
+    amp_list = []
+    for i, unit_id in enumerate(unit_ids):
+        if unit_id not in sorting.get_unit_ids():
+            raise Exception("unit_ids is not in valid")
+
+        spike_train = sorting.get_unit_spike_train(unit_id)
+        if max_num_amplitudes < len(spike_train):
+            indices = np.random.permutation(len(spike_train))[:max_num_amplitudes]
+        else:
+            indices = np.arange(len(spike_train))
+        spike_train = spike_train[indices]
+
+        snippets = recording.get_snippets(reference_frames=spike_train,
+                                          snippet_len=[frames_before, frames_after])
+        if peak == 'both':
+            amps = np.max(np.abs(snippets), axis=-1)
+            if len(amps.shape) > 1:
+                amps = np.max(amps, axis=-1)
+        elif peak == 'neg':
+            amps = np.min(snippets, axis=-1)
+            if len(amps.shape) > 1:
+                amps = np.min(amps, axis=-1)
+        elif peak == 'pos':
+            amps = np.max(snippets, axis=-1)
+            if len(amps.shape) > 1:
+                amps = np.max(amps, axis=-1)
+        else:
+            raise Exception("'peak' can be 'neg', 'pos', or 'both'")
+
+        if method == 'relative':
+            amps /= np.median(amps)
+
+        if save_as_features:
+            if len(indices) < len(spike_train):
+                if 'amps' not in sorting.get_unit_spike_feature_names(unit_id):
+                    amp_features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
+                else:
+                    amp_features = np.array(sorting.get_unit_spike_features(unit_id, 'amps'))
+                for i, ind in enumerate(indices):
+                    amp_features[ind] = amps[i]
+            else:
+                amp_features = amps
+            sorting.set_unit_spike_features(unit_id, 'amps', amp_features)
+        amp_list.append(amps)
+
+    if len(amp_list) == 1:
+        return amp_list[0]
+    else:
+        return amp_list
+
+
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                             ms_before=3., ms_after=3., dtype=None,
                             max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
