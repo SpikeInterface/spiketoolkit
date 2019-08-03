@@ -16,6 +16,7 @@ class ThresholdMinNumSpike(CurationSortingExtractor):
 
     def __init__(self, sorting, min_num_spike_threshold=50):
         CurationSortingExtractor.__init__(self, parent_sorting=sorting)
+        raise AssertionError("Disabled")
         self._sorting = sorting
         self._min_num_spike_threshold = min_num_spike_threshold
 

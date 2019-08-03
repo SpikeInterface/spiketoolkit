@@ -1,5 +1,5 @@
 from .CurationSortingExtractor import CurationSortingExtractor
-from spiketoolkit.validation.qualitymetrics import compute_unit_SNR
+# from spiketoolkit.validation.qualitymetrics import compute_unit_SNR
 
 '''
 Basic example of a curation module. They can inherit from the
@@ -28,14 +28,14 @@ class ThresholdMinSNR(CurationSortingExtractor):
         self._min_SNR_threshold = min_SNR_threshold
 
         units_to_be_excluded = []
-        snr_list = compute_unit_SNR(self._recording, self._sorting, mode=mode, 
-                                    seconds=seconds, 
-                                    max_num_waveforms=max_num_waveforms, 
-                                    apply_filter=apply_filter, 
-                                    freq_min=freq_min, freq_max=freq_max)
-        for i, unit_id in enumerate(self._sorting.get_unit_ids()):
-            if snr_list[i] < self._min_SNR_threshold:
-                units_to_be_excluded.append(unit_id)
+        # snr_list = compute_unit_SNR(self._recording, self._sorting, mode=mode, 
+        #                             seconds=seconds, 
+        #                             max_num_waveforms=max_num_waveforms, 
+        #                             apply_filter=apply_filter, 
+        #                             freq_min=freq_min, freq_max=freq_max)
+        # for i, unit_id in enumerate(self._sorting.get_unit_ids()):
+        #     if snr_list[i] < self._min_SNR_threshold:
+        #         units_to_be_excluded.append(unit_id)
         self.exclude_units(units_to_be_excluded)
 
 
