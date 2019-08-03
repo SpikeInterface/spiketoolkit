@@ -55,10 +55,11 @@ class MetricCalculator:
 
     def store_recording(self, recording):
         self._recording = recording
-        for epoch in self._epochs:
-            self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
+        # for epoch in self._epochs:
+        #     self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
 
     def store_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
+                              amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
                               max_num_pca_waveforms=np.inf, save_features_props=False):
         '''
         Computes and stores data for all metrics
@@ -68,11 +69,13 @@ class MetricCalculator:
                 raise ValueError("No recording given. Either call store_recording or pass a recording into this function")
         else:    
             self._recording = recording
-            for epoch in self._epochs:
-                self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
+            # for epoch in self._epochs:
+            #     self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
 
         _, _, amplitudes, pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(self._recording, self._sorting, nPC=nPC, ms_before=ms_before, \
-                                                                                                                ms_after=ms_after, dtype=dtype, max_num_waveforms=np.inf, \
+                                                                                                                ms_after=ms_after, dtype=dtype, amp_method=amp_method, \
+                                                                                                                amp_peak=amp_peak,amp_frames_before=amp_frames_before,
+                                                                                                                amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms, \
                                                                                                                 max_num_pca_waveforms=max_num_waveforms, \
                                                                                                                 save_features_props=save_features_props)
         
@@ -223,8 +226,41 @@ class MetricCalculator:
             isi_violations_epochs = isi_violations_epochs[0]
         return isi_violations_epochs
 
-    def compute_unit_SNR(self, mode='mad', noise_duration=10.0, max_num_waveforms=1000, apply_filter=False, 
-                         freq_min=300, freq_max=6000):
+    # def compute_amplitude_cutoff(self, isi_threshold=0.0015, min_isi=0.000166):
+    #     '''
+    #     Computes and returns the ISI violations for the given units and parameters.
+        
+    #     Parameters
+    #     ----------
+    #     isi_threshold: float
+    #         The isi threshold for calculating isi violations.
+    #     min_isi: float
+    #         The minimum expected isi value.
+            
+    #     Returns
+    #     ----------
+    #     isi_violations_epochs: list
+    #         The isi violations of the sorted units in the given epochs.
+    #     '''
+    #     isi_violations_epochs = []
+    #     for epoch in self._epochs:
+    #         in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
+    #         isi_violations_all = metrics.calculate_isi_violations(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units, \
+    #                                                               isi_threshold=isi_threshold, min_isi=min_isi)
+    #         isi_violations_list = []
+    #         for i in self._unit_indices:
+    #             isi_violations_list.append(isi_violations_all[i])
+    #         isi_violations = np.asarray(isi_violations_list)
+    #         isi_violations_epochs.append(isi_violations)
+
+    #     self.metrics['isi_viol'] = []
+    #     for i, epoch in enumerate(self._epochs):
+    #         self.metrics['isi_viol'].append(isi_violations_epochs[i])
+    #     if len(isi_violations_epochs) == 1:
+    #         isi_violations_epochs = isi_violations_epochs[0]
+    #     return isi_violations_epochs
+
+    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000):
         '''
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel.
 
@@ -234,14 +270,8 @@ class MetricCalculator:
             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
         noise_duration: float
             Number of seconds to compute noise level from (default 10.0)
-        max_num_waveforms: int
-            Maximum number of waveforms to cpmpute templates from (default 1000)
-        apply_filter: bool
-            If True, recording is filtered before computing noise level
-        freq_min: float
-            High-pass frequency for optional filter (default 300 Hz)
-        freq_max: float
-            Low-pass frequency for optional filter (default 6000 Hz)
+        max_snr_waveforms: int
+            Maximum number of waveforms to compute templates from (default 1000)
 
         Returns
         -------
@@ -253,23 +283,17 @@ class MetricCalculator:
 
         snrs_epochs = []
         for epoch in self._epochs:
-            epoch_recording = self._recording.get_epoch(epoch[0])
+            # epoch_recording = self._recording.get_epoch(epoch[0])
             epoch_sorting = self._sorting.get_epoch(epoch[0])
-            if apply_filter:
-                recording = st.preprocessing.bandpass_filter(recording=epoch_recording, freq_min=freq_min, freq_max=freq_max,
-                                                               cache=True)
-            else:
-                recording = epoch_recording
-            channel_noise_levels = _compute_channel_noise_levels(recording=recording, mode=mode, noise_duration=noise_duration)
-            templates = st.postprocessing.get_unit_templates(recording, epoch_sorting, unit_ids=self._unit_ids,
-                                                            max_num_waveforms=max_num_waveforms,
-                                                            mode='median')
-            max_channels = st.postprocessing.get_unit_max_channels(recording, epoch_sorting, unit_ids=self._unit_ids,
-                                                                max_num_waveforms=max_num_waveforms, peak='both',
-                                                                mode='median')
+            channel_noise_levels = _compute_channel_noise_levels(recording=self._recording, mode=snr_mode, noise_duration=snr_noise_duration)
+            templates = st.postprocessing.get_unit_templates(self._recording, epoch_sorting, unit_ids=self._unit_ids,
+                                                            max_num_waveforms=max_snr_waveforms, mode='median')
+            max_channels = st.postprocessing.get_unit_max_channels(self._recording, epoch_sorting, unit_ids=self._unit_ids,
+                                                                   max_num_waveforms=max_snr_waveforms, peak='both',
+                                                                   mode='median')
             snr_list = []
             for i, unit_id in enumerate(self._unit_ids):
-                max_channel_idx = recording.get_channel_ids().index(max_channels[i])
+                max_channel_idx = self._recording.get_channel_ids().index(max_channels[i])
                 snr = _compute_template_SNR(templates[i], channel_noise_levels, max_channel_idx)
                 snr_list.append(snr)
             snrs = np.asarray(snr_list)
@@ -577,9 +601,9 @@ class MetricCalculator:
             nn_miss_rates_epochs = nn_miss_rates_epochs[0]
         return nn_hit_rates_epochs, nn_miss_rates_epochs
 
-    def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, drift_metrics_interval_s=51, \
-                        drift_metrics_min_spikes_per_interval=10, max_spikes_for_silhouette=10000, \
-                        num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
+    def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, snr_mode='mad', snr_noise_duration=10.0,
+                        max_snr_waveforms=1000, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
+                        max_spikes_for_silhouette=10000,  num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
                         n_neighbors=4, metric_names=['firing_rate', 'num_spikes', 'isi_viol', 'presence_ratio', 'max_drift', 'cumulative_drift', \
                         'silhouette_score', 'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', 'nn_miss_rate'], seed=0):
         '''
@@ -630,6 +654,10 @@ class MetricCalculator:
         if 'isi_viol' in metric_names:
             isi_violations_epochs = self.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
             metrics_epochs.append(isi_violations_epochs)
+
+        if 'snr' in metric_names:
+            snrs_epochs = self.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration, max_snr_waveforms=max_snr_waveforms)
+            metrics_epochs.append(snrs_epochs)
         
         if 'max_drift' in metric_names or 'cumulative_drift' in metric_names:
             max_drifts_epochs, cumulative_drifts_epochs = self.compute_drift_metrics(drift_metrics_interval_s=drift_metrics_interval_s, \
@@ -693,7 +721,6 @@ class MetricCalculator:
         metrics_df = pd.DataFrame(data=OrderedDict({'unit_ids': epoch_unit_ids}))
         for metric_name in self.metrics.keys():
             all_metrics = [0]*len(epoch_unit_ids)
-            index = 0
             for i, metric in enumerate(self.metrics[metric_name]):
                 unit_ids = self.get_unit_ids()
                 for unit_id in all_unit_ids:
@@ -701,8 +728,6 @@ class MetricCalculator:
                         all_metrics[unit_id + len(all_unit_ids)*i] = metric[unit_ids.index(unit_id)]
                     else:
                         all_metrics[unit_id + len(all_unit_ids)*i] = ''
-
-        #         print(all_metrics)
             metrics_df = pd.concat((metrics_df, pd.DataFrame(data= OrderedDict(({metric_name: all_metrics})))), sort=False, axis=1)
 
         epoch_names_all = []

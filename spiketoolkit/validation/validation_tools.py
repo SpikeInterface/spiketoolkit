@@ -45,9 +45,9 @@ def get_firing_times_ids(sorting, sampling_frequency):
 
     return spike_times, spike_clusters
 
-def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, 
-                            max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, recompute_waveform_info=True, \
-                            save_features_props=False, verbose=False, seed=0):
+def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both', \
+                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
+                            recompute_waveform_info=True, save_features_props=False, verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -65,6 +65,15 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
+    amp_method: str
+        If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+        If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+    amp_peak: str
+        If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+    frames_before: int
+        Frames before peak to compute amplitude
+    frames_after: float
+        Frames after peak to compute amplitude
     max_num_waveforms: int
         The maximum number of waveforms to extract (default is np.inf)
     max_num_pca_waveforms: int
@@ -94,13 +103,11 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, amplitudes, _, pc_features, pc_feature_ind, _ = \
-        st.postprocessing.postprocessing_tools._get_quality_metric_data_and_waveforms(recording, sorting, nPC=nPC, 
-                                                                                      ms_before=ms_before, ms_after=ms_after, \
-                                                                                      dtype=dtype, max_num_waveforms=max_num_waveforms, \
-                                                                                      max_num_pca_waveforms=max_num_pca_waveforms, \
-                                                                                      recompute_waveform_info=recompute_waveform_info,
-                                                                                      save_features_props=save_features_props, verbose=verbose, \
-                                                                                      seed=seed)
+    spike_times, spike_clusters, amplitudes, _, pc_features, pc_feature_ind \
+        = st.postprocessing.postprocessing_tools._get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after, \
+                                                                        dtype=dtype, amp_method=amp_method, amp_peak=amp_peak, amp_frames_before=amp_frames_before, \
+                                                                        amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms, \
+                                                                        max_num_pca_waveforms=max_num_pca_waveforms, recompute_waveform_info=recompute_waveform_info, \
+                                                                        save_features_props=save_features_props, verbose=verbose, seed=seed)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
            amplitudes.flatten('F'), pc_features, pc_feature_ind 
