@@ -205,7 +205,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
 def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
                        ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                       compute_property_from_recording=False, verbose=False):
+                       compute_property_from_recording=False, verbose=False, seed=0):
     '''
     Computes the spike templates from a recording and sorting extractor. If waveforms are not found as features,
     they are computed.
@@ -238,6 +238,8 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
         the recording extractor channel on which the average waveform is the largest
     verbose: bool
         If True output is verbose
+    seed: int
+        Random seed for extracting random waveforms
 
     Returns
     -------
@@ -267,7 +269,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
                                            ms_before=ms_before, ms_after=ms_after,
                                            grouping_property=grouping_property, dtype=dtype,
                                            compute_property_from_recording=compute_property_from_recording,
-                                           verbose=verbose)
+                                           verbose=verbose, seed=seed)
         if mode == 'mean':
             template = np.mean(waveforms, axis=0)
         elif mode == 'median':
@@ -287,7 +289,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
 
 def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
                           save_as_property=True, ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                          compute_property_from_recording=False, verbose=False):
+                          compute_property_from_recording=False, verbose=False, seed=0):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
     they are computed.
@@ -322,6 +324,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         the recording extractor channel on which the average waveform is the largest
     verbose: bool
         If True output is verbose
+    seed: int
+        Random seed for extracting random waveforms
 
     Returns
     -------
@@ -346,7 +350,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
                                           dtype=dtype, ms_before=ms_before, ms_after=ms_after,
                                           grouping_property=grouping_property,
                                           compute_property_from_recording=compute_property_from_recording,
-                                          verbose=verbose)
+                                          verbose=verbose, seed=seed)
         if peak == 'both':
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                         template.shape)[0]
@@ -370,7 +374,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         return max_list
 
 def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', save_as_features=True, peak='both',
-                        frames_before=3, frames_after=3,  max_num_amplitudes=np.inf, verbose=False):
+                        frames_before=3, frames_after=3,  max_num_amplitudes=np.inf, verbose=False, seed=0):
     '''
     Computes the spike amplitudes from a recording and sorting extractor. Amplitudes can be computed
     in absolute value (uV) or relative to the template amplitude.
@@ -420,7 +424,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
 
         spike_train = sorting.get_unit_spike_train(unit_id)
         if max_num_amplitudes < len(spike_train):
-            indices = np.random.permutation(len(spike_train))[:max_num_amplitudes]
+            indices = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_num_amplitudes]
         else:
             indices = np.arange(len(spike_train))
         spike_train = spike_train[indices]
@@ -604,7 +608,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
 
 def set_unit_properties_by_max_channel_properties(recording, sorting, property, unit_ids=None, peak='both',
                                                   mode='median', ms_before=3., ms_after=3., dtype=None,
-                                                  max_num_waveforms=np.inf, verbose=False):
+                                                  max_num_waveforms=np.inf, verbose=False, seed=0):
     '''
     Extracts 'property' from recording channel with largest peak for each unit and saves it as unit property.
 
@@ -632,6 +636,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
         The maximum number of waveforms to extract (default is np.inf)
     verbose: bool
         If True output is verbose
+    seed: int
+        Random seed for reproducibility
     '''
     if property not in recording.get_channel_property_names():
         raise Exception("'property' should be in recording properties")
@@ -661,7 +667,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             else:
                 max_chan = get_unit_max_channels(recording, sorting, unit_id, mode=mode, peak=peak,
                                                  max_num_waveforms=max_num_waveforms, dtype=dtype,
-                                                 ms_before=ms_before, ms_after=ms_after, verbose=verbose)
+                                                 ms_before=ms_before, ms_after=ms_after, verbose=verbose,
+                                                 seed=seed)
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
@@ -865,7 +872,7 @@ def _get_quality_metric_data(recording, sorting, nPC, ms_before, ms_after, dtype
 
     # amplitudes.npy
     amplitudes_list = get_unit_amplitudes(recording, sorting, unit_ids=None, method=amp_method, save_as_features=save_features_props, peak=amp_peak,
-                                          frames_before=amp_frames_before, frames_after=amp_frames_after, verbose=verbose)
+                                          frames_before=amp_frames_before, frames_after=amp_frames_after, verbose=verbose, seed=seed)
 
     index_amps = [0]*len(amplitudes_list)
     amplitudes = np.zeros(len(spike_clusters))
@@ -941,7 +948,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
         positions[:, 1] = np.arange(recording.get_num_channels())
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    templates = get_unit_templates(recording, sorting, save_as_property=save_features_props)
+    templates = get_unit_templates(recording, sorting, save_as_property=save_features_props, seed=seed)
 
     if not isinstance(templates, list):
         if len(templates.shape) == 2:
@@ -955,7 +962,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
 
     if grouping_property in recording.get_channel_property_names():
         if grouping_property not in sorting.get_unit_property_names():
-            set_unit_properties_by_max_channel_properties(recording, sorting, grouping_property)
+            set_unit_properties_by_max_channel_properties(recording, sorting, grouping_property, seed=seed)
         # pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_red = np.zeros((templates.shape[0], templates.shape[1], int(max_num_chans_in_group)))

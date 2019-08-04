@@ -63,7 +63,7 @@ class MetricCalculator:
         for epoch in self._epochs:
             self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
 
-    def store_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, save_features_props=False):
+    def store_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, save_features_props=False, seed=0):
         '''
         Computes and stores amplitudes for the amplitude cutoff metric
 
@@ -80,6 +80,8 @@ class MetricCalculator:
             Frames before peak to compute amplitude
         frames_after: float
             Frames after peak to compute amplitude
+        seed: int
+            Random seed for reproducibility
         '''
         if recording is None:
             if self._recording is None:
@@ -88,7 +90,7 @@ class MetricCalculator:
             self.store_recording(recording)
         
         amplitudes_list = st.postprocessing.get_unit_amplitudes(self._recording, self._sorting, unit_ids=None, method=amp_method, save_as_features=save_features_props, peak=amp_peak,
-                                                                frames_before=amp_frames_before, frames_after=amp_frames_after)
+                                                                frames_before=amp_frames_before, frames_after=amp_frames_after, seed=seed)
 
         index_amps = [0]*len(amplitudes_list)
         amplitudes = np.zeros(len(self._spike_clusters))
@@ -99,7 +101,7 @@ class MetricCalculator:
 
     def store_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
                               amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
-                              recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False):
+                              recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
         
@@ -132,6 +134,8 @@ class MetricCalculator:
             The maximum number of waveforms to use to compute PCA (default is np.inf)
         save_features_props: bool
             If True, save all features and properties in the sorting extractor.
+        seed: int
+            Random seed for reproducibility
         '''
         if recording is None:
             if self._recording is None:
@@ -143,7 +147,7 @@ class MetricCalculator:
                                                                                                                 amp_peak=amp_peak,amp_frames_before=amp_frames_before,
                                                                                                                 amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms, \
                                                                                                                 max_num_pca_waveforms=max_num_waveforms, recompute_waveform_info=recompute_waveform_info, \
-                                                                                                                save_features_props=save_features_props)
+                                                                                                                save_features_props=save_features_props, seed=seed)
         
         self._amplitudes = amplitudes
         self._pc_features = pc_features
@@ -321,7 +325,7 @@ class MetricCalculator:
             amplitude_cutoffs_epochs = amplitude_cutoffs_epochs[0]
         return amplitude_cutoffs_epochs
 
-    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000):
+    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000, seed=0):
         '''
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
 
@@ -348,10 +352,11 @@ class MetricCalculator:
             epoch_sorting = self._sorting.get_epoch(epoch[0])
             channel_noise_levels = _compute_channel_noise_levels(recording=epoch_recording, mode=snr_mode, noise_duration=snr_noise_duration)
             templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
-                                                            max_num_waveforms=max_snr_waveforms, mode='median')
+                                                            max_num_waveforms=max_snr_waveforms, mode='median', seed=seed)
+
             max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
                                                                    max_num_waveforms=max_snr_waveforms, peak='both',
-                                                                   mode='median')
+                                                                   mode='median',seed=seed)
             snr_list = []
             for i, unit_id in enumerate(self._unit_ids):
                 max_channel_idx = epoch_recording.get_channel_ids().index(max_channels[i])
@@ -859,7 +864,7 @@ def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
     return snr
 
 
-def _compute_channel_noise_levels(recording, mode='mad', noise_duration=10.0):
+def _compute_channel_noise_levels(recording, mode='mad', noise_duration=10.0, seed=0):
     '''
     Computes noise level channel-wise
 
@@ -884,7 +889,7 @@ def _compute_channel_noise_levels(recording, mode='mad', noise_duration=10.0):
         start_frame = 0
         end_frame = recording.get_num_frames()
     else:
-        start_frame = np.random.randint(0, recording.get_num_frames() - n_frames)
+        start_frame = np.random.RandomState(seed=seed).randint(0, recording.get_num_frames() - n_frames)
         end_frame = start_frame + n_frames
 
     X = recording.get_traces(start_frame=start_frame, end_frame=end_frame)
