@@ -1,8 +1,7 @@
+from .CurationSortingExtractor import CurationSortingExtractor
 from .threshold_min_num_spikes import threshold_min_num_spikes, ThresholdMinNumSpikes
 from .threshold_min_snr import threshold_min_snr, ThresholdMinSNR
 from .threshold_max_isi_violations import threshold_max_isi_violations, ThresholdMaxISIViolations
-from .CurationSortingExtractor import CurationSortingExtractor
-
 
 curation_full_list = [
     ThresholdMinNumSpikes,
