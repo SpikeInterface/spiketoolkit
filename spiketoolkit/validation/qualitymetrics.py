@@ -52,31 +52,97 @@ class MetricCalculator:
 
         for epoch in self._epochs:
             self._sorting.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
-
+    
     def store_recording(self, recording):
-        self._recording = recording
-        # for epoch in self._epochs:
-        #     self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
-
-    def store_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
-                              amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
-                              max_num_pca_waveforms=np.inf, save_features_props=False):
         '''
-        Computes and stores data for all metrics
+        Stores given recording extractor
+
+        Parameters
+        '''
+        self._recording = recording
+        for epoch in self._epochs:
+            self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
+
+    def store_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, save_features_props=False):
+        '''
+        Computes and stores amplitudes for the amplitude cutoff metric
+
+        Parameters
+        ----------
+        recording: RecordingExtractor
+            The given recording extractor from which to extract amplitudes.
+        amp_method: str
+            If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+            If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+        amp_peak: str
+            If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+        frames_before: int
+            Frames before peak to compute amplitude
+        frames_after: float
+            Frames after peak to compute amplitude
         '''
         if recording is None:
             if self._recording is None:
                 raise ValueError("No recording given. Either call store_recording or pass a recording into this function")
         else:    
-            self._recording = recording
-            # for epoch in self._epochs:
-            #     self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1]*self._sampling_frequency, end_frame=epoch[2]*self._sampling_frequency)
+            self.store_recording(recording)
+        
+        amplitudes_list = st.postprocessing.get_unit_amplitudes(self._recording, self._sorting, unit_ids=None, method=amp_method, save_as_features=save_features_props, peak=amp_peak,
+                                                                frames_before=amp_frames_before, frames_after=amp_frames_after)
 
+        index_amps = [0]*len(amplitudes_list)
+        amplitudes = np.zeros(len(self._spike_clusters))
+        for i, spike_cluster in enumerate(self._spike_clusters):
+            amplitudes[i] = amplitudes_list[int(spike_cluster)][index_amps[int(spike_cluster)]]
+            index_amps[int(spike_cluster)] += 1
+        self._amplitudes = amplitudes
+
+    def store_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, \
+                              amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
+                              recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False):
+        '''
+        Computes and stores data for all metrics (all metrics can be run after calling this function).
+        
+        Parameters
+        ----------
+        recording: RecordingExtractor
+            The recording extractor
+        nPC: int
+            nPCFeatures in template-gui format
+        ms_before: float
+            Time period in ms to cut waveforms before the spike events
+        ms_after: float
+            Time period in ms to cut waveforms after the spike events
+        dtype: dtype
+            The numpy dtype of the waveforms
+        max_num_waveforms: int
+            The maximum number of waveforms to extract (default is np.inf)
+        amp_method: str
+            If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+            If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+        amp_peak: str
+            If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+        amp_frames_before: int
+            Frames before peak to compute amplitude
+        amp_frames_after: float
+            Frames after peak to compute amplitude
+        recompute_waveform_info: bool
+            If True, will always re-extract waveforms.
+        max_num_pca_waveforms: int
+            The maximum number of waveforms to use to compute PCA (default is np.inf)
+        save_features_props: bool
+            If True, save all features and properties in the sorting extractor.
+        '''
+        if recording is None:
+            if self._recording is None:
+                raise ValueError("No recording given. Either call store_recording or pass a recording into this function")
+        else:    
+            self.store_recording(recording)
         _, _, amplitudes, pc_features, pc_feature_ind  = st.validation.validation_tools.get_quality_metric_data(self._recording, self._sorting, nPC=nPC, ms_before=ms_before, \
                                                                                                                 ms_after=ms_after, dtype=dtype, amp_method=amp_method, \
                                                                                                                 amp_peak=amp_peak,amp_frames_before=amp_frames_before,
                                                                                                                 amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms, \
-                                                                                                                max_num_pca_waveforms=max_num_waveforms, \
+                                                                                                                max_num_pca_waveforms=max_num_waveforms, recompute_waveform_info=recompute_waveform_info, \
                                                                                                                 save_features_props=save_features_props)
         
         self._amplitudes = amplitudes
@@ -115,7 +181,7 @@ class MetricCalculator:
     def compute_num_spikes(self):
         '''
         Computes and returns the spike times in seconds and also returns 
-        the cluster_ids needed for quality metrics (all within given epoch)
+        the cluster_ids needed for quality metrics.
 
         Returns
         ----------
@@ -142,7 +208,7 @@ class MetricCalculator:
     def compute_firing_rates(self):
         '''
         Computes and returns the spike times in seconds and also returns 
-        the cluster_ids needed for quality metrics (all within given epoch)
+        the cluster_ids needed for quality metrics.
 
         Returns
         ----------
@@ -168,7 +234,7 @@ class MetricCalculator:
 
     def compute_presence_ratios(self):
         '''
-        Computes and returns the presence ratios for the given units.
+        Computes and returns the presence ratios.
 
         Returns
         ----------
@@ -194,7 +260,7 @@ class MetricCalculator:
 
     def compute_isi_violations(self, isi_threshold=0.0015, min_isi=0.000166):
         '''
-        Computes and returns the ISI violations for the given units and parameters.
+        Computes and returns the ISI violations for the given parameters.
         
         Parameters
         ----------
@@ -226,43 +292,38 @@ class MetricCalculator:
             isi_violations_epochs = isi_violations_epochs[0]
         return isi_violations_epochs
 
-    # def compute_amplitude_cutoff(self, isi_threshold=0.0015, min_isi=0.000166):
-    #     '''
-    #     Computes and returns the ISI violations for the given units and parameters.
-        
-    #     Parameters
-    #     ----------
-    #     isi_threshold: float
-    #         The isi threshold for calculating isi violations.
-    #     min_isi: float
-    #         The minimum expected isi value.
+    def compute_amplitude_cutoffs(self):
+        '''
+        Computes and returns the amplitude cutoffs for the sorted dataset.
             
-    #     Returns
-    #     ----------
-    #     isi_violations_epochs: list
-    #         The isi violations of the sorted units in the given epochs.
-    #     '''
-    #     isi_violations_epochs = []
-    #     for epoch in self._epochs:
-    #         in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-    #         isi_violations_all = metrics.calculate_isi_violations(self._spike_times[in_epoch], self._spike_clusters[in_epoch], self._total_units, \
-    #                                                               isi_threshold=isi_threshold, min_isi=min_isi)
-    #         isi_violations_list = []
-    #         for i in self._unit_indices:
-    #             isi_violations_list.append(isi_violations_all[i])
-    #         isi_violations = np.asarray(isi_violations_list)
-    #         isi_violations_epochs.append(isi_violations)
+        Returns
+        ----------
+        amplitude_cutoffs_epochs: list
+            The amplitude cutoffs of the sorted units in the given epochs.
+        '''
+        assert self._amplitudes is not None, "No amplitudes stored. Compute amplitudes before running this method"
 
-    #     self.metrics['isi_viol'] = []
-    #     for i, epoch in enumerate(self._epochs):
-    #         self.metrics['isi_viol'].append(isi_violations_epochs[i])
-    #     if len(isi_violations_epochs) == 1:
-    #         isi_violations_epochs = isi_violations_epochs[0]
-    #     return isi_violations_epochs
+        amplitude_cutoffs_epochs = []
+        for epoch in self._epochs:
+            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
+            amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(self._spike_clusters[in_epoch], self._amplitudes[in_epoch],
+                                                                       self._total_units)
+            amplitude_cutoffs_list = []
+            for i in self._unit_indices:
+                amplitude_cutoffs_list.append(amplitude_cutoffs_all[i])
+            amplitude_cutoffs = np.asarray(amplitude_cutoffs_list)
+            amplitude_cutoffs_epochs.append(amplitude_cutoffs)
+
+        self.metrics['amplitude_cutoff'] = []
+        for i, epoch in enumerate(self._epochs):
+            self.metrics['amplitude_cutoff'].append(amplitude_cutoffs_epochs[i])
+        if len(amplitude_cutoffs_epochs) == 1:
+            amplitude_cutoffs_epochs = amplitude_cutoffs_epochs[0]
+        return amplitude_cutoffs_epochs
 
     def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000):
         '''
-        Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel.
+        Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
 
         Parameters
         ----------
@@ -283,17 +344,17 @@ class MetricCalculator:
 
         snrs_epochs = []
         for epoch in self._epochs:
-            # epoch_recording = self._recording.get_epoch(epoch[0])
+            epoch_recording = self._recording.get_epoch(epoch[0])
             epoch_sorting = self._sorting.get_epoch(epoch[0])
-            channel_noise_levels = _compute_channel_noise_levels(recording=self._recording, mode=snr_mode, noise_duration=snr_noise_duration)
-            templates = st.postprocessing.get_unit_templates(self._recording, epoch_sorting, unit_ids=self._unit_ids,
+            channel_noise_levels = _compute_channel_noise_levels(recording=epoch_recording, mode=snr_mode, noise_duration=snr_noise_duration)
+            templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
                                                             max_num_waveforms=max_snr_waveforms, mode='median')
-            max_channels = st.postprocessing.get_unit_max_channels(self._recording, epoch_sorting, unit_ids=self._unit_ids,
+            max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
                                                                    max_num_waveforms=max_snr_waveforms, peak='both',
                                                                    mode='median')
             snr_list = []
             for i, unit_id in enumerate(self._unit_ids):
-                max_channel_idx = self._recording.get_channel_ids().index(max_channels[i])
+                max_channel_idx = epoch_recording.get_channel_ids().index(max_channels[i])
                 snr = _compute_template_SNR(templates[i], channel_noise_levels, max_channel_idx)
                 snr_list.append(snr)
             snrs = np.asarray(snr_list)
@@ -358,7 +419,7 @@ class MetricCalculator:
 
     def compute_silhouette_score(self, max_spikes_for_silhouette=10000, seed=0):
         '''
-        Computes and returns the silhouette scores for each unit in the sorted dataset.
+        Computes and returns the silhouette scores in the sorted dataset.
 
         Parameters
         ----------
@@ -493,7 +554,7 @@ class MetricCalculator:
 
     def compute_d_primes(self, num_channels_to_compare=13, max_spikes_for_unit=500, seed=0):
         '''
-        Computes and returns the lda-based metric, d prime, for the sorted dataset.
+        Computes and returns the lda-based metric, d-prime, for the sorted dataset.
 
         Parameters
         ----------
@@ -540,7 +601,7 @@ class MetricCalculator:
     def compute_nn_metrics(self, num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
                            n_neighbors=4, seed=0):
         '''
-        Computes and returns the lda-based metric, d prime, for the sorted dataset.
+        Computes and returns the nearest neighbor metrics for the sorted dataset.
 
         Parameters
         ----------
@@ -604,10 +665,11 @@ class MetricCalculator:
     def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, snr_mode='mad', snr_noise_duration=10.0,
                         max_snr_waveforms=1000, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10, \
                         max_spikes_for_silhouette=10000,  num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000, \
-                        n_neighbors=4, metric_names=['firing_rate', 'num_spikes', 'isi_viol', 'presence_ratio', 'max_drift', 'cumulative_drift', \
-                        'silhouette_score', 'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', 'nn_miss_rate'], seed=0):
+                        n_neighbors=4, metric_names=['firing_rate', 'num_spikes', 'isi_viol', 'presence_ratio', 'amplitude_cutoff' \
+                        'max_drift', 'cumulative_drift', 'silhouette_score', 'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', \
+                        'nn_miss_rate'], seed=0):
         '''
-        Computes and returns the lda-based metric, d prime, for the sorted dataset.
+        Computes and returns all specified metrics for the sorted dataset.
 
         Parameters
         ----------
@@ -654,6 +716,10 @@ class MetricCalculator:
         if 'isi_viol' in metric_names:
             isi_violations_epochs = self.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
             metrics_epochs.append(isi_violations_epochs)
+
+        if 'amplitude_cutoff' in metric_names:
+            amplitude_cutoffs_epochs = self.compute_amplitude_cutoffs()
+            metrics_epochs.append(amplitude_cutoffs_epochs)
 
         if 'snr' in metric_names:
             snrs_epochs = self.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration, max_snr_waveforms=max_snr_waveforms)
