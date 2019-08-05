@@ -28,6 +28,7 @@ class ThresholdSNR(ThresholdCurator):
                 self._metric_calculator.store_recording(recording)
                 self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
         snrs_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0] 
+        
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=snrs_epochs)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
