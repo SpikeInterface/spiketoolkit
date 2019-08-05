@@ -1,26 +1,25 @@
-from .CurationSortingExtractor import CurationSortingExtractor
+from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
 '''
 Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
-class ThresholdMinSNR(CurationSortingExtractor):
+class ThresholdMinSNR(ThresholdCurator):
 
     curator_name = 'ThresholdMinSNR'
     installed = False  # check at class level if installed or not
     _gui_params = [
-        {'name': 'min_snr_threshold', 'type': 'float', 'value':5.0, 'default':5.0, 'title': "Minimum snr for which a unit is removed."},
+        {'name': 'threshold', 'type': 'float', 'value':5.0, 'default':5.0, 'title': "The threshold for the given metric."},
+        {'name': 'threshold_sign', 'type': 'str', 'value':'greater', 'default':'greater', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
         {'name': 'snr_mode', 'type': 'str', 'value':'mad', 'default':'mad', 'title': "Mode to compute noise SNR ('mad' | 'std' - default 'mad')"},
         {'name': 'snr_noise_duration', 'type': 'float', 'value':10.0, 'default':10.0, 'title': "Number of seconds to compute noise level from (default 10.0)."},
         {'name': 'max_snr_waveforms', 'type': 'float', 'value':1000, 'default':1000, 'title': "Maximum number of waveforms to compute templates from (default 1000)."},
    ]
     installation_mesg = "" # err
 
-    def __init__(self, sorting, recording, min_snr_threshold=5.0, snr_mode='mad', snr_noise_duration=10.0, \
+    def __init__(self, sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
                  max_snr_waveforms=1000, metric_calculator=None):
-        CurationSortingExtractor.__init__(self, parent_sorting=sorting)
-        self._min_snr_threshold = min_snr_threshold
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(), \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
@@ -32,14 +31,11 @@ class ThresholdMinSNR(CurationSortingExtractor):
                 self._metric_calculator.store_recording(recording)
                 self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
         snrs_epochs = self._metric_calculator.get_metrics_dict()['snr'][0] 
-        units_to_be_excluded = []
-        for i, unit_id in enumerate(sorting.get_unit_ids()):
-            if snrs_epochs[i] < min_snr_threshold:
-                units_to_be_excluded.append(unit_id)
-        self.exclude_units(units_to_be_excluded)
+        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=snrs_epochs)
+        self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_min_snr(sorting, recording, min_snr_threshold=5.0, snr_mode='mad', snr_noise_duration=10.0, \
+def threshold_min_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
                       max_snr_waveforms=1000, metric_calculator=None):
     '''
     Excludes units with number of spikes less than the given threshold
@@ -50,8 +46,11 @@ def threshold_min_snr(sorting, recording, min_snr_threshold=5.0, snr_mode='mad',
         The sorting extractor to be thresholded.
     recording: RecordingExtractor
         The recording extractor to compute SNR with.
-    min_snr_threshold: float
-        The min snr threshold for which a unit is removed from the sorting.
+    threshold:
+        The threshold for the given metric.
+    threshold_sign: str
+        If 'less', will threshold any metric less than the given threshold.
+        If 'greater', will threshold any metric greater than the given threshold.
     mode: str
         Mode to compute noise SNR ('mad' | 'std' - default 'mad')
     noise_duration: float
@@ -59,7 +58,7 @@ def threshold_min_snr(sorting, recording, min_snr_threshold=5.0, snr_mode='mad',
     max_snr_waveforms: int
         Maximum number of waveforms to compute templates from (default 1000)
     metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached 
+        A metric calculator can be passed in with cached metrics.
     Returns
     -------
     thresholded_sorting: ThresholdMinSNR
@@ -69,7 +68,8 @@ def threshold_min_snr(sorting, recording, min_snr_threshold=5.0, snr_mode='mad',
     return ThresholdMinSNR(
         sorting=sorting, 
         recording=recording,
-        min_snr_threshold=min_snr_threshold,
+        threshold=threshold, 
+        threshold_sign=threshold_sign, 
         snr_mode=snr_mode, 
         snr_noise_duration=snr_noise_duration,
         max_snr_waveforms=max_snr_waveforms,
