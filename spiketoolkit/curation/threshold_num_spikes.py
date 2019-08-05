@@ -28,9 +28,9 @@ class ThresholdNumSpikes(ThresholdCurator):
             self._metric_calculator = metric_calculator
             if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.compute_num_spikes()
-        num_spikes_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0] 
+        num_spikes_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0] 
 
-        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=num_spikes_epochs)
+        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=num_spikes_epoch)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 

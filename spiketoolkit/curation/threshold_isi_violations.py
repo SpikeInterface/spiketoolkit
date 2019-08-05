@@ -31,9 +31,9 @@ class ThresholdISIViolations(ThresholdCurator):
             self._metric_calculator = metric_calculator
             if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
-        isi_violations_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]  
+        isi_violations_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0]  
 
-        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=isi_violations_epochs)
+        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=isi_violations_epoch)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
         
