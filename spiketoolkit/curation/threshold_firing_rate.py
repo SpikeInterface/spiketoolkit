@@ -5,18 +5,19 @@ Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
-class ThresholdMinNumSpikes(ThresholdCurator):
+class ThresholdFiringRate(ThresholdCurator):
 
-    curator_name = 'ThresholdMinNumSpikes'
+    curator_name = 'ThresholdFiringRate'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
-        {'name': 'threshold', 'type': 'float', 'value':5.0, 'default':5.0, 'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
+        {'name': 'threshold', 'type': 'float', 'value':15.0, 'default':15.0, 'title': "The threshold for the given metric."},
+        {'name': 'threshold_sign', 'type': 'str', 'value':'greater', 'default':'greater', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
     ]
     installation_mesg = "" # err
 
-    def __init__(self, sorting, threshold=50, threshold_sign='less', sampling_frequency=None, metric_calculator=None):
+    def __init__(self, sorting, threshold=15.0, threshold_sign='greater', sampling_frequency=None, metric_calculator=None):
+        metric_name = 'firing_rate'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:
             raise ValueError("Please pass in a sampling frequency (your SortingExtractor does not have one specified)")
         elif sampling_frequency is None:
@@ -26,20 +27,20 @@ class ThresholdMinNumSpikes(ThresholdCurator):
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=self._sampling_frequency, \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
-            self._metric_calculator.compute_num_spikes()
+            self._metric_calculator.compute_firing_rates()
         else:
             self._metric_calculator = metric_calculator
-            if 'num_spikes' not in self._metric_calculator.get_metrics_dict().keys():
-                self._metric_calculator.compute_num_spikes()
-        num_spikes_epochs = self._metric_calculator.get_metrics_dict()['num_spikes'][0] 
+            if metric_name not in self._metric_calculator.get_metrics_dict().keys():
+                self._metric_calculator.compute_firing_rates()
+        firing_rates_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0] 
 
-        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=num_spikes_epochs)
+        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=firing_rates_epochs)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_min_num_spikes(sorting, threshold=50, threshold_sign='less', sampling_frequency=None, metric_calculator=None):
+def threshold_firing_rate(sorting, threshold=15.0, threshold_sign='greater', sampling_frequency=None, metric_calculator=None):
     '''
-    Excludes units with number of spikes less than the given threshold
+    Excludes units based on firing rate.
 
     Parameters
     ----------
@@ -56,11 +57,11 @@ def threshold_min_num_spikes(sorting, threshold=50, threshold_sign='less', sampl
         A metric calculator can be passed in with cached metrics.
     Returns
     -------
-    thresholded_sorting: ThresholdMinNumSpikes
+    thresholded_sorting: ThresholdFiringRate
         The thresholded sorting extractor
 
     '''
-    return ThresholdMinNumSpikes(
+    return ThresholdFiringRate(
         sorting=sorting, 
         threshold=threshold, 
         threshold_sign=threshold_sign, 

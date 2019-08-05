@@ -1,9 +1,9 @@
 from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
 
-class ThresholdMaxISIViolations(ThresholdCurator):
+class ThresholdISIViolations(ThresholdCurator):
 
-    curator_name = 'ThresholdMaxISIViolations'
+    curator_name = 'ThresholdISIViolations'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
@@ -40,10 +40,10 @@ class ThresholdMaxISIViolations(ThresholdCurator):
 
 
 
-def threshold_max_isi_violations(sorting, threshold=5.0, threshold_sign='greater', isi_threshold=0.0015, min_isi=0.000166, \
+def threshold_isi_violations(sorting, threshold=5.0, threshold_sign='greater', isi_threshold=0.0015, min_isi=0.000166, \
                                  sampling_frequency=None, metric_calculator=None):
     '''
-    Excludes units with ISI ratios greater than or equal to the max_ISI_threshold.
+    Excludes units based on isi violations.
 
     Parameters
     ----------
@@ -64,11 +64,11 @@ def threshold_max_isi_violations(sorting, threshold=5.0, threshold_sign='greater
         A metric calculator can be passed in with cached metrics.
     Returns
     -------
-    thresholded_sorting: ThresholdMaxISIViolations
+    thresholded_sorting: ThresholdISIViolations
         The thresholded sorting extractor
 
     '''
-    return ThresholdMaxISIViolations(
+    return ThresholdISIViolations(
         sorting=sorting, 
         threshold=threshold, 
         threshold_sign=threshold_sign, 

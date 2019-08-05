@@ -5,7 +5,7 @@ Basic example of a curation module. They can inherit from the
 CurationSortingExtractor to allow for excluding, merging, and splitting of units.
 '''
 
-class ThresholdMinSNR(ThresholdCurator):
+class ThresholdSNR(ThresholdCurator):
 
     curator_name = 'ThresholdMinSNR'
     installed = False  # check at class level if installed or not
@@ -35,10 +35,10 @@ class ThresholdMinSNR(ThresholdCurator):
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_min_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
+def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
                       max_snr_waveforms=1000, metric_calculator=None):
     '''
-    Excludes units with number of spikes less than the given threshold
+    Excludes units based on snr.
 
     Parameters
     ----------
@@ -61,11 +61,11 @@ def threshold_min_snr(sorting, recording, threshold=5.0, threshold_sign='less', 
         A metric calculator can be passed in with cached metrics.
     Returns
     -------
-    thresholded_sorting: ThresholdMinSNR
+    thresholded_sorting: ThresholdSNR
         The thresholded sorting extractor
 
     '''
-    return ThresholdMinSNR(
+    return ThresholdSNR(
         sorting=sorting, 
         recording=recording,
         threshold=threshold, 

@@ -1,12 +1,14 @@
 from .CurationSortingExtractor import CurationSortingExtractor
-from .threshold_min_num_spikes import threshold_min_num_spikes, ThresholdMinNumSpikes
-from .threshold_min_snr import threshold_min_snr, ThresholdMinSNR
-from .threshold_max_isi_violations import threshold_max_isi_violations, ThresholdMaxISIViolations
+from .threshold_num_spikes import threshold_num_spikes, ThresholdNumSpikes
+from .threshold_firing_rate import threshold_firing_rate, ThresholdFiringRate
+from .threshold_snr import threshold_snr, ThresholdSNR
+from .threshold_isi_violations import threshold_isi_violations, ThresholdISIViolations
 
 curation_full_list = [
-    ThresholdMinNumSpikes,
-    ThresholdMinSNR,
-    ThresholdMaxISIViolations
+    ThresholdNumSpikes,
+    ThresholdFiringRate,
+    ThresholdSNR,
+    ThresholdISIViolations
 ]
 
 installed_curation_list = [c for c in curation_full_list if c.installed]
