@@ -11,7 +11,7 @@ class ThresholdMinSNR(ThresholdCurator):
     installed = False  # check at class level if installed or not
     _gui_params = [
         {'name': 'threshold', 'type': 'float', 'value':5.0, 'default':5.0, 'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value':'greater', 'default':'greater', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
+        {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
         {'name': 'snr_mode', 'type': 'str', 'value':'mad', 'default':'mad', 'title': "Mode to compute noise SNR ('mad' | 'std' - default 'mad')"},
         {'name': 'snr_noise_duration', 'type': 'float', 'value':10.0, 'default':10.0, 'title': "Number of seconds to compute noise level from (default 10.0)."},
         {'name': 'max_snr_waveforms', 'type': 'float', 'value':1000, 'default':1000, 'title': "Maximum number of waveforms to compute templates from (default 1000)."},

@@ -12,7 +12,7 @@ class ThresholdMinNumSpikes(ThresholdCurator):
     _gui_params = [
         {'name': 'sampling_frequency', 'type': 'float', 'title': "The sampling frequency of recording"},
         {'name': 'threshold', 'type': 'float', 'value':5.0, 'default':5.0, 'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value':'greater', 'default':'greater', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
+        {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
     ]
     installation_mesg = "" # err
 
