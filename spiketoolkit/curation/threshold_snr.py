@@ -1,9 +1,5 @@
 from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
-'''
-Basic example of a curation module. They can inherit from the
-CurationSortingExtractor to allow for excluding, merging, and splitting of units.
-'''
 
 class ThresholdSNR(ThresholdCurator):
 
@@ -20,6 +16,7 @@ class ThresholdSNR(ThresholdCurator):
 
     def __init__(self, sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
                  max_snr_waveforms=1000, metric_calculator=None):
+        metric_name = 'snr'
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(), \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
@@ -27,10 +24,10 @@ class ThresholdSNR(ThresholdCurator):
             self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
         else:
             self._metric_calculator = metric_calculator
-            if 'snr' not in self._metric_calculator.get_metrics_dict().keys():
+            if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.store_recording(recording)
                 self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
-        snrs_epochs = self._metric_calculator.get_metrics_dict()['snr'][0] 
+        snrs_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0] 
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=snrs_epochs)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 

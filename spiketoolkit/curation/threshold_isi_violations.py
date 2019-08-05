@@ -16,6 +16,7 @@ class ThresholdISIViolations(ThresholdCurator):
 
     def __init__(self, sorting, threshold=5.0, threshold_sign='greater', isi_threshold=0.0015, min_isi=0.000166, \
                  sampling_frequency=None, metric_calculator=None):
+        metric_name = 'isi_viol'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:
             raise ValueError("Please pass in a sampling frequency (your SortingExtractor does not have one specified)")
         elif sampling_frequency is None:
@@ -28,9 +29,9 @@ class ThresholdISIViolations(ThresholdCurator):
             self._metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
         else:
             self._metric_calculator = metric_calculator
-            if 'isi_viol' not in self._metric_calculator.get_metrics_dict().keys():
+            if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
-        isi_violations_epochs = self._metric_calculator.get_metrics_dict()['isi_viol'][0]  
+        isi_violations_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]  
 
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=isi_violations_epochs)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)

@@ -1,9 +1,5 @@
 from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
-'''
-Basic example of a curation module. They can inherit from the
-CurationSortingExtractor to allow for excluding, merging, and splitting of units.
-'''
 
 class ThresholdNumSpikes(ThresholdCurator):
 
@@ -17,6 +13,7 @@ class ThresholdNumSpikes(ThresholdCurator):
     installation_mesg = "" # err
 
     def __init__(self, sorting, threshold=100, threshold_sign='less', sampling_frequency=None, metric_calculator=None):
+        metric_name = 'num_spikes'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:
             raise ValueError("Please pass in a sampling frequency (your SortingExtractor does not have one specified)")
         elif sampling_frequency is None:
@@ -29,9 +26,9 @@ class ThresholdNumSpikes(ThresholdCurator):
             self._metric_calculator.compute_num_spikes()
         else:
             self._metric_calculator = metric_calculator
-            if 'num_spikes' not in self._metric_calculator.get_metrics_dict().keys():
+            if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.compute_num_spikes()
-        num_spikes_epochs = self._metric_calculator.get_metrics_dict()['num_spikes'][0] 
+        num_spikes_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0] 
 
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=num_spikes_epochs)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)

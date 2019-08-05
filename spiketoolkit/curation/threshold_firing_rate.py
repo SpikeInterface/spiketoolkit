@@ -1,9 +1,5 @@
 from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
-'''
-Basic example of a curation module. They can inherit from the
-CurationSortingExtractor to allow for excluding, merging, and splitting of units.
-'''
 
 class ThresholdFiringRate(ThresholdCurator):
 
