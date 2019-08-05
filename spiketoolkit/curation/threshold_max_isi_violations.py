@@ -23,7 +23,6 @@ class ThresholdMaxISIViolations(CurationSortingExtractor):
         else:
             self._sampling_frequency = sampling_frequency
         self._max_isi_threshold = max_isi_threshold
-
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=self._sampling_frequency, \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
