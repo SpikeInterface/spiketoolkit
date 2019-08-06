@@ -4,19 +4,11 @@ os:
   - linux
 python:
   - '3.6'
-sudo: enabled
-addons:
-  apt:
-    packages:
-    - libopenmpi-dev
-    - libglib2.0-0
-    - libgl1-mesa-glx
-    - qt5-default
-    - packagekit-gtk3-module
-    - libcanberra-gtk-module
 install:
   # spikeextractors is taken from github to get latest version
   - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+  - pip install https://github.com/SpikeInterface/spikesorters/archive/master.zip
+  - pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
   - pip install .
   - pip install pytest==4.3
 script:
