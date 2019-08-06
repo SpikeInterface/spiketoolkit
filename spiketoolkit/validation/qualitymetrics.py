@@ -60,6 +60,9 @@ class MetricCalculator:
         Stores given recording extractor
 
         Parameters
+        ----------
+        recording: RecordingExtractor
+            The recording extractor to be stored.
         '''
         self._recording = recording
         for epoch in self._epochs:
@@ -356,6 +359,8 @@ class MetricCalculator:
             Number of seconds to compute noise level from (default 10.0)
         max_snr_waveforms: int
             Maximum number of waveforms to compute templates from (default 1000)
+        seed: int
+            Random seed for reproducibility
 
         Returns
         -------
@@ -703,6 +708,12 @@ class MetricCalculator:
             The isi threshold for calculating isi violations.
         min_isi: float
             The minimum expected isi value.
+        snr_mode: str
+            Mode to compute noise SNR ('mad' | 'std' - default 'mad')
+        snr_noise_duration: float
+            Number of seconds to compute noise level from (default 10.0)
+        max_snr_waveforms: int
+            Maximum number of waveforms to compute templates from (default 1000)
         drift_metrics_interval_s: float
             Time period for evaluating drift.
         drift_metrics_min_spikes_per_interval: int
@@ -717,6 +728,8 @@ class MetricCalculator:
             Max spikes to be used for nearest-neighbors calculation.
         n_neighbors: int
             Number of neighbors to compare for  nearest-neighbors calculation.
+        metrics_names: list
+            The list of metric names to be computed.
         seed: int
             Random seed for extracting pc features.
 
@@ -826,8 +839,8 @@ class MetricCalculator:
 
         Returns
         ----------
-        metrics_copy: dict
-            A copy of the metrics dictionary
+        metrics_df: pandas.DataFrame
+            A pandas dataframe of the cached metrics
         '''
         all_unit_ids = self._sorting.get_unit_ids()
         epoch_unit_ids = all_unit_ids * len(self.get_epochs())

@@ -404,7 +404,9 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
         The maximum number of amplitudes to extract (default is np.inf)
     verbose: bool
         If True output is verbose
-
+    seed: int
+            Random seed for reproducibility
+            
     Returns
     -------
     amplitudes: list

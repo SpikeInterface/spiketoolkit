@@ -84,6 +84,8 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         If True, save all features and properties in the sorting extractor.
     verbose: bool
         If True output is verbose
+    seed: int
+            Random seed for reproducibility
 
     Returns
     -------
