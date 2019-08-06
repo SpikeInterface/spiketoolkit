@@ -6,6 +6,9 @@ import pandas as pd
 from collections import defaultdict, OrderedDict
 import copy
 
+'''
+The MetricCalculator class allows the user to compute and store a variety of quality metrics about their sorted dataset. 
+'''
 
 class MetricCalculator:
     def __init__(self, sorting, sampling_frequency=None, unit_ids=None, epoch_tuples=None, epoch_names=None):
