@@ -58,9 +58,9 @@ class MetricCalculator:
             self._sorting.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
                                     end_frame=epoch[2] * self._sampling_frequency)
 
-    def store_recording(self, recording):
+    def set_recording(self, recording):
         '''
-        Stores given recording extractor
+        Sets given recording extractor
 
         Parameters
         ----------
@@ -72,7 +72,7 @@ class MetricCalculator:
             self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
                                       end_frame=epoch[2] * self._sampling_frequency)
 
-    def store_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3,
+    def compute_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3,
                          amp_frames_after=3, save_features_props=False, seed=0):
         '''
         Computes and stores amplitudes for the amplitude cutoff metric
@@ -98,7 +98,7 @@ class MetricCalculator:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
-            self.store_recording(recording)
+            self.set_recording(recording)
 
         amplitudes_list = st.postprocessing.get_unit_amplitudes(self._recording, self._sorting, unit_ids=None,
                                                                 method=amp_method, save_as_features=save_features_props,
@@ -113,7 +113,7 @@ class MetricCalculator:
             index_amps[int(spike_cluster)] += 1
         self._amplitudes = amplitudes
 
-    def store_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
+    def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
                               max_num_waveforms=np.inf, \
                               amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
                               recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False,
@@ -158,7 +158,7 @@ class MetricCalculator:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
-            self.store_recording(recording)
+            self.set_recording(recording)
         _, _, amplitudes, pc_features, pc_feature_ind = st.validation.validation_tools.get_quality_metric_data(
             self._recording, self._sorting, nPC=nPC, ms_before=ms_before, \
             ms_after=ms_after, dtype=dtype, amp_method=amp_method, \
@@ -169,6 +169,15 @@ class MetricCalculator:
 
         self._amplitudes = amplitudes
         self._pc_features = pc_features
+        self._pc_feature_ind = pc_feature_ind
+
+    def set_amplitudes(self, amplitudes):
+        self._amplitudes = amplitudes
+
+    def set_pc_features(self, pc_features):
+        self._pc_features = pc_features
+
+    def set_pc_feature_ind(self, pc_feature_ind):
         self._pc_feature_ind = pc_feature_ind
 
     def _set_epochs(self, epoch_tuples, epoch_names):
@@ -372,7 +381,7 @@ class MetricCalculator:
 
         '''
         assert self._recording is not None, "No recording stored. Add a recording first " \
-                                            "with store_recording or by computing all data for metrics"
+                                            "with set_recording or by computing all data for metrics"
 
         snrs_epochs = []
         for epoch in self._epochs:

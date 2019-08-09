@@ -20,12 +20,12 @@ class ThresholdSNR(ThresholdCurator):
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(), \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
-            self._metric_calculator.store_recording(recording)
+            self._metric_calculator.set_recording(recording)
             self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
         else:
             self._metric_calculator = metric_calculator
             if metric_name not in self._metric_calculator.get_metrics_dict().keys():
-                self._metric_calculator.store_recording(recording)
+                self._metric_calculator.set_recording(recording)
                 self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
         snrs_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0] 
 
