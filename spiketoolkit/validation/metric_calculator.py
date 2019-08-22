@@ -1,7 +1,7 @@
 import numpy as np
 import spiketoolkit as st
 import spikemetrics.metrics as metrics
-from spikemetrics.utils import Epoch
+from spikemetrics.utils import Epoch, printProgressBar
 import pandas as pd
 from collections import defaultdict, OrderedDict
 import copy
@@ -73,7 +73,7 @@ class MetricCalculator:
                                       end_frame=epoch[2] * self._sampling_frequency)
 
     def compute_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                         amp_frames_after=3, save_features_props=False, seed=0):
+                           amp_frames_after=3, save_features_props=False, seed=0):
         '''
         Computes and stores amplitudes for the amplitude cutoff metric
 
@@ -86,10 +86,12 @@ class MetricCalculator:
             If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
         amp_peak: str
             If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-        frames_before: int
+        amp_frames_before: int
             Frames before peak to compute amplitude
-        frames_after: float
+        amp_frames_after: int
             Frames after peak to compute amplitude
+        save_features_props: bool
+            If true, it will save amplitudes in the sorting extractor.
         seed: int
             Random seed for reproducibility
         '''
@@ -378,7 +380,6 @@ class MetricCalculator:
         -------
         snrs_epochs: list
             The snrs of the sorted units in the given epochs.
-
         '''
         assert self._recording is not None, "No recording stored. Add a recording first " \
                                             "with set_recording or by computing all data for metrics"
@@ -399,6 +400,7 @@ class MetricCalculator:
                                                                    mode='median', seed=seed)
             snr_list = []
             for i, unit_id in enumerate(self._unit_ids):
+                printProgressBar(i + 1, len(self._unit_ids))
                 max_channel_idx = epoch_recording.get_channel_ids().index(max_channels[i])
                 snr = _compute_template_SNR(templates[i], channel_noise_levels, max_channel_idx)
                 snr_list.append(snr)
@@ -462,7 +464,7 @@ class MetricCalculator:
             cumulative_drifts_epochs = cumulative_drifts_epochs[0]
         return max_drifts_epochs, cumulative_drifts_epochs
 
-    def compute_silhouette_score(self, max_spikes_for_silhouette=10000, seed=0):
+    def compute_silhouette_scores(self, max_spikes_for_silhouette=10000, seed=0):
         '''
         Computes and returns the silhouette scores in the sorted dataset.
 
@@ -662,9 +664,9 @@ class MetricCalculator:
 
         Returns
         ----------
-        nn_hit_rates: np.array
+        nn_hit_rates_epochs: np.array
             The nearest neighbor hit rates for each specified unit.
-        nn_miss_rates: np.array
+        nn_miss_rates_epochs: np.array
             The nearest neighbor miss rates for each specified unit.
         '''
         assert self._pc_features is not None, "Compute data for all metrics first"
@@ -764,7 +766,7 @@ class MetricCalculator:
                 if m not in all_metrics_list:
                     bad_metrics.append(m)
             if len(bad_metrics) > 0:
-                raise Exception("Wrong metrics names " + str(bad_metrics))
+                raise ValueError("Wrong metrics name: " + str(bad_metrics))
 
         if 'num_spikes' in metric_names:
             num_spikes_epochs = self.compute_num_spikes()
@@ -801,7 +803,7 @@ class MetricCalculator:
                 metrics_epochs.append(cumulative_drifts_epochs)
 
         if 'silhouette_score' in metric_names:
-            silhouette_scores_epochs = self.compute_silhouette_score(
+            silhouette_scores_epochs = self.compute_silhouette_scores(
                 max_spikes_for_silhouette=max_spikes_for_silhouette, seed=seed)
             metrics_epochs.append(silhouette_scores_epochs)
 
@@ -816,7 +818,7 @@ class MetricCalculator:
                                                     max_spikes_for_unit=max_spikes_for_unit, seed=seed)
             metrics_epochs.append(l_ratios_epochs)
 
-        if 'l_ratio' in metric_names:
+        if 'd_prime' in metric_names:
             d_primes_epochs = self.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
                                                     max_spikes_for_unit=max_spikes_for_unit, seed=seed)
             metrics_epochs.append(d_primes_epochs)
