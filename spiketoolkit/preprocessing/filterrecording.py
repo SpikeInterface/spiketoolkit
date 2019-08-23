@@ -1,9 +1,10 @@
 from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
+from spikeextractors import RecordingExtractor
 
 
-class FilterRecording(se.RecordingExtractor):
+class FilterRecording(RecordingExtractor):
     def __init__(self, recording, chunk_size=10000, cache=False):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
