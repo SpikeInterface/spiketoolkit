@@ -270,7 +270,7 @@ tetrodes.
 
     # load probe file to add group information
     recording_tetrodes = se.load_probe_file(recording_tetrodes, 'tetrode_16.prb')
-    print(recording_tetrodes.get_channel_property_names())
+    print(recording_tetrodes.get_shared_channel_property_names())
 
 
 .. parsed-literal::
