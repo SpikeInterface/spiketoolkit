@@ -13,7 +13,6 @@ class BlankSaturationRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, threshold=None):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
@@ -35,6 +34,7 @@ class BlankSaturationRecording(RecordingExtractor):
                 self._lower = False
             else:
                 self._lower = True
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
         
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):

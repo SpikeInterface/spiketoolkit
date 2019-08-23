@@ -1,17 +1,20 @@
 from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
+from spikeextractors import RecordingExtractor
 
 
-class FilterRecording(se.RecordingExtractor):
+class FilterRecording(RecordingExtractor):
     def __init__(self, recording, chunk_size=10000, cache=False):
-        se.RecordingExtractor.__init__(self)
+        if not isinstance(recording, RecordingExtractor):
+            raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         self._chunk_size = chunk_size
         self._filtered_chunk_cache = FilteredChunkCache()
         self._cache = cache
-        self.copy_channel_properties(recording)
         self._traces = None
+        se.RecordingExtractor.__init__(self)
+        self.copy_channel_properties(recording)
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()

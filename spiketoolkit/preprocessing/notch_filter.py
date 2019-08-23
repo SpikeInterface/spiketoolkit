@@ -22,10 +22,9 @@ class NotchFilterRecording(FilterRecording):
 
     def __init__(self, recording, freq=3000, q=30, cache=False):
         assert HAVE_NFR, "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"
-        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
-        self._recording = recording
         self._freq = freq
         self._q = q
+        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
         self.copy_channel_properties(recording)
         if cache:
             self._traces = self.get_traces()

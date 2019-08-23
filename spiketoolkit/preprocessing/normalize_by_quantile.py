@@ -19,7 +19,6 @@ class NormalizeByQuantileRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, scale=1.0, median=0.0, q1=0.01, q2=0.99):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
@@ -30,6 +29,7 @@ class NormalizeByQuantileRecording(RecordingExtractor):
 
         self._scalar = scale / pre_scale
         self._offset = median - pre_median * self._scalar
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):

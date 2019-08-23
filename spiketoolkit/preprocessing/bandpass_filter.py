@@ -28,13 +28,12 @@ class BandpassFilterRecording(FilterRecording):
 
     def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, cache=False):
         assert HAVE_BFR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
-        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
-        self._recording = recording
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
         self._type = type
         self._order = order
+        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
         self.copy_channel_properties(recording)
         if cache:
             self._traces = self.get_traces()

@@ -63,7 +63,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
     waveform_list = []
     if grouping_property is not None:
-        if grouping_property not in recording.get_channel_property_names():
+        if grouping_property not in recording.get_shared_channel_property_names():
             raise ValueError("'grouping_property' should be a property of recording extractors")
         if compute_property_from_recording:
             compute_sorting_group = True
@@ -641,7 +641,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
     seed: int
         Random seed for reproducibility
     '''
-    if property not in recording.get_channel_property_names():
+    if property not in recording.get_shared_channel_property_names():
         raise Exception("'property' should be in recording properties")
 
     if isinstance(unit_ids, (int, np.integer)):
@@ -905,7 +905,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
         sorting.clear_units_spike_features(feature_name='amplitudes')
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
-    if grouping_property in recording.get_channel_property_names():
+    if grouping_property in recording.get_shared_channel_property_names():
         groups, num_chans_in_group = np.unique([recording.get_channel_property(ch, grouping_property)
                                                 for ch in recording.get_channel_ids()], return_counts=True)
         max_num_chans_in_group = np.max(num_chans_in_group)
@@ -938,7 +938,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
     channel_map_si = np.array(recording.get_channel_ids())
 
     # channel_positions.npy
-    if 'location' in recording.get_channel_property_names():
+    if 'location' in recording.get_shared_channel_property_names():
         positions = np.array([recording.get_channel_property(chan, 'location')
                               for chan in recording.get_channel_ids()])
         if electrode_dimensions is not None:
@@ -962,7 +962,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
     # templates.npy
     templates = np.array(templates, dtype='float32').swapaxes(1, 2)
 
-    if grouping_property in recording.get_channel_property_names():
+    if grouping_property in recording.get_shared_channel_property_names():
         if grouping_property not in sorting.get_unit_property_names():
             set_unit_properties_by_max_channel_properties(recording, sorting, grouping_property, seed=seed)
         # pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)

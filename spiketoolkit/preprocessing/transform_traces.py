@@ -12,12 +12,12 @@ class TransformTracesRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, scalar=1, offset=0):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         self._scalar = scalar
         self._offset = offset
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
     def get_sampling_frequency(self):

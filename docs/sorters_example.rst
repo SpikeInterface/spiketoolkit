@@ -234,7 +234,7 @@ tetrodes.
     recording_tetrodes, sorting_true = se.example_datasets.toy_example(duration=60, num_channels=16)
     
     # initially there is no group information
-    print(recording_tetrodes.get_channel_property_names())
+    print(recording_tetrodes.get_shared_channel_property_names())
 
 
 .. parsed-literal::

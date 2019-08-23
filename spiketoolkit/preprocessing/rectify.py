@@ -9,8 +9,8 @@ class RectifyRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording):
-        RecordingExtractor.__init__(self)
         self._recording = recording
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording)
 
     def get_sampling_frequency(self):
