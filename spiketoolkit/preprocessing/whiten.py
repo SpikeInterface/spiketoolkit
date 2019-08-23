@@ -10,9 +10,9 @@ class WhitenRecording(FilterRecording):
     installation_mesg = ""  # err
 
     def __init__(self, recording):
-        FilterRecording.__init__(self, recording=recording, chunk_size=1000)
         self._recording = recording
         self._whitening_matrix = self._compute_whitening_matrix()
+        FilterRecording.__init__(self, recording=recording, chunk_size=1000)
 
     def _get_random_data_for_whitening(self, num_chunks=50, chunk_size=500):
         N = self._recording.get_num_frames()

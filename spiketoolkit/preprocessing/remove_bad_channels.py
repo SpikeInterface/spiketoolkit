@@ -14,7 +14,6 @@ class RemoveBadChannelsRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, bad_channels, bad_threshold, seconds, verbose):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
@@ -23,6 +22,7 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         self._seconds = seconds
         self.verbose = verbose
         self._initialize_subrecording_extractor()
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._subrecording)
 
     def get_sampling_frequency(self):

@@ -13,13 +13,13 @@ class RemoveArtifactsRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, triggers, ms_before=0.5, ms_after=3):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         self._triggers = triggers
         self._ms_before = ms_before
         self._ms_after = ms_after
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
     def get_sampling_frequency(self):

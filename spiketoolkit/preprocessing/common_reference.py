@@ -16,7 +16,6 @@ class CommonReferenceRecording(RecordingExtractor):
     installation_mesg = ""  # err
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None, verbose=False):
-        RecordingExtractor.__init__(self)
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         if reference != 'median' and reference != 'average' and reference != 'single':
@@ -29,6 +28,7 @@ class CommonReferenceRecording(RecordingExtractor):
                 ref_channels = ref_channels[0]
         self._ref_channel = ref_channels
         self.verbose = verbose
+        RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
     def get_sampling_frequency(self):
