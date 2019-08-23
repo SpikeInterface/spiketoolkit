@@ -4,7 +4,7 @@ import numpy as np
 
 class ClipTracesRecording(RecordingExtractor):
 
-    preprocessor_name = 'ClipTracesRecording'
+    preprocessor_name = 'ClipTraces'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'a_min', 'type': 'float',

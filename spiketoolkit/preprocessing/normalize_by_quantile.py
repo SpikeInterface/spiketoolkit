@@ -4,7 +4,7 @@ import numpy as np
 
 class NormalizeByQuantileRecording(RecordingExtractor):
 
-    preprocessor_name = 'NormalizeByQuantileRecording'
+    preprocessor_name = 'NormalizeByQuantile'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'scale', 'type': 'float',

@@ -3,7 +3,7 @@ import numpy as np
 
 class RemoveBadChannelsRecording(RecordingExtractor):
 
-    preprocessor_name = 'RemoveBadChannelsRecording'
+    preprocessor_name = 'RemoveBadChannels'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'bad_channels', 'type': 'int_list', 'title': "List of bad channels or 'auto'"},

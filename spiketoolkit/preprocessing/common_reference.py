@@ -3,7 +3,7 @@ import numpy as np
 
 class CommonReferenceRecording(RecordingExtractor):
 
-    preprocessor_name = 'CommonReferenceRecording'
+    preprocessor_name = 'CommonReference'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'reference', 'type': 'str', 'value':'median', 'default':'median', 'title': "Reference type ('median', 'average', or 'single')"},

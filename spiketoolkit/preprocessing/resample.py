@@ -9,7 +9,7 @@ except ImportError:
 
 class ResampledRecording(RecordingExtractor):
 
-    preprocessor_name = 'ResampledRecording'
+    preprocessor_name = 'Resampled'
     installed = HAVE_RR  # check at class level if installed or not
     _gui_params = [
         {'name': 'resample_rate', 'type': 'float', 'title': "The resampling frequency"},
