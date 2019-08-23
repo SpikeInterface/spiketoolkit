@@ -3,7 +3,7 @@ import numpy as np
 
 class RemoveArtifactsRecording(RecordingExtractor):
 
-    preprocessor_name = 'RemoveArtifactsRecording'
+    preprocessor_name = 'RemoveArtifacts'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'triggers', 'type': 'int_list', 'title': "List of int with the stimulation trigger frames"},

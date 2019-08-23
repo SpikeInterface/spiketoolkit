@@ -4,7 +4,7 @@ import numpy as np
 
 class WhitenRecording(FilterRecording):
 
-    preprocessor_name = 'WhitenRecording'
+    preprocessor_name = 'Whiten'
     installed = True  # check at class level if installed or not
     _gui_params = []
     installation_mesg = ""  # err

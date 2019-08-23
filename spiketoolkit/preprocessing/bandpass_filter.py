@@ -12,7 +12,7 @@ except ImportError:
 
 class BandpassFilterRecording(FilterRecording):
 
-    preprocessor_name = 'BandpassFilterRecording'
+    preprocessor_name = 'BandpassFilter'
     installed = HAVE_BFR  # check at class level if installed or not
     _gui_params = [
         {'name': 'freq_min', 'type': 'float', 'value': 300.0, 'default': 300.0, 'title': "Low-pass frequency"},

@@ -3,7 +3,7 @@ import numpy as np
 
 class RectifyRecording(RecordingExtractor):
 
-    preprocessor_name = 'RectifyRecording'
+    preprocessor_name = 'Rectify'
     installed = True  # check at class level if installed or not
     _gui_params = []
     installation_mesg = ""  # err

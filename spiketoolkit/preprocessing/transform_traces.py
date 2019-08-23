@@ -3,7 +3,7 @@ import numpy as np
 
 class TransformTracesRecording(RecordingExtractor):
 
-    preprocessor_name = 'TransformTracesRecording'
+    preprocessor_name = 'TransformTraces'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'scalar', 'type': 'float', 'title': "Scalar for the traces of the recording extractor"},

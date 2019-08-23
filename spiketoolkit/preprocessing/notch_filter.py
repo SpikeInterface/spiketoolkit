@@ -10,7 +10,7 @@ except ImportError:
 
 class NotchFilterRecording(FilterRecording):
 
-    preprocessor_name = 'NotchFilterRecording'
+    preprocessor_name = 'NotchFilter'
     installed = HAVE_NFR  # check at class level if installed or not
     _gui_params = [
         {'name': 'freq', 'type': 'float', 'value':3000.0, 'default':3000.0, 'title': "Frequency"},
