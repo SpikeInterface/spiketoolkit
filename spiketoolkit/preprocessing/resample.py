@@ -7,18 +7,18 @@ try:
 except ImportError:
     HAVE_RR = False
 
-class ResampledRecording(RecordingExtractor):
+class ResampleRecording(RecordingExtractor):
 
-    preprocessor_name = 'Resampled'
+    preprocessor_name = 'Resample'
     installed = HAVE_RR  # check at class level if installed or not
     _gui_params = [
         {'name': 'resample_rate', 'type': 'float', 'title': "The resampling frequency"},
     ]
-    installation_mesg = "To use the ResampledRecording, install scipy: \n\n pip install scipy\n\n"  # err
+    installation_mesg = "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
 
     def __init__(self, recording, resample_rate):
-        assert HAVE_RR, "To use the ResampledRecording, install scipy: \n\n pip install scipy\n\n"
+        assert HAVE_RR, "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"
         RecordingExtractor.__init__(self)
         self._recording = recording
         self._resample_rate = resample_rate
@@ -75,11 +75,11 @@ def resample(recording, resample_rate):
 
     Returns
     -------
-    resampled_recording: ResampledRecording
-        The resampled recording extractor
+    resampled_recording: ResampleRecording
+        The resample recording extractor
 
     '''
-    return ResampledRecording(
+    return ResampleRecording(
         recording=recording,
         resample_rate=resample_rate
     )
