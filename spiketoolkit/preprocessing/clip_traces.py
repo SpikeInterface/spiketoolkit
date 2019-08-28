@@ -3,14 +3,13 @@ import numpy as np
 
 
 class ClipTracesRecording(RecordingExtractor):
-
     preprocessor_name = 'ClipTraces'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'a_min', 'type': 'float',
-            'title': "Minimum value. If `None`, clipping is not performed on lower interval edge."},
+         'title': "Minimum value. If `None`, clipping is not performed on lower interval edge."},
         {'name': 'a_max', 'type': 'float',
-            'title': "Maximum value. If `None`, clipping is not performed on upper interval edge."},
+         'title': "Maximum value. If `None`, clipping is not performed on upper interval edge."},
     ]
     installation_mesg = ""  # err
 
@@ -43,9 +42,9 @@ class ClipTracesRecording(RecordingExtractor):
                                             start_frame=start_frame,
                                             end_frame=end_frame)
         if self._a_min is not None:
-            traces[traces<a_min] = self._a_min
+            traces[traces < self._a_min] = self._a_min
         if self._a_max is not None:
-            traces[traces>a_max] = self._a_max
+            traces[traces > self._a_max] = self._a_max
         return traces
 
 
@@ -71,5 +70,5 @@ def clip_traces(recording, a_min=None, a_max=None):
         The clipped traces recording extractor object
     '''
     return ClipTracesRecording(
-        recording = recording, a_min=a_min, a_max=a_max
+        recording=recording, a_min=a_min, a_max=a_max
     )

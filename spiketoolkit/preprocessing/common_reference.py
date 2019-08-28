@@ -23,9 +23,17 @@ class CommonReferenceRecording(RecordingExtractor):
         self._recording = recording
         self._ref = reference
         self._groups = groups
-        if ref_channels is not None:
-            if len(ref_channels) == 1:
-                ref_channels = ref_channels[0]
+        if self._ref == 'single':
+            assert ref_channels is not None, "With 'single' reference, provide 'ref_channel'"
+            if self._groups is not None:
+                assert len(ref_channels) == len(self._groups), "'ref_channel' and 'groups' must have the " \
+                                                               "same length"
+            else:
+                if isinstance(ref_channels, (list, np.ndarray)):
+                    assert len(ref_channels) == 1, "'ref_channel' with no 'groups' can be int or a list of one element"
+                    ref_channels = ref_channels[0]
+                else:
+                    assert isinstance(ref_channels, (int, np.integer)), "'ref_channel' must be int"
         self._ref_channel = ref_channels
         self.verbose = verbose
         RecordingExtractor.__init__(self)
@@ -76,7 +84,7 @@ class CommonReferenceRecording(RecordingExtractor):
             if self._groups is None:
                 return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
                        - np.mean(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                           end_frame=end_frame), axis=0, keepdims=True)
+                                                            end_frame=end_frame), axis=0, keepdims=True)
             else:
                 new_groups = []
                 for g in self._groups:
@@ -95,17 +103,13 @@ class CommonReferenceRecording(RecordingExtractor):
                                                      axis=0, keepdims=True) for split_group in new_groups]))
 
         elif self._ref == 'single':
-            assert self._ref_channel is not None, "With 'single' reference, provide 'ref_channel'"
             if self._groups is None:
-                assert isinstance(self._ref_channel, (int, np.integer)), "'ref_channel' must be int"
                 if self.verbose:
                     print('Reference to channel', self._ref_channel)
                 return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
                        - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
                                                    end_frame=end_frame)
             else:
-                assert len(self._ref_channel) == len(self._groups), "'ref_channel' and 'groups' must have the " \
-                                                                    "same length"
                 new_groups = []
                 for g in self._groups:
                     new_chans = []
@@ -141,9 +145,10 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         List of lists containins the channels for splitting the reference. The CMR, CAR, or referencing with respect to
         single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple
         tetrodes.
-    ref_channels: list
+    ref_channels: list or int
         If no 'groups' are specified, all channels are referenced to 'ref_channels'. If 'groups' is provided, then a
-        list of channels to be applied to each group is expected. If 'single' reference, a list of one channel is expected.
+        list of channels to be applied to each group is expected. If 'single' reference, a list of one channel  or an
+        int is expected.
     verbose: bool
         If True, output is verbose
 
