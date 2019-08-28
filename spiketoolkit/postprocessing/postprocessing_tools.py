@@ -3,6 +3,7 @@ import spiketoolkit as st
 import spikeextractors as se
 from sklearn.decomposition import PCA
 from pathlib import Path
+import warnings
 import shutil
 import csv
 
@@ -68,11 +69,12 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
         if compute_property_from_recording:
             compute_sorting_group = True
         elif grouping_property not in sorting.get_unit_property_names():
-            print(grouping_property, ' not in sorting extractor. Computing it from the recording extractor')
+            warnings.warn('Grouping property not in sorting extractor. Computing it from the recording extractor')
             compute_sorting_group = True
         else:
             compute_sorting_group = False
-        print("Waveforms by property: ", grouping_property)
+        if verbose:
+            print("Waveforms by property: ", grouping_property)
 
         if not compute_sorting_group:
             rec_list, rec_props = se.get_sub_extractors_by_property(recording, grouping_property,
@@ -163,7 +165,6 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                             features = waveforms
                         sorting.set_unit_spike_features(unit_id, 'waveforms', features)
                     waveform_list.append(waveforms)
-            return waveform_list
     else:
         for i, unit_id in enumerate(unit_ids):
             if unit_id not in sorting.get_unit_ids():
@@ -197,15 +198,15 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                 sorting.set_unit_spike_features(unit_id, 'waveforms', features)
             waveform_list.append(waveforms)
 
-        if len(waveform_list) == 1:
-            return waveform_list[0]
-        else:
-            return waveform_list
+    if len(waveform_list) == 1:
+        return waveform_list[0]
+    else:
+        return waveform_list
 
 
 def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
-                       ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                       compute_property_from_recording=False, verbose=False, seed=0):
+                       ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf, save_wf_as_features=True,
+                       compute_property_from_recording=False, verbose=False, recompute_waveforms=False, seed=0):
     '''
     Computes the spike templates from a recording and sorting extractor. If waveforms are not found as features,
     they are computed.
@@ -225,6 +226,8 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
         'group', then waveforms are computed group-wise.
     save_as_property: bool
         If True (default), templates are saved as property of the sorting extractor object
+    save_wf_as_features: bool
+        If True (default), waveforms are saved as features of the sorting extractor object
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -238,6 +241,8 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
         the recording extractor channel on which the average waveform is the largest
     verbose: bool
         If True output is verbose
+    recompute_waveforms: bool
+        If True, waveforms are recomputed (default False)
     seed: int
         Random seed for extracting random waveforms
 
@@ -257,7 +262,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
     for i, unit_id in enumerate(unit_ids):
         if unit_id not in sorting.get_unit_ids():
             raise Exception("unit_ids is not in valid")
-        if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id):
+        if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id) and not recompute_waveforms:
             waveforms = sorting.get_unit_spike_features(unit_id, 'waveforms')
             idx_not_none = np.array([i for i in range(len(waveforms)) if waveforms[i] is not None])
             if len(idx_not_none) != len(waveforms):
@@ -266,7 +271,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
                 waveforms = np.array(waveforms[idx_not_none])
         else:
             waveforms = get_unit_waveforms(recording, sorting, unit_id, max_num_waveforms=max_num_waveforms,
-                                           ms_before=ms_before, ms_after=ms_after,
+                                           ms_before=ms_before, ms_after=ms_after, save_as_features=save_wf_as_features,
                                            grouping_property=grouping_property, dtype=dtype,
                                            compute_property_from_recording=compute_property_from_recording,
                                            verbose=verbose, seed=seed)
@@ -289,7 +294,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
 
 def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
                           save_as_property=True, ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
-                          compute_property_from_recording=False, verbose=False, seed=0):
+                          compute_property_from_recording=False, verbose=False, recompute_templates=False, seed=0):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
     they are computed.
@@ -324,6 +329,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         the recording extractor channel on which the average waveform is the largest
     verbose: bool
         If True output is verbose
+    recompute_templates: bool
+        If True, templates are recomputed (default False)
     seed: int
         Random seed for extracting random waveforms
 
@@ -343,7 +350,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
     for i, unit_id in enumerate(unit_ids):
         if unit_id not in sorting.get_unit_ids():
             raise Exception("unit_ids is not in valid")
-        if 'template' in sorting.get_unit_property_names(unit_id):
+        if 'template' in sorting.get_unit_property_names(unit_id) and not recompute_templates:
             template = sorting.get_unit_property(unit_id, 'template')
         else:
             template = get_unit_templates(recording, sorting, unit_id, mode=mode, max_num_waveforms=max_num_waveforms,
