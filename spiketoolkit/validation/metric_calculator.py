@@ -104,8 +104,7 @@ class MetricCalculator:
 
         amplitudes_list = st.postprocessing.get_unit_amplitudes(self._recording, self._sorting, unit_ids=None,
                                                                 method=amp_method, save_as_features=save_features_props,
-                                                                peak=amp_peak,
-                                                                frames_before=amp_frames_before,
+                                                                peak=amp_peak,frames_before=amp_frames_before,
                                                                 frames_after=amp_frames_after, seed=seed)
 
         index_amps = [0] * len(amplitudes_list)
@@ -116,10 +115,9 @@ class MetricCalculator:
         self._amplitudes = amplitudes
 
     def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
-                              max_num_waveforms=np.inf, \
-                              amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, \
-                              recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False,
-                              seed=0):
+                              max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both', \
+                              amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True, \
+                              max_num_pca_waveforms=np.inf, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
         
@@ -361,7 +359,8 @@ class MetricCalculator:
             amplitude_cutoffs_epochs = amplitude_cutoffs_epochs[0]
         return amplitude_cutoffs_epochs
 
-    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000, seed=0):
+    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000, \
+                     recompute_waveform_info=True, save_features_props=False, seed=0):
         '''
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
 
@@ -392,11 +391,14 @@ class MetricCalculator:
                                                                  noise_duration=snr_noise_duration)
             templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
                                                              max_num_waveforms=max_snr_waveforms, mode='median',
-                                                             seed=seed)
+                                                             save_wf_as_features=save_features_props,
+                                                             recompute_waveforms=recompute_waveform_info, seed=seed)
 
             max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting,
                                                                    unit_ids=self._unit_ids,
                                                                    max_num_waveforms=max_snr_waveforms, peak='both',
+                                                                   recompute_templates=recompute_waveform_info,
+                                                                   save_as_property=save_features_props, 
                                                                    mode='median', seed=seed)
             snr_list = []
             for i, unit_id in enumerate(self._unit_ids):

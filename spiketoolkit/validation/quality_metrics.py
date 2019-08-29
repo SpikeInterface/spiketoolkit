@@ -159,8 +159,9 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
     amplitude_cutoffs_epochs = metric_calculator.compute_amplitude_cutoffs()
     return amplitude_cutoffs_epochs
 
-def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000, unit_ids=None, \
-                 epoch_tuples=None, epoch_names=None, seed=0):
+def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000, 
+                 recompute_waveform_info=True, save_features_props=False, unit_ids=None, epoch_tuples=None, 
+                 epoch_names=None, seed=0):
     '''
     Computes and stores snrs for the sorted units.
 
@@ -195,7 +196,8 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.set_recording(recording)                                             
     snrs_epochs = metric_calculator.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration, \
-                                                 max_snr_waveforms=max_snr_waveforms, seed=seed)
+                                                 max_snr_waveforms=max_snr_waveforms, recompute_waveform_info=recompute_waveform_info, \
+                                                 save_features_props=save_features_props, seed=seed)
     return snrs_epochs
 
 def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
