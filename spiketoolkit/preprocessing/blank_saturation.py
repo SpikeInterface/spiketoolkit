@@ -3,12 +3,11 @@ import numpy as np
 
 
 class BlankSaturationRecording(RecordingExtractor):
-
     preprocessor_name = 'BlankSaturation'
     installed = True  # check at class level if installed or not
     _gui_params = [
         {'name': 'threshold', 'type': 'float',
-            'title': "Scale for the output distribution"},
+         'title': "Scale for the output distribution"},
     ]
     installation_mesg = ""  # err
 
@@ -17,26 +16,26 @@ class BlankSaturationRecording(RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         random_data = self._get_random_data_for_scaling().ravel()
-        q = np.quantile(random_data,[0.001, 0.5, 1-0.001])
-        if 2*q[1]-q[0]-q[2]<2*np.min([q[1]-q[0],q[2]-q[1]]):
+        q = np.quantile(random_data, [0.001, 0.5, 1 - 0.001])
+        if 2 * q[1] - q[0] - q[2] < 2 * np.min([q[1] - q[0], q[2] - q[1]]):
             print('Warning, narrow signal range suggests artefact-free data.')
         self._median = q[1]
         if threshold is None:
-            if np.abs(q[1]-q[0]) > np.abs(q[1]-q[2]):
+            if np.abs(q[1] - q[0]) > np.abs(q[1] - q[2]):
                 self._threshold = q[0]
                 self._lower = True
             else:
-                self._threshold = q[2]  
+                self._threshold = q[2]
                 self._lower = False
         else:
             self._threshold = threshold
-            if q[1]-threshold < 0:
+            if q[1] - threshold < 0:
                 self._lower = False
             else:
                 self._lower = True
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
-        
+
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):
         np.random.seed(0)
         N = self._recording.get_num_frames()
@@ -47,7 +46,7 @@ class BlankSaturationRecording(RecordingExtractor):
                                                end_frame=ff + chunk_size)
             list.append(chunk)
         return np.concatenate(list, axis=1)
-    
+
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 
@@ -68,21 +67,21 @@ class BlankSaturationRecording(RecordingExtractor):
                                             start_frame=start_frame,
                                             end_frame=end_frame)
         if self._lower:
-            traces[traces<=self._threshold] = self._median
+            traces[traces <= self._threshold] = self._median
         else:
-            traces[traces>=self._threshold] = self._median
+            traces[traces >= self._threshold] = self._median
         return traces
 
 
 def blank_saturation(recording, threshold=None):
     '''
-    Find and remove parts of the signla with extereme values. Some arrays
+    Find and remove parts of the signal with extereme values. Some arrays
     may produce these when amplifiers enter saturation, typically for
     short periods of time. To remove these artefacts, values below or above 
     a threshold are set to the median signal value.
     The threshold is either be estimated automatically, using the lower and upper 
     0.1 signal percentile with the largest deviation from the median, or specificed.
-    Use this function with caution, as it may clip uncontaminated signals. A wanrning is
+    Use this function with caution, as it may clip uncontaminated signals. A warning is
     printed if the data range suggests no artefacts.
     
     Parameters
@@ -101,5 +100,5 @@ def blank_saturation(recording, threshold=None):
         The filtered traces recording extractor object
     '''
     return BlankSaturationRecording(
-        recording = recording, threshold=threshold
+        recording=recording, threshold=threshold
     )
