@@ -69,7 +69,7 @@ def normalize_by_quantile(recording, scale=1.0, median=0.0, q1=0.01, q2=0.99):
     '''
     Rescale the traces from the given recording extractor with a scalar
     and offset. First, the median and quantiles of the distribution are estimated.
-    Then the distribution is rescaled and offset so that the scale given by the
+    Then the distribution is rescaled and offset so that the scale is given by the
     distance between the quantiles (1st and 99th by default) is set to `scale`,
     and the median is set to the given median.
 

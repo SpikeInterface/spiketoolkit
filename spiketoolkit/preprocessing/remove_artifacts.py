@@ -16,7 +16,7 @@ class RemoveArtifactsRecording(RecordingExtractor):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
-        self._triggers = triggers
+        self._triggers = np.array(triggers)
         self._ms_before = ms_before
         self._ms_after = ms_after
         RecordingExtractor.__init__(self)
@@ -47,9 +47,11 @@ class RemoveArtifactsRecording(RecordingExtractor):
         for trig in triggers:
             if trig - pad[0] > 0 and trig + pad[1] < end_frame - start_frame:
                 traces[:, trig - pad[0]:trig + pad[1]] = 0
-            elif trig - pad[0] > 0:
+            elif trig - pad[0] <= 0 and trig + pad[1] >= end_frame - start_frame:
+                traces = 0
+            elif trig - pad[0] <= 0:
                 traces[:, :trig + pad[1]] = 0
-            elif trig + pad[1] < end_frame - start_frame:
+            elif trig + pad[1] >= end_frame - start_frame:
                 traces[:, trig - pad[0]:] = 0
         return traces
 
