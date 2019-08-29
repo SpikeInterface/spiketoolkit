@@ -3,7 +3,7 @@ import pytest
 from .utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
-    get_unit_max_channels, compute_unit_pca_scores, export_to_phy
+    get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
 
 
 @pytest.mark.implemented
@@ -155,6 +155,17 @@ def test_export_to_phy():
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
     assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
     assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
+
+
+@pytest.mark.implemented
+def test_set_unit_properties_by_max_channel_properties():
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
+
+    rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 0, 0, 1, 1, 1, 1])
+    set_unit_properties_by_max_channel_properties(rec, sort, property='group')
+    assert 'group' in sort.get_unit_property_names()
+    sort_groups = [sort.get_unit_property(u, 'group') for u in sort.get_unit_ids()]
+    assert np.all(np.unique(sort_groups) == [0, 1])
 
 
 @pytest.mark.notimplemented
