@@ -104,19 +104,29 @@ def create_signal_with_known_waveforms(n_channels=4, n_waveforms=2, n_wf_samples
 
     timeseries = np.zeros((n_channels, n_samples))
     waveforms = []
+    amplitudes = []
     for i, tem in enumerate(templates):
         idxs = np.where(labels == i)
         wav = []
+        amps = []
         for t in times[idxs]:
             rand_val = np.random.randn() * 0.01 + 1
             timeseries[:, t - n_wf_samples // 2:t + n_wf_samples // 2] = rand_val * tem
             wav.append(rand_val * tem)
+            amps.append(np.min(rand_val * tem))
         wav = np.array(wav)
+        amps = np.array(amps)
         waveforms.append(wav)
+        amplitudes.append(amps)
 
     rec = se.NumpyRecordingExtractor(timeseries=timeseries, samplerate=fs)
     sort = se.NumpySortingExtractor()
     sort.set_times_labels(times=times, labels=labels)
     sort.set_sampling_frequency(fs)
 
-    return rec, sort, waveforms, templates, max_chans
+    return rec, sort, waveforms, templates, max_chans, amplitudes
+
+
+def create_fake_waveforms_with_known_pc():
+    # HINT: start from Guassians in PC space and stereotyped waveforms and build dataset.
+    pass
