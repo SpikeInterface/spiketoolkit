@@ -11,22 +11,25 @@ class ThresholdSNR(ThresholdCurator):
         {'name': 'snr_mode', 'type': 'str', 'value':'mad', 'default':'mad', 'title': "Mode to compute noise SNR ('mad' | 'std' - default 'mad')"},
         {'name': 'snr_noise_duration', 'type': 'float', 'value':10.0, 'default':10.0, 'title': "Number of seconds to compute noise level from (default 10.0)."},
         {'name': 'max_snr_waveforms', 'type': 'float', 'value':1000, 'default':1000, 'title': "Maximum number of waveforms to compute templates from (default 1000)."},
+        {'name': 'seed', 'type': 'int', 'value':0, 'default':0, 'title': "Random seed for computing SNR."},
    ]
     installation_mesg = "" # err
 
     def __init__(self, sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
-                 max_snr_waveforms=1000, metric_calculator=None):
+                 max_snr_waveforms=1000, recompute_waveform_info=True, save_features_props=False, metric_calculator=None, seed=0):
         metric_name = 'snr'
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(), \
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
             self._metric_calculator.set_recording(recording)
-            self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
+            self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms, recompute_waveform_info=recompute_waveform_info, \
+                                                 save_features_props=save_features_props, seed=seed)
         else:
             self._metric_calculator = metric_calculator
             if metric_name not in self._metric_calculator.get_metrics_dict().keys():
                 self._metric_calculator.set_recording(recording)
-                self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms)
+                self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_waveforms, recompute_waveform_info=recompute_waveform_info, \
+                                                     save_features_props=save_features_props, seed=seed)
         snrs_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0] 
 
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=snrs_epoch)
@@ -34,7 +37,7 @@ class ThresholdSNR(ThresholdCurator):
 
 
 def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
-                      max_snr_waveforms=1000, metric_calculator=None):
+                  max_snr_waveforms=1000, metric_calculator=None):
     '''
     Excludes units based on snr.
 
