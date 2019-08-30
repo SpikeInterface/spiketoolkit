@@ -2,6 +2,7 @@ import spiketoolkit as st
 import spikeextractors as se
 import numpy as np
 
+
 def get_firing_times_ids(sorting, sampling_frequency):
     '''
     Computes and returns the spike times in seconds and also returns 
@@ -25,7 +26,7 @@ def get_firing_times_ids(sorting, sampling_frequency):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
-                
+
     # spike times.npy and spike clusters.npy
     spike_times = np.array([])
     spike_clusters = np.array([])
@@ -40,13 +41,16 @@ def get_firing_times_ids(sorting, sampling_frequency):
     spike_times = spike_times[sorting_idxs, np.newaxis]
     spike_clusters = spike_clusters[sorting_idxs, np.newaxis]
 
-    spike_times = (spike_times/sampling_frequency).flatten('F')
+    spike_times = (spike_times / sampling_frequency).flatten('F')
     spike_clusters = spike_clusters.astype(int).flatten('F')
 
     return spike_times, spike_clusters
 
-def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both', \
-                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf, \
+
+def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
+                            amp_peak='both',
+                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=np.inf,
+                            max_num_pca_waveforms=np.inf, \
                             recompute_waveform_info=True, save_features_props=False, verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
@@ -106,10 +110,16 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
     spike_times, spike_clusters, amplitudes, _, pc_features, pc_feature_ind \
-        = st.postprocessing.postprocessing_tools._get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after, \
-                                                                        dtype=dtype, amp_method=amp_method, amp_peak=amp_peak, amp_frames_before=amp_frames_before, \
-                                                                        amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms, \
-                                                                        max_num_pca_waveforms=max_num_pca_waveforms, recompute_waveform_info=recompute_waveform_info, \
-                                                                        save_features_props=save_features_props, verbose=verbose, seed=seed)
+        = st.postprocessing.postprocessing_tools._get_quality_metric_data(recording, sorting, nPC=nPC,
+                                                                          ms_before=ms_before, ms_after=ms_after,
+                                                                          dtype=dtype, amp_method=amp_method,
+                                                                          amp_peak=amp_peak,
+                                                                          amp_frames_before=amp_frames_before,
+                                                                          amp_frames_after=amp_frames_after,
+                                                                          max_num_waveforms=max_num_waveforms,
+                                                                          max_num_pca_waveforms=max_num_pca_waveforms,
+                                                                          recompute_waveform_info=recompute_waveform_info,
+                                                                          save_features_props=save_features_props,
+                                                                          verbose=verbose, seed=seed)
     return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
-           amplitudes.flatten('F'), pc_features, pc_feature_ind 
+           amplitudes.flatten('F'), pc_features, pc_feature_ind
