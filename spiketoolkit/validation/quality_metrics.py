@@ -37,9 +37,12 @@ def compute_num_spikes(sorting, sampling_frequency=None, unit_ids=None, epoch_tu
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     num_spikes_epochs = metric_calculator.compute_num_spikes()
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'num_spikes', num_spikes_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'num_spikes', num_spikes_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return num_spikes_epochs
 
@@ -78,9 +81,12 @@ def compute_firing_rates(sorting, sampling_frequency=None, unit_ids=None, epoch_
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     firings_rates_epochs = metric_calculator.compute_firing_rates()
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'firing_rate', firings_rates_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'firing_rate', firings_rates_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return firings_rates_epochs
 
@@ -119,9 +125,12 @@ def compute_presence_ratios(sorting, sampling_frequency=None, unit_ids=None, epo
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     presence_ratios_epochs = metric_calculator.compute_presence_ratios()
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'presence_ratio', presence_ratios_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'presence_ratio', presence_ratios_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return presence_ratios_epochs
 
@@ -164,9 +173,12 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     isi_violations_epochs = metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'isi_violation', isi_violations_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'isi_violation', isi_violations_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return isi_violations_epochs
 
@@ -223,9 +235,12 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
                                          seed=seed)
     amplitude_cutoffs_epochs = metric_calculator.compute_amplitude_cutoffs()
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'amplitude_cutoff', amplitude_cutoffs_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'amplitude_cutoff', amplitude_cutoffs_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return amplitude_cutoffs_epochs
 
@@ -281,10 +296,12 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
                                                  recompute_waveform_info=recompute_waveform_info,
                                                  save_features_props=save_features_props, seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'snr', snrs_epochs)
-
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'snr', snrs_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
     return snrs_epochs
 
 
@@ -367,10 +384,13 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
         drift_metrics_interval_s=drift_metrics_interval_s,
         drift_metrics_min_spikes_per_interval=drift_metrics_min_spikes_per_interval)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'max_drift', max_drifts_epochs)
-            sorting.set_unit_property(u, 'cumulative_drift', cumulative_drifts_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'max_drift', max_drifts_epochs[i_u])
+                sorting.set_unit_property(u, 'cumulative_drift', cumulative_drifts_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return max_drifts_epochs, cumulative_drifts_epochs
 
@@ -450,9 +470,12 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
     silhouette_scores_epochs = metric_calculator.compute_silhouette_scores(
         max_spikes_for_silhouette=max_spikes_for_silhouette, seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'silhouette_score', silhouette_scores_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'silhouette_score', silhouette_scores_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return silhouette_scores_epochs
 
@@ -536,9 +559,12 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         num_channels_to_compare=num_channels_to_compare,
         max_spikes_for_unit=max_spikes_for_unit, seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'isolation_distance', isolation_distances_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'isolation_distance', isolation_distances_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return isolation_distances_epochs
 
@@ -620,9 +646,12 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
     l_ratios_epochs = metric_calculator.compute_l_ratios(num_channels_to_compare=num_channels_to_compare,
                                                          max_spikes_for_unit=max_spikes_for_unit, seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'l_ratio', l_ratios_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'l_ratio', l_ratios_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return l_ratios_epochs
 
@@ -704,9 +733,12 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
     d_primes_epochs = metric_calculator.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
                                                          max_spikes_for_unit=max_spikes_for_unit, seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'd_prime', d_primes_epochs)
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'd_prime', d_primes_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
     return d_primes_epochs
 
@@ -796,11 +828,13 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors,
         seed=seed)
 
-    if save_as_property and (epoch_tuples is None or len(epoch_tuples) == 1):
-        for i_u, u in enumerate(unit_ids):
-            sorting.set_unit_property(u, 'nn_hit_rates', nn_hit_rates_epochs)
-            sorting.set_unit_property(u, 'nn_miss_rates', nn_miss_rates_epochs)
-
+    if save_as_property:
+        if epoch_tuples is None:
+            for i_u, u in enumerate(unit_ids):
+                sorting.set_unit_property(u, 'nn_hit_rates', nn_hit_rates_epochs[i_u])
+                sorting.set_unit_property(u, 'nn_miss_rates', nn_miss_rates_epochs[i_u])
+        else:
+            raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
     return nn_hit_rates_epochs, nn_miss_rates_epochs
 
 
