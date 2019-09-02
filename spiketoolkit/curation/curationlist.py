@@ -1,4 +1,4 @@
-from .CurationSortingExtractor import CurationSortingExtractor
+from .curationsortingextractor import CurationSortingExtractor
 from .threshold_num_spikes import threshold_num_spikes, ThresholdNumSpikes
 from .threshold_firing_rate import threshold_firing_rate, ThresholdFiringRate
 from .threshold_presence_ratio import threshold_presence_ratio, ThresholdPresenceRatio
