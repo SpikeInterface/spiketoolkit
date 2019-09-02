@@ -1,4 +1,4 @@
-from .ThresholdCurator import ThresholdCurator
+from .thresholdcurator import ThresholdCurator
 import spiketoolkit as st
 
 class ThresholdNumSpikes(ThresholdCurator):

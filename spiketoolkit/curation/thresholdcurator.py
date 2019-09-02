@@ -1,4 +1,4 @@
-from .CurationSortingExtractor import CurationSortingExtractor
+from .curationsortingextractor import CurationSortingExtractor
 import spiketoolkit as st
 
 class ThresholdCurator(CurationSortingExtractor):
