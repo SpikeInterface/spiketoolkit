@@ -1,6 +1,7 @@
 from .ThresholdCurator import ThresholdCurator
 import spiketoolkit as st
 
+
 class ThresholdSNR(ThresholdCurator):
 
     curator_name = 'ThresholdMinSNR'

@@ -168,6 +168,12 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
+    if sampling_frequency is None:
+        assert sorting.get_sampling_frequency() is not None, "Cannot retrieve 'sampling_frequency' information from" \
+                                                             "the sorting extractor. Pass it with the " \
+                                                             "'sampling_frequency' argument"
+        sampling_frequency = sorting.get_sampling_frequency()
+
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
