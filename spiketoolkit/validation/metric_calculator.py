@@ -42,7 +42,8 @@ class MetricCalculator:
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
 
-        spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting, sampling_frequency)
+        spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting,
+                                                                                          self._sampling_frequency)
 
         self._sorting = sorting
         self._set_unit_ids(unit_ids)
