@@ -1,4 +1,5 @@
 import numpy as np
+from spikeextractors import RecordingExtractor, SortingExtractor
 import spiketoolkit as st
 import spikemetrics.metrics as metrics
 from spikemetrics.utils import Epoch, printProgressBar
@@ -12,8 +13,8 @@ The MetricCalculator class allows the user to compute and store a variety of qua
 
 
 class MetricCalculator:
-    def __init__(self, sorting, sampling_frequency=None, unit_ids=None, epoch_tuples=None, epoch_names=None,
-                 verbose=False):
+    def __init__(self, sorting, recording=None, sampling_frequency=None, unit_ids=None, epoch_tuples=None,
+                 epoch_names=None, verbose=False):
         '''
         Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
         
@@ -44,7 +45,7 @@ class MetricCalculator:
 
         spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting,
                                                                                           self._sampling_frequency)
-
+        assert isinstance(sorting, SortingExtractor), "'sorting' must be  a SortingExtractor object"
         self._sorting = sorting
         self._set_unit_ids(unit_ids)
         self._set_epochs(epoch_tuples, epoch_names)
@@ -63,6 +64,11 @@ class MetricCalculator:
         for epoch in self._epochs:
             self._sorting.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
                                     end_frame=epoch[2] * self._sampling_frequency)
+        if recording is not None:
+            assert isinstance(recording, RecordingExtractor), "'sorting' must be  a RecordingExtractor object"
+            self.set_recording(recording)
+        else:
+            self._recording = None
 
     def set_recording(self, recording):
         '''
@@ -101,8 +107,8 @@ class MetricCalculator:
         seed: int
             Random seed for reproducibility
         '''
-        if recording is None:
-            if self._recording is None:
+        if self._recording is None:
+            if recording is None:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
@@ -881,9 +887,9 @@ class MetricCalculator:
                 unit_ids = self.get_unit_ids()
                 for unit_id in all_unit_ids:
                     if unit_id in unit_ids:
-                        all_metrics[unit_id + len(all_unit_ids) * i] = metric[unit_ids.index(unit_id)]
+                        all_metrics[unit_ids.index(unit_id) + len(all_unit_ids) * i] = metric[unit_ids.index(unit_id)]
                     else:
-                        all_metrics[unit_id + len(all_unit_ids) * i] = ''
+                        all_metrics[unit_ids.index(unit_id) + len(all_unit_ids) * i] = ''
             metrics_df = pd.concat((metrics_df, pd.DataFrame(data=OrderedDict(({metric_name: all_metrics})))),
                                    sort=False, axis=1)
 
