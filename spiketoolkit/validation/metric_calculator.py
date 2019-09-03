@@ -981,7 +981,7 @@ def _compute_channel_noise_levels(recording, mode='mad', noise_duration=10.0, se
     M = recording.get_num_channels()
     n_frames = int(noise_duration * recording.get_sampling_frequency())
 
-    if n_frames > recording.get_num_frames():
+    if n_frames >= recording.get_num_frames():
         start_frame = 0
         end_frame = recording.get_num_frames()
     else:
