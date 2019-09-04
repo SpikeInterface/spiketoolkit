@@ -22,7 +22,6 @@ You can also install SpikeToolkit locally by cloning the repo into your code bas
 
 ```shell
 git clone https://github.com/SpikeInterface/spiketoolkit.git
-
 cd spiketoolkit
 python setup.py install
 ```
