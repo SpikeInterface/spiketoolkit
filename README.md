@@ -1,12 +1,8 @@
 [![Build Status](https://travis-ci.org/SpikeInterface/spiketoolkit.svg?branch=master)](https://travis-ci.org/SpikeInterface/spiketoolkit) [![PyPI version](https://badge.fury.io/py/spiketoolkit.svg)](https://badge.fury.io/py/spiketoolkit)
 
-Alpha Development
-
 # SpikeToolkit
 
 SpikeToolkit is a package of the SpikeInterface project that was designed to make running, curating, evaluating, and comparing popular spike sorting algorithms as simple as possible.
-
-Its tools and functions are built using [spikeextractors](https://github.com/SpikeInterface/spikeextractors) objects, allowing for straightforward, standardized analysis and sorting.
 
 ## Getting Started
 
@@ -46,6 +42,8 @@ The documentation page for the SpikeInterface project can be found here: https:/
 [Matthias Hennig](http://homepages.inf.ed.ac.uk/mhennig/) - The Institute for Adaptive and Neural Computation (ANC), University of Edinburgh, Edinburgh, Scotland
 
 [Samuel Garcia](https://github.com/samuelgarcia) - Centre de Recherche en Neuroscience de Lyon (CRNL), Lyon, France
+
+[Josh Siegle](https://alleninstitute.org/what-we-do/brain-science/about/team/staff-profiles/josh-siegle/) - Allen Institute for Brain Science, Seattle, United States
 
 <br/>
 <br/>
