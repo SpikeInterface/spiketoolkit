@@ -2,7 +2,7 @@
 
 # SpikeToolkit
 
-SpikeToolkit is a package of the SpikeInterface project that was designed to make running, curating, evaluating, and comparing popular spike sorting algorithms as simple as possible.
+SpikeToolkit is a package of the SpikeInterface project designed to make preprocessing, postprocessing, evaluating, and curating extracellular datasets (both raw and sorted) as straightforward as possible. 
 
 ## Getting Started
 
