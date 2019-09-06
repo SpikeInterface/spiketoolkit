@@ -20,7 +20,7 @@ def test_waveforms():
 
     for (w, w_gt) in zip(wav, waveforms):
         assert np.allclose(w, w_gt)
-    assert 'waveforms' not in sort.get_unit_spike_feature_names()
+    assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
     # change cut ms
     wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_as_features=True)
@@ -28,7 +28,7 @@ def test_waveforms():
     for (w, w_gt) in zip(wav, waveforms):
         _, _, samples = w.shape
         assert np.allclose(w[:, :, samples // 2 - n_wf_samples // 2: samples // 2 + n_wf_samples // 2], w_gt)
-    assert 'waveforms' in sort.get_unit_spike_feature_names()
+    assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
 
     # by group
     rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 1, 1])
@@ -70,8 +70,8 @@ def test_templates():
 
     for (t, t_gt) in zip(temp, templates):
         assert np.allclose(t, t_gt, atol=1)
-    assert 'template' not in sort.get_unit_property_names()
-    assert 'waveforms' not in sort.get_unit_spike_feature_names()
+    assert 'template' not in sort.get_shared_unit_property_names()
+    assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
     # change cut ms
     temp = get_unit_templates(rec, sort, ms_before=2, ms_after=2, save_as_property=True, recompute_waveforms=True)
@@ -79,8 +79,8 @@ def test_templates():
     for (t, t_gt) in zip(temp, templates):
         _, samples = t.shape
         assert np.allclose(t[:, samples // 2 - n_wf_samples // 2: samples // 2 + n_wf_samples // 2], t_gt, atol=1)
-    assert 'template' in sort.get_unit_property_names()
-    assert 'waveforms' in sort.get_unit_spike_feature_names()
+    assert 'template' in sort.get_shared_unit_property_names()
+    assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
 
     # by group
     rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 1, 1])
@@ -99,12 +99,12 @@ def test_max_chan():
                                                                                           n_wf_samples=n_wf_samples)
     max_channels = get_unit_max_channels(rec, sort, save_as_property=False)
     assert np.allclose(np.array(max_chans), np.array(max_channels))
-    assert 'max_channel' not in sort.get_unit_property_names()
+    assert 'max_channel' not in sort.get_shared_unit_property_names()
 
     max_channels = get_unit_max_channels(rec, sort, save_as_property=True, recompute_templates=True,
                                          peak='neg')
     assert np.allclose(np.array(max_chans), np.array(max_channels))
-    assert 'max_channel' in sort.get_unit_property_names()
+    assert 'max_channel' in sort.get_shared_unit_property_names()
 
 
 @pytest.mark.implemented
@@ -118,13 +118,13 @@ def test_amplitudes():
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, np.abs(a_gt))
-    assert 'amps' not in sort.get_unit_spike_feature_names()
+    assert 'amps' not in sort.get_shared_unit_spike_feature_names()
 
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=True, peak='neg')
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, a_gt)
-    assert 'amps' in sort.get_unit_spike_feature_names()
+    assert 'amps' in sort.get_shared_unit_spike_feature_names()
 
     # relative
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=False, method='relative')
@@ -163,7 +163,7 @@ def test_set_unit_properties_by_max_channel_properties():
 
     rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 0, 0, 1, 1, 1, 1])
     set_unit_properties_by_max_channel_properties(rec, sort, property='group')
-    assert 'group' in sort.get_unit_property_names()
+    assert 'group' in sort.get_shared_unit_property_names()
     sort_groups = [sort.get_unit_property(u, 'group') for u in sort.get_unit_ids()]
     assert np.all(np.unique(sort_groups) == [0, 1])
 
