@@ -28,7 +28,7 @@ python setup.py install
 
 ## Examples
 
-For more information about how to use SpikeExtractors, please checkout these [examples](https://github.com/SpikeInterface/spikeinterface/tree/master/examples/modules/toolkit).
+For more information about how to use SpikeToolkit, please checkout these [examples](https://github.com/SpikeInterface/spikeinterface/tree/master/examples/modules/toolkit).
 
 ## Documentation
 
