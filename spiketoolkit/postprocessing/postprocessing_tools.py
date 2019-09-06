@@ -68,7 +68,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             raise ValueError("'grouping_property' should be a property of recording extractors")
         if compute_property_from_recording:
             compute_sorting_group = True
-        elif grouping_property not in sorting.get_unit_property_names():
+        elif grouping_property not in sorting.get_shared_unit_property_names():
             warnings.warn('Grouping property not in sorting extractor. Computing it from the recording extractor')
             compute_sorting_group = True
         else:
@@ -540,7 +540,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     all_waveforms = np.array([])
     nspikes = []
     idx_not_none = None
-    if 'waveforms' in sorting.get_unit_spike_feature_names():
+    if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
         if verbose:
             print("Using 'waveforms' features")
         waveforms = []
@@ -655,7 +655,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
 
-    if 'max_channel' in sorting.get_unit_property_names():
+    if 'max_channel' in sorting.get_shared_unit_property_names():
         if verbose:
             print("Using 'template' property")
         max_chan_property = True
@@ -780,7 +780,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         writer.writerow(['cluster_id', 'sec_channel'])
         for i, (u, ch) in enumerate(zip(sorting.get_unit_ids(), second_max_channel)):
             writer.writerow([i, ch])
-    if 'group' in sorting.get_unit_property_names():
+    if 'group' in sorting.get_shared_unit_property_names():
         with (output_folder / 'cluster_chan_grp.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
             writer.writerow(['cluster_id', 'chan_grp'])
@@ -926,7 +926,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
     #     if verbose:
     #         print("Changed number of PC to number of channels: ", nPC)
 
-    if 'waveforms' not in sorting.get_unit_spike_feature_names():
+    if 'waveforms' not in sorting.get_shared_unit_spike_feature_names():
         waveforms = get_unit_waveforms(recording, sorting, max_num_waveforms=max_num_waveforms,
                                        ms_before=ms_before, ms_after=ms_after, save_as_features=save_features_props,
                                        dtype=dtype, verbose=verbose, seed=seed)
@@ -972,7 +972,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
     templates = np.array(templates, dtype='float32').swapaxes(1, 2)
 
     if grouping_property in recording.get_shared_channel_property_names():
-        if grouping_property not in sorting.get_unit_property_names():
+        if grouping_property not in sorting.get_shared_unit_property_names():
             set_unit_properties_by_max_channel_properties(recording, sorting, grouping_property, seed=seed)
         # pc_feature_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
         templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_num_chans_in_group)), dtype=int)
