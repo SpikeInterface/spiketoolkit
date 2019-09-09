@@ -32,7 +32,7 @@ For more information about how to use SpikeToolkit, please checkout these [examp
 
 ## Documentation
 
-The documentation page for the SpikeInterface project can be found here: https://spikeinterface.readthedocs.io/en/latest/
+All documentation for SpikeInterface can be found here: https://spikeinterface.readthedocs.io/en/latest/.
 
 ### Authors
 
