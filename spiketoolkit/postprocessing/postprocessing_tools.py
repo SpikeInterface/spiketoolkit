@@ -8,7 +8,7 @@ import shutil
 import csv
 
 
-def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None, channels=None,
+def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None, channel_ids=None,
                        ms_before=3., ms_after=3., dtype=None, max_num_waveforms=np.inf,
                        save_as_features=True, compute_property_from_recording=False, verbose=False,
                        seed=0):
@@ -26,8 +26,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     grouping_property: str
         Property to group channels. E.g. if the recording extractor has the 'group' property and 'grouping_property' is
         'group', then waveforms are computed group-wise.
-    channels: list
-        List of channels to compute waveforms from
+    channel_ids: list
+        List of channels ids to compute waveforms from
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -109,7 +109,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                                              unit=unit_id,
                                                                              max_num=max_num_waveforms,
                                                                              snippet_len=n_pad,
-                                                                             channels=channels,
+                                                                             channel_ids=channel_ids,
                                                                              seed=seed)
                             waveforms = waveforms.swapaxes(0, 2)
                             waveforms = waveforms.swapaxes(1, 2)
@@ -143,7 +143,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                                      unit=unit_id,
                                                                      max_num=max_num_waveforms,
                                                                      snippet_len=n_pad,
-                                                                     channels=channels,
+                                                                     channel_ids=channel_ids,
                                                                      seed=seed)
                     waveforms = waveforms.swapaxes(0, 2)
                     waveforms = waveforms.swapaxes(1, 2)
@@ -180,7 +180,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                              unit=unit_id,
                                                              max_num=max_num_waveforms,
                                                              snippet_len=n_pad,
-                                                             channels=channels,
+                                                             channel_ids=channel_ids,
                                                              seed=seed)
             waveforms = waveforms.swapaxes(0, 2)
             waveforms = waveforms.swapaxes(1, 2)
@@ -833,7 +833,7 @@ def _compute_whitening_and_inverse(recording):
     return wh_mat, wh_mat_inv
 
 
-def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, channels=None, seed=0):
+def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, channel_ids=None, seed=0):
     st = sorting.get_unit_spike_train(unit_id=unit)
     num_events = len(st)
     if num_events > max_num:
@@ -842,7 +842,7 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_num, snippet_len, 
         event_indices = range(num_events)
 
     spikes = recording.get_snippets(reference_frames=st[event_indices].astype('int64'),
-                                    snippet_len=snippet_len, channel_ids=channels)
+                                    snippet_len=snippet_len, channel_ids=channel_ids)
     spikes = np.dstack(tuple(spikes))
     return spikes, event_indices
 
