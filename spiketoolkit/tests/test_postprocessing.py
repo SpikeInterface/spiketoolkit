@@ -49,7 +49,7 @@ def test_waveforms():
         assert len(w) <= 10
 
     # test channels
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, channels=[0, 1, 2])
+    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, channel_ids=[0, 1, 2])
 
     for (w, w_gt) in zip(wav, waveforms):
         assert np.allclose(w, w_gt[:, :3])
