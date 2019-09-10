@@ -77,10 +77,10 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             print("Waveforms by property: ", grouping_property)
 
         if not compute_sorting_group:
-            rec_list, rec_props = se.get_sub_extractors_by_property(recording, grouping_property,
-                                                                    return_property_list=True)
-            sort_list, sort_props = se.get_sub_extractors_by_property(sorting, grouping_property,
-                                                                      return_property_list=True)
+            rec_list, rec_props = recording.get_sub_extractors_by_property(grouping_property,
+                                                                           return_property_list=True)
+            sort_list, sort_props = sorting.get_sub_extractors_by_property(grouping_property,
+                                                                           return_property_list=True)
             if len(rec_props) != len(sort_props):
                 print('Different' + grouping_property + ' numbers: using largest number of ' + grouping_property)
                 if len(rec_props) > len(sort_props):
@@ -410,7 +410,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
         The maximum number of amplitudes to extract (default is np.inf)
     seed: int
             Random seed for reproducibility
-            
+
     Returns
     -------
     amplitudes: list
@@ -744,8 +744,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     if dtype is None:
         dtype = recording.get_traces(channel_ids=[recording.get_channel_ids()[0]], start_frame=0, end_frame=1).dtype
 
-    # se.write_binary_dat_format(recording, output_folder / 'recording.dat', dtype='int16')
-    se.write_binary_dat_format(recording, output_folder / 'recording.dat', dtype=dtype)
+    recording.write_to_binary_dat_format(output_folder / 'recording.dat', dtype=dtype)
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
