@@ -5,7 +5,7 @@ import numpy as np
 class ClipTracesRecording(RecordingExtractor):
     preprocessor_name = 'ClipTraces'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'a_min', 'type': 'float',
          'title': "Minimum value. If `None`, clipping is not performed on lower interval edge."},
         {'name': 'a_max', 'type': 'float',

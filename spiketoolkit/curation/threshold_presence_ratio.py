@@ -6,7 +6,7 @@ class ThresholdPresenceRatio(ThresholdCurator):
 
     curator_name = 'ThresholdPresenceRatio'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    curator_gui_params = [
         {'name': 'threshold', 'type': 'float', 'value':.50, 'default':.50, 'title': "The threshold for the given metric."},
         {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
     ]

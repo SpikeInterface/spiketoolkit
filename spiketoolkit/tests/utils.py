@@ -119,7 +119,7 @@ def create_signal_with_known_waveforms(n_channels=4, n_waveforms=2, n_wf_samples
         waveforms.append(wav)
         amplitudes.append(amps)
 
-    rec = se.NumpyRecordingExtractor(timeseries=timeseries, samplerate=fs)
+    rec = se.NumpyRecordingExtractor(timeseries=timeseries, sampling_frequency=fs)
     sort = se.NumpySortingExtractor()
     sort.set_times_labels(times=times, labels=labels)
     sort.set_sampling_frequency(fs)

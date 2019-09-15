@@ -5,7 +5,7 @@ import numpy as np
 class BlankSaturationRecording(RecordingExtractor):
     preprocessor_name = 'BlankSaturation'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'threshold', 'type': 'float',
          'title': "Scale for the output distribution"},
     ]
