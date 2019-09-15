@@ -14,7 +14,7 @@ class BandpassFilterRecording(FilterRecording):
 
     preprocessor_name = 'BandpassFilter'
     installed = HAVE_BFR  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'freq_min', 'type': 'float', 'value': 300.0, 'default': 300.0, 'title': "Low-pass frequency"},
         {'name': 'freq_max', 'type': 'float', 'value': 6000.0, 'default': 6000.0, 'title': "High-pass frequency"},
         {'name': 'freq_wid', 'type': 'float', 'value': 1000.0, 'default': 1000.0, 'title':
@@ -46,10 +46,10 @@ class BandpassFilterRecording(FilterRecording):
         filtered_padded_chunk = self._do_filter(padded_chunk)
         return filtered_padded_chunk[:, start_frame - i1:end_frame - i1]
 
-    def _create_filter_kernel(self, N, samplerate, freq_min, freq_max, freq_wid=1000):
+    def _create_filter_kernel(self, N, sampling_frequency, freq_min, freq_max, freq_wid=1000):
         # Matches ahb's code /matlab/processors/ms_bandpass_filter.m
         # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
-        T = N / samplerate  # total time
+        T = N / sampling_frequency  # total time
         df = 1 / T  # frequency grid
         relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
 
@@ -69,7 +69,7 @@ class BandpassFilterRecording(FilterRecording):
         return val
 
     def _do_filter(self, chunk):
-        samplerate = self._recording.get_sampling_frequency()
+        sampling_frequency = self._recording.get_sampling_frequency()
         M = chunk.shape[0]
         chunk2 = chunk
         # Do the actual filtering with a DFT with real input
@@ -77,7 +77,7 @@ class BandpassFilterRecording(FilterRecording):
             chunk_fft = np.fft.rfft(chunk2)
             kernel = self._create_filter_kernel(
                 chunk2.shape[1],
-                samplerate,
+                sampling_frequency,
                 self._freq_min, self._freq_max, self._freq_wid
             )
             kernel = kernel[0:chunk_fft.shape[1]]  # because this is the DFT of real data

@@ -5,7 +5,7 @@ class RemoveBadChannelsRecording(RecordingExtractor):
 
     preprocessor_name = 'RemoveBadChannels'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'bad_channel_ids', 'type': 'int_list', 'value':None, 'default':None, 'title': "List of bad channels. If None, automatic removal will be done based on standard deviation."},
         {'name': 'bad_threshold', 'type': 'float', 'title': "Threshold in number of sd to remove channels (when automatic)"},
         {'name': 'seconds', 'type': 'float', 'title': "Number of seconds to compute standard deviation (when automatic)"},

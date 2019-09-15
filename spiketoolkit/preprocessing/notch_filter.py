@@ -12,7 +12,7 @@ class NotchFilterRecording(FilterRecording):
 
     preprocessor_name = 'NotchFilter'
     installed = HAVE_NFR  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'freq', 'type': 'float', 'value':3000.0, 'default':3000.0, 'title': "Frequency"},
         {'name': 'q', 'type': 'int', 'value':30, 'default':30, 'title': "Quality factor"},
         {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
@@ -37,10 +37,10 @@ class NotchFilterRecording(FilterRecording):
         filtered_padded_chunk = self._do_filter(padded_chunk)
         return filtered_padded_chunk[:, start_frame - i1:end_frame - i1]
 
-    def _create_filter_kernel(self, N, samplerate, freq_min, freq_max, freq_wid=1000):
+    def _create_filter_kernel(self, N, sampling_frequency, freq_min, freq_max, freq_wid=1000):
         # Matches ahb's code /matlab/processors/ms_bandpass_filter.m
         # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
-        T = N / samplerate  # total time
+        T = N / sampling_frequency  # total time
         df = 1 / T  # frequency grid
         relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
 
@@ -60,7 +60,7 @@ class NotchFilterRecording(FilterRecording):
         return val
 
     def _do_filter(self, chunk):
-        samplerate = self._recording.get_sampling_frequency()
+        sampling_frequency = self._recording.get_sampling_frequency()
         M = chunk.shape[0]
         chunk2 = chunk
         fn = 0.5 * float(self.get_sampling_frequency())

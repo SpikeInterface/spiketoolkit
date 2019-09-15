@@ -137,7 +137,7 @@ def test_remove_bad_channels():
     timeseries = np.random.randn(4, 60000)
     timeseries[1] = 3 * timeseries[1]
 
-    rec_np = se.NumpyRecordingExtractor(timeseries=timeseries, samplerate=30000)
+    rec_np = se.NumpyRecordingExtractor(timeseries=timeseries, sampling_frequency=30000)
     rec_rm = remove_bad_channels(rec_np, bad_channel_ids=None, bad_threshold=2)
     assert 1 not in rec_rm.get_channel_ids()
 

@@ -30,11 +30,11 @@ class TestCuration(unittest.TestCase):
         channel_ids = [0, 1, 2, 3]
         num_channels = 4
         num_frames = 10000
-        samplerate = 30000
+        sampling_frequency = 30000
         X = np.random.normal(0, 1, (num_channels, num_frames))
         geom = np.random.normal(0, 1, (num_channels, 2))
         X = (X * 100).astype(int)
-        RX = se.NumpyRecordingExtractor(timeseries=X, samplerate=samplerate, geom=geom)
+        RX = se.NumpyRecordingExtractor(timeseries=X, sampling_frequency=sampling_frequency, geom=geom)
         SX = se.NumpySortingExtractor()
         spike_times = [200, 300, 400]
         train1 = np.sort(np.rint(np.random.uniform(0, num_frames, spike_times[0])).astype(int))
@@ -42,7 +42,7 @@ class TestCuration(unittest.TestCase):
         SX.add_unit(unit_id=2, times=np.sort(np.random.uniform(0, num_frames, spike_times[1])))
         SX.add_unit(unit_id=3, times=np.sort(np.random.uniform(0, num_frames, spike_times[2])))
         SX.set_unit_property(unit_id=1, property_name='stablility', value=80)
-        SX.set_sampling_frequency(samplerate)
+        SX.set_sampling_frequency(sampling_frequency)
         SX2 = se.NumpySortingExtractor()
         spike_times2 = [100, 150, 450]
         train2 = np.rint(np.random.uniform(0, num_frames, spike_times[0])).astype(int)
@@ -55,7 +55,7 @@ class TestCuration(unittest.TestCase):
             channel_ids=channel_ids,
             num_channels=num_channels,
             num_frames=num_frames,
-            samplerate=samplerate,
+            sampling_frequency=sampling_frequency,
             unit_ids=[1, 2, 3],
             train1=train1,
             unit_prop=80,

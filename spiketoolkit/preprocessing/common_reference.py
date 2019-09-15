@@ -5,7 +5,7 @@ class CommonReferenceRecording(RecordingExtractor):
 
     preprocessor_name = 'CommonReference'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'reference', 'type': 'str', 'value':'median', 'default':'median', 'title': "Reference type ('median', 'average', or 'single')"},
         {'name': 'groups', 'type': 'int_list_list', 'value':None, 'default':None, 'title': "List of int lists containins the channels for splitting the reference, \
         The CMR, CAR, or referencing with respect to single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple tetrodes."},

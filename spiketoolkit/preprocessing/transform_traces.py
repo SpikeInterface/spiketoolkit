@@ -5,7 +5,7 @@ class TransformTracesRecording(RecordingExtractor):
 
     preprocessor_name = 'TransformTraces'
     installed = True  # check at class level if installed or not
-    _gui_params = [
+    preprocessor_gui_params = [
         {'name': 'scalar', 'type': 'float', 'title': "Scalar for the traces of the recording extractor"},
         {'name': 'offset', 'type': 'float', 'title': "Offset for the traces of the recording extractor"},
     ]
