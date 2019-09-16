@@ -21,19 +21,21 @@ class BandpassFilterRecording(FilterRecording):
             "Width of the filter (when type is 'fft')"},
         {'name': 'type', 'type': 'str', 'value': 'fft', 'default': 'fft', 'title': "Filter type ('fft' or 'butter')"},
         {'name': 'order', 'type': 'int', 'value': 3, 'default': 3, 'title': "Order of the filter (if 'butter')"},
+        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
+            "Chunk size for the filter."},
         {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
             "If True filtered traces are computed and cached"},
     ]
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
-    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, cache=False):
+    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, chunk_size=30000, cache=False):
         assert HAVE_BFR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
         self._type = type
         self._order = order
-        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
         self.copy_channel_properties(recording)
         if cache:
             self._traces = self.get_traces()
@@ -111,27 +113,29 @@ class BandpassFilterRecording(FilterRecording):
         return ret
 
 
-def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, cache=False):
+def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3, chunk_size=30000, cache=False):
     '''
     Performs a lazy filter on the recording extractor traces.
 
     Parameters
     ----------
     recording: RecordingExtractor
-        The recording extractor to be filtered
+        The recording extractor to be filtered.
     freq_min: int or float
-        High-pass cutoff frequency
+        High-pass cutoff frequency.
     freq_max: int or float
-        Low-pass cutoff frequency
+        Low-pass cutoff frequency.
     freq_wid: int or float
-        Width of the filter (when type is 'fft')
+        Width of the filter (when type is 'fft').
     type: str
         'fft' or 'butter'. The 'fft' filter uses a kernel in the frequency domain. The 'butter' filter uses
         scipy butter and filtfilt functions.
     order: int
-        Order of the filter (if 'butter')
+        Order of the filter (if 'butter').
+    chunk_size: int
+        The chunk size to be used for the filtering.
     cache: bool
-        If True, filtered traces are computed and cached all at once (default False)
+        If True, filtered traces are computed and cached all at once (default False).
 
     Returns
     -------
@@ -145,5 +149,6 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         freq_wid=freq_wid,
         type=type,
         order=order,
+        chunk_size=chunk_size,
         cache=cache
     )

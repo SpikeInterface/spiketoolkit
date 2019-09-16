@@ -15,16 +15,18 @@ class NotchFilterRecording(FilterRecording):
     preprocessor_gui_params = [
         {'name': 'freq', 'type': 'float', 'value':3000.0, 'default':3000.0, 'title': "Frequency"},
         {'name': 'q', 'type': 'int', 'value':30, 'default':30, 'title': "Quality factor"},
+        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
+            "Chunk size for the filter."},
         {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
             "If True filtered traces are computed and cached"},
     ]
     installation_mesg = "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"  # error message when not installed
 
-    def __init__(self, recording, freq=3000, q=30, cache=False):
+    def __init__(self, recording, freq=3000, q=30, chunk_size=30000, cache=False):
         assert HAVE_NFR, "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq = freq
         self._q = q
-        FilterRecording.__init__(self, recording=recording, chunk_size=3000 * 10, cache=cache)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
         self.copy_channel_properties(recording)
         if cache:
             self._traces = self.get_traces()
@@ -89,20 +91,22 @@ class NotchFilterRecording(FilterRecording):
         return ret
 
 
-def notch_filter(recording, freq=3000, q=30, cache=False):
+def notch_filter(recording, freq=3000, q=30, chunk_size=30000, cache=False):
     '''
     Performs a notch filter on the recording extractor traces using scipy iirnotch function.
 
     Parameters
     ----------
     recording: RecordingExtractor
-        The recording extractor to be notch-filtered
+        The recording extractor to be notch-filtered.
     freq: int or float
-        The target frequency of the notch filter
+        The target frequency of the notch filter.
     q: int
-        The quality factor of the notch filter
+        The quality factor of the notch filter.
+    chunk_size: int
+        The chunk size to be used for the filtering.
     cache: bool
-        If True, filtered traces are computed and cached all at once (default False)
+        If True, filtered traces are computed and cached all at once (default False).
 
     Returns
     -------
@@ -114,5 +118,6 @@ def notch_filter(recording, freq=3000, q=30, cache=False):
         recording=recording,
         freq=freq,
         q=q,
+        chunk_size=chunk_size,
         cache=cache,
     )
