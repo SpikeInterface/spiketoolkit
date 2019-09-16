@@ -6,13 +6,18 @@ class WhitenRecording(FilterRecording):
 
     preprocessor_name = 'Whiten'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = []
+    preprocessor_gui_params = [
+        {'name': 'chunk_size', 'type': 'int', 'value': 1000, 'default': 1000, 'title':
+            "Chunk size for the filter."},
+        {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
+            "If True filtered traces are computed and cached"},
+    ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording):
+    def __init__(self, recording, chunk_size=1000, cache=False):
         self._recording = recording
         self._whitening_matrix = self._compute_whitening_matrix()
-        FilterRecording.__init__(self, recording=recording, chunk_size=1000)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
 
     def _get_random_data_for_whitening(self, num_chunks=50, chunk_size=500):
         N = self._recording.get_num_frames()
@@ -37,7 +42,7 @@ class WhitenRecording(FilterRecording):
         return chunk2
 
 
-def whiten(recording):
+def whiten(recording, chunk_size=1000, cache=False):
     '''
     Whitens the recording extractor traces.
 
@@ -45,7 +50,10 @@ def whiten(recording):
     ----------
     recording: RecordingExtractor
         The recording extractor to be whitened.
-
+    chunk_size: int
+        The chunk size to be used for the filtering.
+    cache: bool
+        If True, filtered traces are computed and cached all at once (default False).
     Returns
     -------
     whitened_recording: WhitenRecording
@@ -53,5 +61,7 @@ def whiten(recording):
 
     '''
     return WhitenRecording(
-        recording=recording
+        recording=recording,
+        chunk_size=chunk_size,
+        cache=cache
     )
