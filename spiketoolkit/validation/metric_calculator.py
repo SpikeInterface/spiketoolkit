@@ -410,7 +410,8 @@ class MetricCalculator:
             templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
                                                              max_num_waveforms=max_snr_waveforms, mode='median',
                                                              save_wf_as_features=save_features_props,
-                                                             recompute_waveforms=recompute_waveform_info, seed=seed)
+                                                             recompute_waveforms=recompute_waveform_info,
+                                                             save_as_property=save_features_props, seed=seed)
 
             max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting,
                                                                    unit_ids=self._unit_ids,

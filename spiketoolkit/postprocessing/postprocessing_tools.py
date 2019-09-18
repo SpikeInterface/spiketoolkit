@@ -117,10 +117,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
                             if save_as_features:
                                 if len(indices) < len(sort.get_unit_spike_train(unit_id)):
-                                    if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
-                                        features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                                    else:
-                                        features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+                                    features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                                     for i, ind in enumerate(indices):
                                         features[ind] = waveforms[i]
                                 else:
@@ -155,10 +152,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                     waveforms = np.squeeze(waveforms[:, elec_group, :])
                     if save_as_features:
                         if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
-                            if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
-                                features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                            else:
-                                features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+                            features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                             for i, ind in enumerate(indices):
                                 features[ind] = waveforms[i]
                         else:
@@ -187,10 +181,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             waveforms = waveforms.astype(dtype)
             if save_as_features:
                 if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
-                    if 'waveforms' not in sorting.get_unit_spike_feature_names(unit_id):
-                        features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                    else:
-                        features = np.array(sorting.get_unit_spike_features(unit_id, 'waveforms'))
+                    features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                     for i, ind in enumerate(indices):
                         features[ind] = waveforms[i]
                 else:
@@ -268,7 +259,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
             if len(idx_not_none) != len(waveforms):
                 if verbose:
                     print("Using ", len(idx_not_none), " waveforms for unit ", unit_id)
-                waveforms = np.array(waveforms[idx_not_none])
+                waveforms = np.stack(waveforms[idx_not_none])
         else:
             waveforms = get_unit_waveforms(recording, sorting, unit_id, max_num_waveforms=max_num_waveforms,
                                            ms_before=ms_before, ms_after=ms_after, save_as_features=save_wf_as_features,
@@ -355,7 +346,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         else:
             template = get_unit_templates(recording, sorting, unit_id, mode=mode, max_num_waveforms=max_num_waveforms,
                                           dtype=dtype, ms_before=ms_before, ms_after=ms_after,
-                                          grouping_property=grouping_property,
+                                          grouping_property=grouping_property, save_as_property=save_as_property,
                                           compute_property_from_recording=compute_property_from_recording,
                                           verbose=verbose, seed=seed)
         if peak == 'both':
