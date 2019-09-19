@@ -733,8 +733,6 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
-    if len(sorting.get_unit_ids()) == 0:
-        raise Exception("No units in the sorting result, can't save to phy.")
     
     _empty_flag = False
     for unit_id in sorting.get_unit_ids():
@@ -743,6 +741,9 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     if _empty_flag:
         print('Warning: empty units have been removed when being exported to Phy')
         sorting = st.curation.threshold_num_spikes(sorting, 1)
+
+    if len(sorting.get_unit_ids()) == 0:
+        raise Exception("No non-empty units in the sorting result, can't save to phy.")
 
     output_folder = Path(output_folder).absolute()
     if output_folder.is_dir():
