@@ -682,7 +682,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
                   amp_frames_before=3, amp_frames_after=3, max_num_waveforms=np.inf, max_num_pca_waveforms=np.inf,
                   recompute_waveform_info=True, save_features_props=False, write_waveforms=False, verbose=False,
-                  seed=0, remove_empty_units=True):
+                  seed=0):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
@@ -730,21 +730,19 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         If True output is verbose
     seed: int
         Random seed for extracting waveforms and pcs
-    remove_empty_units: bool
-        If True (default), empty units in sortings will be removed.
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't save to phy.")
-    if remove_empty_units:
-        empty_flag = False
-        for unit_id in sorting.get_unit_ids():
-            _spikes = sorting.get_unit_spike_train(unit_id)
-            if _spikes.shape[0] == 0: empty_flag = True
-        if empty_flag:
-            print('Warning: empty units have been removed when being exported to Phy')
-            sorting = st.curation.threshold_num_spikes(sorting, 1)
+    
+    _empty_flag = False
+    for unit_id in sorting.get_unit_ids():
+        _spikes = sorting.get_unit_spike_train(unit_id)
+        if _spikes.shape[0] == 0: _empty_flag = True
+    if _empty_flag:
+        print('Warning: empty units have been removed when being exported to Phy')
+        sorting = st.curation.threshold_num_spikes(sorting, 1)
 
     output_folder = Path(output_folder).absolute()
     if output_folder.is_dir():
