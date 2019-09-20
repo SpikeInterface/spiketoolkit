@@ -46,7 +46,9 @@ def threshold_presence_ratio(sorting, threshold=.50, threshold_sign='less', samp
         The threshold for the given metric.
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
     sampling_frequency: float
         The sampling frequency of recording
     metric_calculator: MetricCalculator

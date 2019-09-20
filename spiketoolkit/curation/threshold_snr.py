@@ -52,7 +52,9 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         The threshold for the given metric.
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
     mode: str
         Mode to compute noise SNR ('mad' | 'std' - default 'mad')
     noise_duration: float
