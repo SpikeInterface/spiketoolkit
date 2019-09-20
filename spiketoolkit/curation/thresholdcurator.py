@@ -40,7 +40,7 @@ class ThresholdCurator(CurationSortingExtractor):
             elif threshold_sign == 'greater':
                 if self._metrics_epoch[i] > threshold:
                     units_to_be_excluded.append(unit_id)
-             elif threshold_sign == 'greater_or_equal':
+            elif threshold_sign == 'greater_or_equal':
                 if self._metrics_epoch[i] >= threshold:
                     units_to_be_excluded.append(unit_id)
             else:
