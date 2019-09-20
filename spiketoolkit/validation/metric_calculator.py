@@ -8,7 +8,7 @@ from collections import defaultdict, OrderedDict
 import copy
 
 '''
-The MetricCalculator class allows the user to compute and store a variety of quality metrics about their sorted dataset. 
+The MetricCalculator class allows the user to compute and store a variety of quality metrics about their sorted dataset.
 '''
 
 
@@ -17,7 +17,7 @@ class MetricCalculator:
                  epoch_names=None, verbose=False):
         '''
         Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
-        
+
         Parameters
         ----------
         sorting: SortingExtractor
@@ -107,8 +107,8 @@ class MetricCalculator:
         seed: int
             Random seed for reproducibility
         '''
-        if self._recording is None:
-            if recording is None:
+        if recording is None:
+            if self._recording is None:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
@@ -132,7 +132,7 @@ class MetricCalculator:
                                 max_num_pca_waveforms=np.inf, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
-        
+
         Parameters
         ----------
         recording: RecordingExtractor
@@ -223,7 +223,7 @@ class MetricCalculator:
 
     def compute_num_spikes(self):
         '''
-        Computes and returns the spike times in seconds and also returns 
+        Computes and returns the spike times in seconds and also returns
         the cluster_ids needed for quality metrics.
 
         Returns
@@ -252,7 +252,7 @@ class MetricCalculator:
 
     def compute_firing_rates(self):
         '''
-        Computes and returns the spike times in seconds and also returns 
+        Computes and returns the spike times in seconds and also returns
         the cluster_ids needed for quality metrics.
 
         Returns
@@ -310,14 +310,14 @@ class MetricCalculator:
     def compute_isi_violations(self, isi_threshold=0.0015, min_isi=0.000166):
         '''
         Computes and returns the ISI violations for the given parameters.
-        
+
         Parameters
         ----------
         isi_threshold: float
             The isi threshold for calculating isi violations.
         min_isi: float
             The minimum expected isi value.
-            
+
         Returns
         ----------
         isi_violations_epochs: list
@@ -346,7 +346,7 @@ class MetricCalculator:
     def compute_amplitude_cutoffs(self):
         '''
         Computes and returns the amplitude cutoffs for the sorted dataset.
-            
+
         Returns
         ----------
         amplitude_cutoffs_epochs: list
@@ -444,7 +444,7 @@ class MetricCalculator:
         drift_metrics_interval_s: float
             Time period for evaluating drift.
         drift_metrics_min_spikes_per_interval: int
-            Minimum number of spikes for evaluating drift metrics per interval. 
+            Minimum number of spikes for evaluating drift metrics per interval.
 
         Returns
         ----------
@@ -754,7 +754,7 @@ class MetricCalculator:
         drift_metrics_interval_s: float
             Time period for evaluating drift.
         drift_metrics_min_spikes_per_interval: int
-            Minimum number of spikes for evaluating drift metrics per interval. 
+            Minimum number of spikes for evaluating drift metrics per interval.
         max_spikes_for_silhouette: int
             Max spikes to be used for silhouette metric
         num_channels_to_compare: int
