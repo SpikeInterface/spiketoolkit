@@ -724,8 +724,18 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
+    
+    _empty_flag = False
+    for unit_id in sorting.get_unit_ids():
+        _spikes = sorting.get_unit_spike_train(unit_id)
+        if _spikes.shape[0] == 0: _empty_flag = True
+    if _empty_flag:
+        print('Warning: empty units have been removed when being exported to Phy')
+        sorting = st.curation.threshold_num_spikes(sorting, 1)
+
     if len(sorting.get_unit_ids()) == 0:
-        raise Exception("No units in the sorting result, can't save to phy.")
+        raise Exception("No non-empty units in the sorting result, can't save to phy.")
+
     output_folder = Path(output_folder).absolute()
     if output_folder.is_dir():
         shutil.rmtree(output_folder)
