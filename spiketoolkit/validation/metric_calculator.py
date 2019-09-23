@@ -6,6 +6,7 @@ from spikemetrics.utils import Epoch, printProgressBar
 import pandas as pd
 from collections import defaultdict, OrderedDict
 import copy
+from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 
 '''
 The MetricCalculator class allows the user to compute and store a variety of quality metrics about their sorted dataset.
@@ -39,9 +40,20 @@ class MetricCalculator:
             self._sampling_frequency = sorting.get_sampling_frequency()
         else:
             self._sampling_frequency = sampling_frequency
+        
+        # only use units with spikes to avoid breaking metric calculation
+        num_spikes_per_unit = [len(sorting.get_unit_spike_train(unit_id)) for unit_id in sorting.get_unit_ids()]
+        sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
+        sorting.threshold_sorting(0, 'less_or_equal')
 
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
+        else:
+            unit_ids = set(unit_ids)
+            unit_ids = list(unit_ids.intersection(sorting.get_unit_ids()))
+
+        if len(unit_ids)==0:
+            raise ValueError("No units found.")
 
         spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting,
                                                                                           self._sampling_frequency)
@@ -51,7 +63,9 @@ class MetricCalculator:
         self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
-        self._total_units = len(sorting.get_unit_ids())
+#         self._total_units = len(sorting.get_unit_ids())
+#         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
+        self._total_units = len(unit_ids)
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
         # To compute this data, need to call all metric data
         self._amplitudes = None
