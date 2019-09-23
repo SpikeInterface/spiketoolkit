@@ -40,9 +40,6 @@ class MetricCalculator:
             self._sampling_frequency = sorting.get_sampling_frequency()
         else:
             self._sampling_frequency = sampling_frequency
-
-        if unit_ids is None:
-            unit_ids = sorting.get_unit_ids()
         
         # only use units with spikes to avoid breaking metric calculation
         num_spikes_per_unit = [len(sorting.get_unit_spike_train(unit_id)) for unit_id in sorting.get_unit_ids()]
