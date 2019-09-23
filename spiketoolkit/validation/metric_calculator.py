@@ -43,15 +43,20 @@ class MetricCalculator:
 
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
-            
+        
         # only use units with spikes to avoid breaking metric calculation
-        num_spikes_per_unit = [len(sorting.get_unit_spike_train(u)) for u in unit_ids]
+        num_spikes_per_unit = [len(sorting.get_unit_spike_train(unit_id)) for unit_id in sorting.get_unit_ids()]
         sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
         sorting.threshold_sorting(0, 'less_or_equal')
 
-        unit_ids = sorting.get_unit_ids()
+        if unit_ids is None:
+            unit_ids = sorting.get_unit_ids()
+        else:
+            unit_ids = set(unit_ids)
+            unit_ids = list(unit_ids.intersection(sorting.get_unit_ids()))
+
         if len(unit_ids)==0:
-            raise ValueError("No spikes found.")
+            raise ValueError("No units found.")
 
         spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting,
                                                                                           self._sampling_frequency)
