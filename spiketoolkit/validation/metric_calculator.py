@@ -141,9 +141,9 @@ class MetricCalculator:
         self._amplitudes = amplitudes
 
     def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
-                                max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both',
+                                max_num_waveforms=1000, amp_method='absolute', amp_peak='both',
                                 amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True,
-                                max_num_pca_waveforms=np.inf, save_features_props=False, seed=0):
+                                max_num_pca_waveforms=1000, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
 
@@ -160,7 +160,7 @@ class MetricCalculator:
         dtype: dtype
             The numpy dtype of the waveforms
         max_num_waveforms: int
-            The maximum number of waveforms to extract (default is np.inf)
+            The maximum number of waveforms to extract.
         amp_method: str
             If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
             If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -173,7 +173,7 @@ class MetricCalculator:
         recompute_waveform_info: bool
             If True, will always re-extract waveforms.
         max_num_pca_waveforms: int
-            The maximum number of waveforms to use to compute PCA (default is np.inf)
+            The maximum number of waveforms to use to compute PCA.
         save_features_props: bool
             If True, save all features and properties in the sorting extractor.
         seed: int
