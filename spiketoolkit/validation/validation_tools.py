@@ -49,8 +49,8 @@ def get_firing_times_ids(sorting, sampling_frequency):
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
                             amp_peak='both',
-                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=1000,
-                            max_num_pca_waveforms=1000, \
+                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=300,
+                            max_num_pca_waveforms=10000, \
                             recompute_waveform_info=True, save_features_props=False, verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
@@ -79,7 +79,7 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
     frames_after: float
         Frames after peak to compute amplitude
     max_num_waveforms: int
-        The maximum number of waveforms to extract.
+        The maximum number of waveforms to extract per unit.
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA.
     recompute_waveform_info: bool

@@ -35,7 +35,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     save_as_features: bool
         If True (default), waveforms are saved as features of the sorting extractor object
     compute_property_from_recording: bool
@@ -226,7 +226,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -314,7 +314,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -500,7 +500,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
     compute_property_from_recording: bool
@@ -630,7 +630,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
     dtype: dtype
         The numpy dtype of the waveforms
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     verbose: bool
         If True output is verbose
     seed: int
@@ -708,7 +708,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     amp_frames_after: int
         Frames after peak to compute amplitude
     max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+        The maximum number of waveforms to extract per unit.
     max_num_pca_waveforms: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
     recompute_waveform_info: bool
