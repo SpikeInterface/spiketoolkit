@@ -162,14 +162,6 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         cache=cache
     )
     if cache:
-        tmp_file = tempfile.NamedTemporaryFile(prefix="filt", suffix=".dat")
-        dtype = bpf_recording.get_traces(start_frame=0, end_frame=10).dtype
-        se.write_to_binary_dat_format(bpf_recording, save_path=str(tmp_file.name))
-        bin_recording = se.BinDatRecordingExtractor(str(tmp_file.name), numchan=bpf_recording.get_num_channels(),
-                                                    recording_channels=bpf_recording.get_channel_ids(),
-                                                    sampling_frequency=bpf_recording.get_sampling_frequency(),
-                                                    dtype=dtype)
-        bin_recording.copy_channel_properties(bpf_recording)
-        return bin_recording
+        return se.CacheRecordingExtractor(bpf_recording)
     else:
         return bpf_recording
