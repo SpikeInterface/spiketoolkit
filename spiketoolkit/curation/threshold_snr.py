@@ -38,7 +38,7 @@ class ThresholdSNR(ThresholdCurator):
 
 
 def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
-                  max_snr_waveforms=1000, metric_calculator=None):
+                  max_snr_waveforms=1000, metric_calculator=None, recompute_waveform_info=True, save_features_props=False, seed=0):
     '''
     Excludes units based on snr.
 
@@ -78,7 +78,7 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         snr_noise_duration=snr_noise_duration,
         max_snr_waveforms=max_snr_waveforms,
         metric_calculator=metric_calculator,
-        recompute_waveform_info=True,
-        save_features_props=False,
-        seed=0
+        recompute_waveform_info=recompute_waveform_info,
+        save_features_props=save_features_props,
+        seed=seed
     )
