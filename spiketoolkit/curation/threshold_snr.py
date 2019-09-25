@@ -77,5 +77,8 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         snr_mode=snr_mode, 
         snr_noise_duration=snr_noise_duration,
         max_snr_waveforms=max_snr_waveforms,
-        metric_calculator=metric_calculator
+        metric_calculator=metric_calculator,
+        recompute_waveform_info=True,
+        save_features_props=False,
+        seed=0
     )
