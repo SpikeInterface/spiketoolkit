@@ -38,7 +38,7 @@ class ThresholdSNR(ThresholdCurator):
 
 
 def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0, \
-                  max_snr_spikes_per_unit=1000, metric_calculator=None):
+                  max_snr_spikes_per_unit=1000, recompute_waveform_info=True, save_features_props=False, metric_calculator=None, seed=0):
     '''
     Excludes units based on snr.
 
@@ -55,14 +55,20 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-    mode: str
+    snr_mode: str
         Mode to compute noise SNR ('mad' | 'std' - default 'mad')
-    noise_duration: float
+    snr_noise_duration: float
         Number of seconds to compute noise level from (default 10.0)
     max_snr_spikes_per_unit: int
         Maximum number of spikes to compute templates from (default 1000)
+    recompute_waveform_info: bool
+        If True, waveforms are recomputed
+    save_features_props: bool
+        If True, waveforms and templates are saved as sorting features/properties
     metric_calculator: MetricCalculator
         A metric calculator can be passed in with cached metrics.
+    seed: int
+        Random seed for reproducibility
     Returns
     -------
     thresholded_sorting: ThresholdSNR
@@ -77,5 +83,8 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         snr_mode=snr_mode,
         snr_noise_duration=snr_noise_duration,
         max_snr_spikes_per_unit=max_snr_spikes_per_unit,
-        metric_calculator=metric_calculator
+        recompute_waveform_info=recompute_waveform_info,
+        save_features_props=save_features_props,
+        metric_calculator=metric_calculator,
+        seed=seed
     )
