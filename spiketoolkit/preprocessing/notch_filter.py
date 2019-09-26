@@ -8,6 +8,7 @@ try:
 except ImportError:
     HAVE_NFR = False
 
+
 class NotchFilterRecording(FilterRecording):
 
     preprocessor_name = 'NotchFilter'
@@ -26,7 +27,7 @@ class NotchFilterRecording(FilterRecording):
         assert HAVE_NFR, "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq = freq
         self._q = q
-        fn = 0.5 * float(self.get_sampling_frequency())
+        fn = 0.5 * float(recording.get_sampling_frequency())
         self._b, self._a = ss.iirnotch(self._freq / fn, self._q)
 
         if not np.all(np.abs(np.roots(self._a)) < 1):
