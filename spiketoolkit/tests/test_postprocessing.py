@@ -43,8 +43,8 @@ def test_waveforms():
     for (w, w_gt) in zip(wav, waveforms):
         assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
-    # test max_num_waveforms
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_num_waveforms=10, save_as_features=False)
+    # test max_spikes_per_unit
+    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10, save_as_features=False)
     for w in wav:
         assert len(w) <= 10
 
@@ -171,7 +171,3 @@ def test_set_unit_properties_by_max_channel_properties():
 @pytest.mark.notimplemented
 def test_compute_pca_scores():
     pass
-
-
-
-

@@ -5,9 +5,9 @@ import numpy as np
 
 def get_firing_times_ids(sorting, sampling_frequency):
     '''
-    Computes and returns the spike times in seconds and also returns 
+    Computes and returns the spike times in seconds and also returns
     along with cluster_ids needed for quality metrics
-    
+
     Parameters
     ----------
     sorting: SortingExtractor
@@ -49,8 +49,8 @@ def get_firing_times_ids(sorting, sampling_frequency):
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
                             amp_peak='both',
-                            amp_frames_before=3, amp_frames_after=3, max_num_waveforms=300,
-                            max_num_pca_waveforms=10000, \
+                            amp_frames_before=3, amp_frames_after=3, max_spikes_per_unit=np.inf,
+                            max_spikes_for_pca=np.inf, \
                             recompute_waveform_info=True, save_features_props=False, verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
@@ -78,10 +78,10 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
         Frames before peak to compute amplitude
     frames_after: float
         Frames after peak to compute amplitude
-    max_num_waveforms: int
-        The maximum number of waveforms to extract per unit.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA.
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract per unit.
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA.
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
     save_features_props: bool
@@ -116,8 +116,8 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
                                                                           amp_peak=amp_peak,
                                                                           amp_frames_before=amp_frames_before,
                                                                           amp_frames_after=amp_frames_after,
-                                                                          max_num_waveforms=max_num_waveforms,
-                                                                          max_num_pca_waveforms=max_num_pca_waveforms,
+                                                                          max_spikes_per_unit=max_spikes_per_unit,
+                                                                          max_spikes_for_pca=max_spikes_for_pca,
                                                                           recompute_waveform_info=recompute_waveform_info,
                                                                           save_features_props=save_features_props,
                                                                           verbose=verbose, seed=seed)
