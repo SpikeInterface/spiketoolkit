@@ -40,7 +40,7 @@ class MetricCalculator:
             self._sampling_frequency = sorting.get_sampling_frequency()
         else:
             self._sampling_frequency = sampling_frequency
-        
+
         # only use units with spikes to avoid breaking metric calculation
         num_spikes_per_unit = [len(sorting.get_unit_spike_train(unit_id)) for unit_id in sorting.get_unit_ids()]
         sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
@@ -63,8 +63,6 @@ class MetricCalculator:
         self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
-#         self._total_units = len(sorting.get_unit_ids())
-#         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
         self._total_units = len(unit_ids)
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
         # To compute this data, need to call all metric data
@@ -141,9 +139,9 @@ class MetricCalculator:
         self._amplitudes = amplitudes
 
     def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
-                                max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both',
+                                max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both',
                                 amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True,
-                                max_num_pca_waveforms=np.inf, save_features_props=False, seed=0):
+                                max_spikes_for_pca=np.inf, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
 
@@ -159,8 +157,8 @@ class MetricCalculator:
             Time period in ms to cut waveforms after the spike events
         dtype: dtype
             The numpy dtype of the waveforms
-        max_num_waveforms: int
-            The maximum number of waveforms to extract (default is np.inf)
+        max_spikes_per_unit: int
+            The maximum number of spikes to extract per unit.
         amp_method: str
             If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
             If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -172,8 +170,8 @@ class MetricCalculator:
             Frames after peak to compute amplitude
         recompute_waveform_info: bool
             If True, will always re-extract waveforms.
-        max_num_pca_waveforms: int
-            The maximum number of waveforms to use to compute PCA (default is np.inf)
+        max_spikes_for_pca: int
+            The maximum number of spikes to use to compute PCA.
         save_features_props: bool
             If True, save all features and properties in the sorting extractor.
         seed: int
@@ -189,8 +187,8 @@ class MetricCalculator:
             self._recording, self._sorting, nPC=nPC, ms_before=ms_before,
             ms_after=ms_after, dtype=dtype, amp_method=amp_method,
             amp_peak=amp_peak, amp_frames_before=amp_frames_before,
-            amp_frames_after=amp_frames_after, max_num_waveforms=max_num_waveforms,
-            max_num_pca_waveforms=max_num_waveforms, recompute_waveform_info=recompute_waveform_info,
+            amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit,
+            max_spikes_for_pca=max_spikes_for_pca, recompute_waveform_info=recompute_waveform_info,
             save_features_props=save_features_props, seed=seed)
 
         self._amplitudes = amplitudes
@@ -387,7 +385,7 @@ class MetricCalculator:
             amplitude_cutoffs_epochs = amplitude_cutoffs_epochs[0]
         return amplitude_cutoffs_epochs
 
-    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000,
+    def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
                      recompute_waveform_info=True, save_features_props=False, seed=0):
         '''
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
@@ -398,8 +396,8 @@ class MetricCalculator:
             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
         snr_noise_duration: float
             Number of seconds to compute noise level from (default 10.0)
-        max_snr_waveforms: int
-            Maximum number of waveforms to compute templates from (default 1000)
+        max_spikes_per_unit_for_snr: int
+            Maximum number of spikes to compute templates from (default 1000)
         recompute_waveform_info: bool
             If True, waveforms are recomputed
         save_features_props: bool
@@ -422,14 +420,14 @@ class MetricCalculator:
             channel_noise_levels = _compute_channel_noise_levels(recording=epoch_recording, mode=snr_mode,
                                                                  noise_duration=snr_noise_duration)
             templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
-                                                             max_num_waveforms=max_snr_waveforms, mode='median',
+                                                             max_spikes_per_unit=max_spikes_per_unit_for_snr, mode='median',
                                                              save_wf_as_features=save_features_props,
                                                              recompute_waveforms=recompute_waveform_info,
                                                              save_as_property=save_features_props, seed=seed)
 
             max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting,
                                                                    unit_ids=self._unit_ids,
-                                                                   max_num_waveforms=max_snr_waveforms, peak='both',
+                                                                   max_spikes_per_unit=max_spikes_per_unit_for_snr, peak='both',
                                                                    recompute_templates=recompute_waveform_info,
                                                                    save_as_property=save_features_props,
                                                                    mode='median', seed=seed)
@@ -543,16 +541,16 @@ class MetricCalculator:
             silhouette_scores_epochs = silhouette_scores_epochs[0]
         return silhouette_scores_epochs
 
-    def compute_isolation_distances(self, num_channels_to_compare=13, max_spikes_for_unit=500, seed=0):
+    def compute_isolation_distances(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
         '''
         Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
 
         Parameters
         ----------
         num_channels_to_compare: int
-            The number of channels to be used for the PC extraction and comparison
-        max_spikes_for_unit: int
-            Max spikes to be used from each unit
+            The number of channels to be used for the PC extraction and comparison.
+        max_spikes_per_cluster: int
+            Max spikes to be used from each unit to compute cluster-based metrics.
         seed: int
             Random seed for extracting pc features.
 
@@ -571,7 +569,7 @@ class MetricCalculator:
                                                                    pc_features=self._pc_features[in_epoch, :, :],
                                                                    pc_feature_ind=self._pc_feature_ind,
                                                                    num_channels_to_compare=num_channels_to_compare,
-                                                                   max_spikes_for_cluster=max_spikes_for_unit,
+                                                                   max_spikes_for_cluster=max_spikes_per_cluster,
                                                                    spikes_for_nn=None,
                                                                    n_neighbors=None,
                                                                    metric_names=['isolation_distance'],
@@ -589,16 +587,16 @@ class MetricCalculator:
             isolation_distances_epochs = isolation_distances_epochs[0]
         return isolation_distances_epochs
 
-    def compute_l_ratios(self, num_channels_to_compare=13, max_spikes_for_unit=500, seed=0):
+    def compute_l_ratios(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
         '''
         Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
         Parameters
         ----------
         num_channels_to_compare: int
-            The number of channels to be used for the PC extraction and comparison
-        max_spikes_for_unit: int
-            Max spikes to be used from each unit
+            The number of channels to be used for the PC extraction and comparison.
+        max_spikes_per_cluster: int
+            Max spikes to be used from each unit to compute cluster-based metrics.
         seed: int
             Random seed for extracting pc features.
 
@@ -617,7 +615,7 @@ class MetricCalculator:
                                                         pc_features=self._pc_features[in_epoch, :, :],
                                                         pc_feature_ind=self._pc_feature_ind,
                                                         num_channels_to_compare=num_channels_to_compare,
-                                                        max_spikes_for_cluster=max_spikes_for_unit,
+                                                        max_spikes_for_cluster=max_spikes_per_cluster,
                                                         spikes_for_nn=None,
                                                         n_neighbors=None,
                                                         metric_names=['l_ratio'],
@@ -635,16 +633,16 @@ class MetricCalculator:
             l_ratios_epochs = l_ratios_epochs[0]
         return l_ratios_epochs
 
-    def compute_d_primes(self, num_channels_to_compare=13, max_spikes_for_unit=500, seed=0):
+    def compute_d_primes(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
         '''
         Computes and returns the lda-based metric, d-prime, for the sorted dataset.
 
         Parameters
         ----------
         num_channels_to_compare: int
-            The number of channels to be used for the PC extraction and comparison
-        max_spikes_for_unit: int
-            Max spikes to be used from each unit
+            The number of channels to be used for the PC extraction and comparison.
+        max_spikes_per_cluster: int
+            Max spikes to be used from each unit to compute cluster-based metrics.
         seed: int
             Random seed for extracting pc features.
 
@@ -663,7 +661,7 @@ class MetricCalculator:
                                                         pc_features=self._pc_features[in_epoch, :, :],
                                                         pc_feature_ind=self._pc_feature_ind,
                                                         num_channels_to_compare=num_channels_to_compare,
-                                                        max_spikes_for_cluster=max_spikes_for_unit,
+                                                        max_spikes_for_cluster=max_spikes_per_cluster,
                                                         spikes_for_nn=None,
                                                         n_neighbors=None,
                                                         metric_names=['d_prime'],
@@ -681,7 +679,7 @@ class MetricCalculator:
             d_primes_epochs = d_primes_epochs[0]
         return d_primes_epochs
 
-    def compute_nn_metrics(self, num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000,
+    def compute_nn_metrics(self, num_channels_to_compare=13, max_spikes_per_cluster=500, max_spikes_for_nn=10000,
                            n_neighbors=4, seed=0):
         '''
         Computes and returns the nearest neighbor metrics for the sorted dataset.
@@ -690,8 +688,8 @@ class MetricCalculator:
         ----------
         num_channels_to_compare: int
             The number of channels to be used for the PC extraction and comparison.
-        max_spikes_for_unit: int
-            Max spikes to be used from each unit.
+        max_spikes_per_cluster: int
+            Max spikes to be used from each unit to compute cluster-based metrics.
         max_spikes_for_nn: int
             Max spikes to be used for nearest-neighbors calculation.
         n_neighbors: int
@@ -721,7 +719,7 @@ class MetricCalculator:
                 pc_features=self._pc_features[in_epoch, :, :],
                 pc_feature_ind=self._pc_feature_ind,
                 num_channels_to_compare=num_channels_to_compare,
-                max_spikes_for_cluster=max_spikes_for_unit,
+                max_spikes_for_cluster=max_spikes_per_cluster,
                 spikes_for_nn=spikes_for_nn,
                 n_neighbors=n_neighbors,
                 metric_names=['nearest_neighbor'],
@@ -747,8 +745,8 @@ class MetricCalculator:
         return nn_hit_rates_epochs, nn_miss_rates_epochs
 
     def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, snr_mode='mad', snr_noise_duration=10.0,
-                        max_snr_waveforms=1000, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
-                        max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_for_unit=500,
+                        max_spikes_per_unit_for_snr=1000, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
+                        max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
                         max_spikes_for_nn=10000, n_neighbors=4, metric_names=None, seed=0):
         '''
         Computes and returns all specified metrics for the sorted dataset.
@@ -763,8 +761,8 @@ class MetricCalculator:
             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
         snr_noise_duration: float
             Number of seconds to compute noise level from (default 10.0)
-        max_snr_waveforms: int
-            Maximum number of waveforms to compute templates from (default 1000)
+        max_spikes_per_unit_for_snr: int
+            Maximum number of spikes to compute templates from (default 1000)
         drift_metrics_interval_s: float
             Time period for evaluating drift.
         drift_metrics_min_spikes_per_interval: int
@@ -773,8 +771,8 @@ class MetricCalculator:
             Max spikes to be used for silhouette metric
         num_channels_to_compare: int
             The number of channels to be used for the PC extraction and comparison.
-        max_spikes_for_unit: int
-            Max spikes to be used from each unit.
+        max_spikes_per_cluster: int
+            Max spikes to be used from each unit to compute cluster-based metrics.
         max_spikes_for_nn: int
             Max spikes to be used for nearest-neighbors calculation.
         n_neighbors: int
@@ -827,7 +825,7 @@ class MetricCalculator:
 
         if 'snr' in metric_names:
             snrs_epochs = self.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration,
-                                            max_snr_waveforms=max_snr_waveforms)
+                                            max_spikes_per_unit_for_snr=max_spikes_per_unit_for_snr)
             metrics_epochs.append(snrs_epochs)
 
         if 'max_drift' in metric_names or 'cumulative_drift' in metric_names:
@@ -846,23 +844,23 @@ class MetricCalculator:
 
         if 'isolation_distance' in metric_names:
             isolation_distances_epochs = self.compute_isolation_distances(
-                num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit,
+                num_channels_to_compare=num_channels_to_compare, max_spikes_per_cluster=max_spikes_per_cluster,
                 seed=seed)
             metrics_epochs.append(isolation_distances_epochs)
 
         if 'l_ratio' in metric_names:
             l_ratios_epochs = self.compute_l_ratios(num_channels_to_compare=num_channels_to_compare,
-                                                    max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                    max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
             metrics_epochs.append(l_ratios_epochs)
 
         if 'd_prime' in metric_names:
             d_primes_epochs = self.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
-                                                    max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                    max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
             metrics_epochs.append(d_primes_epochs)
 
         if 'nn_hit_rate' in metric_names or 'nn_miss_rate' in metric_names:
             nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_nn_metrics(
-                num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit,
+                num_channels_to_compare=num_channels_to_compare, max_spikes_per_cluster=max_spikes_per_cluster,
                 max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors, seed=seed)
             if 'nn_hit_rate' in metric_names:
                 metrics_epochs.append(nn_hit_rates_epochs)
@@ -941,7 +939,7 @@ class MetricCalculator:
             "isi_threshold": 0.0015,
             "min_isi": 0.000166,
             "num_channels_to_compare": 13,
-            "max_spikes_for_unit": 500,
+            "max_spikes_per_cluster": 500,
             "max_spikes_for_nn": 10000,
             "n_neighbors": 4,
             'n_silhouette': 10000,

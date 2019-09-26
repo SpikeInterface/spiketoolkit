@@ -245,7 +245,7 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
     return amplitude_cutoffs_epochs
 
 
-def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_snr_waveforms=1000,
+def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
                  recompute_waveform_info=True, save_features_props=False, unit_ids=None, epoch_tuples=None,
                  epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -261,8 +261,8 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
     snr_noise_duration: float
         Number of seconds to compute noise level from (default 10.0)
-    max_snr_waveforms: int
-        Maximum number of waveforms to compute templates from (default 1000)
+    max_spikes_per_unit_for_snr: int
+        Maximum number of spikes to compute templates from (default 1000)
     unit_ids: list
         List of unit ids to compute metric for. If not specified, all units are used
     recompute_waveform_info: bool
@@ -292,7 +292,7 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.set_recording(recording)
     snrs_epochs = metric_calculator.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration,
-                                                 max_snr_waveforms=max_snr_waveforms,
+                                                 max_spikes_per_unit_for_snr=max_spikes_per_unit_for_snr,
                                                  recompute_waveform_info=recompute_waveform_info,
                                                  save_features_props=save_features_props, seed=seed)
 
@@ -306,9 +306,9 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
 
 def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
-                          nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf, amp_method='absolute',
+                          nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=np.inf, amp_method='absolute',
                           amp_peak='both', amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True,
-                          max_num_pca_waveforms=np.inf, save_features_props=False, unit_ids=None, epoch_tuples=None,
+                          max_spikes_for_pca=np.inf, save_features_props=False, unit_ids=None, epoch_tuples=None,
                           epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the drift metrics for the sorted dataset.
@@ -331,8 +331,8 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -344,8 +344,8 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -374,11 +374,11 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     max_drifts_epochs, cumulative_drifts_epochs = metric_calculator.compute_drift_metrics(
         drift_metrics_interval_s=drift_metrics_interval_s,
@@ -396,9 +396,9 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
 
 
 def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, nPC=3, ms_before=1., ms_after=2.,
-                              dtype=None, max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both',
+                              dtype=None, max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both',
                               amp_frames_before=3,
-                              amp_frames_after=3, recompute_waveform_info=True, max_num_pca_waveforms=np.inf,
+                              amp_frames_after=3, recompute_waveform_info=True, max_spikes_for_pca=np.inf,
                               save_features_props=False,
                               unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -420,8 +420,8 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -433,8 +433,8 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -461,11 +461,11 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     silhouette_scores_epochs = metric_calculator.compute_silhouette_scores(
         max_spikes_for_silhouette=max_spikes_for_silhouette, seed=seed)
@@ -480,11 +480,11 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
     return silhouette_scores_epochs
 
 
-def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3,
+def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3,
                                 ms_before=1., ms_after=2.,
-                                dtype=None, max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both',
+                                dtype=None, max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both',
                                 amp_frames_before=3,
-                                amp_frames_after=3, recompute_waveform_info=True, max_num_pca_waveforms=np.inf,
+                                amp_frames_after=3, recompute_waveform_info=True, max_spikes_for_pca=np.inf,
                                 save_features_props=False,
                                 unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -498,7 +498,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         The given recording extractor from which to extract amplitudes.
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-    max_spikes_for_unit: int
+    max_spikes_per_cluster: int
         Max spikes to be used from each unit
     nPC: int
         nPCFeatures in template-gui format
@@ -508,8 +508,8 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -521,8 +521,8 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -549,15 +549,15 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     isolation_distances_epochs = metric_calculator.compute_isolation_distances(
         num_channels_to_compare=num_channels_to_compare,
-        max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+        max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
 
     if save_as_property:
         if epoch_tuples is None:
@@ -569,10 +569,10 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
     return isolation_distances_epochs
 
 
-def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, ms_before=1.,
+def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3, ms_before=1.,
                      ms_after=2.,
-                     dtype=None, max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                     amp_frames_after=3, recompute_waveform_info=True, max_num_pca_waveforms=np.inf,
+                     dtype=None, max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both', amp_frames_before=3,
+                     amp_frames_after=3, recompute_waveform_info=True, max_spikes_for_pca=np.inf,
                      save_features_props=False,
                      unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -586,7 +586,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
         The given recording extractor from which to extract amplitudes.
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-    max_spikes_for_unit: int
+    max_spikes_per_cluster: int
         Max spikes to be used from each unit
     nPC: int
         nPCFeatures in template-gui format
@@ -596,8 +596,8 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -609,8 +609,8 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -637,14 +637,14 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     l_ratios_epochs = metric_calculator.compute_l_ratios(num_channels_to_compare=num_channels_to_compare,
-                                                         max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                         max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
 
     if save_as_property:
         if epoch_tuples is None:
@@ -656,10 +656,10 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
     return l_ratios_epochs
 
 
-def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_for_unit=500, nPC=3, ms_before=1.,
+def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3, ms_before=1.,
                      ms_after=2.,
-                     dtype=None, max_num_waveforms=np.inf, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                     amp_frames_after=3, recompute_waveform_info=True, max_num_pca_waveforms=np.inf,
+                     dtype=None, max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both', amp_frames_before=3,
+                     amp_frames_after=3, recompute_waveform_info=True, max_spikes_for_pca=np.inf,
                      save_features_props=False,
                      unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -673,7 +673,7 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
         The given recording extractor from which to extract amplitudes.
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-    max_spikes_for_unit: int
+    max_spikes_per_cluster: int
         Max spikes to be used from each unit
     nPC: int
         nPCFeatures in template-gui format
@@ -683,8 +683,8 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -696,8 +696,8 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -724,14 +724,14 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     d_primes_epochs = metric_calculator.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
-                                                         max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                         max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
 
     if save_as_property:
         if epoch_tuples is None:
@@ -743,10 +743,10 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
     return d_primes_epochs
 
 
-def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_for_unit=500, max_spikes_for_nn=10000,
-                       n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf,
+def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, max_spikes_for_nn=10000,
+                       n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=np.inf,
                        amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3,
-                       recompute_waveform_info=True, max_num_pca_waveforms=np.inf, save_features_props=False,
+                       recompute_waveform_info=True, max_spikes_for_pca=np.inf, save_features_props=False,
                        unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the nearest neighbor metrics for the sorted dataset.
@@ -759,7 +759,7 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         The given recording extractor from which to extract amplitudes.
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison.
-    max_spikes_for_unit: int
+    max_spikes_per_cluster: int
         Max spikes to be used from each unit.
     max_spikes_for_nn: int
         Max spikes to be used for nearest-neighbors calculation.
@@ -773,8 +773,8 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         Time period in ms to cut waveforms after the spike events
     dtype: dtype
         The numpy dtype of the waveforms
-    max_num_waveforms: int
-        The maximum number of waveforms to extract (default is np.inf)
+    max_spikes_per_unit: int
+        The maximum number of spikes to extract (default is np.inf)
     amp_method: str
         If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
         If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -786,8 +786,8 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         Frames after peak to compute amplitude
     recompute_waveform_info: bool
         If True, will always re-extract waveforms.
-    max_num_pca_waveforms: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+    max_spikes_for_pca: int
+        The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -816,15 +816,15 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                               dtype=dtype,
-                                              max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                              max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                               amp_peak=amp_peak,
                                               amp_frames_before=amp_frames_before, amp_frames_after=amp_frames_after,
                                               recompute_waveform_info=recompute_waveform_info,
-                                              max_num_pca_waveforms=max_num_pca_waveforms,
+                                              max_spikes_for_pca=max_spikes_for_pca,
                                               save_features_props=save_features_props, seed=seed)
     nn_hit_rates_epochs, nn_miss_rates_epochs = metric_calculator.compute_nn_metrics(
         num_channels_to_compare=num_channels_to_compare,
-        max_spikes_for_unit=max_spikes_for_unit,
+        max_spikes_per_cluster=max_spikes_per_cluster,
         max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors,
         seed=seed)
 
@@ -840,14 +840,14 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
 
 def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_threshold=0.0015, min_isi=0.000166,
                     snr_mode='mad',
-                    snr_noise_duration=10.0, max_snr_waveforms=1000, drift_metrics_interval_s=51,
+                    snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000, drift_metrics_interval_s=51,
                     drift_metrics_min_spikes_per_interval=10,
-                    max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_for_unit=500,
+                    max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
                     max_spikes_for_nn=10000,
-                    n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None, max_num_waveforms=np.inf,
+                    n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=np.inf,
                     amp_method='absolute',
                     amp_peak='both', amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True,
-                    max_num_pca_waveforms=np.inf,
+                    max_spikes_for_pca=np.inf,
                     save_features_props=False, metric_names=None, unit_ids=None, epoch_tuples=None, epoch_names=None,
                     return_dataframe=False, seed=0):
     '''
@@ -869,18 +869,18 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
         Mode to compute noise SNR ('mad' | 'std' - default 'mad')
     snr_noise_duration: float
         Number of seconds to compute noise level from (default 10.0)
-    max_snr_waveforms: int
-        Maximum number of waveforms to compute templates from (default 1000)
+    max_spikes_per_unit_for_snr: int
+        Maximum number of spikes to compute templates from (default 1000)
     drift_metrics_interval_s: float
         Time period for evaluating drift.
     drift_metrics_min_spikes_per_interval: int
-        Minimum number of spikes for evaluating drift metrics per interval. 
+        Minimum number of spikes for evaluating drift metrics per interval.
     max_spikes_for_silhouette: int
         Max spikes to be used for silhouette metric
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison.
-    max_spikes_for_unit: int
-        Max spikes to be used from each unit.
+    max_spikes_per_cluster: int
+        Max spikes to be used from each unit to compute metrics.
     max_spikes_for_nn: int
         Max spikes to be used for nearest-neighbors calculation.
     n_neighbors: int
@@ -937,12 +937,12 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
         else:
             metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before,
                                                       ms_after=ms_after, dtype=dtype,
-                                                      max_num_waveforms=max_num_waveforms, amp_method=amp_method,
+                                                      max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                                       amp_peak=amp_peak,
                                                       amp_frames_before=amp_frames_before,
                                                       amp_frames_after=amp_frames_after,
                                                       recompute_waveform_info=recompute_waveform_info,
-                                                      max_num_pca_waveforms=max_num_pca_waveforms,
+                                                      max_spikes_for_pca=max_spikes_for_pca,
                                                       save_features_props=save_features_props, seed=seed)
     elif 'amplitude_cutoff' in metric_names:
         if recording is None:
@@ -980,7 +980,7 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
 
     if 'snr' in metric_names:
         snrs_epochs = metric_calculator.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration,
-                                                     max_snr_waveforms=max_snr_waveforms)
+                                                     max_spikes_per_unit_for_snr=max_spikes_per_unit_for_snr)
         metrics_epochs.append(snrs_epochs)
 
     if 'max_drift' in metric_names or 'cumulative_drift' in metric_names:
@@ -999,23 +999,23 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
 
     if 'isolation_distance' in metric_names:
         isolation_distances_epochs = metric_calculator.compute_isolation_distances(
-            num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit,
+            num_channels_to_compare=num_channels_to_compare, max_spikes_per_cluster=max_spikes_per_cluster,
             seed=seed)
         metrics_epochs.append(isolation_distances_epochs)
 
     if 'l_ratio' in metric_names:
         l_ratios_epochs = metric_calculator.compute_l_ratios(num_channels_to_compare=num_channels_to_compare,
-                                                             max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                             max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
         metrics_epochs.append(l_ratios_epochs)
 
     if 'd_prime' in metric_names:
         d_primes_epochs = metric_calculator.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
-                                                             max_spikes_for_unit=max_spikes_for_unit, seed=seed)
+                                                             max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
         metrics_epochs.append(d_primes_epochs)
 
     if 'nn_hit_rate' in metric_names or 'nn_miss_rate' in metric_names:
         nn_hit_rates_epochs, nn_miss_rates_epochs = metric_calculator.compute_nn_metrics(
-            num_channels_to_compare=num_channels_to_compare, max_spikes_for_unit=max_spikes_for_unit,
+            num_channels_to_compare=num_channels_to_compare, max_spikes_per_cluster=max_spikes_per_cluster,
             max_spikes_for_nn=max_spikes_for_nn, n_neighbors=n_neighbors, seed=seed)
         if 'nn_hit_rate' in metric_names:
             metrics_epochs.append(nn_hit_rates_epochs)
