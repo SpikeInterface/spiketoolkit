@@ -7,7 +7,7 @@ class ThresholdNumSpikes(ThresholdCurator):
     installed = True  # check at class level if installed or not
     curator_gui_params = [
         {'name': 'threshold', 'type': 'float', 'value':100, 'default':100, 'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'greater', will threshold any metric greater than the given threshold."},
+        {'name': 'threshold_sign', 'type': 'str', 'value':'less', 'default':'less', 'title': "If 'less', will threshold any metric less than the given threshold. If 'less_or_equal', will threshold any metric less than or equal to the given threshold. If 'greater', will threshold any metric greater than the given threshold. If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold."},
     ]
     installation_mesg = "" # err
 
