@@ -1,12 +1,10 @@
 from .filterrecording import FilterRecording
 import numpy as np
 from scipy import special
-import tempfile
 import spikeextractors as se
-from scipy.signal import butter, filtfilt
 
 try:
-    from scipy.signal import butter, filtfilt
+    import scipy.signal as ss
     HAVE_BFR = True
 except ImportError:
     HAVE_BFR = False
@@ -44,13 +42,13 @@ class BandpassFilterRecording(FilterRecording):
             fn = recording.get_sampling_frequency() / 2.
             band = np.array([self._freq_min, self._freq_max]) / fn
 
-            self._b, self._a = butter(self._order, band, btype='bandpass')
+            self._b, self._a = ss.butter(self._order, band, btype='bandpass')
 
             if not np.all(np.abs(np.roots(self._a)) < 1):
                 raise ValueError('Filter is not stable')
         if cache:
             self._chunk_size = None
-        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size)
         self.copy_channel_properties(recording)
 
     def filter_chunk(self, *, start_frame, end_frame):
@@ -77,7 +75,7 @@ class BandpassFilterRecording(FilterRecording):
             chunk_fft = chunk_fft * np.tile(kernel, (M, 1))
             chunk_filtered = np.fft.irfft(chunk_fft)
         elif self._type == 'butter':
-            chunk_filtered = filtfilt(self._b, self._a, chunk2, axis=1)
+            chunk_filtered = ss.filtfilt(self._b, self._a, chunk2, axis=1)
 
         return chunk_filtered
 

@@ -5,13 +5,12 @@ from spikeextractors import RecordingExtractor
 
 
 class FilterRecording(RecordingExtractor):
-    def __init__(self, recording, chunk_size=10000, cache=False):
+    def __init__(self, recording, chunk_size=10000):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
         self._chunk_size = chunk_size
         self._filtered_chunk_cache = FilteredChunkCache()
-        self._cache = cache
         self._traces = None
         se.RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording)
