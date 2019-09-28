@@ -1,4 +1,4 @@
-import spiketoolkit as st
+from ..postprocessing.postprocessing_tools import _get_quality_metric_data
 import spikeextractors as se
 import numpy as np
 
@@ -48,10 +48,9 @@ def get_firing_times_ids(sorting, sampling_frequency):
 
 
 def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
-                            amp_peak='both',
-                            amp_frames_before=3, amp_frames_after=3, max_spikes_per_unit=np.inf,
-                            max_spikes_for_pca=np.inf, \
-                            recompute_waveform_info=True, save_features_props=False, verbose=False, seed=0):
+                            amp_peak='both', amp_frames_before=3, amp_frames_after=3, max_spikes_per_unit=np.inf,
+                            max_spikes_for_pca=np.inf, recompute_waveform_info=True, save_features_props=False,
+                            verbose=False, seed=0):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -95,8 +94,16 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
     -------
     spike_times: numpy.ndarray (num_spikes x 0)
         Spike times in frames
+    spike_times:amps: numpy.ndarray (num_spikes x 0)
+        Spike times in frames for amplitudes
+    spike_times_pca: numpy.ndarray (num_spikes x 0)
+        Spike times in frames for pca
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
+    spike_clusters_amps: numpy.ndarray (num_spikes x 0)
+        Cluster IDs for each spike time in amplitudes
+    spike_clusters_pca: numpy.ndarray (num_spikes x 0)
+        Cluster IDs for each spike time in pca
     amplitudes: numpy.ndarray (num_spikes x 0)
         Amplitude value for each spike time
     pc_features: numpy.ndarray (num_spikes x num_pcs x num_channels)
@@ -109,17 +116,21 @@ def get_quality_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2.
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, amplitudes, _, pc_features, pc_feature_ind \
-        = st.postprocessing.postprocessing_tools._get_quality_metric_data(recording, sorting, nPC=nPC,
-                                                                          ms_before=ms_before, ms_after=ms_after,
-                                                                          dtype=dtype, amp_method=amp_method,
-                                                                          amp_peak=amp_peak,
-                                                                          amp_frames_before=amp_frames_before,
-                                                                          amp_frames_after=amp_frames_after,
-                                                                          max_spikes_per_unit=max_spikes_per_unit,
-                                                                          max_spikes_for_pca=max_spikes_for_pca,
-                                                                          recompute_waveform_info=recompute_waveform_info,
-                                                                          save_features_props=save_features_props,
-                                                                          verbose=verbose, seed=seed)
-    return recording.frame_to_time(spike_times).flatten('F'), spike_clusters.astype(int).flatten('F'), \
-           amplitudes.flatten('F'), pc_features, pc_feature_ind
+    spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
+    amplitudes, channel_map, pc_features, pc_feature_ind = _get_quality_metric_data(
+        recording, sorting, nPC=nPC,
+        ms_before=ms_before, ms_after=ms_after,
+        dtype=dtype, amp_method=amp_method,
+        amp_peak=amp_peak,
+        amp_frames_before=amp_frames_before,
+        amp_frames_after=amp_frames_after,
+        max_spikes_per_unit=max_spikes_per_unit,
+        max_spikes_for_pca=max_spikes_for_pca,
+        recompute_waveform_info=recompute_waveform_info,
+        save_features_props=save_features_props,
+        verbose=verbose, seed=seed)
+
+    return recording.frame_to_time(spike_times), recording.frame_to_time(spike_times_amps), \
+           recording.frame_to_time(spike_times_pca), spike_clusters.astype(int), \
+           spike_clusters_amps.astype(int), spike_clusters_pca.astype(int), \
+           amplitudes, pc_features, pc_feature_ind
