@@ -715,7 +715,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
-                  amp_frames_before=3, amp_frames_after=3, max_spikes_per_unit=np.inf, max_spikes_for_pca=np.inf,
+                  amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
                   recompute_waveform_info=True, save_features_props=False, write_waveforms=False, verbose=False,
                   seed=0):
     '''
@@ -751,8 +751,6 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         Frames before peak to compute amplitude
     amp_frames_after: int
         Frames after peak to compute amplitude
-    max_spikes_per_unit: int
-        The maximum number of spikes to extract per unit.
     max_spikes_for_pca: int
         The maximum number of waveforms to use to compute PCA (default is np.inf)
     recompute_waveform_info: bool
@@ -768,6 +766,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
+
+    max_spikes_per_unit = np.inf
 
     _empty_flag = False
     for unit_id in sorting.get_unit_ids():
@@ -1015,8 +1015,8 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
         for unit_id in sorting.get_unit_ids():
             waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
 
-    spike_times, spike_clusters, spike_clusters_amps, spike_clusters_pcs, amplitudes, \
-    channel_map, pc_features, pc_feature_ind \
+    spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
+    amplitudes, channel_map, pc_features, pc_feature_ind \
         = _get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
