@@ -6,9 +6,43 @@ from spiketoolkit.validation import compute_isolation_distances, compute_isi_vio
     MetricCalculator
 
 
-def test_snrs():
-    pass
-
-
 def test_calculator():
-    pass
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
+    mc = MetricCalculator(sort, rec)
+
+    _ = mc.compute_metrics()
+    metric_dict = mc.get_metrics_dict()
+    assert 'firing_rate' in metric_dict.keys()
+    assert 'num_spikes' in metric_dict.keys()
+    assert 'isi_viol' in metric_dict.keys()
+    assert 'presence_ratio' in metric_dict.keys()
+    assert 'amplitude_cutoff' in metric_dict.keys()
+    assert 'max_drift' in metric_dict.keys()
+    assert 'cumulative_drift' in metric_dict.keys()
+    assert 'silhouette_score' in metric_dict.keys()
+    assert 'isolation_distance' in metric_dict.keys()
+    assert 'l_ratio' in metric_dict.keys()
+    assert 'd_prime' in metric_dict.keys()
+    assert 'nn_hit_rate' in metric_dict.keys()
+    assert 'nn_miss_rate' in metric_dict.keys()
+    assert 'snr' in metric_dict.keys()
+
+
+def test_functions():
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
+
+    firing_rates = compute_firing_rates(sort)
+    num_spikes = compute_num_spikes(sort)
+    isi = compute_isi_violations(sort)
+    presence = compute_presence_ratios(sort)
+
+    amp_cutoff = compute_amplitude_cutoffs(sort, rec)
+
+    max_drift, cum_drift = compute_drift_metrics(sort, rec)
+    silh = compute_silhouette_scores(sort, rec)
+    iso = compute_isolation_distances(sort, rec)
+    l_ratio = compute_l_ratios(sort, rec)
+    dprime = compute_d_primes(sort, rec)
+    nn_hit, nn_miss = compute_nn_metrics(sort, rec)
+
+    snr = compute_snrs(sort, rec)
