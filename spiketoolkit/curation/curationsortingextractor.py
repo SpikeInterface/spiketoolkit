@@ -41,12 +41,12 @@ class CurationSortingExtractor(SortingExtractor):
         valid_unit_id = False
         spike_train = np.asarray([])
         for root in self._roots:
-            if (root.unit_id == unit_id):
+            if root.unit_id == unit_id:
                 valid_unit_id = True
                 full_spike_train = root.get_spike_train()
                 inds = np.where((start_frame <= full_spike_train) & (full_spike_train < end_frame))
                 spike_train = full_spike_train[inds]
-        if (valid_unit_id):
+        if valid_unit_id:
             return spike_train
         else:
             raise ValueError(str(unit_id) + " is an invalid unit id")
@@ -66,7 +66,7 @@ class CurationSortingExtractor(SortingExtractor):
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
-        if (unit_id in root_ids):
+        if unit_id in root_ids:
             root_index = root_ids.index(unit_id)
             print(self._roots[root_index])
         else:
@@ -80,14 +80,14 @@ class CurationSortingExtractor(SortingExtractor):
         unit_ids: list
             The unit ids to be excluded
         '''
-        if (len(unit_ids) == 0):
+        if len(unit_ids) == 0:
             return
         root_ids = []
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
 
-        if (set(unit_ids).issubset(set(root_ids)) and len(unit_ids) > 0):
+        if set(unit_ids).issubset(set(root_ids)) and len(unit_ids) > 0:
             indices_to_be_deleted = []
             for unit_id in unit_ids:
                 root_index = root_ids.index(unit_id)
@@ -107,7 +107,7 @@ class CurationSortingExtractor(SortingExtractor):
         unit_ids: list
             The unit ids to be merged
         '''
-        if (len(unit_ids) <= 1):
+        if len(unit_ids) <= 1:
             return
 
         root_ids = []
@@ -116,7 +116,7 @@ class CurationSortingExtractor(SortingExtractor):
             root_ids.append(root_id)
 
         indices_to_be_deleted = []
-        if (set(unit_ids).issubset(set(root_ids))):
+        if set(unit_ids).issubset(set(root_ids)):
             # Find all unique feature names and create all feature lists
             all_feature_names = []
             for unit_id in unit_ids:
@@ -174,7 +174,7 @@ class CurationSortingExtractor(SortingExtractor):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
 
-        if (unit_id in root_ids):
+        if unit_id in root_ids:
             indices_1 = np.sort(np.asarray(list(set(indices))))
 
             root_index = root_ids.index(unit_id)
@@ -226,7 +226,7 @@ class CurationSortingExtractor(SortingExtractor):
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
-        if (unit_id in root_ids):
+        if unit_id in root_ids:
             root_index = root_ids.index(unit_id)
             print(self._roots[root_index])
         else:
@@ -253,7 +253,7 @@ class Unit(object):
         return self.children
 
     def __str__(self, level=0):
-        if (level == 0):
+        if level == 0:
             ret = "\t" * (max(level - 1, 0)) + repr(self.unit_id) + "\n"
         else:
             ret = "\t" * (max(level - 1, 0)) + "^-------" + repr(self.unit_id) + "\n"
