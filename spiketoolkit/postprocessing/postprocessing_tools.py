@@ -713,7 +713,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 
-def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions=None,
+def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
                   amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
                   recompute_info=True, save_features_props=False, write_waveforms=False, verbose=False,
@@ -729,8 +729,8 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
         The sorting extractor
     output_folder: str
         The output folder where the phy template-gui files are saved
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     electrode_dimensions: list
         If electrode locations are 3D, it indicates the 2D dimensions to use as channel location
     grouping_property: str
@@ -802,7 +802,7 @@ def export_to_phy(recording, sorting, output_folder, nPC=3, electrode_dimensions
 
     spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms, \
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
-    positions = _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_property, ms_before,
+    positions = _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property, ms_before,
                               ms_after, dtype, amp_method, amp_peak, amp_frames_before, amp_frames_after,
                               max_spikes_per_unit, max_spikes_for_pca, recompute_info, save_features_props,
                               verbose, seed)
@@ -955,12 +955,12 @@ def _get_amp_metric_data(recording, sorting, amp_method, amp_peak,
     return spike_times, spike_clusters, amplitudes
 
 
-def _get_pca_metric_data(recording, sorting, nPC, ms_before, ms_after, dtype, max_spikes_per_unit, max_spikes_for_pca,
+def _get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, max_spikes_per_unit, max_spikes_for_pca,
                          recompute_info, save_features_props, verbose, seed):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
 
-    pc_scores, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
+    pc_scores, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
                                                   max_spikes_per_unit=max_spikes_per_unit, ms_before=ms_before,
                                                   ms_after=ms_after, dtype=dtype, save_as_features=save_features_props,
                                                   max_spikes_for_pca=max_spikes_for_pca, verbose=verbose, seed=seed,
@@ -1000,14 +1000,14 @@ def _get_pca_metric_data(recording, sorting, nPC, ms_before, ms_after, dtype, ma
     return spike_times, spike_clusters, pc_features, pc_feature_ind
 
 
-def _get_quality_metric_data(recording, sorting, nPC, ms_before, ms_after, dtype, amp_method, amp_peak,
+def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method, amp_peak,
                              amp_frames_before, amp_frames_after, max_spikes_per_unit, max_spikes_for_pca,
                              recompute_info, save_features_props, verbose, seed):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
         sorting.clear_units_spike_features(feature_name='amplitudes')
 
-    pc_scores, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=nPC, by_electrode=True,
+    pc_scores, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
                                                   max_spikes_per_unit=max_spikes_per_unit, ms_before=ms_before,
                                                   ms_after=ms_after, dtype=dtype, save_as_features=save_features_props,
                                                   max_spikes_for_pca=max_spikes_for_pca, verbose=verbose, seed=seed,
@@ -1081,7 +1081,7 @@ def _get_quality_metric_data(recording, sorting, nPC, ms_before, ms_after, dtype
            amplitudes, pc_features, pc_feature_ind
 
 
-def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_property,
+def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property,
                   ms_before, ms_after, dtype, amp_method, amp_peak, amp_frames_before,
                   amp_frames_after, max_spikes_per_unit, max_spikes_for_pca,
                   recompute_info, save_features_props, verbose, seed):
@@ -1117,7 +1117,7 @@ def _get_phy_data(recording, sorting, nPC, electrode_dimensions, grouping_proper
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
     amplitudes, pc_features, pc_feature_ind \
-        = _get_quality_metric_data(recording, sorting, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+        = _get_quality_metric_data(recording, sorting, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
                                    amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit,

@@ -304,7 +304,7 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
 
 def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
-                          nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
+                          n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
                           max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
                           epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -320,8 +320,8 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
         Time period for evaluating drift.
     drift_metrics_min_spikes_per_interval: int
         Minimum number of spikes for evaluating drift metrics per interval.
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -360,7 +360,7 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -381,7 +381,7 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
     return max_drifts_epochs, cumulative_drifts_epochs
 
 
-def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, nPC=3, ms_before=1., ms_after=2.,
+def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, n_comp=3, ms_before=1., ms_after=2.,
                               dtype=None, max_spikes_per_unit=300, recompute_info=True,
                               max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
                               epoch_names=None, save_as_property=True, seed=0):
@@ -396,8 +396,8 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
         The given recording extractor from which to extract amplitudes.
     max_spikes_for_silhouette: int
         Max spikes to be used for silhouette metric
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -434,7 +434,7 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -453,7 +453,7 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
     return silhouette_scores_epochs
 
 
-def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3,
+def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3,
                                 ms_before=1., ms_after=2.,
                                 dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5,
                                 save_features_props=False,
@@ -471,8 +471,8 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         The number of channels to be used for the PC extraction and comparison
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -509,7 +509,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -529,7 +529,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
     return isolation_distances_epochs
 
 
-def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3, ms_before=1.,
+def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
                      ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
                      max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
                      epoch_names=None, save_as_property=True, seed=0):
@@ -546,8 +546,8 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
         The number of channels to be used for the PC extraction and comparison
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -584,7 +584,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -603,7 +603,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
     return l_ratios_epochs
 
 
-def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, nPC=3, ms_before=1.,
+def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
                      ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
                      max_spikes_for_pca=1e5,
                      save_features_props=False, unit_ids=None, epoch_tuples=None, epoch_names=None,
@@ -621,8 +621,8 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
         The number of channels to be used for the PC extraction and comparison
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -659,7 +659,7 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -680,7 +680,7 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
 
 def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500,
                        max_spikes_for_nn=10000,
-                       n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300,
+                       n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300,
                        recompute_info=True, max_spikes_for_pca=1e5, save_features_props=False,
                        unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -700,8 +700,8 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         Max spikes to be used for nearest-neighbors calculation.
     n_neighbors: int
         Number of neighbors to compare.
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -740,7 +740,7 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.compute_pca_scores(recording=recording, nPC=nPC, ms_before=ms_before, ms_after=ms_after,
+    metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
@@ -766,7 +766,7 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
                     snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
                     drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
                     max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
-                    max_spikes_for_nn=10000, n_neighbors=4, nPC=3, ms_before=1., ms_after=2., dtype=None,
+                    max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None,
                     max_spikes_per_unit=300,  amp_method='absolute', amp_peak='both', amp_frames_before=3, 
                     amp_frames_after=3, recompute_info=True,  max_spikes_for_pca=1e5, save_features_props=False, 
                     metric_names=None, unit_ids=None, epoch_tuples=None, epoch_names=None, return_dataframe=False, 
@@ -823,8 +823,8 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
         The maximum number of spikes to use to compute PCA (default is np.inf)
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -885,7 +885,7 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
                              "silhouette_score isolation_distance, l_ratio, d_prime, nn_hit_rate, amplitude_cutoff, "
                              "or nn_miss_rate.")
         else:
-            metric_calculator.compute_all_metric_data(recording=recording, nPC=nPC, ms_before=ms_before,
+            metric_calculator.compute_all_metric_data(recording=recording, n_comp=n_comp, ms_before=ms_before,
                                                       ms_after=ms_after, dtype=dtype,
                                                       max_spikes_per_unit=max_spikes_per_unit, amp_method=amp_method,
                                                       amp_peak=amp_peak,

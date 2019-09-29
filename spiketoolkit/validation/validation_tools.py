@@ -37,7 +37,7 @@ def get_spike_times_metrics_data(sorting, sampling_frequency):
     return spike_times, spike_clusters
 
 
-def get_pca_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=np.inf,
+def get_pca_metric_data(recording, sorting, n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=np.inf,
                         max_spikes_for_pca=np.inf, recompute_info=True, save_features_props=False,
                         verbose=False, seed=0):
     '''
@@ -49,8 +49,8 @@ def get_pca_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dt
         The recording extractor
     sorting: SortingExtractor
         The sorting extractor
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -86,7 +86,7 @@ def get_pca_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dt
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, nPC=nPC,
+    spike_times, spike_clusters, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, n_comp=n_comp,
                                                                                     ms_before=ms_before,
                                                                                     ms_after=ms_after,
                                                                                     dtype=dtype,
@@ -163,7 +163,7 @@ def get_amplitude_metric_data(recording, sorting, amp_method='absolute', amp_pea
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(spike_clusters), np.squeeze(amplitudes)
 
 
-def get_all_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
+def get_all_metric_data(recording, sorting, n_comp=3, ms_before=1., ms_after=2., dtype=None, amp_method='absolute',
                         amp_peak='both', amp_frames_before=3, amp_frames_after=3, max_spikes_per_unit=np.inf,
                         max_spikes_for_pca=np.inf, recompute_info=True, save_features_props=False,
                         verbose=False, seed=0):
@@ -176,8 +176,8 @@ def get_all_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dt
         The recording extractor
     sorting: SortingExtractor
         The sorting extractor
-    nPC: int
-        nPCFeatures in template-gui format
+    n_comp: int
+        n_compFeatures in template-gui format
     ms_before: float
         Time period in ms to cut waveforms before the spike events
     ms_after: float
@@ -234,7 +234,7 @@ def get_all_metric_data(recording, sorting, nPC=3, ms_before=1., ms_after=2., dt
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
     amplitudes, channel_map, pc_features, pc_feature_ind = _get_quality_metric_data(
-        recording, sorting, nPC=nPC,
+        recording, sorting, n_comp=n_comp,
         ms_before=ms_before, ms_after=ms_after,
         dtype=dtype, amp_method=amp_method,
         amp_peak=amp_peak,

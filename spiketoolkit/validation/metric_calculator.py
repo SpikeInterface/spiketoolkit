@@ -138,7 +138,7 @@ class MetricCalculator:
         self._spike_clusters_amps = spike_clusters
         self._spike_times_amps = spike_times
 
-    def compute_pca_scores(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
+    def compute_pca_scores(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
                            max_spikes_per_unit=300, recompute_info=True,
                            max_spikes_for_pca=1e5, save_features_props=False, seed=0):
         '''
@@ -148,8 +148,8 @@ class MetricCalculator:
         ----------
         recording: RecordingExtractor
             The recording extractor
-        nPC: int
-            nPCFeatures in template-gui format
+        n_comp: int
+            n_compFeatures in template-gui format
         ms_before: float
             Time period in ms to cut waveforms before the spike events
         ms_after: float
@@ -175,7 +175,7 @@ class MetricCalculator:
             self.set_recording(recording)
 
         spike_times, spike_clusters, pc_features, pc_feature_ind = get_pca_metric_data(self._recording, self._sorting,
-                                                                                       nPC=nPC,
+                                                                                       n_comp=n_comp,
                                                                                        ms_before=ms_before,
                                                                                        ms_after=ms_after, dtype=dtype,
                                                                                        max_spikes_per_unit=
@@ -192,7 +192,7 @@ class MetricCalculator:
         self._spike_times_pca = spike_times
         self._pc_feature_ind = pc_feature_ind
 
-    def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
+    def compute_all_metric_data(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
                                 max_spikes_per_unit=300, amp_method='absolute', amp_peak='both',
                                 amp_frames_before=3, amp_frames_after=3, recompute_info=True,
                                 max_spikes_for_pca=1e5, save_features_props=False, seed=0):
@@ -203,8 +203,8 @@ class MetricCalculator:
         ----------
         recording: RecordingExtractor
             The recording extractor
-        nPC: int
-            nPCFeatures in template-gui format
+        n_comp: int
+            n_compFeatures in template-gui format
         ms_before: float
             Time period in ms to cut waveforms before the spike events
         ms_after: float
@@ -239,7 +239,7 @@ class MetricCalculator:
             self.set_recording(recording)
         spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
         amplitudes, pc_features, pc_feature_ind = get_all_metric_data(
-            self._recording, self._sorting, nPC=nPC, ms_before=ms_before,
+            self._recording, self._sorting, n_comp=n_comp, ms_before=ms_before,
             ms_after=ms_after, dtype=dtype, amp_method=amp_method,
             amp_peak=amp_peak, amp_frames_before=amp_frames_before,
             amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit,
