@@ -17,7 +17,7 @@ class WhitenRecording(FilterRecording):
     def __init__(self, recording, chunk_size=30000, cache=False):
         self._recording = recording
         self._whitening_matrix = self._compute_whitening_matrix()
-        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size)
 
     def _get_random_data_for_whitening(self, num_chunks=50, chunk_size=500):
         N = self._recording.get_num_frames()

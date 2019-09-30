@@ -1,12 +1,13 @@
 from .filterrecording import FilterRecording
+import spikeextractors as se
 import numpy as np
 
 try:
-    from scipy import special
-    from scipy.signal import iirnotch, filtfilt
+    import scipy.signal as ss
     HAVE_NFR = True
 except ImportError:
     HAVE_NFR = False
+
 
 class NotchFilterRecording(FilterRecording):
 
@@ -26,10 +27,15 @@ class NotchFilterRecording(FilterRecording):
         assert HAVE_NFR, "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq = freq
         self._q = q
-        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache=cache)
-        self.copy_channel_properties(recording)
+        fn = 0.5 * float(recording.get_sampling_frequency())
+        self._b, self._a = ss.iirnotch(self._freq / fn, self._q)
+
+        if not np.all(np.abs(np.roots(self._a)) < 1):
+            raise ValueError('Filter is not stable')
         if cache:
-            self._traces = self.get_traces()
+            self._chunk_size = None
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size)
+        self.copy_channel_properties(recording)
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
@@ -39,40 +45,9 @@ class NotchFilterRecording(FilterRecording):
         filtered_padded_chunk = self._do_filter(padded_chunk)
         return filtered_padded_chunk[:, start_frame - i1:end_frame - i1]
 
-    def _create_filter_kernel(self, N, sampling_frequency, freq_min, freq_max, freq_wid=1000):
-        # Matches ahb's code /matlab/processors/ms_bandpass_filter.m
-        # improved ahb, changing tanh to erf, correct -3dB pts  6/14/16
-        T = N / sampling_frequency  # total time
-        df = 1 / T  # frequency grid
-        relwid = 3.0  # relative bottom-end roll-off width param, kills low freqs by factor 1e-5.
-
-        k_inds = np.arange(0, N)
-        k_inds = np.where(k_inds <= (N + 1) / 2, k_inds, k_inds - N)
-
-        fgrid = df * k_inds
-        absf = np.abs(fgrid)
-
-        val = np.ones(fgrid.shape)
-        if freq_min != 0:
-            val = val * (1 + special.erf(relwid * (absf - freq_min) / freq_min)) / 2
-            val = np.where(np.abs(k_inds) < 0.1, 0, val)  # kill DC part exactly
-        if freq_max != 0:
-            val = val * (1 - special.erf((absf - freq_max) / freq_wid)) / 2;
-        val = np.sqrt(val)  # note sqrt of filter func to apply to spectral intensity not ampl
-        return val
-
     def _do_filter(self, chunk):
-        sampling_frequency = self._recording.get_sampling_frequency()
-        M = chunk.shape[0]
-        chunk2 = chunk
-        fn = 0.5 * float(self.get_sampling_frequency())
-        # Do the actual filtering with a DFT with real input
-        b, a = iirnotch(self._freq / fn, self._q)
+        chunk_filtered = ss.filtfilt(self._b, self._a, chunk, axis=1)
 
-        if np.all(np.abs(np.roots(a)) < 1) and np.all(np.abs(np.roots(a)) < 1):
-            chunk_filtered = filtfilt(b, a, chunk2, axis=1)
-        else:
-            raise ValueError('Filter is not stable')
         return chunk_filtered
 
     def _read_chunk(self, i1, i2):
@@ -114,10 +89,14 @@ def notch_filter(recording, freq=3000, q=30, chunk_size=30000, cache=False):
         The notch-filtered recording extractor object
 
     '''
-    return NotchFilterRecording(
+    notch_recording =  NotchFilterRecording(
         recording=recording,
         freq=freq,
         q=q,
         chunk_size=chunk_size,
         cache=cache,
     )
+    if cache:
+        return se.CacheRecordingExtractor(notch_recording)
+    else:
+        return notch_recording
