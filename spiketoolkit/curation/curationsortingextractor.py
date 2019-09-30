@@ -12,7 +12,7 @@ class CurationSortingExtractor(SortingExtractor):
         self._original_unit_ids = list(np.copy(parent_sorting.get_unit_ids()))
         self._all_ids = list(np.copy(parent_sorting.get_unit_ids()))
 
-        #Create and store roots with original unit ids and cached spiketrains
+        # Create and store roots with original unit ids and cached spiketrains
         self._roots = []
         for unit_id in self._original_unit_ids:
             root = Unit(unit_id)
@@ -41,12 +41,12 @@ class CurationSortingExtractor(SortingExtractor):
         valid_unit_id = False
         spike_train = np.asarray([])
         for root in self._roots:
-            if(root.unit_id == unit_id):
+            if root.unit_id == unit_id:
                 valid_unit_id = True
                 full_spike_train = root.get_spike_train()
                 inds = np.where((start_frame <= full_spike_train) & (full_spike_train < end_frame))
                 spike_train = full_spike_train[inds]
-        if(valid_unit_id):
+        if valid_unit_id:
             return spike_train
         else:
             raise ValueError(str(unit_id) + " is an invalid unit id")
@@ -66,12 +66,11 @@ class CurationSortingExtractor(SortingExtractor):
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
-        if(unit_id in root_ids):
+        if unit_id in root_ids:
             root_index = root_ids.index(unit_id)
             print(self._roots[root_index])
         else:
             raise ValueError("invalid unit id")
-
 
     def exclude_units(self, unit_ids):
         '''This function deletes roots from the curation tree according to the given unit_ids
@@ -81,21 +80,21 @@ class CurationSortingExtractor(SortingExtractor):
         unit_ids: list
             The unit ids to be excluded
         '''
-        if(len(unit_ids) == 0):
+        if len(unit_ids) == 0:
             return
         root_ids = []
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
 
-        if(set(unit_ids).issubset(set(root_ids)) and len(unit_ids) > 0):
+        if set(unit_ids).issubset(set(root_ids)) and len(unit_ids) > 0:
             indices_to_be_deleted = []
             for unit_id in unit_ids:
                 root_index = root_ids.index(unit_id)
                 indices_to_be_deleted.append(root_index)
                 if unit_id in self._unit_features:
                     del self._unit_features[unit_id]
-            self._roots = [self._roots[i] for i,_ in enumerate(root_ids) if i not in indices_to_be_deleted]
+            self._roots = [self._roots[i] for i, _ in enumerate(root_ids) if i not in indices_to_be_deleted]
         else:
             raise ValueError(str(unit_ids) + " has one or more invalid unit ids")
 
@@ -108,7 +107,7 @@ class CurationSortingExtractor(SortingExtractor):
         unit_ids: list
             The unit ids to be merged
         '''
-        if(len(unit_ids) <= 1):
+        if len(unit_ids) <= 1:
             return
 
         root_ids = []
@@ -117,8 +116,8 @@ class CurationSortingExtractor(SortingExtractor):
             root_ids.append(root_id)
 
         indices_to_be_deleted = []
-        if(set(unit_ids).issubset(set(root_ids))):
-            #Find all unique feature names and create all feature lists
+        if set(unit_ids).issubset(set(root_ids)):
+            # Find all unique feature names and create all feature lists
             all_feature_names = []
             for unit_id in unit_ids:
                 feature_names = self.get_unit_spike_feature_names(unit_id)
@@ -132,7 +131,7 @@ class CurationSortingExtractor(SortingExtractor):
             for i in range(len(shared_feature_names)):
                 shared_features.append([])
 
-            new_root_id = max(self._all_ids)+1
+            new_root_id = max(self._all_ids) + 1
             self._all_ids.append(new_root_id)
             new_root = Unit(new_root_id)
             all_spike_trains = []
@@ -144,17 +143,18 @@ class CurationSortingExtractor(SortingExtractor):
                     features = self.get_unit_spike_features(unit_id, feature_name)
                     shared_features[i].append(features)
                 del self._unit_features[unit_id]
-                self._roots[root_index].set_spike_train(np.asarray([])) #clear spiketrain
+                self._roots[root_index].set_spike_train(np.asarray([]))  # clear spiketrain
                 indices_to_be_deleted.append(root_index)
 
             all_spike_trains = np.concatenate(all_spike_trains)
             sort_indices = np.argsort(all_spike_trains)
             new_root.set_spike_train(np.asarray(all_spike_trains)[sort_indices])
             del all_spike_trains
-            self._roots = [self._roots[i] for i,_ in enumerate(root_ids) if i not in indices_to_be_deleted]
+            self._roots = [self._roots[i] for i, _ in enumerate(root_ids) if i not in indices_to_be_deleted]
             self._roots.append(new_root)
             for i, feature_name in enumerate(shared_feature_names):
-                self.set_unit_spike_features(new_root_id, feature_name, np.concatenate(shared_features[i])[sort_indices])
+                self.set_unit_spike_features(new_root_id, feature_name,
+                                             np.concatenate(shared_features[i])[sort_indices])
         else:
             raise ValueError(str(unit_ids) + " has one or more invalid unit ids")
 
@@ -174,7 +174,7 @@ class CurationSortingExtractor(SortingExtractor):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
 
-        if(unit_id in root_ids):
+        if unit_id in root_ids:
             indices_1 = np.sort(np.asarray(list(set(indices))))
 
             root_index = root_ids.index(unit_id)
@@ -190,13 +190,13 @@ class CurationSortingExtractor(SortingExtractor):
             spike_train_2 = original_spike_train[indices_2]
             del original_spike_train
 
-            new_root_1_id = max(self._all_ids)+1
+            new_root_1_id = max(self._all_ids) + 1
             self._all_ids.append(new_root_1_id)
             new_root_1 = Unit(new_root_1_id)
             new_root_1.add_child(new_child)
             new_root_1.set_spike_train(spike_train_1)
 
-            new_root_2_id = max(self._all_ids)+1
+            new_root_2_id = max(self._all_ids) + 1
             self._all_ids.append(new_root_2_id)
             new_root_2 = Unit(new_root_2_id)
             new_root_2.add_child(new_child)
@@ -226,7 +226,7 @@ class CurationSortingExtractor(SortingExtractor):
         for i in range(len(self._roots)):
             root_id = self._roots[i].unit_id
             root_ids.append(root_id)
-        if(unit_id in root_ids):
+        if unit_id in root_ids:
             root_index = root_ids.index(unit_id)
             print(self._roots[root_index])
         else:
@@ -253,10 +253,10 @@ class Unit(object):
         return self.children
 
     def __str__(self, level=0):
-        if(level == 0):
-            ret = "\t"*(max(level-1, 0)) +repr(self.unit_id)+ "\n"
+        if level == 0:
+            ret = "\t" * (max(level - 1, 0)) + repr(self.unit_id) + "\n"
         else:
-            ret = "\t"*(max(level-1, 0)) + "^-------" +repr(self.unit_id)+ "\n"
+            ret = "\t" * (max(level - 1, 0)) + "^-------" + repr(self.unit_id) + "\n"
         for child in self.children:
-            ret += child.__str__(level+1)
+            ret += child.__str__(level + 1)
         return ret
