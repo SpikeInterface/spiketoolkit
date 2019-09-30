@@ -5,12 +5,10 @@ import spikemetrics.metrics as metrics
 from spikemetrics.utils import Epoch, printProgressBar
 import pandas as pd
 from collections import defaultdict, OrderedDict
+from .validation_tools import get_all_metric_data, get_pca_metric_data, get_amplitude_metric_data, \
+    get_spike_times_metrics_data
 import copy
 from spiketoolkit.curation.thresholdcurator import ThresholdCurator
-
-'''
-The MetricCalculator class allows the user to compute and store a variety of quality metrics about their sorted dataset.
-'''
 
 
 class MetricCalculator:
@@ -52,11 +50,10 @@ class MetricCalculator:
             unit_ids = set(unit_ids)
             unit_ids = list(unit_ids.intersection(sorting.get_unit_ids()))
 
-        if len(unit_ids)==0:
+        if len(unit_ids) == 0:
             raise ValueError("No units found.")
 
-        spike_times, spike_clusters = st.validation.validation_tools.get_firing_times_ids(sorting,
-                                                                                          self._sampling_frequency)
+        spike_times, spike_clusters = get_spike_times_metrics_data(sorting, self._sampling_frequency)
         assert isinstance(sorting, SortingExtractor), "'sorting' must be  a SortingExtractor object"
         self._sorting = sorting
         self._set_unit_ids(unit_ids)
@@ -69,6 +66,10 @@ class MetricCalculator:
         self._amplitudes = None
         self._pc_features = None
         self._pc_feature_ind = None
+        self._spike_clusters_pca = None
+        self._spike_clusters_amps = None
+        self._spike_times_pca = None
+        self._spike_times_amps = None
         # Dictionary of cached metrics
         self.metrics = {}
         self.verbose = verbose
@@ -126,22 +127,75 @@ class MetricCalculator:
         else:
             self.set_recording(recording)
 
-        amplitudes_list = st.postprocessing.get_unit_amplitudes(self._recording, self._sorting, unit_ids=None,
-                                                                method=amp_method, save_as_features=save_features_props,
-                                                                peak=amp_peak, frames_before=amp_frames_before,
-                                                                frames_after=amp_frames_after, seed=seed)
-
-        index_amps = [0] * len(amplitudes_list)
-        amplitudes = np.zeros(len(self._spike_clusters))
-        for i, spike_cluster in enumerate(self._spike_clusters):
-            amplitudes[i] = amplitudes_list[int(spike_cluster)][index_amps[int(spike_cluster)]]
-            index_amps[int(spike_cluster)] += 1
+        spike_times, spike_clusters, amplitudes = get_amplitude_metric_data(self._recording, self._sorting,
+                                                                            amp_method=amp_method,
+                                                                            save_features_props=save_features_props,
+                                                                            amp_peak=amp_peak,
+                                                                            amp_frames_before=amp_frames_before,
+                                                                            amp_frames_after=amp_frames_after,
+                                                                            seed=seed)
         self._amplitudes = amplitudes
+        self._spike_clusters_amps = spike_clusters
+        self._spike_times_amps = spike_times
 
-    def compute_all_metric_data(self, recording=None, nPC=3, ms_before=1., ms_after=2., dtype=None,
-                                max_spikes_per_unit=np.inf, amp_method='absolute', amp_peak='both',
-                                amp_frames_before=3, amp_frames_after=3, recompute_waveform_info=True,
-                                max_spikes_for_pca=np.inf, save_features_props=False, seed=0):
+    def compute_pca_scores(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
+                           max_spikes_per_unit=300, recompute_info=True,
+                           max_spikes_for_pca=1e5, save_features_props=False, seed=0):
+        '''
+        Computes and stores pca for the metrics computation
+
+        Parameters
+        ----------
+        recording: RecordingExtractor
+            The recording extractor
+        n_comp: int
+            n_compFeatures in template-gui format
+        ms_before: float
+            Time period in ms to cut waveforms before the spike events
+        ms_after: float
+            Time period in ms to cut waveforms after the spike events
+        dtype: dtype
+            The numpy dtype of the waveforms
+        max_spikes_per_unit: int
+            The maximum number of spikes to extract per unit.
+        recompute_info: bool
+            If True, will always re-extract waveforms.
+        max_spikes_for_pca: int
+            The maximum number of spikes to use to compute PCA.
+        save_features_props: bool
+            If true, it will save amplitudes in the sorting extractor.
+        seed: int
+            Random seed for reproducibility
+        '''
+        if recording is None:
+            if self._recording is None:
+                raise ValueError(
+                    "No recording given. Either call store_recording or pass a recording into this function")
+        else:
+            self.set_recording(recording)
+
+        spike_times, spike_clusters, pc_features, pc_feature_ind = get_pca_metric_data(self._recording, self._sorting,
+                                                                                       n_comp=n_comp,
+                                                                                       ms_before=ms_before,
+                                                                                       ms_after=ms_after, dtype=dtype,
+                                                                                       max_spikes_per_unit=
+                                                                                       max_spikes_per_unit,
+                                                                                       max_spikes_for_pca=
+                                                                                       max_spikes_for_pca,
+                                                                                       recompute_info=
+                                                                                       recompute_info,
+                                                                                       save_features_props=
+                                                                                       save_features_props,
+                                                                                       seed=seed)
+        self._pc_features = pc_features
+        self._spike_clusters_pca = spike_clusters
+        self._spike_times_pca = spike_times
+        self._pc_feature_ind = pc_feature_ind
+
+    def compute_all_metric_data(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
+                                max_spikes_per_unit=300, amp_method='absolute', amp_peak='both',
+                                amp_frames_before=3, amp_frames_after=3, recompute_info=True,
+                                max_spikes_for_pca=1e5, save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
 
@@ -149,8 +203,8 @@ class MetricCalculator:
         ----------
         recording: RecordingExtractor
             The recording extractor
-        nPC: int
-            nPCFeatures in template-gui format
+        n_comp: int
+            n_compFeatures in template-gui format
         ms_before: float
             Time period in ms to cut waveforms before the spike events
         ms_after: float
@@ -166,9 +220,9 @@ class MetricCalculator:
             If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
         amp_frames_before: int
             Frames before peak to compute amplitude
-        amp_frames_after: float
+        amp_frames_after: int
             Frames after peak to compute amplitude
-        recompute_waveform_info: bool
+        recompute_info: bool
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
@@ -183,16 +237,21 @@ class MetricCalculator:
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
             self.set_recording(recording)
-        _, _, amplitudes, pc_features, pc_feature_ind = st.validation.validation_tools.get_quality_metric_data(
-            self._recording, self._sorting, nPC=nPC, ms_before=ms_before,
+        spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
+        amplitudes, pc_features, pc_feature_ind = get_all_metric_data(
+            self._recording, self._sorting, n_comp=n_comp, ms_before=ms_before,
             ms_after=ms_after, dtype=dtype, amp_method=amp_method,
             amp_peak=amp_peak, amp_frames_before=amp_frames_before,
             amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit,
-            max_spikes_for_pca=max_spikes_for_pca, recompute_waveform_info=recompute_waveform_info,
+            max_spikes_for_pca=max_spikes_for_pca, recompute_info=recompute_info,
             save_features_props=save_features_props, seed=seed)
 
         self._amplitudes = amplitudes
+        self._spike_clusters_amps = spike_clusters_amps
+        self._spike_times_amps = spike_times_amps
         self._pc_features = pc_features
+        self._spike_clusters_pca = spike_clusters_pca
+        self._spike_times_pca = spike_times_pca
         self._pc_feature_ind = pc_feature_ind
 
     def set_amplitudes(self, amplitudes):
@@ -364,12 +423,14 @@ class MetricCalculator:
         amplitude_cutoffs_epochs: list
             The amplitude cutoffs of the sorted units in the given epochs.
         '''
-        assert self._amplitudes is not None, "No amplitudes stored. Compute amplitudes before running this method"
+        if self._amplitudes is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_amplitudes(self._recording)
 
         amplitude_cutoffs_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-            amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(self._spike_clusters[in_epoch],
+            in_epoch = np.logical_and(self._spike_times_amps > epoch[1], self._spike_times_amps < epoch[2])
+            amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(self._spike_clusters_amps[in_epoch],
                                                                        self._amplitudes[in_epoch],
                                                                        self._total_units, verbose=self.verbose)
             amplitude_cutoffs_list = []
@@ -386,7 +447,7 @@ class MetricCalculator:
         return amplitude_cutoffs_epochs
 
     def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
-                     recompute_waveform_info=True, save_features_props=False, seed=0):
+                     recompute_info=True, save_features_props=False, seed=0):
         '''
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
 
@@ -398,7 +459,7 @@ class MetricCalculator:
             Number of seconds to compute noise level from (default 10.0)
         max_spikes_per_unit_for_snr: int
             Maximum number of spikes to compute templates from (default 1000)
-        recompute_waveform_info: bool
+        recompute_info: bool
             If True, waveforms are recomputed
         save_features_props: bool
             If True, waveforms and templates are saved as sorting features/properties
@@ -410,8 +471,7 @@ class MetricCalculator:
         snrs_epochs: list
             The snrs of the sorted units in the given epochs.
         '''
-        assert self._recording is not None, "No recording stored. Add a recording first " \
-                                            "with set_recording or by computing all data for metrics"
+        assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
 
         snrs_epochs = []
         for epoch in self._epochs:
@@ -420,15 +480,17 @@ class MetricCalculator:
             channel_noise_levels = _compute_channel_noise_levels(recording=epoch_recording, mode=snr_mode,
                                                                  noise_duration=snr_noise_duration)
             templates = st.postprocessing.get_unit_templates(epoch_recording, epoch_sorting, unit_ids=self._unit_ids,
-                                                             max_spikes_per_unit=max_spikes_per_unit_for_snr, mode='median',
+                                                             max_spikes_per_unit=max_spikes_per_unit_for_snr,
+                                                             mode='median',
                                                              save_wf_as_features=save_features_props,
-                                                             recompute_waveforms=recompute_waveform_info,
+                                                             recompute_waveforms=recompute_info,
                                                              save_as_property=save_features_props, seed=seed)
 
             max_channels = st.postprocessing.get_unit_max_channels(epoch_recording, epoch_sorting,
                                                                    unit_ids=self._unit_ids,
-                                                                   max_spikes_per_unit=max_spikes_per_unit_for_snr, peak='both',
-                                                                   recompute_templates=recompute_waveform_info,
+                                                                   max_spikes_per_unit=max_spikes_per_unit_for_snr,
+                                                                   peak='both',
+                                                                   recompute_templates=recompute_info,
                                                                    save_as_property=save_features_props,
                                                                    mode='median', seed=seed)
             snr_list = []
@@ -465,13 +527,16 @@ class MetricCalculator:
         cumulative_drifts_epochs: list
             The cumulative drifts of the given units over the specified epochs
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_pca_scores(self._recording)
+
         max_drifts_epochs = []
         cumulative_drifts_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-            max_drifts_all, cumulative_drifts_all = metrics.calculate_drift_metrics(self._spike_times[in_epoch],
-                                                                                    self._spike_clusters[in_epoch],
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
+            max_drifts_all, cumulative_drifts_all = metrics.calculate_drift_metrics(self._spike_times_pca[in_epoch],
+                                                                                    self._spike_clusters_pca[in_epoch],
                                                                                     self._total_units,
                                                                                     self._pc_features[in_epoch, :, :],
                                                                                     self._pc_feature_ind,
@@ -515,14 +580,17 @@ class MetricCalculator:
         silhouette_scores_epochs: list
             The silhouette scores of the given units for the specified epochs.
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_pca_scores(self._recording)
+
         silhouette_scores_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
             spikes_in_epoch = np.sum(in_epoch)
-            spikes_for_silhouette = min(spikes_in_epoch, max_spikes_for_silhouette)
+            spikes_for_silhouette = np.min([spikes_in_epoch, max_spikes_for_silhouette])
 
-            silhouette_scores_all = metrics.calculate_silhouette_score(self._spike_clusters[in_epoch],
+            silhouette_scores_all = metrics.calculate_silhouette_score(self._spike_clusters_pca[in_epoch],
                                                                        self._total_units,
                                                                        self._pc_features[in_epoch, :, :],
                                                                        self._pc_feature_ind,
@@ -559,12 +627,14 @@ class MetricCalculator:
         isolation_distances_epochs: list
             Returns the isolation distances of each specified unit for the given epochs.
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_pca_scores(self._recording)
 
         isolation_distances_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-            isolation_distances_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
+            isolation_distances_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters_pca[in_epoch],
                                                                    total_units=self._total_units,
                                                                    pc_features=self._pc_features[in_epoch, :, :],
                                                                    pc_feature_ind=self._pc_feature_ind,
@@ -605,12 +675,14 @@ class MetricCalculator:
         l_ratios_epochs: list
             Returns the L ratios of each specified unit for the given epochs
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_pca_scores(self._recording)
 
         l_ratios_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-            l_ratios_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
+            l_ratios_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters_pca[in_epoch],
                                                         total_units=self._total_units,
                                                         pc_features=self._pc_features[in_epoch, :, :],
                                                         pc_feature_ind=self._pc_feature_ind,
@@ -651,12 +723,14 @@ class MetricCalculator:
         d_primes_epochs: list
             Returns the d primes of each specified unit for the given epochs.
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first with set_recording"
+            self.compute_pca_scores(self._recording)
 
         d_primes_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
-            d_primes_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters[in_epoch],
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
+            d_primes_all = metrics.calculate_pc_metrics(spike_clusters=self._spike_clusters_pca[in_epoch],
                                                         total_units=self._total_units,
                                                         pc_features=self._pc_features[in_epoch, :, :],
                                                         pc_feature_ind=self._pc_feature_ind,
@@ -704,17 +778,20 @@ class MetricCalculator:
         nn_miss_rates_epochs: np.array
             The nearest neighbor miss rates for each specified unit.
         '''
-        assert self._pc_features is not None, "Compute data for all metrics first"
+        if self._pc_features is None:
+            assert self._recording is not None, "No recording stored. Add a recording first " \
+                                                "with set_recording or by computing all data for metrics"
+            self.compute_pca_scores(self._recording)
 
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
         for epoch in self._epochs:
-            in_epoch = np.logical_and(self._spike_times > epoch[1], self._spike_times < epoch[2])
+            in_epoch = np.logical_and(self._spike_times_pca > epoch[1], self._spike_times_pca < epoch[2])
             spikes_in_epoch = np.sum(in_epoch)
-            spikes_for_nn = min(spikes_in_epoch, max_spikes_for_nn)
+            spikes_for_nn = np.min([spikes_in_epoch, max_spikes_for_nn])
 
             nn_hit_rates_all, nn_miss_rates_all = metrics.calculate_pc_metrics(
-                spike_clusters=self._spike_clusters[in_epoch],
+                spike_clusters=self._spike_clusters_pca[in_epoch],
                 total_units=self._total_units,
                 pc_features=self._pc_features[in_epoch, :, :],
                 pc_feature_ind=self._pc_feature_ind,
@@ -745,7 +822,8 @@ class MetricCalculator:
         return nn_hit_rates_epochs, nn_miss_rates_epochs
 
     def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, snr_mode='mad', snr_noise_duration=10.0,
-                        max_spikes_per_unit_for_snr=1000, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
+                        max_spikes_per_unit_for_snr=1000, drift_metrics_interval_s=51,
+                        drift_metrics_min_spikes_per_interval=10,
                         max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
                         max_spikes_for_nn=10000, n_neighbors=4, metric_names=None, seed=0):
         '''
@@ -777,10 +855,13 @@ class MetricCalculator:
             Max spikes to be used for nearest-neighbors calculation.
         n_neighbors: int
             Number of neighbors to compare for  nearest-neighbors calculation.
-        metrics_names: list
-            The list of metric names to be computed.
+        metrics_names: list or None
+            The list of metric names to be computed. Available metrics are: 'firing_rate', 'num_spikes', 'isi_viol',
+            'presence_ratio', 'amplitude_cutoff', 'max_drift', 'cumulative_drift', 'silhouette_score',
+            'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', 'nn_miss_rate', 'snr'. If None, all metrics are
+            computed.
         seed: int
-            Random seed for extracting pc features.
+            Random seed for extracting features.
 
         Returns
         ----------
