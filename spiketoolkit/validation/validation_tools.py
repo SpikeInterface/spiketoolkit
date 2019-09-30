@@ -233,7 +233,7 @@ def get_all_metric_data(recording, sorting, n_comp=3, ms_before=1., ms_after=2.,
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-    amplitudes, channel_map, pc_features, pc_feature_ind = _get_quality_metric_data(
+    amplitudes, pc_features, pc_feature_ind = _get_quality_metric_data(
         recording, sorting, n_comp=n_comp,
         ms_before=ms_before, ms_after=ms_after,
         dtype=dtype, amp_method=amp_method,
