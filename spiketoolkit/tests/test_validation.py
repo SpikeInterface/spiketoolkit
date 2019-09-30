@@ -9,6 +9,7 @@ from spiketoolkit.validation import compute_isolation_distances, compute_isi_vio
 def test_calculator():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
     mc = MetricCalculator(sort, rec)
+    mc.compute_all_metric_data()
 
     _ = mc.compute_metrics()
     metric_dict = mc.get_metrics_dict()
