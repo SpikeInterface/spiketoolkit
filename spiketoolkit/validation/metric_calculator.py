@@ -115,6 +115,9 @@ class MetricCalculator:
         for epoch in self._epochs:
             self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
                                       end_frame=epoch[2] * self._sampling_frequency)
+    
+    def is_filtered(self):
+        return self._is_filtered
 
     def compute_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, 
                            apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, seed=0):
