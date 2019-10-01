@@ -14,6 +14,7 @@ def test_calculator():
     _ = mc.compute_metrics()
     metric_dict = mc.get_metrics_dict()
     assert type(mc._recording._recording).__name__ == 'BandpassFilterRecording' #check if filter by default
+    assert mc.is_filtered == True
     assert 'firing_rate' in metric_dict.keys()
     assert 'num_spikes' in metric_dict.keys()
     assert 'isi_viol' in metric_dict.keys()
