@@ -107,7 +107,10 @@ class MetricCalculator:
             Low-pass frequency for optional filter (default 6000 Hz).
         '''
         if apply_filter:
+            self._is_filtered = True
             recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max, cache=True)
+        else:
+            self._is_filtered = False
         self._recording = recording
         for epoch in self._epochs:
             self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
@@ -272,7 +275,7 @@ class MetricCalculator:
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
             self.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
-            
+
         spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
         amplitudes, pc_features, pc_feature_ind = get_all_metric_data(
             self._recording, self._sorting, n_comp=n_comp, ms_before=ms_before,
