@@ -182,8 +182,8 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
 
 
 def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                              amp_frames_after=3, save_features_props=False, unit_ids=None, epoch_tuples=None,
-                              epoch_names=None, save_as_property=True, seed=0):
+                              amp_frames_after=3, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                              unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the amplitude cutoffs for the sorted dataset.
 
@@ -202,6 +202,12 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
         Frames before peak to compute amplitude.
     amp_frames_after: int
         Frames after peak to compute amplitude.
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If true, it will save amplitudes in the sorting extractor.
     unit_ids: list
@@ -229,8 +235,9 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_amplitudes(recording=recording, amp_method=amp_method, amp_peak=amp_peak,
                                          amp_frames_before=amp_frames_before,
-                                         amp_frames_after=amp_frames_after, save_features_props=save_features_props,
-                                         seed=seed)
+                                         amp_frames_after=amp_frames_after, apply_filter=apply_filter, 
+                                         freq_min=freq_min, freq_max=freq_max, 
+                                         save_features_props=save_features_props, seed=seed)
     amplitude_cutoffs_epochs = metric_calculator.compute_amplitude_cutoffs()
 
     if save_as_property:
@@ -244,8 +251,8 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
 
 
 def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
-                 recompute_info=True, save_features_props=False, unit_ids=None, epoch_tuples=None,
-                 epoch_names=None, save_as_property=True, seed=0):
+                 recompute_info=True, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                 unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and stores snrs for the sorted units.
 
@@ -265,6 +272,12 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
         List of unit ids to compute metric for. If not specified, all units are used
     recompute_info: bool
         If True, waveforms are recomputed
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, waveforms and templates are saved as properties and features of the sorting extractor
     epoch_tuples: list
@@ -288,7 +301,7 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
     metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
-    metric_calculator.set_recording(recording)
+    metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
     snrs_epochs = metric_calculator.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration,
                                                  max_spikes_per_unit_for_snr=max_spikes_per_unit_for_snr,
                                                  recompute_info=recompute_info,
@@ -305,8 +318,8 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
 def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
                           n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                          max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
-                          epoch_names=None, save_as_property=True, seed=0):
+                          max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                          unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the drift metrics for the sorted dataset.
 
@@ -334,6 +347,12 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -365,6 +384,7 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     max_drifts_epochs, cumulative_drifts_epochs = metric_calculator.compute_drift_metrics(
         drift_metrics_interval_s=drift_metrics_interval_s,
@@ -383,8 +403,8 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
 
 def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, n_comp=3, ms_before=1., ms_after=2.,
                               dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                              max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
-                              epoch_names=None, save_as_property=True, seed=0):
+                              max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                              unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the silhouette scores in the sorted dataset.
 
@@ -410,6 +430,12 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -439,6 +465,7 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     silhouette_scores_epochs = metric_calculator.compute_silhouette_scores(
         max_spikes_for_silhouette=max_spikes_for_silhouette, seed=seed)
@@ -456,7 +483,7 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
 def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3,
                                 ms_before=1., ms_after=2.,
                                 dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5,
-                                save_features_props=False,
+                                apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
                                 unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
@@ -485,6 +512,12 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -514,6 +547,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     isolation_distances_epochs = metric_calculator.compute_isolation_distances(
         num_channels_to_compare=num_channels_to_compare,
@@ -531,8 +565,8 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
 
 def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
                      ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                     max_spikes_for_pca=1e5, save_features_props=False, unit_ids=None, epoch_tuples=None,
-                     epoch_names=None, save_as_property=True, seed=0):
+                     max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                     unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
@@ -560,6 +594,12 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -589,6 +629,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     l_ratios_epochs = metric_calculator.compute_l_ratios(num_channels_to_compare=num_channels_to_compare,
                                                          max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
@@ -605,7 +646,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
 
 def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
                      ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                     max_spikes_for_pca=1e5,
+                     max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
                      save_features_props=False, unit_ids=None, epoch_tuples=None, epoch_names=None,
                      save_as_property=True, seed=0):
     '''
@@ -635,6 +676,12 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -664,6 +711,7 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     d_primes_epochs = metric_calculator.compute_d_primes(num_channels_to_compare=num_channels_to_compare,
                                                          max_spikes_per_cluster=max_spikes_per_cluster, seed=seed)
@@ -679,9 +727,9 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
 
 
 def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500,
-                       max_spikes_for_nn=10000,
-                       n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300,
-                       recompute_info=True, max_spikes_for_pca=1e5, save_features_props=False,
+                       max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., 
+                       dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5, 
+                       apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
                        unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the nearest neighbor metrics for the sorted dataset.
@@ -714,6 +762,12 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     unit_ids: list
@@ -745,6 +799,7 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
                                          max_spikes_per_unit=max_spikes_per_unit,
                                          recompute_info=recompute_info,
                                          max_spikes_for_pca=max_spikes_for_pca,
+                                         apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     nn_hit_rates_epochs, nn_miss_rates_epochs = metric_calculator.compute_nn_metrics(
         num_channels_to_compare=num_channels_to_compare,
@@ -768,9 +823,9 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
                     max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
                     max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None,
                     max_spikes_per_unit=300,  amp_method='absolute', amp_peak='both', amp_frames_before=3, 
-                    amp_frames_after=3, recompute_info=True,  max_spikes_for_pca=1e5, save_features_props=False, 
-                    metric_names=None, unit_ids=None, epoch_tuples=None, epoch_names=None, return_dataframe=False, 
-                    seed=0):
+                    amp_frames_after=3, recompute_info=True,  max_spikes_for_pca=1e5, apply_filter=True, 
+                    freq_min=300, freq_max=6000, save_features_props=False, metric_names=None, unit_ids=None, 
+                    epoch_tuples=None, epoch_names=None, return_dataframe=False, seed=0):
     '''
     Computes and returns all specified metrics for the sorted dataset.
 
@@ -821,6 +876,12 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
         If True, will always re-extract waveforms.
     max_spikes_for_pca: int
         The maximum number of spikes to use to compute PCA (default is np.inf)
+    apply_filter: bool
+        If True, recording is bandpass-filtered.
+    freq_min: float
+        High-pass frequency for optional filter (default 300 Hz).
+    freq_max: float
+        Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
     n_comp: int
@@ -879,7 +940,7 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
 
     if 'max_drift' in metric_names or 'cumulative_drift' in metric_names or 'silhouette_score' in metric_names \
             or 'isolation_distance' in metric_names or 'l_ratio' in metric_names or 'd_prime' in metric_names \
-            or 'nn_hit_rate' in metric_names or 'nn_miss_rate' in metric_names or 'amplitude_cutoff' in metric_names:
+            or 'nn_hit_rate' in metric_names or 'nn_miss_rate' in metric_names:
         if recording is None:
             raise ValueError("The recording cannot be None when computing max_drift, cumulative_drift, "
                              "silhouette_score isolation_distance, l_ratio, d_prime, nn_hit_rate, amplitude_cutoff, "
@@ -893,12 +954,22 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
                                                       amp_frames_after=amp_frames_after,
                                                       recompute_info=recompute_info,
                                                       max_spikes_for_pca=max_spikes_for_pca,
+                                                      apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max,
                                                       save_features_props=save_features_props, seed=seed)
-    if 'snr' in metric_names:
+    elif 'amplitude_cutoff' in metric_names:
+        if recording is None:
+            raise ValueError("The recording cannot be None when computing amplitude cutoffs.")
+        else:
+            metric_calculator.compute_amplitudes(recording=recording, amp_method=amp_method, amp_peak=amp_peak,
+                                                 amp_frames_before=amp_frames_before,
+                                                 amp_frames_after=amp_frames_after, apply_filter=apply_filter, 
+                                                 freq_min=freq_min, freq_max=freq_max, 
+                                                 save_features_props=save_features_props, seed=seed)
+    elif 'snr' in metric_names:
         if recording is None:
             raise ValueError("The recording cannot be None when computing snr.")
         else:
-            metric_calculator.set_recording(recording)
+            metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
 
     if 'num_spikes' in metric_names:
         num_spikes_epochs = metric_calculator.compute_num_spikes()
