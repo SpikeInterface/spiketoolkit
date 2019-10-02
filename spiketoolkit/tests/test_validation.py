@@ -9,9 +9,11 @@ from spiketoolkit.validation import compute_isolation_distances, compute_isi_vio
 def test_calculator():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
     mc = MetricCalculator(sort, rec)
+    mc.compute_all_metric_data()
 
     _ = mc.compute_metrics()
     metric_dict = mc.get_metrics_dict()
+    assert type(mc._recording._recording).__name__ == 'BandpassFilterRecording' #check if filter by default
     assert 'firing_rate' in metric_dict.keys()
     assert 'num_spikes' in metric_dict.keys()
     assert 'isi_viol' in metric_dict.keys()
@@ -26,6 +28,7 @@ def test_calculator():
     assert 'nn_hit_rate' in metric_dict.keys()
     assert 'nn_miss_rate' in metric_dict.keys()
     assert 'snr' in metric_dict.keys()
+    assert mc.is_filtered()
 
 
 def test_functions():
