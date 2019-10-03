@@ -23,8 +23,8 @@ class BandpassFilterRecording(FilterRecording):
         {'name': 'order', 'type': 'int', 'value': 3, 'default': 3, 'title': "Order of the filter (if 'butter')"},
         {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
             "Chunk size for the filter."},
-        {'name': 'cache', 'type': 'bool', 'value': False, 'default': False, 'title':
-            "If True filtered traces are computed and cached"},
+        {'name': 'chunk_cache', 'type': 'bool', 'value': False, 'default': False, 'title':
+            "If True fileterd chunk traces are computed and cached in memory"},
     ]
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
