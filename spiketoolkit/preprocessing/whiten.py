@@ -68,6 +68,6 @@ def whiten(recording, chunksize=30000, cache_chunks=False, seed=0):
     return WhitenRecording(
         recording=recording,
         chunksize=chunksize,
-        cache=cache,
+        cache_chunks=cache_chunks,
         seed=seed
     )
