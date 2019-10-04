@@ -5,11 +5,11 @@ from spikeextractors import RecordingExtractor
 
 
 class FilterRecording(RecordingExtractor):
-    def __init__(self, recording, chunksize=10000, cache_chunks=False):
+    def __init__(self, recording, chunk_size=10000, cache_chunks=False):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
-        self._chunksize = chunksize
+        self._chunk_size = chunk_size
         self._cache_chunks = cache_chunks
         if cache_chunks:
             self._filtered_cache_chunks = FilteredChunkCache()
@@ -35,21 +35,21 @@ class FilterRecording(RecordingExtractor):
             end_frame = self.get_num_frames()
         if channel_ids is None:
             channel_ids = self.get_channel_ids()
-        if self._chunksize is not None:
-            ich1 = int(start_frame / self._chunksize)
-            ich2 = int((end_frame - 1) / self._chunksize)
+        if self._chunk_size is not None:
+            ich1 = int(start_frame / self._chunk_size)
+            ich2 = int((end_frame - 1) / self._chunk_size)
             dt = self._recording.get_traces(start_frame=0, end_frame=1).dtype
             filtered_chunk = np.zeros((len(channel_ids), (end_frame-start_frame)), dtype=dt)
             for ich in range(ich1, ich2 + 1):
                 filtered_chunk0 = self._get_filtered_chunk(ich)
                 if ich == ich1:
-                    start0 = start_frame - ich * self._chunksize
+                    start0 = start_frame - ich * self._chunk_size
                 else:
                     start0 = 0
                 if ich == ich2:
-                    end0 = end_frame - ich * self._chunksize
+                    end0 = end_frame - ich * self._chunk_size
                 else:
-                    end0 = self._chunksize
+                    end0 = self._chunk_size
                 chan_idx = [self.get_channel_ids().index(chan) for chan in channel_ids]
                 filtered_chunk[:, start0:end0] = filtered_chunk0[chan_idx, start0:end0]
         else:
@@ -69,8 +69,8 @@ class FilterRecording(RecordingExtractor):
         if chunk0 is not None:
             return chunk0
 
-        start0 = ind * self._chunksize
-        end0 = (ind + 1) * self._chunksize
+        start0 = ind * self._chunk_size
+        end0 = (ind + 1) * self._chunk_size
         chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0)
         if self._cache_chunks:
             self._filtered_cache_chunks.add(code, chunk1)
