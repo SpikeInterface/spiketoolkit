@@ -38,13 +38,18 @@ def test_bandpass_filter_with_cache():
     
     rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=10000)
     
-    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=None)
+    rec_filtered2 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=None)
     
-    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=10000)
-    rec_filtered.get_traces()
-    assert rec_filtered._filtered_cache_chunks.get('0') is not None
+    rec_filtered3 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=10000)
+    rec_filtered3.get_traces()
+    assert rec_filtered3._filtered_cache_chunks.get('0') is not None
     
-    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=None)
+    rec_filtered4 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=None)
+    
+    assert np.allclose(rec_filtered.get_traces(), rec_filtered2.get_traces(), rtol=1e-02, atol=1e-02)
+    assert np.allclose(rec_filtered.get_traces(), rec_filtered3.get_traces(), rtol=1e-02, atol=1e-02)
+    assert np.allclose(rec_filtered.get_traces(), rec_filtered4.get_traces(), rtol=1e-02, atol=1e-02)
+    
     
     
 
@@ -205,23 +210,28 @@ def test_whiten():
     rec_w = whiten(rec)
     cov_w = np.cov(rec_w.get_traces())
 
-    print(cov_w)
-
-    # This is a wring test
-    # assert np.allclose(cov_w, np.eye(4), atol=0.3)
+    assert np.allclose(cov_w, np.eye(4), atol=0.3)
+    
+    # should size should not affect
+    rec_w2 = whiten(rec, chunk_size=30000)
+    
+    assert np.array_equal(rec_w.get_traces(), rec_w2.get_traces())
+    
+    
+    
 
 
 if __name__ == '__main__':
-    # test_bandpass_filter()
-    # test_bandpass_filter_with_cache()
-    # test_blank_saturation()
-    # test_clip_traces()
-    # test_common_reference()
-    # test_norm_by_quantile()
-    # test_notch_filter()
-    # test_rectify()
-    # test_remove_artifacts()
-    # test_resample()
-    # test_transform_traces()
-    test_whiten()
+    #~ test_bandpass_filter()
+    test_bandpass_filter_with_cache()
+    #~ test_blank_saturation()
+    #~ test_clip_traces()
+    #~ test_common_reference()
+    #~ test_norm_by_quantile()
+    #~ test_notch_filter()
+    #~ test_rectify()
+    #~ test_remove_artifacts()
+    #~ test_resample()
+    #~ test_transform_traces()
+    #~ test_whiten()
 
