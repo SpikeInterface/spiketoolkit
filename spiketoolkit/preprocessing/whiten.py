@@ -33,14 +33,26 @@ class WhitenRecording(FilterRecording):
 
     def _compute_whitening_matrix(self, seed):
         data = self._get_random_data_for_whitening(seed=seed)
+        
+        # center the data
+        data = data - np.mean(data, axis=1, keepdims=True)
+        
+        # Original by Jeremy
         AAt = data @ np.transpose(data)
         AAt = AAt / data.shape[1]
         U, S, Ut = np.linalg.svd(AAt, full_matrices=True)
         W = (U @ np.diag(1 / np.sqrt(S))) @ Ut
+        
+        # proposed by Alessio
+        # AAt = data @ data.T / data.shape[1]
+        # D, V = np.linalg.eig(AAt)
+        # W = np.dot(np.diag(1.0 / np.sqrt(D + 1e-10)), V)
+        
         return W
 
     def filter_chunk(self, *, start_frame, end_frame):
         chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
+        chunk = chunk - np.mean(chunk, axis=1, keepdims=True)
         chunk2 = self._whitening_matrix @ chunk
         return chunk2
 
