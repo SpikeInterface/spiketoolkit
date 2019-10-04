@@ -36,14 +36,14 @@ class BlankSaturationRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
-    def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500):
+    def _get_random_data_for_scaling(self, num_chunks=50, chunksize=500):
         np.random.seed(0)
         N = self._recording.get_num_frames()
         list = []
         for i in range(num_chunks):
-            ff = np.random.randint(0, N - chunk_size)
+            ff = np.random.randint(0, N - chunksize)
             chunk = self._recording.get_traces(start_frame=ff,
-                                               end_frame=ff + chunk_size)
+                                               end_frame=ff + chunksize)
             list.append(chunk)
         return np.concatenate(list, axis=1)
 
