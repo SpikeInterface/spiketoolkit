@@ -86,7 +86,6 @@ def notch_filter(recording, freq=3000, q=30, chunksize=30000, cache_to_file=Fals
     -------
     filter_recording: NotchFilterRecording
         The notch-filtered recording extractor object
-
     '''
 
     if cache_to_file:
@@ -99,7 +98,7 @@ def notch_filter(recording, freq=3000, q=30, chunksize=30000, cache_to_file=Fals
         chunksize=chunksize,
         cache_chunks=cache_chunks,
     )
-    if cache:
+    if cache_to_file:
         return se.CacheRecordingExtractor(notch_recording, chunksize=chunksize)
     else:
         return notch_recording

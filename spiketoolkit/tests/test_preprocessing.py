@@ -25,13 +25,14 @@ def test_bandpass_filter():
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
-    rec_cache = bandpass_filter(rec, freq_min=3000, freq_max=6000, type='butter', order=3, cache=True)
+    rec_cache = bandpass_filter(rec, freq_min=3000, freq_max=6000, type='butter', order=3, cache_to_file=True)
 
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
+@pytest.mark.implemented
 def test_bandpass_filter_with_cache():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
     
@@ -208,6 +209,16 @@ def test_whiten():
 
 
 if __name__ == '__main__':
-    #~ test_bandpass_filter()
+    test_bandpass_filter()
     test_bandpass_filter_with_cache()
+    test_blank_saturation()
+    test_clip_traces()
+    test_common_reference()
+    test_norm_by_quantile()
+    test_notch_filter()
+    test_rectify()
+    test_remove_artifacts()
+    test_resample()
+    test_transform_traces()
+    test_whiten()
 
