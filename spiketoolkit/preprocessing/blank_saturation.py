@@ -8,14 +8,16 @@ class BlankSaturationRecording(RecordingExtractor):
     preprocessor_gui_params = [
         {'name': 'threshold', 'type': 'float',
          'title': "Scale for the output distribution"},
+        {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
+         'title': "Random seed for reproducibility."},
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, threshold=None):
+    def __init__(self, recording, threshold=None, seed=0):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
-        random_data = self._get_random_data_for_scaling().ravel()
+        random_data = self._get_random_data_for_scaling(seed=seed).ravel()
         q = np.quantile(random_data, [0.001, 0.5, 1 - 0.001])
         if 2 * q[1] - q[0] - q[2] < 2 * np.min([q[1] - q[0], q[2] - q[1]]):
             print('Warning, narrow signal range suggests artefact-free data.')
@@ -36,16 +38,15 @@ class BlankSaturationRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
-    def _get_random_data_for_scaling(self, num_chunks=50, chunksize=500):
-        np.random.seed(0)
+    def _get_random_data_for_scaling(self, num_chunks=50, chunksize=500, seed=0):
         N = self._recording.get_num_frames()
-        list = []
-        for i in range(num_chunks):
-            ff = np.random.randint(0, N - chunksize)
+        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunksize, size=num_chunks)
+        chunk_list = []
+        for ff in random_ints:
             chunk = self._recording.get_traces(start_frame=ff,
                                                end_frame=ff + chunksize)
-            list.append(chunk)
-        return np.concatenate(list, axis=1)
+            chunk_list.append(chunk)
+        return np.concatenate(chunk_list, axis=1)
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
@@ -73,7 +74,7 @@ class BlankSaturationRecording(RecordingExtractor):
         return traces
 
 
-def blank_saturation(recording, threshold=None):
+def blank_saturation(recording, threshold=None, seed=0):
     '''
     Find and remove parts of the signal with extereme values. Some arrays
     may produce these when amplifiers enter saturation, typically for
@@ -93,12 +94,15 @@ def blank_saturation(recording, threshold=None):
     threshold: float or 'None' (default `None`)
         Threshold value (in absolute units) for saturation artifacts.
         If `None`, the threshold will be determined from the 0.1 signal percentile.
-
+    seed: int
+        Random seed for reproducibility
     Returns
     -------
     rescaled_traces: BlankSaturationRecording
         The filtered traces recording extractor object
     '''
     return BlankSaturationRecording(
-        recording=recording, threshold=threshold
+        recording=recording, 
+        threshold=threshold,
+        seed=seed
     )

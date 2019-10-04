@@ -11,25 +11,28 @@ class WhitenRecording(FilterRecording):
             "Chunk size for the filter."},
         {'name': 'cache_chunks', 'type': 'bool', 'value': False, 'default': False, 'title':
             "If True filtered traces are computed and cached"},
+         {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
+          'title': "Random seed for reproducibility."},
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, chunksize=30000, cache_chunks=False):
+    def __init__(self, recording, chunksize=30000, cache_chunks=False, seed=0):
         self._recording = recording
-        self._whitening_matrix = self._compute_whitening_matrix()
-        FilterRecording.__init__(self, recording=recording, chunksize=chunksize)
+        self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
+        FilterRecording.__init__(self, recording=recording, chunksize=chunksize, cache_chunks=cache_chunks)
 
-    def _get_random_data_for_whitening(self, num_chunks=50, chunksize=500):
+    def _get_random_data_for_whitening(self, num_chunks=50, chunksize=500, seed=0):
         N = self._recording.get_num_frames()
-        list = []
-        for i in range(num_chunks):
-            ff = np.random.randint(0, N - chunksize)
-            chunk = self._recording.get_traces(start_frame=ff, end_frame=ff + chunksize)
-            list.append(chunk)
-        return np.concatenate(list, axis=1)
+        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunksize, size=num_chunks)
+        chunk_list = []
+        for ff in random_ints:
+            chunk = self._recording.get_traces(start_frame=ff,
+                                               end_frame=ff + chunksize)
+            chunk_list.append(chunk)
+        return np.concatenate(chunk_list, axis=1)
 
-    def _compute_whitening_matrix(self):
-        data = self._get_random_data_for_whitening()
+    def _compute_whitening_matrix(self, seed):
+        data = self._get_random_data_for_whitening(seed=seed)
         AAt = data @ np.transpose(data)
         AAt = AAt / data.shape[1]
         U, S, Ut = np.linalg.svd(AAt, full_matrices=True)
@@ -42,7 +45,7 @@ class WhitenRecording(FilterRecording):
         return chunk2
 
 
-def whiten(recording, chunksize=30000, cache_chunks=False):
+def whiten(recording, chunksize=30000, cache_chunks=False, seed=0):
     '''
     Whitens the recording extractor traces.
 
@@ -54,6 +57,8 @@ def whiten(recording, chunksize=30000, cache_chunks=False):
         The chunk size to be used for the filtering.
     cache_chunks: bool
         If True, filtered traces are computed and cached all at once (default False).
+    seed: int
+        Random seed for reproducibility
     Returns
     -------
     whitened_recording: WhitenRecording
@@ -63,5 +68,7 @@ def whiten(recording, chunksize=30000, cache_chunks=False):
     return WhitenRecording(
         recording=recording,
         chunksize=chunksize,
-        cache_chunks=cache_chunks
+        chunksize=chunksize,
+        cache=cache,
+        seed=seed
     )
