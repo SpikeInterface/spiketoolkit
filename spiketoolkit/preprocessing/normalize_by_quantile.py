@@ -34,13 +34,13 @@ class NormalizeByQuantileRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
-    def _get_random_data_for_scaling(self, num_chunks=50, chunksize=500, seed=0):
+    def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
-        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunksize, size=num_chunks)
+        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)
         chunk_list = []
         for ff in random_ints:
             chunk = self._recording.get_traces(start_frame=ff,
-                                               end_frame=ff + chunksize)
+                                               end_frame=ff + chunk_size)
             chunk_list.append(chunk)
         return np.concatenate(chunk_list, axis=1)
 

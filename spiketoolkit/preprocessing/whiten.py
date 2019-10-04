@@ -7,7 +7,7 @@ class WhitenRecording(FilterRecording):
     preprocessor_name = 'Whiten'
     installed = True  # check at class level if installed or not
     preprocessor_gui_params = [
-        {'name': 'chunksize', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
+        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
             "Chunk size for the filter."},
         {'name': 'cache_chunks', 'type': 'bool', 'value': False, 'default': False, 'title':
             "If True filtered traces are computed and cached"},
@@ -16,18 +16,18 @@ class WhitenRecording(FilterRecording):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, chunksize=30000, cache_chunks=False, seed=0):
+    def __init__(self, recording, chunk_size=30000, cache_chunks=False, seed=0):
         self._recording = recording
         self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
-        FilterRecording.__init__(self, recording=recording, chunksize=chunksize, cache_chunks=cache_chunks)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
 
-    def _get_random_data_for_whitening(self, num_chunks=50, chunksize=500, seed=0):
+    def _get_random_data_for_whitening(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
-        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunksize, size=num_chunks)
+        random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)
         chunk_list = []
         for ff in random_ints:
             chunk = self._recording.get_traces(start_frame=ff,
-                                               end_frame=ff + chunksize)
+                                               end_frame=ff + chunk_size)
             chunk_list.append(chunk)
         return np.concatenate(chunk_list, axis=1)
 
@@ -45,7 +45,7 @@ class WhitenRecording(FilterRecording):
         return chunk2
 
 
-def whiten(recording, chunksize=30000, cache_chunks=False, seed=0):
+def whiten(recording, chunk_size=30000, cache_chunks=False, seed=0):
     '''
     Whitens the recording extractor traces.
 
@@ -53,7 +53,7 @@ def whiten(recording, chunksize=30000, cache_chunks=False, seed=0):
     ----------
     recording: RecordingExtractor
         The recording extractor to be whitened.
-    chunksize: int
+    chunk_size: int
         The chunk size to be used for the filtering.
     cache_chunks: bool
         If True, filtered traces are computed and cached all at once (default False).
@@ -67,7 +67,7 @@ def whiten(recording, chunksize=30000, cache_chunks=False, seed=0):
     '''
     return WhitenRecording(
         recording=recording,
-        chunksize=chunksize,
+        chunk_size=chunk_size,
         cache_chunks=cache_chunks,
         seed=seed
     )
