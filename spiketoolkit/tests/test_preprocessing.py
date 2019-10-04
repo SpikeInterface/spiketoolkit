@@ -1,7 +1,7 @@
 import numpy as np
 import spikeextractors as se
 import pytest
-from .utils import check_signal_power_signal1_below_signal2
+from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
 from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, clip_traces, common_reference, \
     normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform_traces, \
     whiten
@@ -31,6 +31,22 @@ def test_bandpass_filter():
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
+
+def test_bandpass_filter_with_cache():
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
+    
+    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunksize=10000)
+    
+    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunksize=None)
+    
+    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunksize=10000)
+    rec_filtered.get_traces()
+    assert rec_filtered._filtered_cache_chunks.get('0') is not None
+    
+    rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunksize=None)
+    
+    
+
 
 
 @pytest.mark.implemented
@@ -192,8 +208,6 @@ def test_whiten():
 
 
 if __name__ == '__main__':
-    test_notch_filter()
-    # ~ test_do_score_labels()
-    # ~ test_do_counting()
-    # ~ test_do_confusion_matrix()
-    # ~ test_compare_spike_trains()
+    #~ test_bandpass_filter()
+    test_bandpass_filter_with_cache()
+

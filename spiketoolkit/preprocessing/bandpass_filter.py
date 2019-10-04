@@ -21,22 +21,22 @@ class BandpassFilterRecording(FilterRecording):
             "Width of the filter (when type is 'fft')"},
         {'name': 'type', 'type': 'str', 'value': 'fft', 'default': 'fft', 'title': "Filter type ('fft' or 'butter')"},
         {'name': 'order', 'type': 'int', 'value': 3, 'default': 3, 'title': "Order of the filter (if 'butter')"},
-        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
+        {'name': 'chunksize', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
             "Chunk size for the filter."},
-        {'name': 'chunk_cache', 'type': 'bool', 'value': False, 'default': False, 'title':
+        {'name': 'cache_chunks', 'type': 'bool', 'value': False, 'default': False, 'title':
             "If True fileterd chunk traces are computed and cached in memory"},
     ]
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
     def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3,
-                 chunk_size=30000, chunk_cache=False):
+                 chunksize=30000, cache_chunks=False):
         assert HAVE_BFR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
         self._type = type
         self._order = order
-        self._chunk_size = chunk_size
+        self._chunksize = chunksize
 
         if self._type == 'butter':
             fn = recording.get_sampling_frequency() / 2.
@@ -46,7 +46,7 @@ class BandpassFilterRecording(FilterRecording):
 
             if not np.all(np.abs(np.roots(self._a)) < 1):
                 raise ValueError('Filter is not stable')
-        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, chunk_cache=chunk_cache)
+        FilterRecording.__init__(self, recording=recording, chunksize=chunksize, cache_chunks=cache_chunks)
         self.copy_channel_properties(recording)
 
     def filter_chunk(self, *, start_frame, end_frame):
@@ -118,7 +118,7 @@ def _create_filter_kernel(N, sampling_frequency, freq_min, freq_max, freq_wid=10
 
 
 def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3,
-                    chunk_size=30000, cache_on_file=False, chunk_cache=False):
+                    chunksize=30000, cache_to_file=False, cache_chunks=False):
     '''
     Performs a lazy filter on the recording extractor traces.
 
@@ -137,21 +137,19 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         scipy butter and filtfilt functions.
     order: int
         Order of the filter (if 'butter').
-    chunk_size: int
+    chunksize: int
         The chunk size to be used for the filtering.
-    cache_on_file: bool (default False).
+    cache_to_file: bool (default False).
         If True, filtered traces are computed and cached all at once on disk in temp file 
-    chunk_cache: bool (default False).
+    cache_chunks: bool (default False).
         If True then each chunk is cached in memory (in a dict)
     Returns
     -------
     filter_recording: BandpassFilterRecording
         The filtered recording extractor object
     '''
-    if cache_on_file:
-        # force chunksize to None to make a filtering 
-        chunk_size = None
-        assert not chunk_cache, 'if cache_on_file chunk_cache should be False'
+    if cache_to_file:
+        assert not cache_chunks, 'if cache_to_file cache_chunks should be False'
     
     bpf_recording = BandpassFilterRecording(
         recording=recording,
@@ -160,10 +158,10 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         freq_wid=freq_wid,
         type=type,
         order=order,
-        chunk_size=chunk_size,
-        chunk_cache=chunk_cache,
+        chunksize=chunksize,
+        cache_chunks=cache_chunks,
     )
-    if cache_on_file:
-        return se.CacheRecordingExtractor(bpf_recording)
+    if cache_to_file:
+        return se.CacheRecordingExtractor(bpf_recording, chunksize=chunksize)
     else:
         return bpf_recording
