@@ -39,8 +39,8 @@ class SpykingcircusSorter(BaseSorter):
     installation_mesg = """
         >>> pip install spyking-circus
 
-        Need OpenMPI working, for ubuntu do:
-            sudo apt install libopenmpi-dev"
+        Need MPICH working, for ubuntu do:
+            sudo apt install libmpich-dev mpich"
 
         More information on Spyking-Circus at: "
             https://spyking-circus.readthedocs.io/en/latest/
