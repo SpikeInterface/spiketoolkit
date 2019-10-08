@@ -108,7 +108,7 @@ class MetricCalculator:
         '''
         if apply_filter:
             self._is_filtered = True
-            recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max, cache=True)
+            recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max, cache_to_file=True)
         else:
             self._is_filtered = False
         self._recording = recording
