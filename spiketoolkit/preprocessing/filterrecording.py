@@ -52,7 +52,6 @@ class FilterRecording(RecordingExtractor):
                 else:
                     end0 = self._chunk_size
                 chan_idx = [self.get_channel_ids().index(chan) for chan in channel_ids]
-
                 filtered_chunk[:, pos:pos+end0-start0] = filtered_chunk0[chan_idx, start0:end0]
                 pos += (end0-start0)
         else:
