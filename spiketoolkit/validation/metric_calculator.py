@@ -12,17 +12,25 @@ from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 
 
 class MetricCalculator:
-    def __init__(self, sorting, recording=None, sampling_frequency=None, unit_ids=None, epoch_tuples=None,
-                 epoch_names=None, verbose=False):
+    def __init__(self, sorting, recording=None, sampling_frequency=None, apply_filter=True, freq_min=300, freq_max=6000, 
+                 unit_ids=None, epoch_tuples=None, epoch_names=None, verbose=False):
         '''
         Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
 
         Parameters
         ----------
         sorting: SortingExtractor
-            The sorting result to be evaluated.
+            The sorting extractor to be evaluated.
+        recording: RecordingExtractor
+            The recording extractor to be stored. If None, the recording extractor can be added later.
         sampling_frequency:
             The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
+        apply_filter: bool
+            If True, recording is bandpass-filtered.
+        freq_min: float
+            High-pass frequency for optional filter (default 300 Hz).
+        freq_max: float
+            Low-pass frequency for optional filter (default 6000 Hz).
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
@@ -79,11 +87,11 @@ class MetricCalculator:
                                     end_frame=epoch[2] * self._sampling_frequency)
         if recording is not None:
             assert isinstance(recording, RecordingExtractor), "'sorting' must be  a RecordingExtractor object"
-            self.set_recording(recording)
+            self.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
         else:
             self._recording = None
 
-    def set_recording(self, recording):
+    def set_recording(self, recording, apply_filter=True, freq_min=300, freq_max=6000):
         '''
         Sets given recording extractor
 
@@ -91,14 +99,28 @@ class MetricCalculator:
         ----------
         recording: RecordingExtractor
             The recording extractor to be stored.
+        apply_filter: bool
+            If True, recording is bandpass-filtered.
+        freq_min: float
+            High-pass frequency for optional filter (default 300 Hz).
+        freq_max: float
+            Low-pass frequency for optional filter (default 6000 Hz).
         '''
+        if apply_filter:
+            self._is_filtered = True
+            recording = st.preprocessing.bandpass_filter(recording=recording, freq_min=freq_min, freq_max=freq_max, cache_to_file=True)
+        else:
+            self._is_filtered = False
         self._recording = recording
         for epoch in self._epochs:
             self._recording.add_epoch(epoch_name=epoch[0], start_frame=epoch[1] * self._sampling_frequency,
                                       end_frame=epoch[2] * self._sampling_frequency)
+    
+    def is_filtered(self):
+        return self._is_filtered
 
-    def compute_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                           amp_frames_after=3, save_features_props=False, seed=0):
+    def compute_amplitudes(self, recording=None, amp_method='absolute', amp_peak='both', amp_frames_before=3, amp_frames_after=3, 
+                           apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, seed=0):
         '''
         Computes and stores amplitudes for the amplitude cutoff metric
 
@@ -115,6 +137,12 @@ class MetricCalculator:
             Frames before peak to compute amplitude
         amp_frames_after: int
             Frames after peak to compute amplitude
+        apply_filter: bool
+            If True, recording is bandpass-filtered.
+        freq_min: float
+            High-pass frequency for optional filter (default 300 Hz).
+        freq_max: float
+            Low-pass frequency for optional filter (default 6000 Hz).
         save_features_props: bool
             If true, it will save amplitudes in the sorting extractor.
         seed: int
@@ -125,7 +153,7 @@ class MetricCalculator:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
-            self.set_recording(recording)
+            self.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
 
         spike_times, spike_clusters, amplitudes = get_amplitude_metric_data(self._recording, self._sorting,
                                                                             amp_method=amp_method,
@@ -139,8 +167,8 @@ class MetricCalculator:
         self._spike_times_amps = spike_times
 
     def compute_pca_scores(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
-                           max_spikes_per_unit=300, recompute_info=True,
-                           max_spikes_for_pca=1e5, save_features_props=False, seed=0):
+                           max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5, 
+                           apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, seed=0):
         '''
         Computes and stores pca for the metrics computation
 
@@ -162,6 +190,12 @@ class MetricCalculator:
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
+        apply_filter: bool
+            If True, recording is bandpass-filtered.
+        freq_min: float
+            High-pass frequency for optional filter (default 300 Hz).
+        freq_max: float
+            Low-pass frequency for optional filter (default 6000 Hz).
         save_features_props: bool
             If true, it will save amplitudes in the sorting extractor.
         seed: int
@@ -172,7 +206,7 @@ class MetricCalculator:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
-            self.set_recording(recording)
+            self.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
 
         spike_times, spike_clusters, pc_features, pc_feature_ind = get_pca_metric_data(self._recording, self._sorting,
                                                                                        n_comp=n_comp,
@@ -195,7 +229,8 @@ class MetricCalculator:
     def compute_all_metric_data(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
                                 max_spikes_per_unit=300, amp_method='absolute', amp_peak='both',
                                 amp_frames_before=3, amp_frames_after=3, recompute_info=True,
-                                max_spikes_for_pca=1e5, save_features_props=False, seed=0):
+                                max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
+                                save_features_props=False, seed=0):
         '''
         Computes and stores data for all metrics (all metrics can be run after calling this function).
 
@@ -226,6 +261,12 @@ class MetricCalculator:
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
+        apply_filter: bool
+            If True, recording is bandpass-filtered.
+        freq_min: float
+            High-pass frequency for optional filter (default 300 Hz).
+        freq_max: float
+            Low-pass frequency for optional filter (default 6000 Hz).
         save_features_props: bool
             If True, save all features and properties in the sorting extractor.
         seed: int
@@ -236,7 +277,8 @@ class MetricCalculator:
                 raise ValueError(
                     "No recording given. Either call store_recording or pass a recording into this function")
         else:
-            self.set_recording(recording)
+            self.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
+
         spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
         amplitudes, pc_features, pc_feature_ind = get_all_metric_data(
             self._recording, self._sorting, n_comp=n_comp, ms_before=ms_before,
@@ -1030,7 +1072,6 @@ class MetricCalculator:
         }
 
         return self._quality_metrics_params
-
 
 def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
     '''
