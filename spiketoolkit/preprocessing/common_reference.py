@@ -1,17 +1,19 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 
-class CommonReferenceRecording(RecordingExtractor):
 
+class CommonReferenceRecording(RecordingExtractor):
     preprocessor_name = 'CommonReference'
     installed = True  # check at class level if installed or not
     preprocessor_gui_params = [
-        {'name': 'reference', 'type': 'str', 'value':'median', 'default':'median', 'title': "Reference type ('median', 'average', or 'single')"},
-        {'name': 'groups', 'type': 'int_list_list', 'value':None, 'default':None, 'title': "List of int lists containins the channels for splitting the reference, \
+        {'name': 'reference', 'type': 'str', 'value': 'median', 'default': 'median',
+         'title': "Reference type ('median', 'average', or 'single')"},
+        {'name': 'groups', 'type': 'int_list_list', 'value': None, 'default': None, 'title': "List of int lists containins the channels for splitting the reference, \
         The CMR, CAR, or referencing with respect to single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple tetrodes."},
-        {'name': 'ref_channels', 'type': 'int_list', 'value':None, 'default':None, 'title': "If no 'groups' are specified, all channels are referenced to 'ref_channels'. \
+        {'name': 'ref_channels', 'type': 'int_list', 'value': None, 'default': None, 'title': "If no 'groups' are specified, all channels are referenced to 'ref_channels'. \
          If 'groups' is provided, then a list of channels to be applied to each group is expected. If 'single' reference, a list of one channel is expected."},
-        {'name': 'verbose', 'type': 'bool', 'value':False, 'default':False, 'title': "If True, then the function will be verbose"}
+        {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False,
+         'title': "If True, then the function will be verbose"}
     ]
     installation_mesg = ""  # err
 
@@ -24,16 +26,16 @@ class CommonReferenceRecording(RecordingExtractor):
         self._ref = reference
         self._groups = groups
         if self._ref == 'single':
-            assert ref_channels is not None, "With 'single' reference, provide 'ref_channel'"
+            assert ref_channels is not None, "With 'single' reference, provide 'ref_channels'"
             if self._groups is not None:
                 assert len(ref_channels) == len(self._groups), "'ref_channel' and 'groups' must have the " \
                                                                "same length"
             else:
                 if isinstance(ref_channels, (list, np.ndarray)):
                     assert len(ref_channels) == 1, "'ref_channel' with no 'groups' can be int or a list of one element"
-                    ref_channels = ref_channels[0]
                 else:
-                    assert isinstance(ref_channels, (int, np.integer)), "'ref_channel' must be int"
+                    assert isinstance(ref_channels, (int, np.integer)), "'ref_channels' must be int"
+                    ref_channels = [ref_channels]
         self._ref_channel = ref_channels
         self.verbose = verbose
         RecordingExtractor.__init__(self)
@@ -73,10 +75,10 @@ class CommonReferenceRecording(RecordingExtractor):
                 if self.verbose:
                     print('Common median in groups: ', new_groups)
                 return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                     start_frame=start_frame, end_frame=end_frame)
+                                                                      start_frame=start_frame, end_frame=end_frame)
                                            - np.median(self._recording.get_traces(channel_ids=split_group,
-                                                                                 start_frame=start_frame,
-                                                                                 end_frame=end_frame),
+                                                                                  start_frame=start_frame,
+                                                                                  end_frame=end_frame),
                                                        axis=0, keepdims=True) for split_group in new_groups]))
         elif self._ref == 'average':
             if self.verbose:
@@ -96,10 +98,10 @@ class CommonReferenceRecording(RecordingExtractor):
                 if self.verbose:
                     print('Common average in groups: ', new_groups)
                 return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                     start_frame=start_frame, end_frame=end_frame)
+                                                                      start_frame=start_frame, end_frame=end_frame)
                                            - np.mean(self._recording.get_traces(channel_ids=split_group,
-                                                                               start_frame=start_frame,
-                                                                               end_frame=end_frame),
+                                                                                start_frame=start_frame,
+                                                                                end_frame=end_frame),
                                                      axis=0, keepdims=True) for split_group in new_groups]))
 
         elif self._ref == 'single':
@@ -108,7 +110,7 @@ class CommonReferenceRecording(RecordingExtractor):
                     print('Reference to channel', self._ref_channel)
                 return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
                        - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
-                                                   end_frame=end_frame)
+                                                    end_frame=end_frame)
             else:
                 new_groups = []
                 for g in self._groups:
