@@ -606,6 +606,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
     if len(all_waveforms) < max_spikes_for_pca:
         max_spikes_for_pca = len(all_waveforms)
+    max_spikes_for_pca = int(max_spikes_for_pca)
     if verbose:
         print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_spikes_for_pca))
     pca.fit(all_waveforms[np.random.RandomState(seed=seed).permutation(len(all_waveforms))[:max_spikes_for_pca]])
@@ -800,7 +801,7 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
         f.write('sample_rate = ' + str(recording.get_sampling_frequency()) + '\n')
         f.write('hp_filtered = False')
 
-    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms, \
+    spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, \
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
     positions = _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property, ms_before,
                               ms_after, dtype, amp_method, amp_peak, amp_frames_before, amp_frames_after,
@@ -850,9 +851,6 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     np.save(str(output_folder / 'channel_map_si.npy'), channel_map_si.astype('int64'))
     np.save(str(output_folder / 'channel_positions.npy'), positions)
     np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
-
-    if write_waveforms:
-        np.save(str(output_folder / 'waveforms.npy'), np.array(waveforms))
 
     if verbose:
         print('Saved phy format to: ', output_folder)
@@ -1106,15 +1104,6 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
         max_num_chans_in_group = recording.get_num_channels()
         channel_groups = np.array([0] * recording.get_num_channels())
 
-    if 'waveforms' not in sorting.get_shared_unit_spike_feature_names():
-        waveforms = get_unit_waveforms(recording, sorting, max_spikes_per_unit=max_spikes_per_unit,
-                                       ms_before=ms_before, ms_after=ms_after, save_as_features=save_features_props,
-                                       dtype=dtype, verbose=verbose, seed=seed)
-    else:
-        waveforms = []
-        for unit_id in sorting.get_unit_ids():
-            waveforms.append(sorting.get_unit_spike_features(unit_id, 'waveforms'))
-
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
     amplitudes, pc_features, pc_feature_ind \
         = _get_quality_metric_data(recording, sorting, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
@@ -1185,5 +1174,5 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
 
-    return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, waveforms, \
+    return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, \
            spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, positions
