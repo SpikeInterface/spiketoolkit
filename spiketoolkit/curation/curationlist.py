@@ -4,6 +4,7 @@ from .threshold_firing_rate import threshold_firing_rate, ThresholdFiringRate
 from .threshold_presence_ratio import threshold_presence_ratio, ThresholdPresenceRatio
 from .threshold_isi_violations import threshold_isi_violations, ThresholdISIViolations
 from .threshold_snr import threshold_snr, ThresholdSNR
+from .threshold_metrics import threshold_metrics, ThresholdMetrics
 
 curation_full_list = [
     ThresholdNumSpikes,
