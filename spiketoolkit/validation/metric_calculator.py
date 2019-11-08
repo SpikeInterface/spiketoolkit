@@ -167,7 +167,7 @@ class MetricCalculator:
         self._spike_times_amps = spike_times
 
     def compute_pca_scores(self, recording=None, n_comp=3, ms_before=1., ms_after=2., dtype=None,
-                           max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5, 
+                           max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=100000, 
                            apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, seed=0):
         '''
         Computes and stores pca for the metrics computation
