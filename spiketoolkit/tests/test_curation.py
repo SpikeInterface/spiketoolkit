@@ -1,7 +1,7 @@
 import spikeextractors as se
 import numpy as np
 from spiketoolkit.curation import threshold_snr, threshold_firing_rate, threshold_isi_violations, \
-    threshold_num_spikes, threshold_presence_ratio
+    threshold_num_spikes, threshold_presence_ratio, threshold_metrics
 from spiketoolkit.validation import compute_snrs, compute_firing_rates, compute_num_spikes
 
 def test_thresh_num_spikes():
@@ -33,6 +33,26 @@ def test_thresh_fr():
     assert np.all(new_fr >= fr_thresh)
 
 
+def test_thresh_metrics():
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
+    fr_thresh = 2
+    snr_thresh = 4
+
+    sorting_metrics1 = threshold_metrics(
+        sort, rec, 
+        metrics=['firing_rate', 'snr'],
+        thresholds=[fr_thresh, snr_thresh],
+        threshold_signs=['less', 'less'],
+        mode='or'
+    )
+
+    new_fr = compute_firing_rates(sorting_metrics1)
+    new_snr  = compute_snrs(sorting_metrics1, rec)
+
+    assert np.all(new_fr >= fr_thresh) and np.all(new_snr >= snr_thresh)
+
+
 if __name__ == '__main__':
     test_thresh_snr()
     test_thresh_fr()
+    test_thresh_metrics()
