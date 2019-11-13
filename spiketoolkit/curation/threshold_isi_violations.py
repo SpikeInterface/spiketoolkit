@@ -54,10 +54,10 @@ def threshold_isi_violations(sorting, threshold=5.0, threshold_sign='greater', i
     threshold:
         The threshold for the given metric.
     threshold_sign: str
-        If 'less', will threshold any metric less than the given threshold.
-        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
-        If 'greater', will threshold any metric greater than the given threshold.
-        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
+        If 'less', will remove any units with metric scores less than the given threshold.
+        If 'less_or_equal', will remove any units with metric scores less than or equal to the given threshold.
+        If 'greater', will remove any units with metric scores greater than the given threshold.
+        If 'greater_or_equal', will remove any units with metric scores greater than or equal to the given threshold.
     isi_threshold: float
             The isi threshold for calculating isi violations.
     min_isi: float
