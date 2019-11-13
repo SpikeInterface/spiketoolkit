@@ -51,6 +51,19 @@ def test_thresh_metrics():
 
     assert np.all(new_fr >= fr_thresh) and np.all(new_snr >= snr_thresh)
 
+    sorting_metrics1 = threshold_metrics(
+        sort, rec, 
+        metrics=['firing_rate', 'snr'],
+        thresholds=[fr_thresh, snr_thresh],
+        threshold_signs=['less', 'less'],
+        mode='and'
+    )
+
+    new_fr = compute_firing_rates(sorting_metrics1)
+    new_snr  = compute_snrs(sorting_metrics1, rec)
+
+    assert np.all((new_fr >= fr_thresh) + (new_snr >= snr_thresh))
+
 
 if __name__ == '__main__':
     test_thresh_snr()
