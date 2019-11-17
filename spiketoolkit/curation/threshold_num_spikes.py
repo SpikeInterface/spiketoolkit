@@ -18,7 +18,7 @@ class ThresholdNumSpikes(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, threshold=100, threshold_sign='less', metric_calculator=None):
+    def __init__(self, sorting, threshold, threshold_sign, metric_calculator=None):
         metric_name = 'num_spikes'
         if metric_calculator is not None:
             self._metric_calculator = metric_calculator

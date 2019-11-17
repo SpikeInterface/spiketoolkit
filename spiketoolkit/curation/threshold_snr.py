@@ -27,7 +27,7 @@ class ThresholdSNR(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad',
+    def __init__(self, sorting, recording, threshold, threshold_sign, snr_mode='mad',
                  snr_noise_duration=10.0, max_snr_spikes_per_unit=1000, recompute_info=True,
                  apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
                  metric_calculator=None, seed=0):
