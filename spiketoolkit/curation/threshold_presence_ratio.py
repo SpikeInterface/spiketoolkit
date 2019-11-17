@@ -14,7 +14,7 @@ class ThresholdPresenceRatio(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, threshold=.50, threshold_sign='less', sampling_frequency=None, metric_calculator=None):
+    def __init__(self, sorting, threshold, threshold_sign, sampling_frequency=None, metric_calculator=None):
         metric_name = 'presence_ratio'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:
             raise ValueError("Please pass in a sampling frequency (your SortingExtractor does not have one specified)")

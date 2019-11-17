@@ -14,7 +14,7 @@ class ThresholdFiringRate(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, threshold=15.0, threshold_sign='greater', sampling_frequency=None,
+    def __init__(self, sorting, threshold, threshold_sign, sampling_frequency=None,
                  metric_calculator=None):
         metric_name = 'firing_rate'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:

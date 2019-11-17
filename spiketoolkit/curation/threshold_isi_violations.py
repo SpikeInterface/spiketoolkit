@@ -18,7 +18,7 @@ class ThresholdISIViolations(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, threshold=5.0, threshold_sign='greater', isi_threshold=0.0015, min_isi=0.000166, \
+    def __init__(self, sorting, threshold, threshold_sign, isi_threshold=0.0015, min_isi=0.000166, \
                  sampling_frequency=None, metric_calculator=None):
         metric_name = 'isi_viol'
         if sampling_frequency is None and sorting.get_sampling_frequency() is None:
