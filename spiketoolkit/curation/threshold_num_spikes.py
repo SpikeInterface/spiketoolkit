@@ -8,9 +8,9 @@ class ThresholdNumSpikes(ThresholdCurator):
     curator_name = 'ThresholdNumSpikes'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
-        {'name': 'threshold', 'type': 'float', 'value': 100, 'default': 100, 'title':
+        {'name': 'threshold', 'type': 'float', 'title':
             "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value': 'less', 'default': 'less',
+        {'name': 'threshold_sign', 'type': 'str',
          'title': "If 'less', will threshold any metric less than the given threshold. "
                   "If 'less_or_equal', will threshold any metric less than or equal to the given threshold. "
                   "If 'greater', will threshold any metric greater than the given threshold. "

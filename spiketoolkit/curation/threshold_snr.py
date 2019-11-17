@@ -6,9 +6,9 @@ class ThresholdSNR(ThresholdCurator):
     curator_name = 'ThresholdMinSNR'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
-        {'name': 'threshold', 'type': 'float', 'value': 5.0, 'default': 5.0,
+        {'name': 'threshold', 'type': 'float',
          'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value': 'less', 'default': 'less',
+        {'name': 'threshold_sign', 'type': 'str',
          'title': "If 'less', will threshold any metric less than the given threshold. "
                   "If 'greater', will threshold any metric greater than the given threshold."},
         {'name': 'snr_mode', 'type': 'str', 'value': 'mad', 'default': 'mad',
