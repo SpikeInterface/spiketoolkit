@@ -6,9 +6,9 @@ class ThresholdFiringRate(ThresholdCurator):
     curator_name = 'ThresholdFiringRate'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
-        {'name': 'threshold', 'type': 'float', 'value': 15.0, 'default': 15.0,
+        {'name': 'threshold', 'type': 'float',
          'title': "The threshold for the given metric."},
-        {'name': 'threshold_sign', 'type': 'str', 'value': 'greater', 'default': 'greater',
+        {'name': 'threshold_sign', 'type': 'str',
          'title': "If 'less', will threshold any metric less than the given threshold. "
                   "If 'greater', will threshold any metric greater than the given threshold."},
     ]
