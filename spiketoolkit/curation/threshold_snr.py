@@ -37,7 +37,6 @@ class ThresholdSNR(ThresholdCurator):
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
         else:
             self._metric_calculator = metric_calculator
-
         if metric_name not in self._metric_calculator.get_metrics_dict().keys():
             self._metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
             self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_spikes_per_unit,
@@ -49,9 +48,9 @@ class ThresholdSNR(ThresholdCurator):
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
+#This is so that we only have to define the params once (in the GUI params). Experimental.
 from .threshold_snr import ThresholdSNR
 gps = ThresholdSNR.curator_gui_params
-
 params = {}
 for param in gps:
     if 'value' in param.keys():
