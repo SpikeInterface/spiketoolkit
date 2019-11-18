@@ -27,35 +27,41 @@ class ThresholdSNR(ThresholdCurator):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, sorting, recording, threshold, threshold_sign, snr_mode='mad',
-                 snr_noise_duration=10.0, max_snr_spikes_per_unit=1000, recompute_info=True,
-                 apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
-                 metric_calculator=None, seed=0):
+    def __init__(self, sorting, recording, threshold, threshold_sign, snr_mode, snr_noise_duration, \
+                 max_snr_spikes_per_unit, recompute_info, apply_filter, freq_min, freq_max,
+                 save_features_props, metric_calculator, seed):
         metric_name = 'snr'
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(sorting,
                                                                      sampling_frequency=recording.get_sampling_frequency(),
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
-            self._metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
-            self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_spikes_per_unit,
-                                                 recompute_info=recompute_info,
-                                                 save_features_props=save_features_props, seed=seed)
         else:
             self._metric_calculator = metric_calculator
-            if metric_name not in self._metric_calculator.get_metrics_dict().keys():
-                self._metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
-                self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_spikes_per_unit,
-                                                     recompute_info=recompute_info,
-                                                     save_features_props=save_features_props, seed=seed)
+
+        if metric_name not in self._metric_calculator.get_metrics_dict().keys():
+            self._metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
+            self._metric_calculator.compute_snrs(snr_mode, snr_noise_duration, max_snr_spikes_per_unit,
+                                                 recompute_info=recompute_info, save_features_props=save_features_props, 
+                                                 seed=seed)
         snrs_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0]
 
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=snrs_epoch)
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_mode='mad', snr_noise_duration=10.0,
-                  max_snr_spikes_per_unit=1000, recompute_info=True, apply_filter=True, freq_min=300, freq_max=6000,
-                  save_features_props=False, metric_calculator=None, seed=0):
+from .threshold_snr import ThresholdSNR
+gps = ThresholdSNR.curator_gui_params
+
+params = {}
+for param in gps:
+    if 'value' in param.keys():
+        params[param['name']] = param['value']
+
+def threshold_snr(sorting, recording, threshold, threshold_sign, 
+                  snr_mode=params['snr_mode'], snr_noise_duration=params['snr_noise_duration'], \
+                  max_snr_spikes_per_unit=params['max_snr_spikes_per_unit'], recompute_info=True, 
+                  apply_filter=params['apply_filter'], freq_min=params['freq_min'], freq_max=params['freq_max'], 
+                  save_features_props=False, metric_calculator=None, seed=params['seed']):
     '''
     Excludes units based on snr.
 
@@ -106,10 +112,10 @@ def threshold_snr(sorting, recording, threshold=5.0, threshold_sign='less', snr_
         snr_mode=snr_mode,
         snr_noise_duration=snr_noise_duration,
         max_snr_spikes_per_unit=max_snr_spikes_per_unit,
-        recompute_info=recompute_info,
+        recompute_info=recompute_info, 
         apply_filter=apply_filter, 
-        freq_min=freq_min, 
-        freq_max=freq_max,
+        freq_min=freq_min,
+        freq_max=freq_max, 
         save_features_props=save_features_props,
         metric_calculator=metric_calculator,
         seed=seed
