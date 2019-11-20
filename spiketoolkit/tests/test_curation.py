@@ -2,6 +2,7 @@ import spikeextractors as se
 import numpy as np
 from spiketoolkit.curation import (
     threshold_snr,
+    threshold_silhouette_score,
     threshold_firing_rate,
     threshold_isi_violations,
     threshold_num_spikes,
@@ -9,13 +10,18 @@ from spiketoolkit.curation import (
 )
 from spiketoolkit.validation import (
     compute_snrs,
+    compute_silhouette_scores,
     compute_firing_rates,
     compute_num_spikes,
 )
 
 
 def test_thresh_num_spikes():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(
+        duration=10,
+        num_channels=4,
+        seed=0
+    )
     s_threshold = 25
 
     sort_ns = threshold_num_spikes(sort, s_threshold, "less")
@@ -25,7 +31,9 @@ def test_thresh_num_spikes():
 
 
 def test_thresh_snr():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
     snr_thresh = 4
 
     sort_snr = threshold_snr(sort, rec, snr_thresh, "less")
@@ -35,18 +43,24 @@ def test_thresh_snr():
 
 
 def test_thresh_silhouette():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
 
     silhouette_thresh = 4
 
-    sort_silhouette = threshold_silhouette_score(sort, rec, silhouette_thresh, "less")
+    sort_silhouette = threshold_silhouette_score(
+        sort, rec, silhouette_thresh, "less"
+    )
     new_silhouette = compute_silhouette_scores(sort_silhouette, rec)
 
     assert np.all(new_silhouette >= silhouette_thresh)
 
 
 def test_thresh_fr():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
     fr_thresh = 2
 
     sort_fr = threshold_firing_rate(sort, fr_thresh, "less")
