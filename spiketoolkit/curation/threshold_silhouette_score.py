@@ -27,8 +27,8 @@ cgps = {
         },
         "ms_before": {
             "type": "float",
-            "value": 3.0,
-            "default": 3.0,
+            "value": 1.0,
+            "default": 1.0,
             "title": ("Time period in ms to cut waveforms before the spike"
                       " events."),
         },

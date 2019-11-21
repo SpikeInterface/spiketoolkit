@@ -46,7 +46,6 @@ def test_thresh_silhouette():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
     )
-
     silhouette_thresh = 4
 
     sort_silhouette = threshold_silhouette_score(
@@ -60,7 +59,7 @@ def test_thresh_silhouette():
 def test_thresh_fr():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
-    )
+     )
     fr_thresh = 2
 
     sort_fr = threshold_firing_rate(sort, fr_thresh, "less")
