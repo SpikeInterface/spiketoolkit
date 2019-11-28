@@ -106,6 +106,12 @@ def test_max_chan():
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' in sort.get_shared_unit_property_names()
 
+    # multiple channels
+    max_channels = get_unit_max_channels(rec, sort, max_channels=2,
+                                         peak='neg')
+    assert np.allclose(np.array(max_chans), np.array(max_channels)[:, 0])
+    assert np.array(max_channels).shape[1] == 2
+
 
 @pytest.mark.implemented
 def test_amplitudes():

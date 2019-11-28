@@ -296,9 +296,10 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
         return template_list
 
 
-def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='median', grouping_property=None,
-                          save_as_property=True, ms_before=3., ms_after=3., dtype=None, max_spikes_per_unit=np.inf,
-                          compute_property_from_recording=False, verbose=False, recompute_templates=False, seed=0):
+def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, peak='both', mode='median',
+                          grouping_property=None, save_as_property=True, ms_before=3., ms_after=3., dtype=None,
+                          max_spikes_per_unit=np.inf, compute_property_from_recording=False, verbose=False,
+                          recompute_templates=False, seed=0):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
     they are computed.
@@ -311,6 +312,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
         The sorting extractor
     unit_ids: list
         List of unit ids to extract maximum channels
+    max_channels: int
+        Number of max channels per units to return (default=1)
     peak: str
         If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
     mode: str
@@ -350,6 +353,9 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
 
+    assert max_channels <= recording.get_num_channels(), f"'max_channels' must be less or equal than " \
+                                                         f"{recording.get_num_channels()} (number of channels)"
+
     max_list = []
     for i, unit_id in enumerate(unit_ids):
         if unit_id not in sorting.get_unit_ids():
@@ -363,18 +369,35 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, peak='both', mode='
                                           grouping_property=grouping_property, save_as_property=save_as_property,
                                           compute_property_from_recording=compute_property_from_recording,
                                           verbose=verbose, seed=seed)
-        if peak == 'both':
-            max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
-                                               template.shape)[0]
-        elif peak == 'neg':
-            max_channel_idx = np.unravel_index(np.argmin(template),
-                                               template.shape)[0]
-        elif peak == 'pos':
-            max_channel_idx = np.unravel_index(np.argmax(template),
-                                               template.shape)[0]
+        if max_channels == 1:
+            if peak == 'both':
+                max_channel_idxs = np.unravel_index(np.argmax(np.abs(template)),
+                                                    template.shape)[0]
+            elif peak == 'neg':
+                max_channel_idxs = np.unravel_index(np.argmin(template),
+                                                    template.shape)[0]
+            elif peak == 'pos':
+                max_channel_idxs = np.unravel_index(np.argmax(template),
+                                                    template.shape)[0]
+            max_channel = recording.get_channel_ids()[max_channel_idxs]
         else:
-            raise Exception("'peak' can be 'neg', 'pos', or 'both'")
-        max_channel = recording.get_channel_ids()[max_channel_idx]
+            # find peak time
+            if peak == 'both':
+                peak_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                                      template.shape)[1]
+                max_channel_idxs = np.argsort(np.abs(template[:, peak_idx]))[::-1][:max_channels]
+            elif peak == 'neg':
+                peak_idx = np.unravel_index(np.argmin(template),
+                                            template.shape)[1]
+                max_channel_idxs = np.argsort(template[:, peak_idx])[:max_channels]
+            elif peak == 'pos':
+                peak_idx = np.unravel_index(np.argmax(template),
+                                            template.shape)[1]
+                max_channel_idxs = np.argsort(template[:, peak_idx])[::-1][:max_channels]
+            else:
+                raise Exception("'peak' can be 'neg', 'pos', or 'both'")
+            max_channel = list(np.array(recording.get_channel_ids())[max_channel_idxs])
+
         if save_as_property:
             sorting.set_unit_property(unit_id, 'max_channel', max_channel)
 
@@ -953,7 +976,8 @@ def _get_amp_metric_data(recording, sorting, amp_method, amp_peak,
     return spike_times, spike_clusters, amplitudes
 
 
-def _get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, max_spikes_per_unit, max_spikes_for_pca,
+def _get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, max_spikes_per_unit,
+                         max_spikes_for_pca,
                          recompute_info, save_features_props, verbose, seed):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
