@@ -23,7 +23,7 @@ def compute_num_spikes(sorting, sampling_frequency=None, unit_ids=None, epoch_tu
 
     Returns
     ----------
-    num_spikes_epochs: list
+    num_spikes_epochs: list of lists
         The spike counts of the sorted units in the given epochs.
     '''
 
@@ -34,11 +34,11 @@ def compute_num_spikes(sorting, sampling_frequency=None, unit_ids=None, epoch_tu
                                                        unit_ids=unit_ids,
                                                        epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     num_spikes_epochs = metric_calculator.compute_num_spikes()
-
     if save_as_property:
         if epoch_tuples is None:
+            num_spikes = num_spikes_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'num_spikes', num_spikes_epochs[i_u])
+                sorting.set_unit_property(u, 'num_spikes', num_spikes[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -67,7 +67,7 @@ def compute_firing_rates(sorting, sampling_frequency=None, unit_ids=None, epoch_
 
     Returns
     ----------
-    firing_rates_epochs: list
+    firing_rates_epochs: list of lists
         The firing rates of the sorted units in the given epochs.
     '''
 
@@ -81,8 +81,9 @@ def compute_firing_rates(sorting, sampling_frequency=None, unit_ids=None, epoch_
 
     if save_as_property:
         if epoch_tuples is None:
+            firings_rates = firings_rates_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'firing_rate', firings_rates_epochs[i_u])
+                sorting.set_unit_property(u, 'firing_rate', firings_rates[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -111,7 +112,7 @@ def compute_presence_ratios(sorting, sampling_frequency=None, unit_ids=None, epo
 
     Returns
     ----------
-    presence_ratios_epochs: list
+    presence_ratios_epochs: list of lists
         The presence ratios violations of the sorted units in the given epochs.
     '''
 
@@ -125,8 +126,9 @@ def compute_presence_ratios(sorting, sampling_frequency=None, unit_ids=None, epo
 
     if save_as_property:
         if epoch_tuples is None:
+            presence_ratios = presence_ratios_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'presence_ratio', presence_ratios_epochs[i_u])
+                sorting.set_unit_property(u, 'presence_ratio', presence_ratios[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -159,7 +161,7 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
 
     Returns
     ----------
-    isi_violations_epochs: list
+    isi_violations_epochs: list of lists
         The isi violations of the sorted units in the given epochs.
     '''
 
@@ -173,8 +175,9 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
 
     if save_as_property:
         if epoch_tuples is None:
+            isi_violations = isi_violations_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'isi_violation', isi_violations_epochs[i_u])
+                sorting.set_unit_property(u, 'isi_violation', isi_violations[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -223,7 +226,7 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
 
     Returns
     ----------
-    amplitude_cutoffs_epochs: list
+    amplitude_cutoffs_epochs: list of lists
         The amplitude cutoffs of the sorted units in the given epochs.
     '''
 
@@ -242,8 +245,9 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
 
     if save_as_property:
         if epoch_tuples is None:
+            amplitude_cutoffs = amplitude_cutoffs_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'amplitude_cutoff', amplitude_cutoffs_epochs[i_u])
+                sorting.set_unit_property(u, 'amplitude_cutoff', amplitude_cutoffs[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -291,7 +295,7 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
     Returns
     ----------
-    snrs_epochs: list
+    snrs_epochs: list of lists
        The snrs of the sorted units in the given epochs.
     '''
 
@@ -309,8 +313,9 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
     if save_as_property:
         if epoch_tuples is None:
+            snrs = snrs_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'snr', snrs_epochs[i_u])
+                sorting.set_unit_property(u, 'snr', snrs[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
     return snrs_epochs
@@ -368,9 +373,9 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
 
     Returns
     ----------
-    max_drifts_epochs: list
+    max_drifts_epochs: list of lists
         The max drift of the given units over the specified epochs
-    cumulative_drifts_epochs: list
+    cumulative_drifts_epochs: list of lists
         The cumulative drifts of the given units over the specified epochs
     '''
     if unit_ids is None:
@@ -392,9 +397,11 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
 
     if save_as_property:
         if epoch_tuples is None:
+            max_drifts = max_drifts_epochs[0]
+            cumulative_drifts = cumulative_drifts_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'max_drift', max_drifts_epochs[i_u])
-                sorting.set_unit_property(u, 'cumulative_drift', cumulative_drifts_epochs[i_u])
+                sorting.set_unit_property(u, 'max_drift', max_drifts[i_u])
+                sorting.set_unit_property(u, 'cumulative_drift', cumulative_drifts[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -451,7 +458,7 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
 
     Returns
     ----------
-    silhouette_scores_epochs: list
+    silhouette_scores_epochs: list of lists
         The silhouette scores of the given units for the specified epochs.
     '''
     if unit_ids is None:
@@ -472,8 +479,9 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
 
     if save_as_property:
         if epoch_tuples is None:
+            silhouette_scores = silhouette_scores_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'silhouette_score', silhouette_scores_epochs[i_u])
+                sorting.set_unit_property(u, 'silhouette_score', silhouette_scores[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -533,7 +541,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
 
     Returns
     ----------
-    isolation_distances_epochs: list
+    isolation_distances_epochs: list of lists
         Returns the isolation distances of each specified unit for the given epochs.
     '''
     if unit_ids is None:
@@ -555,8 +563,9 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
 
     if save_as_property:
         if epoch_tuples is None:
+            isolation_distances = isolation_distances_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'isolation_distance', isolation_distances_epochs[i_u])
+                sorting.set_unit_property(u, 'isolation_distance', isolation_distances[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -615,7 +624,7 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
 
     Returns
     ----------
-    l_ratios_epochs: list
+    l_ratios_epochs: list of lists
         Returns the L ratios of each specified unit for the given epochs
     '''
     if unit_ids is None:
@@ -636,8 +645,9 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
 
     if save_as_property:
         if epoch_tuples is None:
+            l_ratios = l_ratios_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'l_ratio', l_ratios_epochs[i_u])
+                sorting.set_unit_property(u, 'l_ratio', l_ratios[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -697,7 +707,7 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
 
     Returns
     ----------
-    d_primes_epochs: list
+    d_primes_epochs: list of lists
         Returns the d primes of each specified unit for the given epochs.
     '''
     if unit_ids is None:
@@ -718,8 +728,9 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
 
     if save_as_property:
         if epoch_tuples is None:
+            d_primes = d_primes_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'd_prime', d_primes_epochs[i_u])
+                sorting.set_unit_property(u, 'd_prime', d_primes[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
 
@@ -783,9 +794,9 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
 
     Returns
     ----------
-    nn_hit_rates_epochs: np.array
+    nn_hit_rates_epochs: list of lists
         The nearest neighbor hit rates for each specified unit.
-    nn_miss_rates_epochs: np.array
+    nn_miss_rates_epochs: list of lists
         The nearest neighbor miss rates for each specified unit.
     '''
     if unit_ids is None:
@@ -809,9 +820,11 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
 
     if save_as_property:
         if epoch_tuples is None:
+            nn_hit_rates = nn_hit_rates_epochs[0]
+            nn_miss_rates = nn_miss_rates_epochs[0]
             for i_u, u in enumerate(unit_ids):
-                sorting.set_unit_property(u, 'nn_hit_rates', nn_hit_rates_epochs[i_u])
-                sorting.set_unit_property(u, 'nn_miss_rates', nn_miss_rates_epochs[i_u])
+                sorting.set_unit_property(u, 'nn_hit_rates', nn_hit_rates[i_u])
+                sorting.set_unit_property(u, 'nn_miss_rates', nn_miss_rates[i_u])
         else:
             raise NotImplementedError("Quality metrics cannot be saved as properties if 'epochs_tuples' are given.")
     return nn_hit_rates_epochs, nn_miss_rates_epochs
@@ -910,7 +923,7 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
 
     Returns
     ----------
-    metrics_epochs : list
+    metrics_epochs : list of lists
         List of metrics data. The list consists of lists of metric data for each given epoch.
     OR
     metrics_df: pandas.DataFrame
