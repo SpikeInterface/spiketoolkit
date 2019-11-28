@@ -217,9 +217,9 @@ def threshold_silhouette_score(
     threshold_sign: str
         If 'less', remove units scoring less than threshold.
         If 'less_or_equal', remove units scoring less than or equal to threshold.
-        If 'greater', remove units scoring greater than threshold.
-        If 'greater_or_equal', remove units scoring greater than or equal to threshold.
-       max_spikes_for_silhouette: int
+        If 'greater', remove units scoring greater than threshold.                       # noqa: E501
+        If 'greater_or_equal', remove units scoring greater than or equal to threshold.  # noqa: E501
+    max_spikes_for_silhouette: int
         Max spikes to be used for silhouette metric
     n_comp: int
         n_compFeatures in template-gui format
@@ -245,6 +245,8 @@ def threshold_silhouette_score(
         If True, save all features and properties in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    metric_calculator: MetricCalculator
+        A metric calculator can be passed in with cached metrics.
     seed: int
         Random seed for reproducibility
 
