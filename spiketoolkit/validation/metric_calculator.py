@@ -359,8 +359,6 @@ class MetricCalculator:
         self.metrics['num_spikes'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['num_spikes'].append(num_spikes_epochs[i])
-        if len(num_spikes_epochs) == 1:
-            num_spikes_epochs = num_spikes_epochs[0]
         return num_spikes_epochs
 
     def compute_firing_rates(self):
@@ -388,8 +386,6 @@ class MetricCalculator:
         self.metrics['firing_rate'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['firing_rate'].append(firings_rates_epochs[i])
-        if len(firings_rates_epochs) == 1:
-            firings_rates_epochs = firings_rates_epochs[0]
         return firings_rates_epochs
 
     def compute_presence_ratios(self):
@@ -416,8 +412,6 @@ class MetricCalculator:
         self.metrics['presence_ratio'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['presence_ratio'].append(presence_ratios_epochs[i])
-        if len(presence_ratios_epochs) == 1:
-            presence_ratios_epochs = presence_ratios_epochs[0]
         return presence_ratios_epochs
 
     def compute_isi_violations(self, isi_threshold=0.0015, min_isi=0.000166):
@@ -452,8 +446,6 @@ class MetricCalculator:
         self.metrics['isi_viol'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['isi_viol'].append(isi_violations_epochs[i])
-        if len(isi_violations_epochs) == 1:
-            isi_violations_epochs = isi_violations_epochs[0]
         return isi_violations_epochs
 
     def compute_amplitude_cutoffs(self):
@@ -484,8 +476,6 @@ class MetricCalculator:
         self.metrics['amplitude_cutoff'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['amplitude_cutoff'].append(amplitude_cutoffs_epochs[i])
-        if len(amplitude_cutoffs_epochs) == 1:
-            amplitude_cutoffs_epochs = amplitude_cutoffs_epochs[0]
         return amplitude_cutoffs_epochs
 
     def compute_snrs(self, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
@@ -547,8 +537,6 @@ class MetricCalculator:
         self.metrics['snr'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['snr'].append(snrs_epochs[i])
-        if len(snrs_epochs) == 1:
-            snrs_epochs = snrs_epochs[0]
         return snrs_epochs
 
     def compute_drift_metrics(self, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10):
@@ -601,9 +589,6 @@ class MetricCalculator:
         for i, epoch in enumerate(self._epochs):
             self.metrics['max_drift'].append(max_drifts_epochs[i])
             self.metrics['cumulative_drift'].append(cumulative_drifts_epochs[i])
-        if len(max_drifts_epochs) == 1:
-            max_drifts_epochs = max_drifts_epochs[0]
-            cumulative_drifts_epochs = cumulative_drifts_epochs[0]
         return max_drifts_epochs, cumulative_drifts_epochs
 
     def compute_silhouette_scores(self, max_spikes_for_silhouette=10000, seed=0):
@@ -647,8 +632,6 @@ class MetricCalculator:
         self.metrics['silhouette_score'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['silhouette_score'].append(silhouette_scores_epochs[i])
-        if len(silhouette_scores_epochs) == 1:
-            silhouette_scores_epochs = silhouette_scores_epochs[0]
         return silhouette_scores_epochs
 
     def compute_isolation_distances(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
@@ -695,8 +678,6 @@ class MetricCalculator:
         self.metrics['isolation_distance'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['isolation_distance'].append(isolation_distances_epochs[i])
-        if len(isolation_distances_epochs) == 1:
-            isolation_distances_epochs = isolation_distances_epochs[0]
         return isolation_distances_epochs
 
     def compute_l_ratios(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
@@ -743,8 +724,6 @@ class MetricCalculator:
         self.metrics['l_ratio'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['l_ratio'].append(l_ratios_epochs[i])
-        if len(l_ratios_epochs) == 1:
-            l_ratios_epochs = l_ratios_epochs[0]
         return l_ratios_epochs
 
     def compute_d_primes(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0):
@@ -791,8 +770,6 @@ class MetricCalculator:
         self.metrics['d_prime'] = []
         for i, epoch in enumerate(self._epochs):
             self.metrics['d_prime'].append(d_primes_epochs[i])
-        if len(d_primes_epochs) == 1:
-            d_primes_epochs = d_primes_epochs[0]
         return d_primes_epochs
 
     def compute_nn_metrics(self, num_channels_to_compare=13, max_spikes_per_cluster=500, max_spikes_for_nn=10000,
@@ -858,9 +835,6 @@ class MetricCalculator:
         for i, epoch in enumerate(self._epochs):
             self.metrics['nn_hit_rate'].append(nn_hit_rates_epochs[i])
             self.metrics['nn_miss_rate'].append(nn_miss_rates_epochs[i])
-        if len(nn_hit_rates_epochs) == 1:
-            nn_hit_rates_epochs = nn_hit_rates_epochs[0]
-            nn_miss_rates_epochs = nn_miss_rates_epochs[0]
         return nn_hit_rates_epochs, nn_miss_rates_epochs
 
     def compute_metrics(self, isi_threshold=0.0015, min_isi=0.000166, snr_mode='mad', snr_noise_duration=10.0,

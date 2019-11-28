@@ -9,7 +9,7 @@ def test_thresh_num_spikes():
     s_threshold = 25
 
     sort_ns = threshold_num_spikes(sort, s_threshold, 'less')
-    new_ns = compute_num_spikes(sort_ns, rec.get_sampling_frequency())
+    new_ns = compute_num_spikes(sort_ns, rec.get_sampling_frequency())[0]
 
     assert np.all(new_ns >= s_threshold)
 
@@ -18,7 +18,7 @@ def test_thresh_snr():
     snr_thresh = 4
 
     sort_snr = threshold_snr(sort, rec, snr_thresh, 'less')
-    new_snr = compute_snrs(sort_snr, rec)
+    new_snr = compute_snrs(sort_snr, rec)[0]
 
     assert np.all(new_snr >= snr_thresh)
 
@@ -28,7 +28,7 @@ def test_thresh_fr():
     fr_thresh = 2
 
     sort_fr = threshold_firing_rate(sort, fr_thresh, 'less')
-    new_fr = compute_firing_rates(sort_fr)
+    new_fr = compute_firing_rates(sort_fr)[0]
 
     assert np.all(new_fr >= fr_thresh)
 
