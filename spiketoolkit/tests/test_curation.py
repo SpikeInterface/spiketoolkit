@@ -69,5 +69,6 @@ def test_thresh_fr():
 
 
 if __name__ == "__main__":
+    test_thresh_silhouette()
     test_thresh_snr()
     test_thresh_fr()
