@@ -196,16 +196,10 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             waveform_list.append(waveforms)
             ind_list.append(indices)
 
-    if len(waveform_list) == 1:
-        if return_idxs:
-            return waveform_list[0], ind_list[0]
-        else:
-            return waveform_list[0]
+    if return_idxs:
+        return waveform_list, ind_list
     else:
-        if return_idxs:
-            return waveform_list, ind_list
-        else:
-            return waveform_list
+        return waveform_list
 
 
 def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
@@ -278,7 +272,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
                                            ms_before=ms_before, ms_after=ms_after, save_as_features=save_wf_as_features,
                                            grouping_property=grouping_property, dtype=dtype,
                                            compute_property_from_recording=compute_property_from_recording,
-                                           verbose=verbose, seed=seed)
+                                           verbose=verbose, seed=seed)[0]
         if mode == 'mean':
             template = np.mean(waveforms, axis=0)
         elif mode == 'median':
@@ -289,11 +283,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
         if save_as_property:
             sorting.set_unit_property(unit_id, 'template', template)
         template_list.append(template)
-
-    if len(template_list) == 1:
-        return template_list[0]
-    else:
-        return template_list
+    return template_list
 
 
 def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, peak='both', mode='median',
@@ -368,7 +358,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, pea
                                           dtype=dtype, ms_before=ms_before, ms_after=ms_after,
                                           grouping_property=grouping_property, save_as_property=save_as_property,
                                           compute_property_from_recording=compute_property_from_recording,
-                                          verbose=verbose, seed=seed)
+                                          verbose=verbose, seed=seed)[0]
         if max_channels == 1:
             if peak == 'both':
                 max_channel_idxs = np.unravel_index(np.argmax(np.abs(template)),
@@ -403,10 +393,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, pea
 
         max_list.append(max_channel)
 
-    if len(max_list) == 1:
-        return max_list[0]
-    else:
-        return max_list
+    return max_list
 
 
 def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', save_as_features=True, peak='both',
@@ -503,16 +490,10 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
         amp_list.append(amps)
         ind_list.append(indices)
 
-    if len(amp_list) == 1:
-        if return_idxs:
-            return amp_list[0], ind_list[0]
-        else:
-            return amp_list[0]
+    if return_idxs:
+        return amp_list, ind_list
     else:
-        if return_idxs:
-            return amp_list, ind_list
-        else:
-            return amp_list
+        return amp_list
 
 
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
@@ -659,16 +640,10 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
                 features = pca_scores_list[i]
             sorting.set_unit_spike_features(unit_id, 'pca_scores', features)
 
-    if len(pca_scores_list) == 1:
-        if return_idxs:
-            return pca_scores_list[0], ind_list[0]
-        else:
-            return pca_scores_list[0]
+    if return_idxs:
+        return pca_scores_list, ind_list
     else:
-        if return_idxs:
-            return pca_scores_list, ind_list
-        else:
-            return pca_scores_list
+        return pca_scores_list
 
 
 def set_unit_properties_by_max_channel_properties(recording, sorting, property, unit_ids=None, peak='both',
@@ -733,7 +708,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
                 max_chan = get_unit_max_channels(recording, sorting, unit_id, mode=mode, peak=peak,
                                                  max_spikes_per_unit=max_spikes_per_unit, dtype=dtype,
                                                  ms_before=ms_before, ms_after=ms_after, verbose=verbose,
-                                                 seed=seed)
+                                                 seed=seed)[0]
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 
@@ -1155,12 +1130,6 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
 
     # similar_templates.npy - [nTemplates, nTemplates] single
     templates = get_unit_templates(recording, sorting, save_as_property=save_features_props, seed=seed)
-
-    if not isinstance(templates, list):
-        if len(templates.shape) == 2:
-            # single unit
-            templates = templates.reshape(1, templates.shape[0], templates.shape[1])
-
     similar_templates = _compute_templates_similarity(templates)
 
     # templates.npy
