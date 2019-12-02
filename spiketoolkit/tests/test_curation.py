@@ -3,6 +3,7 @@ import numpy as np
 from spiketoolkit.curation import (
     threshold_snr,
     threshold_silhouette_score,
+    threshold_d_primes,
     threshold_firing_rate,
     threshold_isi_violations,
     threshold_num_spikes,
@@ -11,6 +12,7 @@ from spiketoolkit.curation import (
 from spiketoolkit.validation import (
     compute_snrs,
     compute_silhouette_scores,
+    compute_d_primes,
     compute_firing_rates,
     compute_num_spikes,
 )
@@ -55,6 +57,20 @@ def test_thresh_silhouette():
     new_silhouette = silhouette[np.where(silhouette >= silhouette_thresh)]
 
     assert np.all(new_silhouette >= silhouette_thresh)
+
+
+def test_thresh_d_primes():
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
+    d_primes_thresh = .5
+
+    sort_d_primes = threshold_d_primes(
+        sort, rec, d_primes_thresh, "less"
+    )
+    new_d_primes = compute_d_primes(sort_d_primes, rec)[0]
+
+    assert np.all(new_d_primes >= d_primes_thresh)
 
 
 def test_thresh_fr():

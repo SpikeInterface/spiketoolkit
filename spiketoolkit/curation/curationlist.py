@@ -5,6 +5,7 @@ from .threshold_presence_ratio import threshold_presence_ratio, ThresholdPresenc
 from .threshold_isi_violations import threshold_isi_violations, ThresholdISIViolations
 from .threshold_snr import threshold_snr, ThresholdSNR
 from .threshold_silhouette_score import threshold_silhouette_score, ThresholdSilhouetteScore
+from .threshold_d_primes import threshold_d_primes, ThresholdDPrimes
 
 curation_full_list = [
     ThresholdNumSpikes,
@@ -13,6 +14,7 @@ curation_full_list = [
     ThresholdISIViolations,
     ThresholdSNR,
     ThresholdSilhouetteScore,
+    ThresholdDPrimes,
 ]
 
 installed_curation_list = [c for c in curation_full_list if c.installed]
