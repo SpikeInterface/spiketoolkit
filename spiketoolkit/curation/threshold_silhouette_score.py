@@ -168,7 +168,6 @@ class ThresholdSilhouetteScore(ThresholdCurator):
             )
 
         silhouette_epoch = self._metric_calculator.get_metrics_dict()[metric_name][0]  # noqa: E501
-        print(silhouette_epoch)
 
         ThresholdCurator.__init__(
             self,
