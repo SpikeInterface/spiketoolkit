@@ -175,8 +175,7 @@ class ThresholdDPrimes(ThresholdCurator):
             )
 
         d_primes_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]    # noqa: E501
-        print(d_primes_epochs)
-
+        
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=d_primes_epochs)  # noqa: E501
 
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)      # noqa: E501
