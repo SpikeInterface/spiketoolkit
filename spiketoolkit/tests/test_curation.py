@@ -1,18 +1,21 @@
 import spikeextractors as se
 import numpy as np
+
 from spiketoolkit.curation import (
     threshold_snr,
     threshold_silhouette_score,
     threshold_d_primes,
     threshold_firing_rate,
-    threshold_isi_violations,
+    # threshold_isi_violations,
     threshold_num_spikes,
-    threshold_presence_ratio,
+    # threshold_presence_ratio,
+    threshold_l_ratios,
 )
 from spiketoolkit.validation import (
     compute_snrs,
     compute_silhouette_scores,
     compute_d_primes,
+    compute_l_ratios,
     compute_firing_rates,
     compute_num_spikes,
 )
@@ -50,7 +53,7 @@ def test_thresh_silhouette():
     )
     silhouette_thresh = .5
 
-    sort_silhouette = threshold_silhouette_score(
+    _ = threshold_silhouette_score(
         sort, rec, silhouette_thresh, "less"
     )
     silhouette = np.asarray(compute_silhouette_scores(sort, rec)[0])
@@ -71,6 +74,20 @@ def test_thresh_d_primes():
     new_d_primes = compute_d_primes(sort_d_primes, rec)[0]
 
     assert np.all(new_d_primes >= d_primes_thresh)
+
+
+def test_thresh_l_ratios():
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
+    l_ratios_thresh = 0
+
+    sort_l_ratios = threshold_l_ratios(
+        sort, rec, l_ratios_thresh, "less"
+    )
+    new_l_ratios = compute_l_ratios(sort_l_ratios, rec)[0]
+
+    assert np.all(new_l_ratios >= l_ratios_thresh)
 
 
 def test_thresh_fr():

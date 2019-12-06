@@ -115,8 +115,8 @@ cgps = {
 }
 
 
-class ThresholdDPrimes(ThresholdCurator):
-    curator_name = "ThresholdDPrimes"
+class ThresholdLRatios(ThresholdCurator):
+    curator_name = "ThresholdLRatios"
     installed = True
     installation_mesg = ""  # err
 
@@ -147,7 +147,7 @@ class ThresholdDPrimes(ThresholdCurator):
         seed=cgps["seed"]["default"],
     ):
 
-        metric_name = "d_prime"
+        metric_name = "l_ratio"
 
         if metric_calculator is None:
             self._metric_calculator = st.validation.MetricCalculator(
@@ -168,20 +168,20 @@ class ThresholdDPrimes(ThresholdCurator):
                 freq_min=freq_min,
                 freq_max=freq_max,
             )
-            self._metric_calculator.compute_d_primes(
+            self._metric_calculator.compute_l_ratios(
                 num_channels_to_compare=cgps["num_channels_to_compare"]["default"],     # noqa: E501
                 max_spikes_per_cluster=cgps["max_spikes_per_cluster"]["default"],       # noqa: E501
                 seed=cgps["seed"]["default"],
             )
 
-        d_primes_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]    # noqa: E501
+        l_ratio_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]    # noqa: E501
 
-        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=d_primes_epochs)  # noqa: E501
+        ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=l_ratio_epochs)  # noqa: E501
 
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)      # noqa: E501
 
 
-def threshold_d_primes(
+def threshold_l_ratios(
     sorting,
     recording,
     threshold,
@@ -253,11 +253,11 @@ def threshold_d_primes(
 
     Returns
     -------
-    thresholded_sorting: ThresholdSilhouetteScore
+    thresholded_sorting: ThresholdLRatios
         The thresholded sorting extractor
 
     """
-    return ThresholdDPrimes(
+    return ThresholdLRatios(
         sorting=sorting,
         recording=recording,
         threshold=threshold,
