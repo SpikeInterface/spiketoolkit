@@ -160,8 +160,7 @@ class ThresholdDPrimes(ThresholdCurator):
         else:
             self._metric_calculator = metric_calculator
 
-        if (
-            metric_name not in self._metric_calculator.get_metrics_dict().keys()):      # noqa: E501
+        if metric_name not in self._metric_calculator.get_metrics_dict().keys():
             self._metric_calculator.set_recording(
                 recording,
                 apply_filter=apply_filter,
