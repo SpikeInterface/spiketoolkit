@@ -122,16 +122,21 @@ class ThresholdAmplitudeCutoff(ThresholdCurator):
             self._metric_calculator = metric_calculator
 
         if metric_name not in self._metric_calculator.get_metrics_dict().keys():
-            self._metric_calculator.set_recording(
-                recording,
+            self._metric_calculator.compute_amplitudes(
+                recording=recording,
+                amp_method=amp_method,
+                amp_peak=amp_peak,
+                amp_frames_before=amp_frames_before,
+                amp_frames_after=amp_frames_after,
                 apply_filter=apply_filter,
                 freq_min=freq_min,
                 freq_max=freq_max,
+                save_features_props=save_features_props,
+                seed=seed
             )
             self._metric_calculator.compute_amplitude_cutoffs()
 
         amplitude_cutoff_epochs = self._metric_calculator.get_metrics_dict()[metric_name][0]
-
         ThresholdCurator.__init__(self, sorting=sorting, metrics_epoch=amplitude_cutoff_epochs)
 
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)

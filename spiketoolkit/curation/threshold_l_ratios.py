@@ -162,11 +162,20 @@ class ThresholdLRatios(ThresholdCurator):
 
         if (
             metric_name not in self._metric_calculator.get_metrics_dict().keys()):      # noqa: E501
-            self._metric_calculator.set_recording(
-                recording,
+            self._metric_calculator.compute_pca_scores(
+                recording=recording,
+                n_comp=n_comp,
+                ms_before=ms_before,
+                ms_after=ms_after,
+                dtype=dtype,
+                max_spikes_per_unit=max_spikes_per_unit,
+                recompute_info=recompute_info,
+                max_spikes_for_pca=max_spikes_for_pca,
                 apply_filter=apply_filter,
                 freq_min=freq_min,
                 freq_max=freq_max,
+                save_features_props=save_features_props,
+                seed=seed,
             )
             self._metric_calculator.compute_l_ratios(
                 num_channels_to_compare=cgps["num_channels_to_compare"]["default"],     # noqa: E501
