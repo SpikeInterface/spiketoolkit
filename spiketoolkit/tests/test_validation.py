@@ -3,12 +3,12 @@ from numpy.testing import assert_array_equal
 from spiketoolkit.validation import compute_isolation_distances, compute_isi_violations, compute_snrs, \
     compute_amplitude_cutoffs, compute_d_primes, compute_drift_metrics, compute_firing_rates, compute_l_ratios, \
     compute_metrics, compute_nn_metrics, compute_num_spikes, compute_presence_ratios, compute_silhouette_scores, \
-    MetricCalculator
+    ValidationMetricCalculator
 
 
 def test_calculator():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
-    mc = MetricCalculator(sort, rec)
+    mc = ValidationMetricCalculator(sort, rec)
     mc.compute_all_metric_data()
 
     _ = mc.compute_metrics()

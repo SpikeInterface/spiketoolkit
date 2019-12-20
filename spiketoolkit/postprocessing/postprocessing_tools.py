@@ -715,7 +715,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
                   amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
-                  recompute_info=True, save_features_props=False, write_waveforms=False, verbose=False,
+                  recompute_info=True, save_features_props=False, verbose=False,
                   seed=0):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.

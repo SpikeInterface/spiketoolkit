@@ -244,8 +244,8 @@ def threshold_silhouette_score(
         If True, save all features and properties in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     seed: int
         Random seed for reproducibility
 

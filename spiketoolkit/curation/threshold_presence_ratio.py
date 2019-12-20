@@ -23,9 +23,11 @@ class ThresholdPresenceRatio(ThresholdCurator):
         else:
             self._sampling_frequency = sampling_frequency
         if metric_calculator is None:
-            self._metric_calculator = st.validation.MetricCalculator(sorting,
-                                                                     sampling_frequency=self._sampling_frequency,
-                                                                     unit_ids=None, epoch_tuples=None, epoch_names=None)
+            self._metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                               sampling_frequency=
+                                                                               self._sampling_frequency,
+                                                                               unit_ids=None, epoch_tuples=None,
+                                                                               epoch_names=None)
             self._metric_calculator.compute_presence_ratios()
         else:
             self._metric_calculator = metric_calculator
@@ -55,8 +57,8 @@ def threshold_presence_ratio(sorting, threshold=.50, threshold_sign='less', samp
         If 'greater_or_equal', will remove any units with metric scores greater than or equal to the given threshold.
     sampling_frequency: float
         The sampling frequency of recording
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     Returns
     -------
     thresholded_sorting: ThresholdPresenceRatio

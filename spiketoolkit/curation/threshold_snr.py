@@ -32,7 +32,7 @@ class ThresholdSNR(ThresholdCurator):
                  save_features_props, metric_calculator, seed):
         metric_name = 'snr'
         if metric_calculator is None:
-            self._metric_calculator = st.validation.MetricCalculator(sorting,
+            self._metric_calculator = st.validation.ValidationMetricCalculator(sorting,
                                                                      sampling_frequency=recording.get_sampling_frequency(),
                                                                      unit_ids=None, epoch_tuples=None, epoch_names=None)
         else:
@@ -93,8 +93,8 @@ def threshold_snr(sorting, recording, threshold, threshold_sign,
         Low-pass frequency for optional filter (default 6000 Hz).
     save_features_props: bool
         If True, waveforms and templates are saved as sorting features/properties
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     seed: int
         Random seed for reproducibility
     Returns

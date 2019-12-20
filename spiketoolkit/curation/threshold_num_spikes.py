@@ -46,8 +46,8 @@ def threshold_num_spikes(sorting, threshold=100, threshold_sign='less', metric_c
         If 'less_or_equal', will remove any units with metric scores less than or equal to the given threshold.
         If 'greater', will remove any units with metric scores greater than the given threshold.
         If 'greater_or_equal', will remove any units with metric scores greater than or equal to the given threshold.
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     Returns
     -------
     thresholded_sorting: ThresholdNumSpikes

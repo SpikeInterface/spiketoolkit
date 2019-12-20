@@ -246,8 +246,8 @@ def threshold_l_ratios(
         A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     seed: int
         Random seed for reproducibility
 

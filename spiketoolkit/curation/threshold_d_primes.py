@@ -150,7 +150,7 @@ class ThresholdDPrimes(ThresholdCurator):
         metric_name = "d_prime"
 
         if metric_calculator is None:
-            self._metric_calculator = st.validation.MetricCalculator(
+            self._metric_calculator = st.validation.ValidationMetricCalculator(
                 sorting,
                 sampling_frequency=recording.get_sampling_frequency(),
                 unit_ids=None,
@@ -246,8 +246,8 @@ def threshold_d_primes(
         A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     seed: int
         Random seed for reproducibility
 

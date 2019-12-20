@@ -28,9 +28,11 @@ class ThresholdISIViolations(ThresholdCurator):
         else:
             self._sampling_frequency = sampling_frequency
         if metric_calculator is None:
-            self._metric_calculator = st.validation.MetricCalculator(sorting,
-                                                                     sampling_frequency=self._sampling_frequency,
-                                                                     unit_ids=None, epoch_tuples=None, epoch_names=None)
+            self._metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                               sampling_frequency=
+                                                                               self._sampling_frequency,
+                                                                               unit_ids=None, epoch_tuples=None,
+                                                                               epoch_names=None)
             self._metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
         else:
             self._metric_calculator = metric_calculator
@@ -64,8 +66,8 @@ def threshold_isi_violations(sorting, threshold=5.0, threshold_sign='greater', i
             The minimum expected isi value.
     sampling_frequency: float
         The sampling frequency of recording
-    metric_calculator: MetricCalculator
-        A metric calculator can be passed in with cached metrics.
+    metric_calculator: ValidationMetricCalculator
+        A validation metric calculator can be passed in with cached metrics.
     Returns
     -------
     thresholded_sorting: ThresholdISIViolations

@@ -11,9 +11,9 @@ import copy
 from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 
 
-class MetricCalculator:
+class ValidationMetricCalculator:
     def __init__(self, sorting, recording=None, sampling_frequency=None, apply_filter=True, freq_min=300, freq_max=6000, 
-                 unit_ids=None, epoch_tuples=None, epoch_names=None, verbose=False):
+                 unit_ids=None, epoch_tuples=None, epoch_names=None, max_spikes_per_unit=None, verbose=False):
         '''
         Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
 

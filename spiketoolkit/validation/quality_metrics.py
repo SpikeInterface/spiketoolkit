@@ -30,9 +30,9 @@ def compute_num_spikes(sorting, sampling_frequency=None, unit_ids=None, epoch_tu
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting, sampling_frequency=sampling_frequency,
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     num_spikes_epochs = metric_calculator.compute_num_spikes()
     if save_as_property:
         if epoch_tuples is None:
@@ -74,9 +74,9 @@ def compute_firing_rates(sorting, sampling_frequency=None, unit_ids=None, epoch_
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting, sampling_frequency=sampling_frequency,
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     firings_rates_epochs = metric_calculator.compute_firing_rates()
 
     if save_as_property:
@@ -119,9 +119,9 @@ def compute_presence_ratios(sorting, sampling_frequency=None, unit_ids=None, epo
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting, sampling_frequency=sampling_frequency,
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     presence_ratios_epochs = metric_calculator.compute_presence_ratios()
 
     if save_as_property:
@@ -168,9 +168,9 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting, sampling_frequency=sampling_frequency,
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     isi_violations_epochs = metric_calculator.compute_isi_violations(isi_threshold=isi_threshold, min_isi=min_isi)
 
     if save_as_property:
@@ -185,7 +185,8 @@ def compute_isi_violations(sorting, sampling_frequency=None, isi_threshold=0.001
 
 
 def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                              amp_frames_after=3, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                              amp_frames_after=3, apply_filter=True, freq_min=300, freq_max=6000,
+                              save_features_props=False,
                               unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the amplitude cutoffs for the sorted dataset.
@@ -233,13 +234,14 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_amplitudes(recording=recording, amp_method=amp_method, amp_peak=amp_peak,
                                          amp_frames_before=amp_frames_before,
-                                         amp_frames_after=amp_frames_after, apply_filter=apply_filter, 
-                                         freq_min=freq_min, freq_max=freq_max, 
+                                         amp_frames_after=amp_frames_after, apply_filter=apply_filter,
+                                         freq_min=freq_min, freq_max=freq_max,
                                          save_features_props=save_features_props, seed=seed)
     amplitude_cutoffs_epochs = metric_calculator.compute_amplitude_cutoffs()
 
@@ -255,7 +257,7 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
 
 
 def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
-                 recompute_info=True, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                 recompute_info=True, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
                  unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and stores snrs for the sorted units.
@@ -302,9 +304,10 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.set_recording(recording, apply_filter=apply_filter, freq_min=freq_min, freq_max=freq_max)
     snrs_epochs = metric_calculator.compute_snrs(snr_mode=snr_mode, snr_noise_duration=snr_noise_duration,
                                                  max_spikes_per_unit_for_snr=max_spikes_per_unit_for_snr,
@@ -323,7 +326,8 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
 
 def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
                           n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                          max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                          max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
+                          save_features_props=False,
                           unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the drift metrics for the sorted dataset.
@@ -381,9 +385,10 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -410,7 +415,8 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
 
 def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, n_comp=3, ms_before=1., ms_after=2.,
                               dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                              max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                              max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
+                              save_features_props=False,
                               unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the silhouette scores in the sorted dataset.
@@ -464,9 +470,10 @@ def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=1000
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -547,9 +554,10 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -574,7 +582,7 @@ def compute_isolation_distances(sorting, recording, num_channels_to_compare=13, 
 
 def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
                      ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                     max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False, 
+                     max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
                      unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
     Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
@@ -630,9 +638,10 @@ def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -713,9 +722,10 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -738,8 +748,8 @@ def compute_d_primes(sorting, recording, num_channels_to_compare=13, max_spikes_
 
 
 def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500,
-                       max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., 
-                       dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5, 
+                       max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2.,
+                       dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5,
                        apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
                        unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
     '''
@@ -802,9 +812,10 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=recording.get_sampling_frequency(),
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting,
+                                                                 sampling_frequency=recording.get_sampling_frequency(),
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
     metric_calculator.compute_pca_scores(recording=recording, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                          dtype=dtype,
                                          max_spikes_per_unit=max_spikes_per_unit,
@@ -835,9 +846,9 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
                     drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
                     max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
                     max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None,
-                    max_spikes_per_unit=300,  amp_method='absolute', amp_peak='both', amp_frames_before=3, 
-                    amp_frames_after=3, recompute_info=True,  max_spikes_for_pca=1e5, apply_filter=True, 
-                    freq_min=300, freq_max=6000, save_features_props=False, metric_names=None, unit_ids=None, 
+                    max_spikes_per_unit=300, amp_method='absolute', amp_peak='both', amp_frames_before=3,
+                    amp_frames_after=3, recompute_info=True, max_spikes_for_pca=1e5, apply_filter=True,
+                    freq_min=300, freq_max=6000, save_features_props=False, metric_names=None, unit_ids=None,
                     epoch_tuples=None, epoch_names=None, return_dataframe=False, seed=0):
     '''
     Computes and returns all specified metrics for the sorted dataset.
@@ -947,9 +958,9 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
     if recording is not None:
         sampling_frequency = recording.get_sampling_frequency()
 
-    metric_calculator = st.validation.MetricCalculator(sorting, sampling_frequency=sampling_frequency,
-                                                       unit_ids=unit_ids,
-                                                       epoch_tuples=epoch_tuples, epoch_names=epoch_names)
+    metric_calculator = st.validation.ValidationMetricCalculator(sorting, sampling_frequency=sampling_frequency,
+                                                                 unit_ids=unit_ids,
+                                                                 epoch_tuples=epoch_tuples, epoch_names=epoch_names)
 
     if 'max_drift' in metric_names or 'cumulative_drift' in metric_names or 'silhouette_score' in metric_names \
             or 'isolation_distance' in metric_names or 'l_ratio' in metric_names or 'd_prime' in metric_names \
@@ -975,8 +986,8 @@ def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_thresh
         else:
             metric_calculator.compute_amplitudes(recording=recording, amp_method=amp_method, amp_peak=amp_peak,
                                                  amp_frames_before=amp_frames_before,
-                                                 amp_frames_after=amp_frames_after, apply_filter=apply_filter, 
-                                                 freq_min=freq_min, freq_max=freq_max, 
+                                                 amp_frames_after=amp_frames_after, apply_filter=apply_filter,
+                                                 freq_min=freq_min, freq_max=freq_max,
                                                  save_features_props=save_features_props, seed=seed)
     elif 'snr' in metric_names:
         if recording is None:
