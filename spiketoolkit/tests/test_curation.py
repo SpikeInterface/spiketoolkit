@@ -10,6 +10,7 @@ from spiketoolkit.curation import (
     threshold_num_spikes,
     # threshold_presence_ratio,
     threshold_l_ratios,
+    threshold_amplitude_cutoff,
 )
 from spiketoolkit.validation import (
     compute_snrs,
@@ -18,6 +19,7 @@ from spiketoolkit.validation import (
     compute_l_ratios,
     compute_firing_rates,
     compute_num_spikes,
+    compute_amplitude_cutoffs,
 )
 
 
@@ -88,6 +90,20 @@ def test_thresh_l_ratios():
     new_l_ratios = compute_l_ratios(sort_l_ratios, rec)[0]
 
     assert np.all(new_l_ratios >= l_ratios_thresh)
+
+
+def test_thresh_amplitude_cutoff():
+    rec, sort = se.example_datasets.toy_example(
+        duration=10, num_channels=4, seed=0
+    )
+    amplitude_cutoff_thresh = 0
+
+    sort_amplitude_cutoff = threshold_amplitude_cutoff(
+        sort, rec, amplitude_cutoff_thresh, "less"
+    )
+    new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec)[0]
+
+    assert np.all(new_amplitude_cutoff >= amplitude_cutoff_thresh)
 
 
 def test_thresh_fr():
