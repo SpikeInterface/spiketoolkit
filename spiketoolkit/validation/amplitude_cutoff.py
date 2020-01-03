@@ -6,49 +6,32 @@ from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 class AmplitudeCutoff(QualityMetric):
     def __init__(
         self,
-        sorting,
-        recording,
-        apply_filter=True,
-        freq_min=300,
-        freq_max=6000,
-        unit_ids=None,
-        epoch_tuples=None,
-        epoch_names=None,
-        verbose=False,
-        amp_method="absolute",
-        amp_peak="both",
-        amp_frames_before=3,
-        amp_frames_after=3,
-        save_features_props=False,
-        seed=0,
+        metric_data,
     ):
-
-        QualityMetric.__init__(self, sorting=sorting, recording=recording, apply_filter=apply_filter,
-                                freq_min=freq_min, freq_max=freq_max, unit_ids=unit_ids, epoch_tuples=epoch_tuples,
-                                verbose=verbose)
-        self.compute_amplitudes(amp_method=amp_method, amp_peak=amp_peak, amp_frames_before=amp_frames_before, 
-                                amp_frames_after=amp_frames_after, save_features_props=save_features_props, seed=seed)
+        QualityMetric.__init__(self, metric_data)
+        if not metric_data.has_amplitudes():
+            raise ValueError("MetricData object must have amplitudes")
 
     def compute_metric(self):
         amplitude_cutoffs_epochs = []
-        for epoch in self._epochs:
+        for epoch in self._metric_data._epochs:
             in_epoch = np.logical_and(
-                self._spike_times_amps > epoch[1], self._spike_times_amps < epoch[2]
+                self._metric_data._spike_times_amps > epoch[1], self._metric_data._spike_times_amps < epoch[2]
             )
             amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(
-                self._spike_clusters_amps[in_epoch],
-                self._amplitudes[in_epoch],
-                self._total_units,
-                verbose=self.verbose,
+                self._metric_data._spike_clusters_amps[in_epoch],
+                self._metric_data._amplitudes[in_epoch],
+                self._metric_data._total_units,
+                verbose=self._metric_data.verbose,
             )
             amplitude_cutoffs_list = []
-            for i in self._unit_indices:
+            for i in self._metric_data._unit_indices:
                 amplitude_cutoffs_list.append(amplitude_cutoffs_all[i])
             amplitude_cutoffs = np.asarray(amplitude_cutoffs_list)
             amplitude_cutoffs_epochs.append(amplitude_cutoffs)
 
         self.metric["amplitude_cutoff"] = []
-        for i, epoch in enumerate(self._epochs):
+        for i, epoch in enumerate(self._metric_data._epochs):
             self.metric["amplitude_cutoff"].append(amplitude_cutoffs_epochs[i])
         return amplitude_cutoffs_epochs
 
@@ -58,8 +41,8 @@ class AmplitudeCutoff(QualityMetric):
             self.compute_metric()
         if epoch is None:
             epoch = 0
-        assert (epoch < len(self.get_epochs)), "Invalid epoch specified"
+        assert (epoch < len(self._metric_data.get_epochs)), "Invalid epoch specified"
         amplitude_cutoff_epochs = self.metric[metric_name][epoch]
-        tc = ThresholdCurator(sorting=self._sorting, metrics_epoch=amplitude_cutoff_epochs)
+        tc = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=amplitude_cutoff_epochs)
         tc.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return tc
