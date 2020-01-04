@@ -3,7 +3,7 @@
 class QualityMetric:
     def __init__(
         self,
-        metric_data
+        metric_data,
     ):
         '''
         Parameters

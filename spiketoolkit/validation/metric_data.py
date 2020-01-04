@@ -20,6 +20,22 @@ from .validation_tools import (
 # Baseclass for each quality metric
 
 class MetricData:
+    recording_params_dict = {'apply_filter':True,
+                             'freq_min':300,
+                             'freq_max':6000,}
+    amplitude_params_dict = {'amp_method':"absolute",
+                             'amp_peak':"both",
+                             'amp_frames_before':3,
+                             'amp_frames_after':3}
+    pca_scores_params_dict = {'n_comp':3,
+                              'ms_before':1.0,
+                              'ms_after':2.0,
+                              'dtype':None,
+                              'max_spikes_per_unit':300,
+                              'max_spikes_for_pca':1e5}
+    metric_scope_params_dict = {'unit_ids':None,
+                                'epoch_tuples':None,
+                                'epoch_names':None}
     def __init__(
         self,
         sorting,
