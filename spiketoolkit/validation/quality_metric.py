@@ -1,6 +1,8 @@
+from abc import ABC, abstractmethod
+
 # Baseclass for each quality metric
 
-class QualityMetric:
+class QualityMetric(ABC):
     def __init__(
         self,
         metric_data,
@@ -12,16 +14,13 @@ class QualityMetric:
             An object for storing and computing preprocessed data 
         '''
         self._metric_data = metric_data
-        # Dictionary of cached metric
-        self.metric = {}
-
-    def get_metric(self):
-        return self.metric
 
     #implemented by quality metric subclasses
+    @abstractmethod
     def compute_metric(self):
         pass
 
+    @abstractmethod
     def threshold_metric(self, threshold, threshold_sign, epoch=None):
         '''
         Parameters

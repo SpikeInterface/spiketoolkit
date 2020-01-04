@@ -59,19 +59,19 @@ def compute_amplitude_cutoffs(
     amplitude_cutoffs_epochs: list of lists
         The amplitude cutoffs of the sorted units in the given epochs.
     """
-    rp_dict = dict(MetricData.recording_params_dict.copy(), **recording_params_dict)
-    ap_dict = dict(MetricData.amplitude_params_dict.copy(), **amplitude_params_dict)
-    ms_dict = dict(MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict)
+    rp_dict = recording_params_dict
+    ap_dict = amplitude_params_dict
+    ms_dict = metric_scope_params_dict
     if ms_dict['unit_ids'] is None:
         ms_dict['unit_ids'] = sorting.get_unit_ids()
 
-    mc = MetricData(sorting=sorting, recording=recording, apply_filter=rp_dict['apply_filter'],
+    md = MetricData(sorting=sorting, recording=recording, apply_filter=rp_dict['apply_filter'],
                     freq_min=rp_dict['freq_min'], freq_max=rp_dict['freq_max'], unit_ids=ms_dict['unit_ids'], 
                     epoch_tuples=ms_dict['epoch_tuples'], epoch_names=ms_dict['epoch_names'])
-    mc.compute_amplitudes(amp_method=ap_dict['amp_method'], amp_peak=ap_dict['amp_peak'],
+    md.compute_amplitudes(amp_method=ap_dict['amp_method'], amp_peak=ap_dict['amp_peak'],
                           amp_frames_before=ap_dict['amp_frames_before'], amp_frames_after=ap_dict['amp_frames_after'],
                           save_features_props=save_features_props, seed=seed)
-    ac = AmplitudeCutoff(metric_data=mc)
+    ac = AmplitudeCutoff(metric_data=md)
     amplitude_cutoffs_epochs = ac.compute_metric()
 
     if save_as_property:
@@ -84,4 +84,3 @@ def compute_amplitude_cutoffs(
                 "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
             )
     return amplitude_cutoffs_epochs
-
