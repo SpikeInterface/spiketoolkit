@@ -59,9 +59,16 @@ def compute_amplitude_cutoffs(
     amplitude_cutoffs_epochs: list of lists
         The amplitude cutoffs of the sorted units in the given epochs.
     """
-    rp_dict = recording_params_dict.copy()
-    ap_dict = amplitude_params_dict.copy()
-    ms_dict = metric_scope_params_dict.copy()
+    if not set(recording_params_dict.keys()).issubset(set(MetricData.recording_params_dict.keys())):
+        raise ValueError("Improper parameter entered into the recording param dict.")
+    if not set(amplitude_params_dict.keys()).issubset(set(MetricData.amplitude_params_dict.keys())):
+        raise ValueError("Improper parameter entered into the amplitude param dict.")
+    if not set(metric_scope_params_dict.keys()).issubset(set(MetricData.metric_scope_params_dict.keys())):
+        raise ValueError("Improper parameter entered into the metric scope param dict.")
+    rp_dict = dict(MetricData.recording_params_dict.copy(), **recording_params_dict)
+    ap_dict = dict(MetricData.amplitude_params_dict.copy(), **amplitude_params_dict)
+    ms_dict = dict(MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict)
+
     if ms_dict['unit_ids'] is None:
         ms_dict['unit_ids'] = sorting.get_unit_ids()
 
