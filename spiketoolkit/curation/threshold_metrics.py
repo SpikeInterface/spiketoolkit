@@ -1,15 +1,17 @@
 import spiketoolkit as st
-from .metric_data import MetricData
-from .amplitude_cutoff import AmplitudeCutoff
+from spiketoolkit.validation.metric_data import MetricData
+from spiketoolkit.validation.amplitude_cutoff import AmplitudeCutoff
 
-def compute_amplitude_cutoffs(
+def threshold_amplitude_cutoffs(
     sorting,
     recording,
+    threshold, 
+    threshold_sign, 
+    epoch=None,
     recording_params_dict=MetricData.recording_params_dict,
     amplitude_params_dict=MetricData.amplitude_params_dict,
     metric_scope_params_dict=MetricData.metric_scope_params_dict,
     save_features_props=False,
-    save_as_property = True,
     seed=0,
 ):
     """
@@ -21,6 +23,16 @@ def compute_amplitude_cutoffs(
         The sorting result to be evaluated.
     recording: RecordingExtractor
         The given recording extractor from which to extract amplitudes
+    threshold: int or float
+        The threshold for the given metric.
+    threshold_sign: str
+        If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
+        If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
+    epoch:
+        The threshold will be applied to the specified epoch. 
+        If epoch is None, then it will default to the first epoch. 
     amplitude_params_dict: dict
         This dictionary should contain any subset of the following parameters:
             amp_method: str
@@ -50,8 +62,6 @@ def compute_amplitude_cutoffs(
                 A list of strings for the names of the given epochs.
     save_features_props: bool
         If true, it will save amplitudes in the sorting extractor.
-    save_as_property: bool
-        If True, the metric is saved as sorting property
     seed: int
         Random seed for reproducibility
     Returns
@@ -72,15 +82,5 @@ def compute_amplitude_cutoffs(
                           amp_frames_before=ap_dict['amp_frames_before'], amp_frames_after=ap_dict['amp_frames_after'],
                           save_features_props=save_features_props, seed=seed)
     ac = AmplitudeCutoff(metric_data=md)
-    amplitude_cutoffs_epochs = ac.compute_metric()
-
-    if save_as_property:
-        if ms_dict['epoch_tuples'] is None:
-            amplitude_cutoffs = amplitude_cutoffs_epochs[0]
-            for i_u, u in enumerate(ms_dict['unit_ids']):
-                sorting.set_unit_property(u, "amplitude_cutoff", amplitude_cutoffs[i_u])
-        else:
-            raise NotImplementedError(
-                "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
-            )
-    return amplitude_cutoffs_epochs
+    threshold_sorting = ac.threshold_metric(threshold, threshold_sign, epoch)
+    return threshold_sorting

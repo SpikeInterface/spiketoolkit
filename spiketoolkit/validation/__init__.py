@@ -19,4 +19,7 @@ from .quality_metrics import (
     compute_nn_metrics,
     compute_metrics,
 )
+
+from .metric_data import MetricData
+from .amplitude_cutoff import AmplitudeCutoff
 from .metric_calculator import MetricCalculator
