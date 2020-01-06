@@ -7,9 +7,7 @@ from .quality_metric import QualityMetric
 
 
 class SilhouetteScore(QualityMetric):
-    def __init__(
-        self, metric_data,
-    ):
+    def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data)
         if not metric_data.has_amplitudes():
             raise ValueError("MetricData object must have amplitudes")
