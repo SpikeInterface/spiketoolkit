@@ -31,9 +31,7 @@ class AmplitudeCutoff(QualityMetric):
             amplitude_cutoffs_epochs.append(amplitude_cutoffs)
         return amplitude_cutoffs_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=None):
-        if epoch is None:
-            epoch = 0
+    def threshold_metric(self, threshold, threshold_sign, epoch=0):
         assert (epoch < len(self._metric_data.get_epochs())), "Invalid epoch specified"
         amplitude_cutoff_epochs = self.compute_metric()[epoch]
         tc = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=amplitude_cutoff_epochs)

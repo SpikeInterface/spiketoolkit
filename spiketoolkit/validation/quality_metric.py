@@ -21,7 +21,7 @@ class QualityMetric(ABC):
         pass
 
     @abstractmethod
-    def threshold_metric(self, threshold, threshold_sign, epoch=None):
+    def threshold_metric(self, threshold, threshold_sign, epoch=0):
         '''
         Parameters
         ----------
