@@ -185,7 +185,7 @@ class MetricData:
     def has_amplitudes(self):
         return self._amplitudes is not None
 
-    def has_pc_scores(self):
+    def has_pca_scores(self):
         return self._pc_features is not None
 
     def compute_amplitudes(

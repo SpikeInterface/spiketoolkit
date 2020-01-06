@@ -84,3 +84,12 @@ def compute_amplitude_cutoffs(
                 "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
             )
     return amplitude_cutoffs_epochs
+
+
+
+    """
+    Notes for Roger's implementation of sil score
+    1.Your function will need to take in this dictionary: pca_scores_params_dict and not amplitude_params_dict.
+    2.Instead of computing amplitudes, you will compute_pca_scores.
+    3.Good luck and enjoy :D
+    """
