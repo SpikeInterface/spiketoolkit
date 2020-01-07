@@ -232,7 +232,6 @@ class MetricData:
 
     def compute_pca_scores(
         self,
-        recording=None,
         n_comp=3,
         ms_before=1.0,
         ms_after=2.0,
@@ -240,9 +239,6 @@ class MetricData:
         max_spikes_per_unit=300,
         recompute_info=True,
         max_spikes_for_pca=1e5,
-        apply_filter=True,
-        freq_min=300,
-        freq_max=6000,
         save_features_props=False,
         seed=0,
     ):
@@ -251,8 +247,6 @@ class MetricData:
 
         Parameters
         ----------
-        recording: RecordingExtractor
-            The recording extractor
         n_comp: int
             n_compFeatures in template-gui format
         ms_before: float
@@ -267,29 +261,11 @@ class MetricData:
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
-        apply_filter: bool
-            If True, recording is bandpass-filtered.
-        freq_min: float
-            High-pass frequency for optional filter (default 300 Hz).
-        freq_max: float
-            Low-pass frequency for optional filter (default 6000 Hz).
         save_features_props: bool
             If true, it will save amplitudes in the sorting extractor.
         seed: int
             Random seed for reproducibility
         """
-        if recording is None:
-            if self._recording is None:
-                raise ValueError(
-                    "No recording given. Either call store_recording or pass a recording into this function"
-                )
-        else:
-            self.set_recording(
-                recording,
-                apply_filter=apply_filter,
-                freq_min=freq_min,
-                freq_max=freq_max,
-            )
 
         spike_times, spike_clusters, pc_features, pc_feature_ind = get_pca_metric_data(
             self._recording,
@@ -311,7 +287,6 @@ class MetricData:
 
     def compute_all_metric_data(
         self,
-        recording=None,
         n_comp=3,
         ms_before=1.0,
         ms_after=2.0,
@@ -323,9 +298,6 @@ class MetricData:
         amp_frames_after=3,
         recompute_info=True,
         max_spikes_for_pca=1e5,
-        apply_filter=True,
-        freq_min=300,
-        freq_max=6000,
         save_features_props=False,
         seed=0,
     ):
@@ -334,8 +306,6 @@ class MetricData:
 
         Parameters
         ----------
-        recording: RecordingExtractor
-            The recording extractor
         n_comp: int
             n_compFeatures in template-gui format
         ms_before: float
@@ -359,29 +329,11 @@ class MetricData:
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
-        apply_filter: bool
-            If True, recording is bandpass-filtered.
-        freq_min: float
-            High-pass frequency for optional filter (default 300 Hz).
-        freq_max: float
-            Low-pass frequency for optional filter (default 6000 Hz).
         save_features_props: bool
             If True, save all features and properties in the sorting extractor.
         seed: int
             Random seed for reproducibility
         """
-        if recording is None:
-            if self._recording is None:
-                raise ValueError(
-                    "No recording given. Either call store_recording or pass a recording into this function"
-                )
-        else:
-            self.set_recording(
-                recording,
-                apply_filter=apply_filter,
-                freq_min=freq_min,
-                freq_max=freq_max,
-            )
 
         (
             spike_times,

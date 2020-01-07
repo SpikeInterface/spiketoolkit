@@ -1,6 +1,7 @@
-import spiketoolkit as st
 from .metric_data import MetricData
 from .amplitude_cutoff import AmplitudeCutoff
+from .silhouette_score import SilhouetteScore
+
 
 def compute_amplitude_cutoffs(
     sorting,
@@ -9,7 +10,7 @@ def compute_amplitude_cutoffs(
     amplitude_params_dict=MetricData.amplitude_params_dict,
     metric_scope_params_dict=MetricData.metric_scope_params_dict,
     save_features_props=False,
-    save_as_property = True,
+    save_as_property=True,
     seed=0,
 ):
     """
@@ -59,32 +60,52 @@ def compute_amplitude_cutoffs(
     amplitude_cutoffs_epochs: list of lists
         The amplitude cutoffs of the sorted units in the given epochs.
     """
-    if not set(recording_params_dict.keys()).issubset(set(MetricData.recording_params_dict.keys())):
+    if not set(recording_params_dict.keys()).issubset(
+        set(MetricData.recording_params_dict.keys())
+    ):
         raise ValueError("Improper parameter entered into the recording param dict.")
-    if not set(amplitude_params_dict.keys()).issubset(set(MetricData.amplitude_params_dict.keys())):
+    if not set(amplitude_params_dict.keys()).issubset(
+        set(MetricData.amplitude_params_dict.keys())
+    ):
         raise ValueError("Improper parameter entered into the amplitude param dict.")
-    if not set(metric_scope_params_dict.keys()).issubset(set(MetricData.metric_scope_params_dict.keys())):
+    if not set(metric_scope_params_dict.keys()).issubset(
+        set(MetricData.metric_scope_params_dict.keys())
+    ):
         raise ValueError("Improper parameter entered into the metric scope param dict.")
     rp_dict = dict(MetricData.recording_params_dict.copy(), **recording_params_dict)
     ap_dict = dict(MetricData.amplitude_params_dict.copy(), **amplitude_params_dict)
-    ms_dict = dict(MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict)
+    ms_dict = dict(
+        MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict
+    )
 
-    if ms_dict['unit_ids'] is None:
-        ms_dict['unit_ids'] = sorting.get_unit_ids()
+    if ms_dict["unit_ids"] is None:
+        ms_dict["unit_ids"] = sorting.get_unit_ids()
 
-    md = MetricData(sorting=sorting, recording=recording, apply_filter=rp_dict['apply_filter'],
-                    freq_min=rp_dict['freq_min'], freq_max=rp_dict['freq_max'], unit_ids=ms_dict['unit_ids'], 
-                    epoch_tuples=ms_dict['epoch_tuples'], epoch_names=ms_dict['epoch_names'])
-    md.compute_amplitudes(amp_method=ap_dict['amp_method'], amp_peak=ap_dict['amp_peak'],
-                          amp_frames_before=ap_dict['amp_frames_before'], amp_frames_after=ap_dict['amp_frames_after'],
-                          save_features_props=save_features_props, seed=seed)
+    md = MetricData(
+        sorting=sorting,
+        recording=recording,
+        apply_filter=rp_dict["apply_filter"],
+        freq_min=rp_dict["freq_min"],
+        freq_max=rp_dict["freq_max"],
+        unit_ids=ms_dict["unit_ids"],
+        epoch_tuples=ms_dict["epoch_tuples"],
+        epoch_names=ms_dict["epoch_names"],
+    )
+    md.compute_amplitudes(
+        amp_method=ap_dict["amp_method"],
+        amp_peak=ap_dict["amp_peak"],
+        amp_frames_before=ap_dict["amp_frames_before"],
+        amp_frames_after=ap_dict["amp_frames_after"],
+        save_features_props=save_features_props,
+        seed=seed,
+    )
     ac = AmplitudeCutoff(metric_data=md)
     amplitude_cutoffs_epochs = ac.compute_metric()
 
     if save_as_property:
-        if ms_dict['epoch_tuples'] is None:
+        if ms_dict["epoch_tuples"] is None:
             amplitude_cutoffs = amplitude_cutoffs_epochs[0]
-            for i_u, u in enumerate(ms_dict['unit_ids']):
+            for i_u, u in enumerate(ms_dict["unit_ids"]):
                 sorting.set_unit_property(u, "amplitude_cutoff", amplitude_cutoffs[i_u])
         else:
             raise NotImplementedError(
@@ -93,10 +114,128 @@ def compute_amplitude_cutoffs(
     return amplitude_cutoffs_epochs
 
 
+def compute_silhouette_scores(
+    sorting,
+    recording,
+    pca_scores_params_dict=MetricData.pca_scores_params_dict,
+    recording_params_dict=MetricData.recording_params_dict,
+    metric_scope_params_dict=MetricData.metric_scope_params_dict,
+    save_features_props=False,
+    save_as_property=True,
+    seed=0,
+):
+    """
+    Computes and returns the silhouette scores in the sorted dataset.
 
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting result to be evaluated.
+
+    recording: RecordingExtractor
+        The given recording extractor from which to extract amplitudes
+
+    pca_scores_params_dict: dict
+        This dictionary should contain any subset of the following parameters:
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+            max_spikes_for_pca: int
+                The maximum number of spikes to use to compute PCA.
+
+    recording_params_dict: dict
+        This dictionary should contain any subset of the following parameters:
+            apply_filter: bool
+                If True, recording is bandpass-filtered.
+            freq_min: float
+                High-pass frequency for optional filter (default 300 Hz).
+            freq_max: float
+                Low-pass frequency for optional filter (default 6000 Hz).
+
+    metric_scope_params_dict: dict
+        This dictionary should contain any subset of the following parameters:
+            unit_ids: list
+                unit ids to compute metric for. If not specified, all units are used
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs.
+
+    save_features_props: bool
+        If true, it will save amplitudes in the sorting extractor.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+
+    seed: int
+        Random seed for reproducibility
+
+    Returns
+    ----------
+    amplitude_cutoffs_epochs: list of lists
+        The amplitude cutoffs of the sorted units in the given epochs.
     """
-    Notes for Roger's implementation of sil score
-    1.Your function will need to take in this dictionary: pca_scores_params_dict and not amplitude_params_dict.
-    2.Instead of computing amplitudes, you will compute_pca_scores.
-    3.Good luck and enjoy :D
-    """
+    if not set(recording_params_dict.keys()).issubset(
+        set(MetricData.recording_params_dict.keys())
+    ):
+        raise ValueError("Improper parameter entered into the recording param dict.")
+    if not set(pca_scores_params_dict.keys()).issubset(
+        set(MetricData.pca_scores_params_dict.keys())
+    ):
+        raise ValueError("Improper parameter entered into the amplitude param dict.")
+    if not set(metric_scope_params_dict.keys()).issubset(
+        set(MetricData.metric_scope_params_dict.keys())
+    ):
+        raise ValueError("Improper parameter entered into the metric scope param dict.")
+
+    recording_params_dict = dict(
+        MetricData.recording_params_dict.copy(), **recording_params_dict)
+    pca_scores_params_dict = dict(
+        MetricData.pca_scores_params_dict.copy(), **pca_scores_params_dict)
+    metric_scope_params_dict = dict(
+        MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict
+    )
+
+    if metric_scope_params_dict["unit_ids"] is None:
+        metric_scope_params_dict["unit_ids"] = sorting.get_unit_ids()
+
+    metric_data = MetricData(
+        sorting=sorting,
+        recording=recording,
+        apply_filter=recording_params_dict["apply_filter"],
+        freq_min=recording_params_dict["freq_min"],
+        freq_max=recording_params_dict["freq_max"],
+        unit_ids=metric_scope_params_dict["unit_ids"],
+        epoch_tuples=metric_scope_params_dict["epoch_tuples"],
+        epoch_names=metric_scope_params_dict["epoch_names"],
+    )
+
+    metric_data.compute_pca_scores(
+        n_comp=pca_scores_params_dict["n_comp"],
+        ms_before=pca_scores_params_dict["ms_before"],
+        ms_after=pca_scores_params_dict["ms_after"],
+        dtype=pca_scores_params_dict["dtype"],
+        max_spikes_per_unit=pca_scores_params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=pca_scores_params_dict["max_spikes_for_pca"],
+        save_features_props=save_features_props,
+        seed=seed,
+    )
+
+    silhouette_score = SilhouetteScore(metric_data=metric_data)
+    silhouette_score_epochs = silhouette_score.compute_metric()
+
+    if save_as_property:
+        if metric_scope_params_dict["epoch_tuples"] is None:
+            silhouette_scores = silhouette_score_epochs[0]
+            for i_u, u in enumerate(metric_scope_params_dict["unit_ids"]):
+                sorting.set_unit_property(u, "silhoutte_score", silhouette_scores[i_u])
+        else:
+            raise NotImplementedError(
+                "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
+            )
+    return silhouette_score_epochs
