@@ -715,7 +715,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
                   amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
-                  recompute_info=True, save_features_props=False, write_waveforms=False, verbose=False,
+                  recompute_info=True, save_features_props=False, verbose=False,
                   seed=0):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
@@ -756,8 +756,6 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
         If True, will always re-extract waveforms and templates.
     save_features_props: bool
         If True, will store all calculated features and properties
-    write_waveforms: bool
-        If True, waveforms are saved as waveforms.npy
     verbose: bool
         If True output is verbose
     seed: int
@@ -864,13 +862,6 @@ def _compute_templates_similarity(templates):
             a = np.corrcoef(t_i_lin, t_j_lin)
             similarity[i, j] = np.abs(a[0, 1])
     return similarity
-
-
-def _compute_whitening_and_inverse(recording):
-    white_recording = st.preprocessing.whiten(recording)
-    wh_mat = white_recording._whitening_matrix
-    wh_mat_inv = np.linalg.inv(wh_mat)
-    return wh_mat, wh_mat_inv
 
 
 def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, snippet_len, channel_ids=None, seed=0):
