@@ -123,7 +123,7 @@ class CommonReferenceRecording(RecordingExtractor):
                     print('Reference', new_groups, 'to channels', self._ref_channel)
                 return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
                                                                       start_frame=start_frame, end_frame=end_frame)
-                                           - self._recording.get_traces(channel_ids=ref, start_frame=start_frame,
+                                           - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
                                                                         end_frame=end_frame)
                                            for (split_group, ref) in zip(new_groups, self._ref_channel)]))
 
