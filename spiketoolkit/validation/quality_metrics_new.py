@@ -177,8 +177,8 @@ def compute_silhouette_scores(
 
     Returns
     ----------
-    amplitude_cutoffs_epochs: list of lists
-        The amplitude cutoffs of the sorted units in the given epochs.
+    silhouette_score_epochs: list of lists
+        The sihouette scores of the sorted units in the given epochs.
     """
     if not set(recording_params_dict.keys()).issubset(
         set(MetricData.recording_params_dict.keys())
