@@ -145,7 +145,7 @@ class ThresholdSilhouetteScore(ThresholdCurator):
         metric_name = "silhouette_score"
 
         if metric_calculator is None:
-            self._metric_calculator = st.validation.MetricCalculator(
+            self._metric_calculator = st.validation.ValidationMetricCalculator(
                 sorting,
                 sampling_frequency=recording.get_sampling_frequency(),
                 unit_ids=None,
@@ -156,11 +156,20 @@ class ThresholdSilhouetteScore(ThresholdCurator):
             self._metric_calculator = metric_calculator
 
         if metric_name not in self._metric_calculator.get_metrics_dict().keys():  # noqa: E501
-            self._metric_calculator.set_recording(
-                recording,
+            self._metric_calculator.compute_pca_scores(
+                recording=recording,
+                n_comp=n_comp,
+                ms_before=ms_before,
+                ms_after=ms_after,
+                dtype=dtype,
+                max_spikes_per_unit=max_spikes_per_unit,
+                recompute_info=recompute_info,
+                max_spikes_for_pca=max_spikes_for_pca,
                 apply_filter=apply_filter,
                 freq_min=freq_min,
                 freq_max=freq_max,
+                save_features_props=save_features_props,
+                seed=seed,
             )
             self._metric_calculator.compute_silhouette_scores(
                 max_spikes_for_silhouette=cgps["max_spikes_for_silhouette"]["default"],  # noqa: E501
