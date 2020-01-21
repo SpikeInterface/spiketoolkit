@@ -92,7 +92,6 @@ def compute_firing_rates(
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-
     metric_calculator = st.validation.ValidationMetricCalculator(
         sorting,
         sampling_frequency=sampling_frequency,
@@ -237,10 +236,23 @@ def compute_isi_violations(
     return isi_violations_epochs
 
 
-def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                              amp_frames_after=3, apply_filter=True, freq_min=300, freq_max=6000,
-                              save_features_props=False,
-                              unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_amplitude_cutoffs(
+    sorting,
+    recording,
+    amp_method="absolute",
+    amp_peak="both",
+    amp_frames_before=3,
+    amp_frames_after=3,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
 
     """
     Computes and returns the amplitude cutoffs for the sorted dataset.
@@ -322,9 +334,23 @@ def compute_amplitude_cutoffs(sorting, recording, amp_method='absolute', amp_pea
     return amplitude_cutoffs_epochs
 
 
-def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
-                 recompute_info=True, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
-                 unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_snrs(
+    sorting,
+    recording,
+    snr_mode="mad",
+    snr_noise_duration=10.0,
+    max_spikes_per_unit_for_snr=1000,
+    recompute_info=True,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
     """
     Computes and stores snrs for the sorted units.
 
@@ -401,11 +427,28 @@ def compute_snrs(sorting, recording, snr_mode='mad', snr_noise_duration=10.0, ma
     return snrs_epochs
 
 
-def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
-                          n_comp=3, ms_before=1., ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                          max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
-                          save_features_props=False,
-                          unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_drift_metrics(
+    sorting,
+    recording,
+    drift_metrics_interval_s=51,
+    drift_metrics_min_spikes_per_interval=10,
+    n_comp=3,
+    ms_before=1.0,
+    ms_after=2.0,
+    dtype=None,
+    max_spikes_per_unit=300,
+    recompute_info=True,
+    max_spikes_for_pca=1e5,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
     """
     Computes and returns the drift metrics for the sorted dataset.
 
@@ -462,7 +505,6 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-
     metric_calculator = st.validation.ValidationMetricCalculator(
         sorting,
         sampling_frequency=recording.get_sampling_frequency(),
@@ -508,11 +550,27 @@ def compute_drift_metrics(sorting, recording, drift_metrics_interval_s=51, drift
     return max_drifts_epochs, cumulative_drifts_epochs
 
 
-def compute_silhouette_scores(sorting, recording, max_spikes_for_silhouette=10000, n_comp=3, ms_before=1., ms_after=2.,
-                              dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                              max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000,
-                              save_features_props=False,
-                              unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_silhouette_scores(
+    sorting,
+    recording,
+    max_spikes_for_silhouette=10000,
+    n_comp=3,
+    ms_before=1.0,
+    ms_after=2.0,
+    dtype=None,
+    max_spikes_per_unit=300,
+    recompute_info=True,
+    max_spikes_for_pca=1e5,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
     """
     Computes and returns the silhouette scores in the sorted dataset.
 
@@ -723,10 +781,28 @@ def compute_isolation_distances(
     return isolation_distances_epochs
 
 
-def compute_l_ratios(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500, n_comp=3, ms_before=1.,
-                     ms_after=2., dtype=None, max_spikes_per_unit=300, recompute_info=True,
-                     max_spikes_for_pca=1e5, apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
-                     unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_l_ratios(
+    sorting,
+    recording,
+    num_channels_to_compare=13,
+    max_spikes_per_cluster=500,
+    n_comp=3,
+    ms_before=1.0,
+    ms_after=2.0,
+    dtype=None,
+    max_spikes_per_unit=300,
+    recompute_info=True,
+    max_spikes_for_pca=1e5,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
     """
     Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
 
@@ -939,11 +1015,30 @@ def compute_d_primes(
     return d_primes_epochs
 
 
-def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spikes_per_cluster=500,
-                       max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2.,
-                       dtype=None, max_spikes_per_unit=300, recompute_info=True, max_spikes_for_pca=1e5,
-                       apply_filter=True, freq_min=300, freq_max=6000, save_features_props=False,
-                       unit_ids=None, epoch_tuples=None, epoch_names=None, save_as_property=True, seed=0):
+def compute_nn_metrics(
+    sorting,
+    recording,
+    num_channels_to_compare=13,
+    max_spikes_per_cluster=500,
+    max_spikes_for_nn=10000,
+    n_neighbors=4,
+    n_comp=3,
+    ms_before=1.0,
+    ms_after=2.0,
+    dtype=None,
+    max_spikes_per_unit=300,
+    recompute_info=True,
+    max_spikes_for_pca=1e5,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    save_as_property=True,
+    seed=0,
+):
     """
     Computes and returns the nearest neighbor metrics for the sorted dataset.
 
@@ -1048,15 +1143,44 @@ def compute_nn_metrics(sorting, recording, num_channels_to_compare=13, max_spike
     return nn_hit_rates_epochs, nn_miss_rates_epochs
 
 
-def compute_metrics(sorting, recording=None, sampling_frequency=None, isi_threshold=0.0015, min_isi=0.000166,
-                    snr_mode='mad', snr_noise_duration=10.0, max_spikes_per_unit_for_snr=1000,
-                    drift_metrics_interval_s=51, drift_metrics_min_spikes_per_interval=10,
-                    max_spikes_for_silhouette=10000, num_channels_to_compare=13, max_spikes_per_cluster=500,
-                    max_spikes_for_nn=10000, n_neighbors=4, n_comp=3, ms_before=1., ms_after=2., dtype=None,
-                    max_spikes_per_unit=300, amp_method='absolute', amp_peak='both', amp_frames_before=3,
-                    amp_frames_after=3, recompute_info=True, max_spikes_for_pca=1e5, apply_filter=True,
-                    freq_min=300, freq_max=6000, save_features_props=False, metric_names=None, unit_ids=None,
-                    epoch_tuples=None, epoch_names=None, return_dataframe=False, seed=0):
+def compute_metrics(
+    sorting,
+    recording=None,
+    sampling_frequency=None,
+    isi_threshold=0.0015,
+    min_isi=0.000166,
+    snr_mode="mad",
+    snr_noise_duration=10.0,
+    max_spikes_per_unit_for_snr=1000,
+    drift_metrics_interval_s=51,
+    drift_metrics_min_spikes_per_interval=10,
+    max_spikes_for_silhouette=10000,
+    num_channels_to_compare=13,
+    max_spikes_per_cluster=500,
+    max_spikes_for_nn=10000,
+    n_neighbors=4,
+    n_comp=3,
+    ms_before=1.0,
+    ms_after=2.0,
+    dtype=None,
+    max_spikes_per_unit=300,
+    amp_method="absolute",
+    amp_peak="both",
+    amp_frames_before=3,
+    amp_frames_after=3,
+    recompute_info=True,
+    max_spikes_for_pca=1e5,
+    apply_filter=True,
+    freq_min=300,
+    freq_max=6000,
+    save_features_props=False,
+    metric_names=None,
+    unit_ids=None,
+    epoch_tuples=None,
+    epoch_names=None,
+    return_dataframe=False,
+    seed=0,
+):
     """
     Computes and returns all specified metrics for the sorted dataset.
 

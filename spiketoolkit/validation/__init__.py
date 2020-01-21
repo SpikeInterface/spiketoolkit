@@ -1,6 +1,3 @@
-
-from .validation_metric_calculator import ValidationMetricCalculator
-
 from .validation_tools import (
     get_all_metric_data,
     get_pca_metric_data,
@@ -23,4 +20,6 @@ from .quality_metrics import (
     compute_nn_metrics,
     compute_metrics,
 )
+
+from .validation_metric_calculator import ValidationMetricCalculator
 
