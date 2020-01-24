@@ -714,7 +714,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
-                  amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
+                  amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=100000, max_channels_per_template=16,
                   recompute_info=True, save_features_props=False, verbose=False,
                   seed=0):
     '''
@@ -751,7 +751,9 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     amp_frames_after: int
         Frames after peak to compute amplitude
     max_spikes_for_pca: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+        The maximum number of waveforms to use to compute PCA (default is 10'000)
+    max_channels_per_template: int
+        The number of channels per template for visualization (default=16)
     recompute_info: bool
         If True, will always re-extract waveforms and templates.
     save_features_props: bool
@@ -801,7 +803,8 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
     positions = _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property, ms_before,
                               ms_after, dtype, amp_method, amp_peak, amp_frames_before, amp_frames_after,
-                              max_spikes_per_unit, max_spikes_for_pca, recompute_info, save_features_props,
+                              max_spikes_per_unit, max_spikes_for_pca, max_channels_per_template,
+                              recompute_info, save_features_props,
                               verbose, seed)
 
     # Save .tsv metadata
@@ -1060,7 +1063,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
 
 def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property,
                   ms_before, ms_after, dtype, amp_method, amp_peak, amp_frames_before,
-                  amp_frames_after, max_spikes_per_unit, max_spikes_for_pca,
+                  amp_frames_after, max_spikes_per_unit, max_spikes_for_pca, max_channels_per_template,
                   recompute_info, save_features_props, verbose, seed):
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
@@ -1140,6 +1143,17 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
             unit_chans = np.array(unit_chans)
             templates_ind[u_i] = unit_chans
             templates_red[u_i, :] = templates[u_i, :, unit_chans].T
+        templates = templates_red
+    elif max_channels_per_template < recording.get_num_channels():
+        templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_channels_per_template)), dtype=int)
+        templates_red = np.zeros((templates.shape[0], templates.shape[1], int(max_channels_per_template)))
+
+        for u_i, u in enumerate(sorting.get_unit_ids()):
+            max_channels = st.postprocessing.get_unit_max_channels(recording, sorting,
+                                                                   max_channels=max_channels_per_template,
+                                                                   unit_ids=u)[0]
+            templates_ind[u_i] = max_channels
+            templates_red[u_i, :] = templates[u_i, :, max_channels].T
         templates = templates_red
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
