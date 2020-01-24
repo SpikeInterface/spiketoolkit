@@ -804,33 +804,22 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
                               max_spikes_per_unit, max_spikes_for_pca, recompute_info, save_features_props,
                               verbose, seed)
 
-    # Save channel_group and second_max_channel to .tsv metadata
-    second_max_channel = []
-
-    for t in templates:
-        second_max_channel.append(np.argsort(np.abs(np.min(t, axis=0)))[::-1][1])
-
     # Save .tsv metadata
     with (output_folder / 'cluster_group.tsv').open('w') as tsvfile:
         writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
         writer.writerow(['cluster_id', 'group'])
         for i, u in enumerate(sorting.get_unit_ids()):
             writer.writerow([i, 'unsorted'])
-    with (output_folder / 'cluster_second_max_chan.tsv').open('w') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-        writer.writerow(['cluster_id', 'sec_channel'])
-        for i, (u, ch) in enumerate(zip(sorting.get_unit_ids(), second_max_channel)):
-            writer.writerow([i, ch])
     if 'group' in sorting.get_shared_unit_property_names():
-        with (output_folder / 'cluster_chan_grp.tsv').open('w') as tsvfile:
+        with (output_folder / 'cluster_channel_group.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-            writer.writerow(['cluster_id', 'chan_grp'])
+            writer.writerow(['cluster_id', 'ch_group'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, sorting.get_unit_property(u, 'group')])
     else:
         with (output_folder / 'cluster_channel_group.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-            writer.writerow(['cluster_id', 'ch_group'])
+            writer.writerow(['cluster_id', 'chan_group'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, 0])
 
@@ -845,7 +834,7 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     np.save(str(output_folder / 'similar_templates.npy'), similar_templates)
     np.save(str(output_folder / 'channel_map.npy'), channel_map.astype('int64'))
     np.save(str(output_folder / 'channel_map_si.npy'), channel_map_si.astype('int64'))
-    np.save(str(output_folder / 'channel_positions.npy'), positions)
+    np.save(str(output_folder / 'channel_positions.npy'), positions.astype('float64'))
     np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
 
     if verbose:
