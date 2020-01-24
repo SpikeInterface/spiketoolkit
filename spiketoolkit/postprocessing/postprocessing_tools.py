@@ -823,19 +823,19 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, 0])
 
-    np.save(str(output_folder / 'amplitudes.npy'), amplitudes)
+    np.save(str(output_folder / 'amplitudes.npy'), amplitudes.astype('float64'))
     np.save(str(output_folder / 'spike_times.npy'), spike_times.astype('int64'))
     np.save(str(output_folder / 'spike_templates.npy'), spike_templates.astype('int64'))
     np.save(str(output_folder / 'spike_clusters.npy'), spike_clusters.astype('int64'))
-    np.save(str(output_folder / 'pc_features.npy'), pc_features)
+    np.save(str(output_folder / 'pc_features.npy'), pc_features.astype('float64'))
     np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind.astype('int64'))
-    np.save(str(output_folder / 'templates.npy'), templates)
+    np.save(str(output_folder / 'templates.npy'), templates.astype('float64'))
     np.save(str(output_folder / 'template_ind.npy'), templates_ind.astype('int64'))
-    np.save(str(output_folder / 'similar_templates.npy'), similar_templates)
+    np.save(str(output_folder / 'similar_templates.npy'), similar_templates.astype('float64'))
     np.save(str(output_folder / 'channel_map.npy'), channel_map.astype('int64'))
     np.save(str(output_folder / 'channel_map_si.npy'), channel_map_si.astype('int64'))
     np.save(str(output_folder / 'channel_positions.npy'), positions.astype('float64'))
-    np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
+    np.save(str(output_folder / 'channel_groups.npy'), channel_groups.astype('int64'))
 
     if verbose:
         print('Saved phy format to: ', output_folder)
