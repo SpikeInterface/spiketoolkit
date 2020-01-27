@@ -714,7 +714,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
-                  amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=1e5,
+                  amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=100000, max_channels_per_template=16,
                   recompute_info=True, save_features_props=False, verbose=False,
                   seed=0):
     '''
@@ -751,7 +751,9 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     amp_frames_after: int
         Frames after peak to compute amplitude
     max_spikes_for_pca: int
-        The maximum number of waveforms to use to compute PCA (default is np.inf)
+        The maximum number of waveforms to use to compute PCA (default is 10'000)
+    max_channels_per_template: int
+        The number of channels per template for visualization (default=16)
     recompute_info: bool
         If True, will always re-extract waveforms and templates.
     save_features_props: bool
@@ -801,14 +803,9 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
     positions = _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property, ms_before,
                               ms_after, dtype, amp_method, amp_peak, amp_frames_before, amp_frames_after,
-                              max_spikes_per_unit, max_spikes_for_pca, recompute_info, save_features_props,
+                              max_spikes_per_unit, max_spikes_for_pca, max_channels_per_template,
+                              recompute_info, save_features_props,
                               verbose, seed)
-
-    # Save channel_group and second_max_channel to .tsv metadata
-    second_max_channel = []
-
-    for t in templates:
-        second_max_channel.append(np.argsort(np.abs(np.min(t, axis=0)))[::-1][1])
 
     # Save .tsv metadata
     with (output_folder / 'cluster_group.tsv').open('w') as tsvfile:
@@ -816,37 +813,32 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
         writer.writerow(['cluster_id', 'group'])
         for i, u in enumerate(sorting.get_unit_ids()):
             writer.writerow([i, 'unsorted'])
-    with (output_folder / 'cluster_second_max_chan.tsv').open('w') as tsvfile:
-        writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-        writer.writerow(['cluster_id', 'sec_channel'])
-        for i, (u, ch) in enumerate(zip(sorting.get_unit_ids(), second_max_channel)):
-            writer.writerow([i, ch])
     if 'group' in sorting.get_shared_unit_property_names():
-        with (output_folder / 'cluster_chan_grp.tsv').open('w') as tsvfile:
+        with (output_folder / 'cluster_channel_group.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-            writer.writerow(['cluster_id', 'chan_grp'])
+            writer.writerow(['cluster_id', 'ch_group'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, sorting.get_unit_property(u, 'group')])
     else:
         with (output_folder / 'cluster_channel_group.tsv').open('w') as tsvfile:
             writer = csv.writer(tsvfile, delimiter='\t', lineterminator='\n')
-            writer.writerow(['cluster_id', 'ch_group'])
+            writer.writerow(['cluster_id', 'chan_group'])
             for i, u in enumerate(sorting.get_unit_ids()):
                 writer.writerow([i, 0])
 
-    np.save(str(output_folder / 'amplitudes.npy'), amplitudes)
+    np.save(str(output_folder / 'amplitudes.npy'), amplitudes.astype('float64'))
     np.save(str(output_folder / 'spike_times.npy'), spike_times.astype('int64'))
     np.save(str(output_folder / 'spike_templates.npy'), spike_templates.astype('int64'))
     np.save(str(output_folder / 'spike_clusters.npy'), spike_clusters.astype('int64'))
-    np.save(str(output_folder / 'pc_features.npy'), pc_features)
+    np.save(str(output_folder / 'pc_features.npy'), pc_features.astype('float64'))
     np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind.astype('int64'))
-    np.save(str(output_folder / 'templates.npy'), templates)
+    np.save(str(output_folder / 'templates.npy'), templates.astype('float64'))
     np.save(str(output_folder / 'template_ind.npy'), templates_ind.astype('int64'))
-    np.save(str(output_folder / 'similar_templates.npy'), similar_templates)
+    np.save(str(output_folder / 'similar_templates.npy'), similar_templates.astype('float64'))
     np.save(str(output_folder / 'channel_map.npy'), channel_map.astype('int64'))
     np.save(str(output_folder / 'channel_map_si.npy'), channel_map_si.astype('int64'))
-    np.save(str(output_folder / 'channel_positions.npy'), positions)
-    np.save(str(output_folder / 'channel_groups.npy'), channel_groups)
+    np.save(str(output_folder / 'channel_positions.npy'), positions.astype('float64'))
+    np.save(str(output_folder / 'channel_groups.npy'), channel_groups.astype('int64'))
 
     if verbose:
         print('Saved phy format to: ', output_folder)
@@ -1071,7 +1063,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
 
 def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_property,
                   ms_before, ms_after, dtype, amp_method, amp_peak, amp_frames_before,
-                  amp_frames_after, max_spikes_per_unit, max_spikes_for_pca,
+                  amp_frames_after, max_spikes_per_unit, max_spikes_for_pca, max_channels_per_template,
                   recompute_info, save_features_props, verbose, seed):
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
@@ -1151,6 +1143,17 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
             unit_chans = np.array(unit_chans)
             templates_ind[u_i] = unit_chans
             templates_red[u_i, :] = templates[u_i, :, unit_chans].T
+        templates = templates_red
+    elif max_channels_per_template < recording.get_num_channels():
+        templates_ind = np.zeros((len(sorting.get_unit_ids()), int(max_channels_per_template)), dtype=int)
+        templates_red = np.zeros((templates.shape[0], templates.shape[1], int(max_channels_per_template)))
+
+        for u_i, u in enumerate(sorting.get_unit_ids()):
+            max_channels = st.postprocessing.get_unit_max_channels(recording, sorting,
+                                                                   max_channels=max_channels_per_template,
+                                                                   unit_ids=u)[0]
+            templates_ind[u_i] = max_channels
+            templates_red[u_i, :] = templates[u_i, :, max_channels].T
         templates = templates_red
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
