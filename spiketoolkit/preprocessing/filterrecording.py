@@ -39,7 +39,7 @@ class FilterRecording(RecordingExtractor):
             ich1 = int(start_frame / self._chunk_size)
             ich2 = int((end_frame - 1) / self._chunk_size)
             dt = self._recording.get_traces(start_frame=0, end_frame=1).dtype
-            filtered_chunk = np.zeros((len(channel_ids), (end_frame-start_frame)), dtype=dt)
+            filtered_chunk = np.zeros((len(channel_ids), int(end_frame-start_frame)), dtype=dt)
             pos = 0
             for ich in range(ich1, ich2 + 1):
                 filtered_chunk0 = self._get_filtered_chunk(ich)
