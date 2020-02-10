@@ -1,8 +1,6 @@
 import numpy as np
-
 import spikemetrics.metrics as metrics
 from spiketoolkit.curation.thresholdcurator import ThresholdCurator
-
 from .quality_metric import QualityMetric
 
 

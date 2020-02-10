@@ -10,7 +10,7 @@ import spiketoolkit as st
 from spikemetrics.utils import Epoch, printProgressBar
 from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 
-from .validation_tools import (
+from .quality_metric_classes.validation_tools import (
     get_all_metric_data,
     get_amplitude_metric_data,
     get_pca_metric_data,

@@ -1,4 +1,4 @@
-from ..postprocessing.postprocessing_tools import _get_quality_metric_data, _get_pca_metric_data, \
+from spiketoolkit.postprocessing.postprocessing_tools import _get_quality_metric_data, _get_pca_metric_data, \
     _get_spike_times_clusters, _get_amp_metric_data
 import spikeextractors as se
 import numpy as np
