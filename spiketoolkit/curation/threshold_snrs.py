@@ -2,8 +2,8 @@ from .thresholdcurator import ThresholdCurator
 import spiketoolkit as st
 
 
-class ThresholdSNR(ThresholdCurator):
-    curator_name = 'ThresholdMinSNR'
+class ThresholdSNRs(ThresholdCurator):
+    curator_name = 'ThresholdSNRs'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
         {'name': 'threshold', 'type': 'float',
@@ -49,14 +49,14 @@ class ThresholdSNR(ThresholdCurator):
 
 
 #This is so that we only have to define the params once (in the GUI params). Experimental.
-from .threshold_snr import ThresholdSNR
-gps = ThresholdSNR.curator_gui_params
+from .threshold_snrs import ThresholdSNRs
+gps = ThresholdSNRs.curator_gui_params
 params = {}
 for param in gps:
     if 'value' in param.keys():
         params[param['name']] = param['value']
 
-def threshold_snr(sorting, recording, threshold, threshold_sign, 
+def threshold_snrs(sorting, recording, threshold, threshold_sign, 
                   snr_mode=params['snr_mode'], snr_noise_duration=params['snr_noise_duration'], \
                   max_snr_spikes_per_unit=params['max_snr_spikes_per_unit'], recompute_info=True, 
                   apply_filter=params['apply_filter'], freq_min=params['freq_min'], freq_max=params['freq_max'], 
@@ -99,11 +99,11 @@ def threshold_snr(sorting, recording, threshold, threshold_sign,
         Random seed for reproducibility
     Returns
     -------
-    thresholded_sorting: ThresholdSNR
+    thresholded_sorting: ThresholdSNRs
         The thresholded sorting extractor
 
     '''
-    return ThresholdSNR(
+    return ThresholdSNRs(
         sorting=sorting,
         recording=recording,
         threshold=threshold,

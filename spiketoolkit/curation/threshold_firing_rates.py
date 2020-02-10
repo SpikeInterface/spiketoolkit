@@ -2,8 +2,8 @@ from .thresholdcurator import ThresholdCurator
 import spiketoolkit as st
 
 
-class ThresholdFiringRate(ThresholdCurator):
-    curator_name = 'ThresholdFiringRate'
+class ThresholdFiringRates(ThresholdCurator):
+    curator_name = 'ThresholdFiringRates'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
         {'name': 'threshold', 'type': 'float',
@@ -38,7 +38,7 @@ class ThresholdFiringRate(ThresholdCurator):
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_firing_rate(sorting, threshold=15.0, threshold_sign='greater', sampling_frequency=None,
+def threshold_firing_rates(sorting, threshold=15.0, threshold_sign='greater', sampling_frequency=None,
                           metric_calculator=None):
     '''
     Excludes units based on firing rate.
@@ -60,11 +60,11 @@ def threshold_firing_rate(sorting, threshold=15.0, threshold_sign='greater', sam
         A metric calculator can be passed in with cached metrics.
     Returns
     -------
-    thresholded_sorting: ThresholdFiringRate
+    thresholded_sorting: ThresholdFiringRates
         The thresholded sorting extractor
 
     '''
-    return ThresholdFiringRate(
+    return ThresholdFiringRates(
         sorting=sorting,
         threshold=threshold,
         threshold_sign=threshold_sign,

@@ -2,8 +2,8 @@ from .thresholdcurator import ThresholdCurator
 import spiketoolkit as st
 
 
-class ThresholdPresenceRatio(ThresholdCurator):
-    curator_name = 'ThresholdPresenceRatio'
+class ThresholdPresenceRatios(ThresholdCurator):
+    curator_name = 'ThresholdPresenceRatios'
     installed = True  # check at class level if installed or not
     curator_gui_params = [
         {'name': 'threshold', 'type': 'float', 'title':
@@ -37,7 +37,7 @@ class ThresholdPresenceRatio(ThresholdCurator):
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_presence_ratio(sorting, threshold=.50, threshold_sign='less', sampling_frequency=None,
+def threshold_presence_ratios(sorting, threshold=.50, threshold_sign='less', sampling_frequency=None,
                              metric_calculator=None):
     '''
     Excludes units based on presence ratios.
@@ -59,11 +59,11 @@ def threshold_presence_ratio(sorting, threshold=.50, threshold_sign='less', samp
         A metric calculator can be passed in with cached metrics.
     Returns
     -------
-    thresholded_sorting: ThresholdPresenceRatio
+    thresholded_sorting: ThresholdPresenceRatios
         The thresholded sorting extractor
 
     '''
-    return ThresholdPresenceRatio(
+    return ThresholdPresenceRatios(
         sorting=sorting,
         threshold=threshold,
         threshold_sign=threshold_sign,

@@ -107,8 +107,8 @@ cgps = {
 }
 
 
-class ThresholdSilhouetteScore(ThresholdCurator):
-    curator_name = "ThresholdSilhouetteScore"
+class ThresholdSilhouetteScores(ThresholdCurator):
+    curator_name = "ThresholdSilhouetteScores"
     installed = True
     installation_mesg = ""  # err
 
@@ -190,7 +190,7 @@ class ThresholdSilhouetteScore(ThresholdCurator):
         )
 
 
-def threshold_silhouette_score(
+def threshold_silhouette_scores(
     sorting,
     recording,
     threshold,
@@ -260,11 +260,11 @@ def threshold_silhouette_score(
 
     Returns
     -------
-    thresholded_sorting: ThresholdSilhouetteScore
+    thresholded_sorting: ThresholdSilhouetteScores
         The thresholded sorting extractor
 
     """
-    return ThresholdSilhouetteScore(
+    return ThresholdSilhouetteScores(
         sorting=sorting,
         recording=recording,
         threshold=threshold,

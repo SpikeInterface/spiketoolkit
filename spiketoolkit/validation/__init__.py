@@ -21,6 +21,11 @@ from .quality_metric_classes.amplitude_cutoff import AmplitudeCutoff
 from .quality_metric_classes.silhouette_score import SilhouetteScore
 from .quality_metric_classes.d_prime import DPrime
 
+from .quality_metric_classes.l_ratio import LRatio
+from .quality_metric_classes.firing_rate import FiringRate
+from .quality_metric_classes.presence_ratio import PresenceRatio
+
+
 from .quality_metric_classes.validation_tools import (
     get_all_metric_data,
     get_pca_metric_data,

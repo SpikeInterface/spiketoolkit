@@ -2,15 +2,15 @@ import spikeextractors as se
 import numpy as np
 
 from spiketoolkit.curation import (
-    threshold_snr,
-    threshold_silhouette_score,
+    threshold_snrs,
+    threshold_silhouette_scores,
     threshold_d_primes,
-    threshold_firing_rate,
+    threshold_firing_rates,
     # threshold_isi_violations,
     threshold_num_spikes,
     # threshold_presence_ratio,
     threshold_l_ratios,
-    threshold_amplitude_cutoff,
+    threshold_amplitude_cutoffs,
 )
 from spiketoolkit.validation import (
     compute_snrs,
@@ -37,25 +37,25 @@ def test_thresh_num_spikes():
     assert np.all(new_ns >= s_threshold)
 
 
-def test_thresh_snr():
+def test_thresh_snrs():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
     )
     snr_thresh = 4
 
-    sort_snr = threshold_snr(sort, rec, snr_thresh, 'less')
+    sort_snr = threshold_snrs(sort, rec, snr_thresh, 'less')
     new_snr = compute_snrs(sort_snr, rec)[0]
 
     assert np.all(new_snr >= snr_thresh)
 
 
-def test_thresh_silhouette():
+def test_thresh_silhouettes():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
     )
     silhouette_thresh = .5
 
-    _ = threshold_silhouette_score(
+    _ = threshold_silhouette_scores(
         sort, rec, silhouette_thresh, "less"
     )
     silhouette = np.asarray(compute_silhouette_scores(sort, rec)[0])
@@ -92,13 +92,13 @@ def test_thresh_l_ratios():
     assert np.all(new_l_ratios >= l_ratios_thresh)
 
 
-def test_thresh_amplitude_cutoff():
+def test_thresh_amplitude_cutoffs():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
     )
     amplitude_cutoff_thresh = 0
 
-    sort_amplitude_cutoff = threshold_amplitude_cutoff(
+    sort_amplitude_cutoff = threshold_amplitude_cutoffs(
         sort, rec, amplitude_cutoff_thresh, "less"
     )
     new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec)[0]
@@ -106,19 +106,19 @@ def test_thresh_amplitude_cutoff():
     assert np.all(new_amplitude_cutoff >= amplitude_cutoff_thresh)
 
 
-def test_thresh_fr():
+def test_thresh_frs():
     rec, sort = se.example_datasets.toy_example(
         duration=10, num_channels=4, seed=0
      )
     fr_thresh = 2
 
-    sort_fr = threshold_firing_rate(sort, fr_thresh, 'less')
+    sort_fr = threshold_firing_rates(sort, fr_thresh, 'less')
     new_fr = compute_firing_rates(sort_fr)[0]
 
     assert np.all(new_fr >= fr_thresh)
 
 
 if __name__ == "__main__":
-    test_thresh_silhouette()
-    test_thresh_snr()
-    test_thresh_fr()
+    test_thresh_silhouettes()
+    test_thresh_snrs()
+    test_thresh_frs()

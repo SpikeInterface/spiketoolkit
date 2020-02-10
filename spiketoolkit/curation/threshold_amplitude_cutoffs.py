@@ -81,8 +81,8 @@ cgps = {
 }
 
 
-class ThresholdAmplitudeCutoff(ThresholdCurator):
-    curator_name = "ThresholdAmplitudeCutoff"
+class ThresholdAmplitudeCutoffs(ThresholdCurator):
+    curator_name = "ThresholdAmplitudeCutoffs"
     installed = True
     installation_mesg = ""  # err
 
@@ -142,7 +142,7 @@ class ThresholdAmplitudeCutoff(ThresholdCurator):
         self.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
 
 
-def threshold_amplitude_cutoff(
+def threshold_amplitude_cutoffs(
     sorting,
     recording,
     threshold,
@@ -202,11 +202,11 @@ def threshold_amplitude_cutoff(
 
     Returns
     ----------
-    thresholded_sorting: amplitude_cutoff
+    thresholded_sorting: ThresholdAmplitudeCutoffs
         The thresholded sorting extractor
     """
 
-    return ThresholdAmplitudeCutoff(
+    return ThresholdAmplitudeCutoffs(
         sorting=sorting,
         recording=recording,
         threshold=threshold,
