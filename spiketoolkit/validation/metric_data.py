@@ -195,7 +195,7 @@ class MetricData:
         amp_frames_before=3,
         amp_frames_after=3,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and stores amplitudes for the amplitude cutoff metric
@@ -240,7 +240,7 @@ class MetricData:
         recompute_info=True,
         max_spikes_for_pca=1e5,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and stores pca for the metrics computation

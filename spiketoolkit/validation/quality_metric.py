@@ -6,6 +6,7 @@ class QualityMetric(ABC):
     def __init__(
         self,
         metric_data,
+        metric_name
     ):
         '''
         Parameters
@@ -14,6 +15,7 @@ class QualityMetric(ABC):
             An object for storing and computing preprocessed data 
         '''
         self._metric_data = metric_data
+        self._metric_name = metric_name
 
     #implemented by quality metric subclasses
     @abstractmethod
@@ -41,3 +43,13 @@ class QualityMetric(ABC):
             The thresholded sorting extractor.
         '''
         pass
+
+    def save_as_property(self, sorting, metric_epochs):
+        if len(self._metric_data.get_epochs()) == 1:
+            metric = metric_epochs[0]
+            for i_u, u in enumerate(sorting.get_unit_ids()):
+                sorting.set_unit_property(u, self._metric_name, metric[i_u])
+        else:
+            raise NotImplementedError(
+                "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
+            )

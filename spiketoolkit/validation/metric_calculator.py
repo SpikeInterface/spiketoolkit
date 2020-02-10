@@ -175,7 +175,7 @@ class MetricCalculator:
         freq_min=300,
         freq_max=6000,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and stores amplitudes for the amplitude cutoff metric
@@ -245,7 +245,7 @@ class MetricCalculator:
         freq_min=300,
         freq_max=6000,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and stores pca for the metrics computation
@@ -328,7 +328,7 @@ class MetricCalculator:
         freq_min=300,
         freq_max=6000,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and stores data for all metrics (all metrics can be run after calling this function).
@@ -639,7 +639,7 @@ class MetricCalculator:
         max_spikes_per_unit_for_snr=1000,
         recompute_info=True,
         save_features_props=False,
-        seed=0,
+        seed=None,
     ):
         """
         Computes signal-to-noise ratio (SNR) of the average waveforms on the largest channel for sorted dataset.
@@ -778,7 +778,7 @@ class MetricCalculator:
             self.metrics["cumulative_drift"].append(cumulative_drifts_epochs[i])
         return max_drifts_epochs, cumulative_drifts_epochs
 
-    def compute_silhouette_scores(self, max_spikes_for_silhouette=10000, seed=0):
+    def compute_silhouette_scores(self, max_spikes_for_silhouette=10000, seed=None):
         """
         Computes and returns the silhouette scores in the sorted dataset.
 
@@ -829,7 +829,7 @@ class MetricCalculator:
         return silhouette_scores_epochs
 
     def compute_isolation_distances(
-        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0
+        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=None
     ):
         """
         Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
@@ -884,7 +884,7 @@ class MetricCalculator:
         return isolation_distances_epochs
 
     def compute_l_ratios(
-        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0
+        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=None
     ):
         """
         Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
@@ -939,7 +939,7 @@ class MetricCalculator:
         return l_ratios_epochs
 
     def compute_d_primes(
-        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=0
+        self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=None
     ):
         """
         Computes and returns the lda-based metric, d-prime, for the sorted dataset.
@@ -999,7 +999,7 @@ class MetricCalculator:
         max_spikes_per_cluster=500,
         max_spikes_for_nn=10000,
         n_neighbors=4,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and returns the nearest neighbor metrics for the sorted dataset.
@@ -1085,7 +1085,7 @@ class MetricCalculator:
         max_spikes_for_nn=10000,
         n_neighbors=4,
         metric_names=None,
-        seed=0,
+        seed=None,
     ):
         """
         Computes and returns all specified metrics for the sorted dataset.
@@ -1378,7 +1378,7 @@ def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
     return snr
 
 
-def _compute_channel_noise_levels(recording, mode="mad", noise_duration=10.0, seed=0):
+def _compute_channel_noise_levels(recording, mode="mad", noise_duration=10.0, seed=None):
     """
     Computes noise level channel-wise
 

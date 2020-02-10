@@ -251,7 +251,7 @@ def compute_amplitude_cutoffs(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the amplitude cutoffs for the sorted dataset.
@@ -348,7 +348,7 @@ def compute_snrs(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and stores snrs for the sorted units.
@@ -446,7 +446,7 @@ def compute_drift_metrics(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the drift metrics for the sorted dataset.
@@ -568,7 +568,7 @@ def compute_silhouette_scores(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the silhouette scores in the sorted dataset.
@@ -681,7 +681,7 @@ def compute_isolation_distances(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the mahalanobis metric, isolation distance, for the sorted dataset.
@@ -800,7 +800,7 @@ def compute_l_ratios(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the mahalanobis metric, l-ratio, for the sorted dataset.
@@ -917,7 +917,7 @@ def compute_d_primes(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the lda-based metric, d-prime, for the sorted dataset.
@@ -1036,7 +1036,7 @@ def compute_nn_metrics(
     epoch_tuples=None,
     epoch_names=None,
     save_as_property=True,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns the nearest neighbor metrics for the sorted dataset.
@@ -1178,7 +1178,7 @@ def compute_metrics(
     epoch_tuples=None,
     epoch_names=None,
     return_dataframe=False,
-    seed=0,
+    seed=None,
 ):
     """
     Computes and returns all specified metrics for the sorted dataset.

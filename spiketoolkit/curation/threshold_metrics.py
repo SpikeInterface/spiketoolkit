@@ -1,6 +1,83 @@
 from spiketoolkit.validation.metric_data import MetricData
 from spiketoolkit.validation.amplitude_cutoff import AmplitudeCutoff
 from spiketoolkit.validation.silhouette_score import SilhouetteScore
+from spiketoolkit.validation.num_spikes import NumSpikes
+
+
+def threshold_num_spikes(
+    sorting,
+    threshold,
+    threshold_sign,
+    epoch=0,
+    sampling_frequency=None,
+    metric_scope_params_dict=MetricData.metric_scope_params_dict,
+    save_as_property=True
+):
+    """
+    Computes and returns the num spikes for the sorted dataset.
+
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting result to be evaluated.
+    threshold: int or float
+        The threshold for the given metric.
+    threshold_sign: str
+        If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
+        If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
+    epoch:
+        The threshold will be applied to the specified epoch.
+        If epoch is None, then it will default to the first epoch.
+    sampling_frequency:
+        The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
+    metric_scope_params_dict: dict
+        This dictionary should contain any subset of the following parameters:
+            unit_ids: list
+                List of unit ids to compute metric for. If not specified, all units are used
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs.
+    save_features_props: bool
+        If true, it will save amplitudes in the sorting extractor.
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    Returns
+    ----------
+    amplitude_cutoffs_epochs: list of lists
+        The amplitude cutoffs of the sorted units in the given epochs.
+    """
+    if sampling_frequency is None and sorting.get_sampling_frequency() is None:
+        raise ValueError(
+            "Please pass in a sampling frequency (your SortingExtractor does not have one specified)"
+        )
+    elif sampling_frequency is None:
+        sampling_frequency = sorting.get_sampling_frequency()
+
+    if not set(metric_scope_params_dict.keys()).issubset(
+        set(MetricData.metric_scope_params_dict.keys())
+    ):
+        raise ValueError("Improper parameter entered into the metric scope param dict.")
+    ms_dict = dict(
+        MetricData.metric_scope_params_dict.copy(), **metric_scope_params_dict
+    )
+
+    if ms_dict["unit_ids"] is None:
+        ms_dict["unit_ids"] = sorting.get_unit_ids()
+
+    md = MetricData(
+        sorting=sorting,
+        unit_ids=ms_dict["unit_ids"],
+        epoch_tuples=ms_dict["epoch_tuples"],
+        epoch_names=ms_dict["epoch_names"],
+    )
+
+    ns = NumSpikes(metric_data=md)
+    num_spikes_epochs = ns.compute_metric()
+    threshold_sorting = ns.threshold_metric(threshold, threshold_sign, epoch, save_as_property)
+    return threshold_sorting
 
 
 def threshold_amplitude_cutoffs(
@@ -8,12 +85,13 @@ def threshold_amplitude_cutoffs(
     recording,
     threshold,
     threshold_sign,
-    epoch=None,
+    epoch=0,
     recording_params_dict=MetricData.recording_params_dict,
     amplitude_params_dict=MetricData.amplitude_params_dict,
     metric_scope_params_dict=MetricData.metric_scope_params_dict,
     save_features_props=False,
-    seed=0,
+    seed=None,
+    save_as_property=True
 ):
     """
     Computes and returns the amplitude cutoffs for the sorted dataset.
@@ -65,6 +143,8 @@ def threshold_amplitude_cutoffs(
         If true, it will save amplitudes in the sorting extractor.
     seed: int
         Random seed for reproducibility
+    save_as_property: bool
+        If True, the metric is saved as sorting property
     Returns
     ----------
     amplitude_cutoffs_epochs: list of lists
@@ -95,7 +175,7 @@ def threshold_amplitude_cutoffs(
         seed=seed,
     )
     ac = AmplitudeCutoff(metric_data=md)
-    threshold_sorting = ac.threshold_metric(threshold, threshold_sign, epoch)
+    threshold_sorting = ac.threshold_metric(threshold, threshold_sign, epoch, save_as_property)
     return threshold_sorting
 
 
@@ -104,12 +184,14 @@ def threshold_silhouette_scores(
     recording,
     threshold,
     threshold_sign,
-    epoch=None,
+    epoch=0,
     recording_params_dict=MetricData.recording_params_dict,
     pca_scores_params_dict=MetricData.pca_scores_params_dict,
     metric_scope_params_dict=MetricData.metric_scope_params_dict,
+    max_spikes_for_silhouette = 10000,
     save_features_props=False,
-    seed=0,
+    seed=None,
+    save_as_property=True
 ):
     """
     Computes and returns the silhouette scores in the sorted dataset.
@@ -166,6 +248,9 @@ def threshold_silhouette_scores(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
+    max_spikes_for_silhouette: int
+        Max spikes to be used for silhouette metric.
+
     save_features_props: bool
         If true, it will save amplitudes in the sorting extractor.
 
@@ -174,6 +259,9 @@ def threshold_silhouette_scores(
 
     seed: int
         Random seed for reproducibility
+    
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     Returns
     ----------
@@ -213,6 +301,5 @@ def threshold_silhouette_scores(
 
     silhouette_score = SilhouetteScore(metric_data=metric_data)
     threshold_sorting = silhouette_score.threshold_metric(
-        threshold, threshold_sign, epoch)
-
+        threshold, threshold_sign, epoch, max_spikes_for_silhouette, seed, save_as_property)
     return threshold_sorting
