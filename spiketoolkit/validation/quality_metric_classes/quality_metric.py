@@ -23,7 +23,7 @@ class QualityMetric(ABC):
         pass
 
     @abstractmethod
-    def threshold_metric(self, threshold, threshold_sign, epoch=0):
+    def threshold_metric(self, threshold, threshold_sign, epoch):
         '''
         Parameters
         ----------
@@ -36,7 +36,6 @@ class QualityMetric(ABC):
             If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
         epoch:
             The threshold will be applied to the specified epoch. 
-            If epoch is None, then it will default to the first epoch. 
         Returns
         -------
         tc: ThresholdCurator
@@ -44,12 +43,12 @@ class QualityMetric(ABC):
         '''
         pass
 
-    def save_as_property(self, sorting, metric_epochs):
+    def save_as_property(self, sorting, metric_epochs, metric_name):
         if len(self._metric_data.get_epochs()) == 1:
             metric = metric_epochs[0]
             for i_u, u in enumerate(sorting.get_unit_ids()):
-                sorting.set_unit_property(u, self._metric_name, metric[i_u])
+                sorting.set_unit_property(u, metric_name, metric[i_u])
         else:
             raise NotImplementedError(
-                "Quality metrics cannot be saved as properties if 'epochs_tuples' are given."
+                "Quality metrics cannot be saved as properties if more than one epoch is computed."
             )

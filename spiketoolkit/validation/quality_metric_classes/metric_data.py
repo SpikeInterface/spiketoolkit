@@ -68,13 +68,18 @@ class MetricData:
         else:
             self._sampling_frequency = sampling_frequency
 
-        # only use units with spikes to avoid breaking metric calculation
-        num_spikes_per_unit = [
-            len(sorting.get_unit_spike_train(unit_id))
-            for unit_id in sorting.get_unit_ids()
-        ]
-        sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
-        sorting.threshold_sorting(0, "less_or_equal")
+        # checks to see if any units have no spikes (will break metric calculation)
+        for unit_id in sorting.get_unit_ids():
+            if len(sorting.get_unit_spike_train(unit_id)) == 0:
+                raise ValueError("Spike trains must have none zero length. Please remove all zero length spike trains")
+        
+        #old code causes issues with saving properties
+        # num_spikes_per_unit = [
+        #     len(sorting.get_unit_spike_train(unit_id))
+        #     for unit_id in sorting.get_unit_ids()
+        # ]
+        # sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
+        # sorting.threshold_sorting(0, "less_or_equal")
 
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()

@@ -10,7 +10,7 @@ class PresenceRatio(QualityMetric):
     ):
         QualityMetric.__init__(self, metric_data, metric_name="presence_ratio")
 
-    def compute_metric(self, save_as_property=True):
+    def compute_metric(self, save_as_property):
         presence_ratios_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = np.logical_and(
@@ -28,10 +28,10 @@ class PresenceRatio(QualityMetric):
             presence_ratios = np.asarray(presence_ratios_list)
             presence_ratios_epochs.append(presence_ratios)
         if save_as_property:
-            self.save_as_property(self._metric_data._sorting, presence_ratios_epochs)
+            self.save_as_property(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
         return presence_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=0, save_as_property=True):
+    def threshold_metric(self, threshold, threshold_sign, epoch, save_as_property):
         assert (epoch < len(self._metric_data.get_epochs())), "Invalid epoch specified"
         presence_ratios_epochs = self.compute_metric(save_as_property=save_as_property)[epoch]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=presence_ratios_epochs)

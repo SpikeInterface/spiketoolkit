@@ -304,8 +304,6 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, pea
         List of unit ids to extract maximum channels
     max_channels: int
         Number of max channels per units to return (default=1)
-    peak: str
-        If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
     mode: str
         Use 'mean' or 'median' to compute templates
     grouping_property: str

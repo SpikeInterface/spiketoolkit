@@ -11,7 +11,7 @@ class SilhouetteScore(QualityMetric):
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, max_spikes_for_silhouette=10000, seed=None, save_as_property=True):
+    def compute_metric(self, max_spikes_for_silhouette, seed, save_as_property):
 
         silhouette_scores_epochs = []
         for epoch in self._metric_data._epochs:
@@ -37,10 +37,10 @@ class SilhouetteScore(QualityMetric):
             silhouette_scores = np.asarray(silhouette_scores_list)
             silhouette_scores_epochs.append(silhouette_scores)
         if save_as_property:
-            self.save_as_property(self._metric_data._sorting, silhouette_scores_epochs)
+            self.save_as_property(self._metric_data._sorting, silhouette_scores_epochs, self._metric_name)
         return silhouette_scores_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=0, max_spikes_for_silhouette=10000, seed=None, save_as_property=True):
+    def threshold_metric(self, threshold, threshold_sign, epoch, max_spikes_for_silhouette, seed, save_as_property):
 
         assert epoch < len(self._metric_data.get_epochs()), "Invalid epoch specified"
 

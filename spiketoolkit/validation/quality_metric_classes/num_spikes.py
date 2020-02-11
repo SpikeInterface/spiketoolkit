@@ -10,7 +10,7 @@ class NumSpikes(QualityMetric):
     ):
         QualityMetric.__init__(self, metric_data, metric_name="num_spikes")
 
-    def compute_metric(self, save_as_property=True):
+    def compute_metric(self, save_as_property):
         num_spikes_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = np.logical_and(
@@ -28,10 +28,10 @@ class NumSpikes(QualityMetric):
             num_spikes = np.asarray(num_spikes_list)
             num_spikes_epochs.append(num_spikes)
         if save_as_property:
-            self.save_as_property(self._metric_data._sorting, num_spikes_epochs)
+            self.save_as_property(self._metric_data._sorting, num_spikes_epochs, self._metric_name)
         return num_spikes_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=0, save_as_property=True):
+    def threshold_metric(self, threshold, threshold_sign, epoch, save_as_property):
         assert (epoch < len(self._metric_data.get_epochs())), "Invalid epoch specified"
         num_spikes_epochs = self.compute_metric(save_as_property=save_as_property)[epoch]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=num_spikes_epochs)

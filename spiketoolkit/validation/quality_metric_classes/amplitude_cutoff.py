@@ -12,7 +12,7 @@ class AmplitudeCutoff(QualityMetric):
         if not metric_data.has_amplitudes():
             raise ValueError("MetricData object must have amplitudes")
 
-    def compute_metric(self, save_as_property=True):
+    def compute_metric(self, save_as_property):
         amplitude_cutoffs_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = np.logical_and(
@@ -30,10 +30,10 @@ class AmplitudeCutoff(QualityMetric):
             amplitude_cutoffs = np.asarray(amplitude_cutoffs_list)
             amplitude_cutoffs_epochs.append(amplitude_cutoffs)
         if save_as_property:
-            self.save_as_property(self._metric_data._sorting, amplitude_cutoffs_epochs)   
+            self.save_as_property(self._metric_data._sorting, amplitude_cutoffs_epochs, self._metric_name)   
         return amplitude_cutoffs_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=0, save_as_property=True):
+    def threshold_metric(self, threshold, threshold_sign, epoch, save_as_property):
         assert (epoch < len(self._metric_data.get_epochs())), "Invalid epoch specified"
         amplitude_cutoff_epochs = self.compute_metric(save_as_property=save_as_property)[epoch]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=amplitude_cutoff_epochs)

@@ -13,7 +13,7 @@ class LRatio(QualityMetric):
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=None, save_as_property=True):
+    def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property):
 
         l_ratios_epochs = []
         for epoch in self._metric_data._epochs:
@@ -40,10 +40,10 @@ class LRatio(QualityMetric):
             l_ratios = np.asarray(l_ratios_list)
             l_ratios_epochs.append(l_ratios)
         if save_as_property:
-            self.save_as_property(self._metric_data._sorting, l_ratios_epochs)
+            self.save_as_property(self._metric_data._sorting, l_ratios_epochs, self._metric_name)
         return l_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch=0, num_channels_to_compare=13, max_spikes_per_cluster=500, seed=None, save_as_property=True):
+    def threshold_metric(self, threshold, threshold_sign, epoch, num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property):
 
         assert epoch < len(self._metric_data.get_epochs()), "Invalid epoch specified"
 
