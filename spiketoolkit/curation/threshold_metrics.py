@@ -9,6 +9,7 @@ from spiketoolkit.validation import PresenceRatio
 from spiketoolkit.validation import ISIViolation
 from spiketoolkit.validation import SNR
 from spiketoolkit.validation import IsolationDistance
+from spiketoolkit.validation import NearestNeighbor
 from spiketoolkit.validation import get_recording_params, get_amplitude_params, get_pca_scores_params, get_metric_scope_params, update_param_dicts
 
 def threshold_num_spikes(
@@ -1010,4 +1011,143 @@ def threshold_isolation_distances(
     isolaiton_distance = IsolationDistance(metric_data=md)
     threshold_sorting = isolaiton_distance.threshold_metric(threshold, threshold_sign, epoch, num_channels_to_compare, 
                                                             max_spikes_per_cluster, seed, save_as_property)
+    return threshold_sorting
+
+
+def threshold_nn_metrics(
+    sorting,
+    recording,
+    threshold,
+    threshold_sign,
+    epoch=0,
+    metric_name="nn_hit_rate",
+    num_channels_to_compare=13,
+    max_spikes_per_cluster=500,
+    max_spikes_for_nn=10000,
+    n_neighbors=4,
+    recording_params=get_recording_params(),
+    pca_scores_params=get_pca_scores_params(),
+    metric_scope_params=get_metric_scope_params(),
+    save_features_props=False,
+    seed=None,
+    save_as_property=True
+):
+    """
+    Computes and thresholds the specified nearest neighbor metric for the sorted dataset with the given sign and value.
+
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting result to be evaluated.
+
+    recording: RecordingExtractor
+        The given recording extractor from which to extract amplitudes
+
+    threshold: int or float
+        The threshold for the given metric.
+
+    threshold_sign: str
+        If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
+        If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
+
+    epoch: int
+        The threshold will be applied to the specified epoch.
+        If epoch is None, then it will default to the first epoch.
+
+    metric_name: str
+        The name of the nearest neighbor metric to be thresholded (either "nn_hit_rate" or "nn_miss_rate").
+
+    num_channels_to_compare: int
+        The number of channels to be used for the PC extraction and comparison
+        
+    max_spikes_per_cluster: int
+        Max spikes to be used from each unit
+
+    max_spikes_for_nn: int
+        Max spikes to be used for nearest-neighbors calculation.
+    
+    n_neighbors: int
+        Number of neighbors to compare.
+
+    recording_params: dict
+        This dictionary should contain any subset of the following parameters:
+            apply_filter: bool
+                If True, recording is bandpass-filtered.
+            freq_min: float
+                High-pass frequency for optional filter (default 300 Hz).
+            freq_max: float
+                Low-pass frequency for optional filter (default 6000 Hz).
+
+    pca_scores_params: dict
+        This dictionary should contain any subset of the following parameters:
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+            max_spikes_for_pca: int
+                The maximum number of spikes to use to compute PCA.
+
+    metric_scope_params: dict
+        This dictionary should contain any subset of the following parameters:
+            unit_ids: list
+                unit ids to compute metric for. If not specified, all units are used
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs.
+
+    save_features_props: bool
+        If true, it will save amplitudes in the sorting extractor.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+
+    seed: int
+        Random seed for reproducibility
+    
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+
+    Returns
+    ----------
+    threshold sorting extractor
+    """
+    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
+                                                   pca_scores_params=pca_scores_params, 
+                                                   metric_scope_params=metric_scope_params)
+
+    if ms_dict["unit_ids"] is None:
+        ms_dict["unit_ids"] = sorting.get_unit_ids()
+
+    md = MetricData(
+        sorting=sorting,
+        recording=recording,
+        apply_filter=rp_dict["apply_filter"],
+        freq_min=rp_dict["freq_min"],
+        freq_max=rp_dict["freq_max"],
+        unit_ids=ms_dict["unit_ids"],
+        epoch_tuples=ms_dict["epoch_tuples"],
+        epoch_names=ms_dict["epoch_names"],
+    )
+
+    md.compute_pca_scores(
+        n_comp=ps_dict["n_comp"],
+        ms_before=ps_dict["ms_before"],
+        ms_after=ps_dict["ms_after"],
+        dtype=ps_dict["dtype"],
+        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        save_features_props=save_features_props,
+        seed=seed,
+    )
+
+    nn = NearestNeighbor(metric_data=md)
+    threshold_sorting = nn.threshold_metric(threshold, threshold_sign, epoch, metric_name, num_channels_to_compare, 
+                                            max_spikes_per_cluster, max_spikes_for_nn, n_neighbors, seed, save_as_property)
     return threshold_sorting

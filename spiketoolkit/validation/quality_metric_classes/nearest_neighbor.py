@@ -50,18 +50,26 @@ class NearestNeighbor(QualityMetric):
         if save_as_property:
             self.save_as_property(self._metric_data._sorting, nn_hit_rates_epochs, metric_name="nn_hit_rate")
             self.save_as_property(self._metric_data._sorting, nn_miss_rates_epochs, metric_name="nn_miss_rate")
-        return nn_hit_rates_epochs, nn_miss_rates_epochs
+        return list(zip(nn_hit_rates_epochs, nn_miss_rates_epochs))
 
-    def threshold_metric(self, threshold, threshold_sign, epoch, num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property):
+    def threshold_metric(self, threshold, threshold_sign, epoch, metric_name, num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
+                         n_neighbors, seed, save_as_property):
 
-        # assert epoch < len(self._metric_data.get_epochs()), "Invalid epoch specified"
+        assert epoch < len(self._metric_data.get_epochs()), "Invalid epoch specified"
 
-        # isolation_distances_epochs = self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property=save_as_property)[epoch]
-        # threshold_curator = ThresholdCurator(
-        #     sorting=self._metric_data._sorting, metrics_epoch=isolation_distances_epochs
-        # )
-        # threshold_curator.threshold_sorting(
-        #     threshold=threshold, threshold_sign=threshold_sign
-        # )
-        # return threshold_curator
-        pass
+        nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn, 
+                                                                        n_neighbors, seed, save_as_property=save_as_property)[epoch]
+        if metric_name == "nn_hit_rate":
+            metrics_epoch = nn_hit_rates_epochs
+        elif metric_name == "nn_miss_rate":
+            metrics_epoch = nn_miss_rates_epochs
+        else:
+            raise ValueError("Invalid metric named entered")
+                                                                    
+        threshold_curator = ThresholdCurator(
+            sorting=self._metric_data._sorting, metrics_epoch=metrics_epoch
+        )
+        threshold_curator.threshold_sorting(
+            threshold=threshold, threshold_sign=threshold_sign
+        )
+        return threshold_curator
