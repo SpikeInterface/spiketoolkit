@@ -42,5 +42,6 @@ from .parameter_dictionaries import (
     get_amplitude_params,
     get_pca_scores_params,
     get_metric_scope_params,
+    get_feature_params,
     update_param_dicts,
 )

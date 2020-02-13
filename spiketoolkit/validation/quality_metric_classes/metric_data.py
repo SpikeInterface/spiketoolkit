@@ -23,15 +23,15 @@ class MetricData:
     def __init__(
         self,
         sorting,
-        recording=None,
-        sampling_frequency=None,
-        apply_filter=True,
-        freq_min=300,
-        freq_max=6000,
-        unit_ids=None,
-        epoch_tuples=None,
-        epoch_names=None,
-        verbose=False,
+        recording,
+        sampling_frequency,
+        apply_filter,
+        freq_min,
+        freq_max,
+        unit_ids,
+        epoch_tuples,
+        epoch_names,
+        verbose,
     ):
         """
         Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
@@ -132,7 +132,7 @@ class MetricData:
         else:
             self._recording = None
 
-    def set_recording(self, recording, apply_filter=True, freq_min=300, freq_max=6000):
+    def set_recording(self, recording, apply_filter, freq_min, freq_max):
         """
         Sets given recording extractor
 
@@ -179,12 +179,14 @@ class MetricData:
 
     def compute_amplitudes(
         self,
-        amp_method="absolute",
-        amp_peak="both",
-        amp_frames_before=3,
-        amp_frames_after=3,
-        save_features_props=False,
-        seed=None,
+        amp_method,
+        amp_peak,
+        amp_frames_before,
+        amp_frames_after,
+        max_spikes_per_unit,
+        save_features_props,
+        recompute_info,
+        seed,
     ):
         """
         Computes and stores amplitudes for the amplitude cutoff metric
@@ -200,8 +202,12 @@ class MetricData:
             Frames before peak to compute amplitude
         amp_frames_after: int
             Frames after peak to compute amplitude
+        max_spikes_per_unit: int
+            The maximum number of spikes to use to compute amplitudes.
         save_features_props: bool
             If true, it will save amplitudes in the sorting extractor.
+        recompute_info: bool
+            If True, will always re-extract waveforms.
         seed: int
             Random seed for reproducibility
         """
@@ -213,6 +219,8 @@ class MetricData:
             amp_peak=amp_peak,
             amp_frames_before=amp_frames_before,
             amp_frames_after=amp_frames_after,
+            max_spikes_per_unit=max_spikes_per_unit,
+            recompute_info=recompute_info,
             seed=seed,
         )
         self._amplitudes = amplitudes
@@ -221,15 +229,15 @@ class MetricData:
 
     def compute_pca_scores(
         self,
-        n_comp=3,
-        ms_before=1.0,
-        ms_after=2.0,
-        dtype=None,
-        max_spikes_per_unit=300,
-        recompute_info=True,
-        max_spikes_for_pca=1e5,
-        save_features_props=False,
-        seed=None,
+        n_comp,
+        ms_before,
+        ms_after,
+        dtype,
+        max_spikes_per_unit,
+        recompute_info,
+        max_spikes_for_pca,
+        save_features_props,
+        seed,
     ):
         """
         Computes and stores pca for the metrics computation
@@ -268,6 +276,7 @@ class MetricData:
             recompute_info=recompute_info,
             save_features_props=save_features_props,
             seed=seed,
+            verbose=self.verbose
         )
         self._pc_features = pc_features
         self._spike_clusters_pca = spike_clusters
@@ -276,19 +285,19 @@ class MetricData:
 
     def compute_all_metric_data(
         self,
-        n_comp=3,
-        ms_before=1.0,
-        ms_after=2.0,
-        dtype=None,
-        max_spikes_per_unit=300,
-        amp_method="absolute",
-        amp_peak="both",
-        amp_frames_before=3,
-        amp_frames_after=3,
-        recompute_info=True,
-        max_spikes_for_pca=1e5,
-        save_features_props=False,
-        seed=0,
+        n_comp,
+        ms_before,
+        ms_after,
+        dtype,
+        max_spikes_per_unit,
+        amp_method,
+        amp_peak,
+        amp_frames_before,
+        amp_frames_after,
+        recompute_info,
+        max_spikes_for_pca,
+        save_features_props,
+        seed,
     ):
         """
         Computes and stores data for all metrics (all metrics can be run after calling this function).
@@ -350,6 +359,7 @@ class MetricData:
             recompute_info=recompute_info,
             save_features_props=save_features_props,
             seed=seed,
+            verbose=self.verbose
         )
 
         self._amplitudes = amplitudes
@@ -399,31 +409,6 @@ class MetricData:
 
     def get_unit_ids(self):
         return self._unit_ids
-
-    #implemented by quality metric subclasses
-    def compute_metric(self):
-        pass
-
-    def threshold_metric(self, threshold, threshold_sign, epoch=None):
-        '''
-        Parameters
-        ----------
-        threshold:
-            The threshold for the given metric.
-        threshold_sign: str
-            If 'less', will threshold any metric less than the given threshold.
-            If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
-            If 'greater', will threshold any metric greater than the given threshold.
-            If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-        epoch:
-            The threshold will be applied to the specified epoch. 
-            If epoch is None, then it will default to the first epoch. 
-        Returns
-        -------
-        tc: ThresholdCurator
-            The thresholded sorting extractor.
-        '''
-        pass
 
 
 def _get_unit_indices(sorting, unit_ids):

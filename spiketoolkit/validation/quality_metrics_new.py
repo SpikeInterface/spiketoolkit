@@ -11,13 +11,14 @@ from .quality_metric_classes.snr import SNR
 from .quality_metric_classes.isolation_distance import IsolationDistance
 from .quality_metric_classes.nearest_neighbor import NearestNeighbor
 from .quality_metric_classes.drift_metric import DriftMetric   
-from .parameter_dictionaries import get_recording_params, get_amplitude_params, get_pca_scores_params, get_metric_scope_params, update_param_dicts
+from .parameter_dictionaries import get_recording_params, get_amplitude_params, get_pca_scores_params, get_metric_scope_params, update_param_dicts, get_feature_params
 
 def compute_num_spikes(
     sorting,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False,
 ):
     """
     Computes and returns the num spikes for the sorted dataset.
@@ -26,7 +27,7 @@ def compute_num_spikes(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-    sampling_frequency:
+    sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
     metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
@@ -38,6 +39,8 @@ def compute_num_spikes(
                 A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     num_spikes_epochs: list of lists
@@ -51,9 +54,14 @@ def compute_num_spikes(
     md = MetricData(
         sorting=sorting,
         sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     ns = NumSpikes(metric_data=md)
@@ -65,7 +73,8 @@ def compute_firing_rates(
     sorting,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False,
 ):
     """
     Computes and returns the firing rates for the sorted dataset.
@@ -74,7 +83,7 @@ def compute_firing_rates(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-    sampling_frequency:
+    sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
     metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
@@ -86,6 +95,8 @@ def compute_firing_rates(
                 A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     firing_rate_epochs: list of lists
@@ -99,9 +110,14 @@ def compute_firing_rates(
     md = MetricData(
         sorting=sorting,
         sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     fr = FiringRate(metric_data=md)
@@ -113,7 +129,8 @@ def compute_presence_ratios(
     sorting,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and returns the presence ratios for the sorted dataset.
@@ -122,7 +139,7 @@ def compute_presence_ratios(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-    sampling_frequency:
+    sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
     metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
@@ -134,6 +151,8 @@ def compute_presence_ratios(
                 A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     presence_ratio_epochs: list of lists
@@ -147,9 +166,14 @@ def compute_presence_ratios(
     md = MetricData(
         sorting=sorting,
         sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     pr = PresenceRatio(metric_data=md)
@@ -163,7 +187,8 @@ def compute_isi_violations(
     min_isi=0.000166,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False,
 ):
     """
     Computes and returns the isi violations for the sorted dataset.
@@ -176,7 +201,7 @@ def compute_isi_violations(
         The isi threshold for calculating isi violations.
     min_isi: float
         The minimum expected isi value.
-    sampling_frequency:
+    sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
     metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
@@ -188,6 +213,8 @@ def compute_isi_violations(
                 A list of strings for the names of the given epochs.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     isi_violation_epochs: list of lists
@@ -201,9 +228,14 @@ def compute_isi_violations(
     md = MetricData(
         sorting=sorting,
         sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     iv = ISIViolation(metric_data=md)
@@ -217,9 +249,10 @@ def compute_amplitude_cutoffs(
     recording_params=get_recording_params(),
     amplitude_params=get_amplitude_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the amplitude cutoffs for the sorted dataset.
@@ -257,27 +290,37 @@ def compute_amplitude_cutoffs(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
-    seed: int
-        Random seed for reproducibility
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     amplitude_cutoffs_epochs: list of lists
         The amplitude cutoffs of the sorted units in the given epochs.
     """
 
-    rp_dict, ap_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   amplitude_params=amplitude_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ap_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            amplitude_params=amplitude_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -285,13 +328,16 @@ def compute_amplitude_cutoffs(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
     md.compute_amplitudes(
         amp_method=ap_dict["amp_method"],
         amp_peak=ap_dict["amp_peak"],
         amp_frames_before=ap_dict["amp_frames_before"],
         amp_frames_after=ap_dict["amp_frames_after"],
-        save_features_props=save_features_props,
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
     ac = AmplitudeCutoff(metric_data=md)
@@ -308,10 +354,10 @@ def compute_snrs(
     max_channel_peak="both", 
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    recompute_info=True,
-    save_features_props=True,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False,
 ):
     """
     Computes and returns the snrs in the sorted dataset.
@@ -370,31 +416,39 @@ def compute_snrs(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    recompute_info: bool
-            If True, waveforms are recomputed
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
 
     Returns
     ----------
     snr_epochs: list of lists
         The snrs of the sorted units in the given epochs.
     """
-    rp_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                          metric_scope_params=metric_scope_params)
+    rp_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                   metric_scope_params=metric_scope_params,
+                                                   feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -402,12 +456,13 @@ def compute_snrs(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     snr = SNR(metric_data=md)
     snr_epochs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr, 
-                                    template_mode, max_channel_peak, save_features_props,
-                                    recompute_info, seed, save_as_property)
+                                    template_mode, max_channel_peak, fp_dict['save_features_props'],
+                                    fp_dict['recompute_info'], seed, save_as_property)
     return snr_epochs
 
 def compute_silhouette_scores(
@@ -417,9 +472,10 @@ def compute_silhouette_scores(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False,
 ):
     """
     Computes and returns the silhouette scores in the sorted dataset.
@@ -466,29 +522,40 @@ def compute_silhouette_scores(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
 
     Returns
     ----------
     silhouette_score_epochs: list of lists
         The sihouette scores of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -496,6 +563,7 @@ def compute_silhouette_scores(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -503,9 +571,10 @@ def compute_silhouette_scores(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -522,9 +591,10 @@ def compute_d_primes(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the d primes in the sorted dataset.
@@ -574,29 +644,40 @@ def compute_d_primes(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
 
     Returns
     ----------
     d_prime_epochs: list of lists
         The d primes of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -604,16 +685,17 @@ def compute_d_primes(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
-
     md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -629,9 +711,10 @@ def compute_l_ratios(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the l ratios in the sorted dataset.
@@ -681,29 +764,40 @@ def compute_l_ratios(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
+
 
     Returns
     ----------
     l_ratio_epochs: list of lists
         The l ratios of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
-
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -711,6 +805,7 @@ def compute_l_ratios(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -718,9 +813,10 @@ def compute_l_ratios(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -737,9 +833,10 @@ def compute_isolation_distances(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the isolation distances in the sorted dataset.
@@ -789,29 +886,39 @@ def compute_isolation_distances(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
-
-    seed: int
-        Random seed for reproducibility
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    seed: int
+        Random seed for reproducibility
+
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     isolation_distance_epochs: list of lists
         The isolation distances of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -819,6 +926,7 @@ def compute_isolation_distances(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -826,9 +934,10 @@ def compute_isolation_distances(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -846,9 +955,12 @@ def compute_nn_metrics(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
+    feature_params=get_feature_params(),
+    recompute_info=False,
     save_features_props=False,
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the nearest neighbor metrics in the sorted dataset.
@@ -904,29 +1016,46 @@ def compute_nn_metrics(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
+    recompute_info: bool
+        If True, will always re-extract waveforms.
+
     save_features_props: bool
         If true, it will save amplitudes in the sorting extractor.
+
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
 
     Returns
     ----------
     nn_metrics_epochs: list of lists
         The nearest neighbor metrics of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -934,6 +1063,7 @@ def compute_nn_metrics(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -941,9 +1071,10 @@ def compute_nn_metrics(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -960,9 +1091,10 @@ def compute_drift_metrics(
     pca_scores_params=get_pca_scores_params(),
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and returns the drift metrics in the sorted dataset.
@@ -1011,30 +1143,41 @@ def compute_drift_metrics(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
+   
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save amplitudes in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    save_as_property: bool
+        If True, the metric is saved as sorting property
 
     seed: int
         Random seed for reproducibility
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
 
     Returns
     ----------
     dm_metrics_epochs: list of lists
         The drift metrics of the sorted units in the given epochs.
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -1042,6 +1185,7 @@ def compute_drift_metrics(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -1049,9 +1193,10 @@ def compute_drift_metrics(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        recompute_info=fp_dict['recompute_info'],
+        save_features_props=fp_dict['save_features_props'],
         seed=seed,
     )
 
@@ -1059,14 +1204,18 @@ def compute_drift_metrics(
     dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, save_as_property)
     return dm_metrics_epochs
 
-#     def compute_metrics(
+# def compute_metrics(
 #     sorting,
 #     recording=None,
 #     sampling_frequency=None,
+#     metric_names=None,
 #     isi_threshold=0.0015,
 #     min_isi=0.000166,
 #     snr_mode="mad",
 #     snr_noise_duration=10.0,
+#     max_spikes_per_unit_for_snr=1000,
+#     template_mode="median", 
+#     max_channel_peak="both", 
 #     max_spikes_per_unit_for_snr=1000,
 #     drift_metrics_interval_s=51,
 #     drift_metrics_min_spikes_per_interval=10,
@@ -1076,14 +1225,15 @@ def compute_drift_metrics(
 #     max_spikes_for_nn=10000,
 #     n_neighbors=4,
 #     max_spikes_per_unit=300,
-#     recompute_info=True,
-#     save_features_props=False,
-#     metric_names=None,
-#     unit_ids=None,
-#     epoch_tuples=None,
-#     epoch_names=None,
-#     return_dataframe=False,
+#     amplitude_params=get_amplitude_params(),
+#     pca_scores_params=get_pca_scores_params(),
+#     recording_params=get_recording_params(),
+#     metric_scope_params=get_metric_scope_params(),
+#     feature_params=get_feature_params()
+#     save_as_property=True,
 #     seed=None,
+#     verbose=False,
+#     return_dataframe=False,
 # ):
 #     """
 #     Computes and returns all specified metrics for the sorted dataset.
@@ -1092,49 +1242,118 @@ def compute_drift_metrics(
 #     ----------
 #     sorting: SortingExtractor
 #         The sorting result to be evaluated.
-#     sampling_frequency:
-#         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
+
 #     recording: RecordingExtractor
-#         The given recording extractor from which to extract amplitudes. If None, certain metrics cannot be computed.
+#         The given recording extractor from which to extract amplitudes
+
+#    sampling_frequency: float
+#         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
+
+#     metric_names: list
+#         List of metric names to be computed.
+
 #     isi_threshold: float
 #         The isi threshold for calculating isi violations.
+
 #     min_isi: float
 #         The minimum expected isi value.
+
 #     snr_mode: str
-#         Mode to compute noise SNR ('mad' | 'std' - default 'mad')
+#             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
+            
 #     snr_noise_duration: float
 #         Number of seconds to compute noise level from (default 10.0)
+
 #     max_spikes_per_unit_for_snr: int
 #         Maximum number of spikes to compute templates from (default 1000)
+
+#     template_mode: str
+#         Use 'mean' or 'median' to compute templates
+
+#     max_channel_peak: str
+#         If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+
 #     drift_metrics_interval_s: float
 #         Time period for evaluating drift.
+
 #     drift_metrics_min_spikes_per_interval: int
 #         Minimum number of spikes for evaluating drift metrics per interval.
+
 #     max_spikes_for_silhouette: int
-#         Max spikes to be used for silhouette metric
+#         Max spikes to be used for silhouette metric.
+    
 #     num_channels_to_compare: int
-#         The number of channels to be used for the PC extraction and comparison.
+#         The number of channels to be used for the PC extraction and comparison
+        
 #     max_spikes_per_cluster: int
-#         Max spikes to be used from each unit to compute metrics.
+#         Max spikes to be used from each unit
+
 #     max_spikes_for_nn: int
 #         Max spikes to be used for nearest-neighbors calculation.
+    
 #     n_neighbors: int
-#         Number of neighbors to compare for  nearest-neighbors calculation.
-#     max_spikes_per_unit: int
-#         The maximum number of spikes to extract (default is np.inf)
+#         Number of neighbors to compare.
+
+#     amplitude_params: dict
+#         This dictionary should contain any subset of the following parameters:
+#             amp_method: str
+#                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+#                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+#             amp_peak: str
+#                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+#             amp_frames_before: int
+#                 Frames before peak to compute amplitude.
+#             amp_frames_after: int
+#                 Frames after peak to compute amplitude.
+
+#     pca_scores_params: dict
+#         This dictionary should contain any subset of the following parameters:
+#             ms_before: float
+#                 Time period in ms to cut waveforms before the spike events
+#             ms_after: float
+#                 Time period in ms to cut waveforms after the spike events
+#             dtype: dtype
+#                 The numpy dtype of the waveforms
+#             max_spikes_per_unit: int
+#                 The maximum number of spikes to extract per unit.
+#             max_spikes_for_pca: int
+#                 The maximum number of spikes to use to compute PCA.
+
+#     recording_params: dict
+#         This dictionary should contain any subset of the following parameters:
+#             apply_filter: bool
+#                 If True, recording is bandpass-filtered.
+#             freq_min: float
+#                 High-pass frequency for optional filter (default 300 Hz).
+#             freq_max: float
+#                 Low-pass frequency for optional filter (default 6000 Hz).
+
+#     metric_scope_params: dict
+#         This dictionary should contain any subset of the following parameters:
+#             unit_ids: list
+#                 unit ids to compute metric for. If not specified, all units are used
+#             epoch_tuples: list
+#                 A list of tuples with a start and end time for each epoch
+#             epoch_names: list
+#                 A list of strings for the names of the given epochs.
+    
 #     recompute_info: bool
-#         If True, will always re-extract waveforms.
+#         If True, waveforms are recomputed
+
 #     save_features_props: bool
-#         If True, save all features and properties in the sorting extractor.
-#     metrics_names: list
-#         The list of metric names to be computed. Available metrics are: 'firing_rate', 'num_spikes', 'isi_viol',
-#             'presence_ratio', 'amplitude_cutoff', 'max_drift', 'cumulative_drift', 'silhouette_score',
-#             'isolation_distance', 'l_ratio', 'd_prime', 'nn_hit_rate', 'nn_miss_rate', 'snr'. If None, all metrics are
-#             computed.
-#     return_dataframe: bool
-#         If True, this function will return a dataframe of the metrics.
+#         If true, it will save amplitudes in the sorting extractor.
+
+#     save_as_property: bool
+#         If True, the metric is saved as sorting property
+
 #     seed: int
 #         Random seed for reproducibility
+
+#     verbose: bool
+#         If True, will be verbose in metric computation.
+
+#     return_dataframe: bool
+#         If True, this function will return a dataframe of the metrics.
 
 #     Returns
 #     ----------
@@ -1144,9 +1363,11 @@ def compute_drift_metrics(
 #     metrics_df: pandas.DataFrame
 #         A pandas dataframe of the cached metrics
 #     """
-#     rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-#                                                 pca_scores_params=pca_scores_params, 
-#                                                 metric_scope_params=metric_scope_params)
+#     rp_dict, ap_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+#                                                                      amplitude_params=amplitude_params,
+#                                                                      pca_scores_params=pca_scores_params, 
+#                                                                      metric_scope_params=metric_scope_params,
+#                                                                      feature_params=feature_params)
 #     metrics_epochs = []
 #     all_metrics_list = [
 #         "firing_rate",
@@ -1175,18 +1396,17 @@ def compute_drift_metrics(
 #         if len(bad_metrics) > 0:
 #             raise ValueError("Wrong metrics name: " + str(bad_metrics))
 
-#     if recording is not None:
-#         sampling_frequency = recording.get_sampling_frequency()
-
 #     md = MetricData(
 #         sorting=sorting,
-#         recording=sampling_frequency,
+#         sampling_frequency=recording.get_sampling_frequency()
+#         recording=recording,
 #         apply_filter=rp_dict["apply_filter"],
 #         freq_min=rp_dict["freq_min"],
 #         freq_max=rp_dict["freq_max"],
 #         unit_ids=ms_dict["unit_ids"],
 #         epoch_tuples=ms_dict["epoch_tuples"],
 #         epoch_names=ms_dict["epoch_names"],
+#         verbose=verbose
 #     )
 
 #     if (

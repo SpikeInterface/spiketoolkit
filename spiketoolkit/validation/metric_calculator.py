@@ -175,6 +175,8 @@ class MetricCalculator:
         freq_min=300,
         freq_max=6000,
         save_features_props=False,
+        max_spikes_per_unit=300,
+        recompute_info=False,
         seed=None,
     ):
         """
@@ -225,6 +227,8 @@ class MetricCalculator:
             amp_peak=amp_peak,
             amp_frames_before=amp_frames_before,
             amp_frames_after=amp_frames_after,
+            max_spikes_per_unit=max_spikes_per_unit,
+            recompute_info=recompute_info,
             seed=seed,
         )
         self._amplitudes = amplitudes
@@ -239,13 +243,14 @@ class MetricCalculator:
         ms_after=2.0,
         dtype=None,
         max_spikes_per_unit=300,
-        recompute_info=True,
+        recompute_info=False,
         max_spikes_for_pca=1e5,
         apply_filter=True,
         freq_min=300,
         freq_max=6000,
         save_features_props=False,
         seed=None,
+        verbose=False
     ):
         """
         Computes and stores pca for the metrics computation
@@ -304,6 +309,7 @@ class MetricCalculator:
             recompute_info=recompute_info,
             save_features_props=save_features_props,
             seed=seed,
+            verbose=verbose
         )
         self._pc_features = pc_features
         self._spike_clusters_pca = spike_clusters
@@ -329,6 +335,7 @@ class MetricCalculator:
         freq_max=6000,
         save_features_props=False,
         seed=None,
+        verbose=False
     ):
         """
         Computes and stores data for all metrics (all metrics can be run after calling this function).
@@ -410,6 +417,7 @@ class MetricCalculator:
             recompute_info=recompute_info,
             save_features_props=save_features_props,
             seed=seed,
+            verbose=verbose
         )
 
         self._amplitudes = amplitudes

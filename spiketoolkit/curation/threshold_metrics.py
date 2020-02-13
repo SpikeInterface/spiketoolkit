@@ -11,7 +11,7 @@ from spiketoolkit.validation import SNR
 from spiketoolkit.validation import IsolationDistance
 from spiketoolkit.validation import NearestNeighbor
 from spiketoolkit.validation import DriftMetric
-from spiketoolkit.validation import get_recording_params, get_amplitude_params, get_pca_scores_params, get_metric_scope_params, update_param_dicts
+from spiketoolkit.validation import get_recording_params, get_amplitude_params, get_pca_scores_params, get_metric_scope_params, get_feature_params, update_param_dicts
 
 def threshold_num_spikes(
     sorting,
@@ -20,7 +20,8 @@ def threshold_num_spikes(
     epoch=0,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the num spikes in the sorted dataset with the given sign and value.
@@ -49,10 +50,10 @@ def threshold_num_spikes(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
@@ -71,9 +72,15 @@ def threshold_num_spikes(
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     ns = NumSpikes(metric_data=md)
@@ -87,7 +94,8 @@ def threshold_firing_rates(
     epoch=0,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the firing rates in the sorted dataset with the given sign and value.
@@ -116,10 +124,10 @@ def threshold_firing_rates(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
@@ -138,10 +146,17 @@ def threshold_firing_rates(
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
+
 
     fr = FiringRate(metric_data=md)
     threshold_sorting = fr.threshold_metric(threshold, threshold_sign, epoch, save_as_property)
@@ -155,7 +170,8 @@ def threshold_presence_ratios(
     epoch=0,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the presence ratios in the sorted dataset with the given sign and value.
@@ -184,10 +200,10 @@ def threshold_presence_ratios(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
@@ -206,9 +222,15 @@ def threshold_presence_ratios(
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     pr = PresenceRatio(metric_data=md)
@@ -224,7 +246,8 @@ def threshold_isi_violations(
     min_isi=0.000166,
     sampling_frequency=None,
     metric_scope_params=get_metric_scope_params(),
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the isi violations in the sorted dataset with the given sign and value.
@@ -257,10 +280,10 @@ def threshold_isi_violations(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
@@ -279,9 +302,15 @@ def threshold_isi_violations(
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=sampling_frequency,
+        recording=None,
+        apply_filter=False,
+        freq_min=300.0,
+        freq_max=6000.0,
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose,
     )
 
     iv = ISIViolation(metric_data=md)
@@ -297,9 +326,10 @@ def threshold_amplitude_cutoffs(
     recording_params=get_recording_params(),
     amplitude_params=get_amplitude_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the amplitude cutoffs in the sorted dataset with the given sign and value.
@@ -309,7 +339,7 @@ def threshold_amplitude_cutoffs(
     sorting: SortingExtractor
         The sorting result to be evaluated.
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
     threshold: int or float
         The threshold for the given metric.
     threshold_sign: str
@@ -339,7 +369,7 @@ def threshold_amplitude_cutoffs(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-    quality_metric_params: dict
+    metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
             unit_ids: list
                 List of unit ids to compute metric for. If not specified, all units are used
@@ -347,24 +377,34 @@ def threshold_amplitude_cutoffs(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
     seed: int
         Random seed for reproducibility
     save_as_property: bool
         If True, the metric is saved as sorting property
+    verbose: bool
+        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   amplitude_params=amplitude_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ap_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            amplitude_params=amplitude_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -372,13 +412,16 @@ def threshold_amplitude_cutoffs(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
     md.compute_amplitudes(
         amp_method=ap_dict["amp_method"],
         amp_peak=ap_dict["amp_peak"],
         amp_frames_before=ap_dict["amp_frames_before"],
         amp_frames_after=ap_dict["amp_frames_after"],
-        save_features_props=save_features_props,
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
     ac = AmplitudeCutoff(metric_data=md)
@@ -398,10 +441,10 @@ def threshold_snrs(
     max_channel_peak="both", 
     recording_params=get_recording_params(),
     metric_scope_params=get_metric_scope_params(),
-    recompute_info=True,
-    save_features_props=True,
+    feature_params=get_feature_params(),
     save_as_property=True,
     seed=None,
+    verbose=False
 ):
     """
     Computes and thresholds the snrs in the sorted dataset with the given sign and value.
@@ -412,7 +455,7 @@ def threshold_snrs(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -473,11 +516,17 @@ def threshold_snrs(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
     recompute_info: bool
             If True, waveforms are recomputed
-
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -485,18 +534,23 @@ def threshold_snrs(
     seed: int
         Random seed for reproducibility
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                          metric_scope_params=metric_scope_params)
+    rp_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                   metric_scope_params=metric_scope_params,
+                                                   feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -504,12 +558,13 @@ def threshold_snrs(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     snr = SNR(metric_data=md)
     threshold_sorting = snr.threshold_metric(threshold, threshold_sign, epoch, snr_mode, snr_noise_duration, 
                                              max_spikes_per_unit_for_snr, template_mode, max_channel_peak, 
-                                             save_features_props, recompute_info, seed, save_as_property)
+                                             fp_dict['save_features_props'], fp_dict['recompute_info'], seed, save_as_property)
     return threshold_sorting
 
 def threshold_silhouette_scores(
@@ -522,9 +577,10 @@ def threshold_silhouette_scores(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the silhouette scores in the sorted dataset with the given sign and value.
@@ -535,7 +591,7 @@ def threshold_silhouette_scores(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -584,8 +640,14 @@ def threshold_silhouette_scores(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -596,19 +658,24 @@ def threshold_silhouette_scores(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
-    metric_data = MetricData(
+    md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -616,20 +683,23 @@ def threshold_silhouette_scores(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
-    metric_data.compute_pca_scores(
+
+    md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 
-    silhouette_score = SilhouetteScore(metric_data=metric_data)
+    silhouette_score = SilhouetteScore(metric_data=md)
     threshold_sorting = silhouette_score.threshold_metric(
         threshold, threshold_sign, epoch, max_spikes_for_silhouette, seed, save_as_property)
     return threshold_sorting
@@ -646,9 +716,10 @@ def threshold_d_primes(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the d primes in the sorted dataset with the given sign and value.
@@ -659,7 +730,7 @@ def threshold_d_primes(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -702,6 +773,15 @@ def threshold_d_primes(
             max_spikes_for_pca: int
                 The maximum number of spikes to use to compute PCA.
 
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+
     metric_scope_params: dict
         This dictionary should contain any subset of the following parameters:
             unit_ids: list
@@ -710,9 +790,6 @@ def threshold_d_primes(
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
-
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -723,19 +800,24 @@ def threshold_d_primes(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -743,16 +825,19 @@ def threshold_d_primes(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
+
 
     md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 
@@ -773,9 +858,10 @@ def threshold_l_ratios(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the l ratios in the sorted dataset with the given sign and value.
@@ -786,7 +872,7 @@ def threshold_l_ratios(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -838,8 +924,14 @@ def threshold_l_ratios(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -850,19 +942,24 @@ def threshold_l_ratios(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -870,16 +967,19 @@ def threshold_l_ratios(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
+
 
     md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 
@@ -899,9 +999,11 @@ def threshold_isolation_distances(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
+    feature_params=get_feature_params(),
     save_features_props=False,
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the isolation distances in the sorted dataset with the given sign and value.
@@ -912,7 +1014,7 @@ def threshold_isolation_distances(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -964,8 +1066,14 @@ def threshold_isolation_distances(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -976,19 +1084,24 @@ def threshold_isolation_distances(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -996,16 +1109,19 @@ def threshold_isolation_distances(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
+
 
     md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 
@@ -1029,9 +1145,10 @@ def threshold_nn_metrics(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the specified nearest neighbor metric for the sorted dataset with the given sign and value.
@@ -1042,7 +1159,7 @@ def threshold_nn_metrics(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -1103,8 +1220,14 @@ def threshold_nn_metrics(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -1115,19 +1238,24 @@ def threshold_nn_metrics(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -1135,6 +1263,7 @@ def threshold_nn_metrics(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
 
     md.compute_pca_scores(
@@ -1142,9 +1271,10 @@ def threshold_nn_metrics(
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 
@@ -1165,9 +1295,10 @@ def threshold_drift_metrics(
     recording_params=get_recording_params(),
     pca_scores_params=get_pca_scores_params(),
     metric_scope_params=get_metric_scope_params(),
-    save_features_props=False,
+    feature_params=get_feature_params(),
     seed=None,
-    save_as_property=True
+    save_as_property=True,
+    verbose=False
 ):
     """
     Computes and thresholds the specified drift metric for the sorted dataset with the given sign and value.
@@ -1178,7 +1309,7 @@ def threshold_drift_metrics(
         The sorting result to be evaluated.
 
     recording: RecordingExtractor
-        The given recording extractor from which to extract amplitudes
+        The given recording extractor
 
     threshold: int or float
         The threshold for the given metric.
@@ -1233,8 +1364,14 @@ def threshold_drift_metrics(
             epoch_names: list
                 A list of strings for the names of the given epochs.
 
-    save_features_props: bool
-        If true, it will save amplitudes in the sorting extractor.
+    feature_params: dict
+        This dictionary should contain any subset of the following parameters:
+            save_features_props: bool
+                If true, it will save features in the sorting extractor.
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
 
     save_as_property: bool
         If True, the metric is saved as sorting property
@@ -1245,19 +1382,24 @@ def threshold_drift_metrics(
     save_as_property: bool
         If True, the metric is saved as sorting property
 
+    verbose: bool
+        If True, will be verbose in metric computation.
+
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, ms_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
-                                                   metric_scope_params=metric_scope_params)
+    rp_dict, ps_dict, ms_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+                                                            pca_scores_params=pca_scores_params, 
+                                                            metric_scope_params=metric_scope_params,
+                                                            feature_params=feature_params)
 
     if ms_dict["unit_ids"] is None:
         ms_dict["unit_ids"] = sorting.get_unit_ids()
 
     md = MetricData(
         sorting=sorting,
+        sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
         freq_min=rp_dict["freq_min"],
@@ -1265,16 +1407,19 @@ def threshold_drift_metrics(
         unit_ids=ms_dict["unit_ids"],
         epoch_tuples=ms_dict["epoch_tuples"],
         epoch_names=ms_dict["epoch_names"],
+        verbose=verbose
     )
+
 
     md.compute_pca_scores(
         n_comp=ps_dict["n_comp"],
         ms_before=ps_dict["ms_before"],
         ms_after=ps_dict["ms_after"],
         dtype=ps_dict["dtype"],
-        max_spikes_per_unit=ps_dict["max_spikes_per_unit"],
+        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
         max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
-        save_features_props=save_features_props,
+        save_features_props=fp_dict['save_features_props'],
+        recompute_info=fp_dict['recompute_info'],
         seed=seed,
     )
 

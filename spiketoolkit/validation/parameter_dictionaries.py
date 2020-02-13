@@ -1,7 +1,7 @@
 
 recording_params_dict = {'apply_filter':True,
                          'freq_min':300.0,
-                         'freq_max':6000.0,}
+                         'freq_max':6000.0}
 keys = list(recording_params_dict.keys())
 types = [type(recording_params_dict[key]) for key in keys]
 values = [recording_params_dict[key] for key in keys]
@@ -9,24 +9,34 @@ recording_full_dict = [{'name': keys[0], 'type': str(types[0].__name__), 'value'
                        {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1], 'title': "High-pass frequency"},
                        {'name': keys[2], 'type': str(types[2].__name__), 'value': values[2], 'default': values[2], 'title': "Low-pass frequency"}]
 
+feature_params_dict = {'max_spikes_per_unit':300,
+                       'recompute_info':False,
+                       'save_features_props':True,}
+
+
 amplitude_params_dict = {'amp_method':"absolute",
                          'amp_peak':"both",
                          'amp_frames_before':3,
-                         'amp_frames_after':3}
-keys = list(amplitude_params_dict.keys())
-types = [type(amplitude_params_dict[key]) for key in keys]
-values = [amplitude_params_dict[key] for key in keys]
-amplitude_full_dict = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0], 'title': "If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned. If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes."},
-                       {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1], 'title': "If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)"},
-                       {'name': keys[2], 'type': str(types[2].__name__), 'value': values[2], 'default': values[2], 'title': "Frames before peak to compute amplitude"},
-                       {'name': keys[3], 'type': str(types[3].__name__), 'value': values[3], 'default': values[3], 'title': "Frames after peak to compute amplitude"}]
+                         'amp_frames_after':3,
+                         'max_spikes_per_unit':300,
+                         'recompute_info':False,
+                         'save_features_props':True,}
+# keys = list(amplitude_params_dict.keys())
+# types = [type(amplitude_params_dict[key]) for key in keys]
+# values = [amplitude_params_dict[key] for key in keys]
+# amplitude_full_dict = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0], 'title': "If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned. If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes."},
+#                        {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1], 'title': "If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)"},
+#                        {'name': keys[2], 'type': str(types[2].__name__), 'value': values[2], 'default': values[2], 'title': "Frames before peak to compute amplitude"},
+#                        {'name': keys[3], 'type': str(types[3].__name__), 'value': values[3], 'default': values[3], 'title': "Frames after peak to compute amplitude"}]
 
 pca_scores_params_dict = {'n_comp':3,
                           'ms_before':1.0,
                           'ms_after':2.0,
                           'dtype':None,
                           'max_spikes_per_unit':300,
-                          'max_spikes_for_pca':1e5}
+                          'max_spikes_for_pca':1e5,
+                          'recompute_info':False,
+                          'save_features_props':True,}
 
 metric_scope_params_dict = {'unit_ids':None,
                             'epoch_tuples':None,
@@ -44,8 +54,12 @@ def get_pca_scores_params():
 def get_metric_scope_params():
     return metric_scope_params_dict.copy()
 
+def get_feature_params():
+    return feature_params_dict.copy()
+
 def update_param_dicts(recording_params=None, amplitude_params=None, 
-                       pca_scores_params=None, metric_scope_params=None):
+                       pca_scores_params=None, metric_scope_params=None,
+                       feature_params=None):
 
     param_dicts = []
     if recording_params is not None:
@@ -83,5 +97,14 @@ def update_param_dicts(recording_params=None, amplitude_params=None,
         else:
             metric_scope_params = dict(get_metric_scope_params(), **metric_scope_params)
             param_dicts.append(metric_scope_params)
+
+    if feature_params is not None:        
+        if not set(feature_params.keys()).issubset(
+            set(get_feature_params().keys())
+        ):
+            raise ValueError("Improper parameter entered into the metric scope param dict.")
+        else:
+            feature_params = dict(get_feature_params(), **feature_params)
+            param_dicts.append(feature_params)
 
     return param_dicts
