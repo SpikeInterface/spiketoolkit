@@ -27,6 +27,7 @@ from .quality_metric_classes.presence_ratio import PresenceRatio
 from .quality_metric_classes.isi_violation import ISIViolation
 from .quality_metric_classes.snr import SNR
 from .quality_metric_classes.nearest_neighbor import NearestNeighbor
+from .quality_metric_classes.drift_metric import DriftMetric
 
 
 from .quality_metric_classes.validation_tools import (
