@@ -19,11 +19,11 @@ class QualityMetric(ABC):
 
     #implemented by quality metric subclasses
     @abstractmethod
-    def compute_metric(self):
+    def compute_metric(self, save_as_property):
         pass
 
     @abstractmethod
-    def threshold_metric(self, threshold, threshold_sign, epoch):
+    def threshold_metric(self, threshold, threshold_sign, save_as_property):
         '''
         Parameters
         ----------
@@ -34,8 +34,6 @@ class QualityMetric(ABC):
             If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
             If 'greater', will threshold any metric greater than the given threshold.
             If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-        epoch:
-            The threshold will be applied to the specified epoch. 
         Returns
         -------
         tc: ThresholdCurator

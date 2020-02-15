@@ -6,20 +6,31 @@ from spiketoolkit.curation import (
     threshold_silhouette_scores,
     threshold_d_primes,
     threshold_firing_rates,
-    # threshold_isi_violations,
+    threshold_isi_violations,
     threshold_num_spikes,
-    # threshold_presence_ratio,
+    threshold_presence_ratios,
     threshold_l_ratios,
     threshold_amplitude_cutoffs,
+    threshold_isolation_distances,
+    threshold_nn_metrics,
+    threshold_drift_metrics,
 )
+
+
 from spiketoolkit.validation import (
-    compute_snrs,
-    compute_silhouette_scores,
-    compute_d_primes,
-    compute_l_ratios,
-    compute_firing_rates,
     compute_num_spikes,
+    compute_firing_rates,
+    compute_presence_ratios,
+    compute_isi_violations,
     compute_amplitude_cutoffs,
+    compute_snrs,
+    compute_drift_metrics,
+    compute_silhouette_scores,
+    compute_isolation_distances,
+    compute_l_ratios,
+    compute_d_primes,
+    compute_nn_metrics,
+    compute_metrics,
 )
 
 
@@ -122,3 +133,6 @@ if __name__ == "__main__":
     test_thresh_silhouettes()
     test_thresh_snrs()
     test_thresh_frs()
+    test_thresh_amplitude_cutoffs()
+    test_thresh_silhouettes()
+    test_thresh_l_ratios()

@@ -8,9 +8,8 @@ from spikeextractors import RecordingExtractor, SortingExtractor
 import spikemetrics.metrics as metrics
 from spiketoolkit.preprocessing.bandpass_filter import bandpass_filter
 from spikemetrics.utils import Epoch, printProgressBar
-from spiketoolkit.curation.thresholdcurator import ThresholdCurator
 
-from .validation_tools import (
+from .utils.validation_tools import (
     get_all_metric_data,
     get_amplitude_metric_data,
     get_pca_metric_data,

@@ -130,8 +130,6 @@ def get_amplitude_metric_data(recording, sorting, amp_method, amp_peak, amp_fram
         If True, will always re-extract waveforms.
     save_features_props: bool
         If True, save all features and properties in the sorting extractor.
-    verbose: bool
-        If True output is verbose
     seed: int
             Random seed for reproducibility
 

@@ -1,9 +1,29 @@
 from .quality_metric import QualityMetric
 import numpy as np
 import spikemetrics.metrics as metrics
-from spiketoolkit.curation.thresholdcurator import ThresholdCurator
+from .utils.thresholdcurator import ThresholdCurator
+from collections import OrderedDict
+
+def make_curator_gui_params(params):
+    keys = list(params.keys())
+    types = [type(params[key]) for key in keys]
+    values = [params[key] for key in keys]
+    gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0], 'title': "If True, will be verbose in metric computation."}]
+    curator_gui_params =  [{'name': 'threshold', 'type': 'float', 'title': "The threshold for the given metric."},
+                           {'name': 'threshold_sign', 'type': 'str',
+                            'title': "If 'less', will threshold any metric less than the given threshold. "
+                            "If 'less_or_equal', will threshold any metric less than or equal to the given threshold. "
+                            "If 'greater', will threshold any metric greater than the given threshold. "
+                            "If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold."}]
+    gui_params = curator_gui_params + gui_params
+    return gui_params
 
 class PresenceRatio(QualityMetric):
+    installed = True  # check at class level if installed or not
+    installation_mesg = ""  # err
+    params = OrderedDict([('verbose',False)])
+    curator_name = "ThresholdPresenceRatio"
+    curator_gui_params = make_curator_gui_params(params)
     def __init__(
         self,
         metric_data,
@@ -31,9 +51,8 @@ class PresenceRatio(QualityMetric):
             self.save_as_property(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
         return presence_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, epoch, save_as_property):
-        assert (epoch < len(self._metric_data.get_epochs())), "Invalid epoch specified"
-        presence_ratios_epochs = self.compute_metric(save_as_property=save_as_property)[epoch]
+    def threshold_metric(self, threshold, threshold_sign, save_as_property):
+        presence_ratios_epochs = self.compute_metric(save_as_property=save_as_property)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=presence_ratios_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

@@ -71,7 +71,7 @@ class TestCuration(unittest.TestCase):
         self.SX.set_unit_spike_features(2, 'bad_features', np.repeat(1, len(self.SX.get_unit_spike_train(2))))
         self.SX.set_unit_spike_features(3, 'f_int', range(0, len(self.SX.get_unit_spike_train(3))))
 
-        CSX = st.curation.CurationSortingExtractor(
+        CSX = st.validation.quality_metric_classes.utils.curationsortingextractor.CurationSortingExtractor(
             parent_sorting=self.SX
         )
         CSX.merge_units(unit_ids=[1, 2])
