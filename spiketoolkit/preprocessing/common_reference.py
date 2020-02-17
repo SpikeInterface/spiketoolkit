@@ -12,12 +12,14 @@ class CommonReferenceRecording(RecordingExtractor):
         The CMR, CAR, or referencing with respect to single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple tetrodes."},
         {'name': 'ref_channels', 'type': 'int_list', 'value': None, 'default': None, 'title': "If no 'groups' are specified, all channels are referenced to 'ref_channels'. \
          If 'groups' is provided, then a list of channels to be applied to each group is expected. If 'single' reference, a list of one channel is expected."},
+        {'name': 'dtype', 'type': 'dtype', 'value': None, 'default': None,
+         'title': "Traces dtype. If None, dtype is maintained."},
         {'name': 'verbose', 'type': 'bool', 'value': False, 'default': False,
          'title': "If True, then the function will be verbose"}
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, reference='median', groups=None, ref_channels=None, verbose=False):
+    def __init__(self, recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         if reference != 'median' and reference != 'average' and reference != 'single':
@@ -37,6 +39,10 @@ class CommonReferenceRecording(RecordingExtractor):
                     assert isinstance(ref_channels, (int, np.integer)), "'ref_channels' must be int"
                     ref_channels = [ref_channels]
         self._ref_channel = ref_channels
+        if dtype is None:
+            self._dtype = recording.get_dtype()
+        else:
+            self._dtype = dtype
         self.verbose = verbose
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
@@ -57,36 +63,39 @@ class CommonReferenceRecording(RecordingExtractor):
             end_frame = self.get_num_frames()
         if channel_ids is None:
             channel_ids = self.get_channel_ids()
+        if isinstance(channel_ids, (int, np.integer)):
+            channel_ids = [channel_ids]
         if self._ref == 'median':
             if self._groups is None:
                 if self.verbose:
                     print('Common median reference using all channels')
-                return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
-                       - np.median(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                              end_frame=end_frame), axis=0, keepdims=True)
+                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
+                traces = traces - np.median(traces, axis=0, keepdims=True)
+                return traces[channel_ids].astype(self._dtype)
             else:
                 new_groups = []
                 for g in self._groups:
                     new_chans = []
                     for chan in g:
-                        if chan in channel_ids:
+                        if chan in self._recording.get_channel_ids():
                             new_chans.append(chan)
                     new_groups.append(new_chans)
                 if self.verbose:
                     print('Common median in groups: ', new_groups)
-                return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                      start_frame=start_frame, end_frame=end_frame)
-                                           - np.median(self._recording.get_traces(channel_ids=split_group,
-                                                                                  start_frame=start_frame,
-                                                                                  end_frame=end_frame),
-                                                       axis=0, keepdims=True) for split_group in new_groups]))
+                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                                                                        start_frame=start_frame, end_frame=end_frame)
+                                             - np.median(self._recording.get_traces(channel_ids=split_group,
+                                                                                    start_frame=start_frame,
+                                                                                    end_frame=end_frame),
+                                                         axis=0, keepdims=True) for split_group in new_groups]))
+                return traces[channel_ids].astype(self._dtype)
         elif self._ref == 'average':
             if self.verbose:
                 print('Common average reference using all channels')
             if self._groups is None:
-                return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
-                       - np.mean(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                            end_frame=end_frame), axis=0, keepdims=True)
+                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
+                traces = traces - np.mean(traces, axis=0, keepdims=True)
+                return traces[channel_ids].astype(self._dtype)
             else:
                 new_groups = []
                 for g in self._groups:
@@ -97,20 +106,22 @@ class CommonReferenceRecording(RecordingExtractor):
                     new_groups.append(new_chans)
                 if self.verbose:
                     print('Common average in groups: ', new_groups)
-                return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                      start_frame=start_frame, end_frame=end_frame)
-                                           - np.mean(self._recording.get_traces(channel_ids=split_group,
-                                                                                start_frame=start_frame,
-                                                                                end_frame=end_frame),
-                                                     axis=0, keepdims=True) for split_group in new_groups]))
-
+                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                                                                        start_frame=start_frame, end_frame=end_frame)
+                                             - np.mean(self._recording.get_traces(channel_ids=split_group,
+                                                                                  start_frame=start_frame,
+                                                                                  end_frame=end_frame),
+                                                       axis=0, keepdims=True) for split_group in new_groups]))
+                return traces[channel_ids].astype(self._dtype)
         elif self._ref == 'single':
             if self._groups is None:
                 if self.verbose:
                     print('Reference to channel', self._ref_channel)
-                return self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame) \
-                       - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
-                                                    end_frame=end_frame)
+                traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
+                                                    end_frame=end_frame) \
+                         - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
+                                                      end_frame=end_frame)
+                return traces.astype(self._dtype)
             else:
                 new_groups = []
                 for g in self._groups:
@@ -121,14 +132,15 @@ class CommonReferenceRecording(RecordingExtractor):
                     new_groups.append(new_chans)
                 if self.verbose:
                     print('Reference', new_groups, 'to channels', self._ref_channel)
-                return np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
                                                                       start_frame=start_frame, end_frame=end_frame)
                                            - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
                                                                         end_frame=end_frame)
                                            for (split_group, ref) in zip(new_groups, self._ref_channel)]))
+                return traces.astype(self._dtype)
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, verbose=False):
+def common_reference(recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
     '''
     Re-references the recording extractor traces.
 
@@ -151,6 +163,8 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         If no 'groups' are specified, all channels are referenced to 'ref_channels'. If 'groups' is provided, then a
         list of channels to be applied to each group is expected. If 'single' reference, a list of one channel  or an
         int is expected.
+    dtype: str
+        dtype of the returned traces. If None, dtype is maintained
     verbose: bool
         If True, output is verbose
 
@@ -160,5 +174,5 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         The re-referenced recording extractor object
     '''
     return CommonReferenceRecording(
-        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels, verbose=verbose
+        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels, dtype=dtype, verbose=verbose
     )

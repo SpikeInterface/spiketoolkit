@@ -87,18 +87,22 @@ def test_common_reference():
     rec_cmr = common_reference(rec, reference='median')
     rec_car = common_reference(rec, reference='average')
     rec_sin = common_reference(rec, reference='single', ref_channels=0)
+    rec_cmr_int16 = common_reference(rec, dtype='int16')
 
     traces = rec.get_traces()
     assert np.allclose(traces, rec_cmr.get_traces() + np.median(traces, axis=0, keepdims=True))
     assert np.allclose(traces, rec_car.get_traces() + np.mean(traces, axis=0, keepdims=True))
     assert not np.all(rec_sin.get_traces()[0])
     assert np.allclose(rec_sin.get_traces()[1], traces[1] - traces[0])
+    assert 'int16' in str(rec_cmr_int16.get_dtype())
 
     # test groups
     groups = [[0, 1], [2, 3]]
     rec_cmr_g = common_reference(rec, reference='median', groups=groups)
     rec_car_g = common_reference(rec, reference='average', groups=groups)
     rec_sin_g = common_reference(rec, reference='single', ref_channels=[0, 2], groups=groups)
+    rec_cmr_int16_g = common_reference(rec, groups=groups, dtype='int16')
+
 
     traces = rec.get_traces()
     assert np.allclose(traces[:2], rec_cmr_g.get_traces()[:2] + np.median(traces[:2], axis=0, keepdims=True))
@@ -109,6 +113,7 @@ def test_common_reference():
     assert np.allclose(rec_sin_g.get_traces()[1], traces[1] - traces[0])
     assert not np.all(rec_sin_g.get_traces()[2])
     assert np.allclose(rec_sin_g.get_traces()[3], traces[3] - traces[2])
+    assert 'int16' in str(rec_cmr_int16_g.get_dtype())
 
 
 @pytest.mark.notimplemented
