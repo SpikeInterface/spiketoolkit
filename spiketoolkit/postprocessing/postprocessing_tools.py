@@ -9,7 +9,7 @@ import csv
 
 
 def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None, channel_ids=None,
-                       ms_before=3., ms_after=3., dtype=None, max_spikes_per_unit=np.inf,
+                       ms_before=3., ms_after=3., dtype=None, max_spikes_per_unit=300,
                        save_as_features=True, compute_property_from_recording=False, verbose=False,
                        seed=0, return_idxs=False):
     '''
@@ -203,7 +203,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
 
 
 def get_unit_templates(recording, sorting, unit_ids=None, mode='median', grouping_property=None, save_as_property=True,
-                       ms_before=3., ms_after=3., dtype=None, max_spikes_per_unit=np.inf, save_wf_as_features=True,
+                       ms_before=3., ms_after=3., dtype=None, max_spikes_per_unit=300, save_wf_as_features=True,
                        compute_property_from_recording=False, verbose=False, recompute_waveforms=False, seed=0):
     '''
     Computes the spike templates from a recording and sorting extractor. If waveforms are not found as features,
@@ -288,7 +288,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, mode='median', groupin
 
 def get_unit_max_channels(recording, sorting, unit_ids=None, max_channels=1, peak='both', mode='median',
                           grouping_property=None, save_as_property=True, ms_before=3., ms_after=3., dtype=None,
-                          max_spikes_per_unit=np.inf, compute_property_from_recording=False, verbose=False,
+                          max_spikes_per_unit=300, compute_property_from_recording=False, verbose=False,
                           recompute_templates=False, seed=0):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
@@ -498,7 +498,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
 
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_electrode=False, grouping_property=None,
                             ms_before=3., ms_after=3., dtype=None,
-                            max_spikes_per_unit=np.inf, max_spikes_for_pca=np.inf,
+                            max_spikes_per_unit=300, max_spikes_for_pca=10000,
                             save_as_features=False, save_waveforms_as_features=False,
                             compute_property_from_recording=False,
                             whiten=False, verbose=False, seed=0, return_idxs=False):
@@ -533,7 +533,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     max_spikes_per_unit: int
         The maximum number of spikes to extract per unit.
     max_spikes_for_pca: int
-        The maximum number of spikes to use to compute PCA (default is np.inf)
+        The maximum number of spikes to use to compute PCA
     compute_property_from_recording: bool
         If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding propery of
         the recording extractor channel on which the average waveform is the largest
@@ -648,7 +648,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
 
 def set_unit_properties_by_max_channel_properties(recording, sorting, property, unit_ids=None, peak='both',
                                                   mode='median', ms_before=3., ms_after=3., dtype=None,
-                                                  max_spikes_per_unit=np.inf, verbose=False, seed=0):
+                                                  max_spikes_per_unit=300, verbose=False, seed=0):
     '''
     Extracts 'property' from recording channel with largest peak for each unit and saves it as unit property.
 
@@ -715,8 +715,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensions=None,
                   grouping_property=None, ms_before=1., ms_after=2., dtype=None, amp_method='absolute', amp_peak='both',
                   amp_frames_before=3, amp_frames_after=3, max_spikes_for_pca=100000, max_channels_per_template=16,
-                  recompute_info=True, save_features_props=False, verbose=False,
-                  seed=0):
+                  recompute_info=True, save_features_props=False, verbose=False, seed=0):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
