@@ -53,7 +53,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     waveforms: list
         List of np.array (n_spikes, n_channels, n_timepoints) containing extracted waveforms for each unit
     indexes: list
-        List of spike indeces for which waveforms are computed. Returned if 'return_idxs' is True
+        List of spike indices for which waveforms are computed. Returned if 'return_idxs' is True
     '''
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
@@ -434,7 +434,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
     amplitudes: list
         List of int containing extracted amplitudes for each unit
     indexes: list
-        List of spike indeces for which amplitudes are computed. Returned if 'return_idxs' is True
+        List of spike indices for which amplitudes are computed. Returned if 'return_idxs' is True
     '''
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
@@ -553,7 +553,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         If 'by_electrode' is False, the array has shape (n_spikes, n_comp)
         If 'by_electrode' is True, the array has shape (n_spikes, n_channels, n_comp)
     indexes: list
-        List of spike indeces for which pca scores are computed. Returned if 'return_idxs' is True
+        List of spike indices for which pca scores are computed. Returned if 'return_idxs' is True
     '''
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
@@ -565,7 +565,6 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     # concatenate all waveforms
     all_waveforms = np.array([])
     nspikes = []
-    idx_not_none = None
     if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
         if verbose:
             print("Using 'waveforms' features")
@@ -628,14 +627,14 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
 
     if save_as_features:
         for i, unit_id in enumerate(sorting.get_unit_ids()):
-            if len(pca_scores_list[i]) < len(sorting.get_unit_spike_train(unit_id)):
-                assert idx_not_none is not None
+            if len(ind_list[i]) < len(sorting.get_unit_spike_train(unit_id)):
+                assert ind_list[i] is not None, 'Indices are not computed for this unit'
                 if 'pca_scores' not in sorting.get_unit_spike_feature_names(unit_id):
                     features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                 else:
                     features = np.array(sorting.get_unit_spike_features(unit_id, 'pca_scores'))
-                for i, ind in enumerate(idx_not_none):
-                    features[ind] = pca_scores_list[i]
+                for idx, ind in enumerate(ind_list[i]):
+                    features[ind] = pca_scores_list[i][idx]
             else:
                 features = pca_scores_list[i]
             sorting.set_unit_spike_features(unit_id, 'pca_scores', features)
