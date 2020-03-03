@@ -52,7 +52,7 @@ class MetricData:
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
         epoch_tuples: list
-            A list of tuples with a start and end time for each epoch
+            A list of tuples with a start and end time for each epoch (in seconds)
         epoch_names: list
             A list of strings for the names of the given epochs.
         verbose: bool

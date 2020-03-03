@@ -19,7 +19,7 @@ def get_spike_times_metrics_data(sorting, sampling_frequency):
     Returns
     -------
     spike_times: numpy.ndarray (num_spikes x 0)
-        Spike times in frames
+        Spike times in seconds
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     '''
@@ -72,7 +72,7 @@ def get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, 
     Returns
     -------
     spike_times: numpy.ndarray (num_spikes x 0)
-        Spike times in frames
+        Spike times in seconds
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     pc_features: numpy.ndarray (num_spikes x num_pcs x num_channels)
@@ -136,7 +136,7 @@ def get_amplitude_metric_data(recording, sorting, amp_method, amp_peak, amp_fram
     Returns
     -------
     spike_times: numpy.ndarray (num_spikes x 0)
-        Spike times in frames
+        Spike times in seconds
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     amplitudes: numpy.ndarray (num_spikes x 0)
@@ -206,11 +206,11 @@ def get_all_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, 
     Returns
     -------
     spike_times: numpy.ndarray (num_spikes x 0)
-        Spike times in frames
+        Spike times in seconds
     spike_times:amps: numpy.ndarray (num_spikes x 0)
-        Spike times in frames for amplitudes
+        Spike times in seconds for amplitudes
     spike_times_pca: numpy.ndarray (num_spikes x 0)
-        Spike times in frames for pca
+        Spike times in seconds for pca
     spike_clusters: numpy.ndarray (num_spikes x 0)
         Cluster IDs for each spike time
     spike_clusters_amps: numpy.ndarray (num_spikes x 0)
