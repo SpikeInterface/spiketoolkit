@@ -1,6 +1,4 @@
 from .curationsortingextractor import CurationSortingExtractor
-import spiketoolkit as st
-
 
 class ThresholdCurator(CurationSortingExtractor):
     def __init__(self, sorting, metrics_epoch):
