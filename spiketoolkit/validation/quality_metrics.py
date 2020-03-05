@@ -1558,7 +1558,7 @@ def compute_metrics(
             metrics_epochs.append(nn_miss_rates_epochs)
             metrics_dict['nn_miss_rate'] = nn_miss_rates_epochs
         
-        if return_dict:
-            return metrics_dict
-        else:
-            return metrics_epochs
+    if return_dict:
+        return metrics_dict
+    else:
+        return metrics_epochs
