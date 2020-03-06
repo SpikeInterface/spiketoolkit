@@ -977,7 +977,7 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, s
     return spikes, event_indices
 
 
-def _get_spike_times_clusters(sorting):
+def _get_spike_times_clusters(sorting, memmap=True):
     if not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
@@ -1002,88 +1002,178 @@ def _get_spike_times_clusters(sorting):
 
 def _get_amp_metric_data(recording, sorting, amp_method, amp_peak,
                          amp_frames_before, amp_frames_after, max_spikes_per_unit, recompute_info,
-                         save_features_props, seed):
+                         save_features_props, seed, memmap=True):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='amplitudes')
+
+    if memmap:
+        if sorting.get_tmp_folder() is None:
+            tmp_folder = Path(tempfile.mkdtemp())
+            sorting.set_tmp_folder(tmp_folder)
+        else:
+            tmp_folder = sorting.get_tmp_folder()
+
+    dtype = recording.get_dtype()
 
     # amplitudes.npy
     amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
                                                     save_as_features=save_features_props, peak=amp_peak,
                                                     max_spikes_per_unit=max_spikes_per_unit,
                                                     frames_before=amp_frames_before, frames_after=amp_frames_after,
-                                                    seed=seed, return_idxs=True)
+                                                    seed=seed, memmap=memmap, return_idxs=True)
 
-    # spike times.npy and spike clusters.npy
-    spike_times = np.array([])
-    spike_clusters = np.array([])
-    amplitudes = np.array([])
+    # compute len of all waveforms (computed for all units)
+    n_spikes = 0
+    n_amps = 0  # n_pca and n_amps are he same (max_spikes_per_unit)
+    for i, (unit_id, amp) in enumerate(zip(sorting.get_unit_ids(), amplitudes_list)):
+        n_spikes += len(sorting.get_unit_spike_train(unit_id))
+        n_amps += len(amp)
 
+    if memmap:
+        spike_times = np.memmap(tmp_folder / 'spike_times.raw', dtype=np.uint64, shape=(n_spikes, 1), mode='w+')
+        spike_clusters = np.memmap(tmp_folder / 'spike_clusters.raw', dtype=dtype, shape=(n_spikes, 1), mode='w+')
+        spike_times_amps = np.memmap(tmp_folder / 'spike_times_amps.raw', dtype=np.uint64, shape=(n_amps, 1),
+                                     mode='w+')
+        spike_clusters_amps = np.memmap(tmp_folder / 'spike_clusters_amps.raw', dtype=dtype, shape=(n_amps, 1),
+                                        mode='w+')
+        amplitudes = np.memmap(tmp_folder / 'amplitudes.raw', dtype=dtype, shape=(n_amps, 1), mode='w+')
+    else:
+        # spike times.npy and spike clusters.npy
+        spike_times = np.zeros((n_spikes, 1), dtype=np.uint64)
+        spike_clusters = np.zeros((n_spikes, 1), dtype=dtype)
+        spike_times_amps = np.zeros((n_amps, 1), dtype=np.uint64)
+        spike_clusters_amps = np.zeros((n_amps, 1), dtype=dtype)
+        amplitudes = np.zeros((n_amps, 1), dtype=dtype)
+
+    i_start_st = 0
+    i_start_amp = 0
     for i_u, id in enumerate(sorting.get_unit_ids()):
         st = sorting.get_unit_spike_train(id)
+        cl = [i_u] * len(st)
         amp = amplitudes_list[i_u]
 
+        # take care of amps and pca computed on subset of spikes
         if len(amp) < len(st):
-            cl = [i_u] * len(amp)
-            spike_times = np.concatenate((spike_times, st[amp_idxs[i_u]]))
+            cl_amp = [i_u] * len(amp)
+            st_amp = st[amp_idxs[i_u]]
         else:
-            cl = [i_u] * len(sorting.get_unit_spike_train(id))
-            spike_times = np.concatenate((spike_times, np.array(st)))
+            cl_amp = [i_u] * len(st)
+            st_amp = st
 
-        spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
-        amplitudes = np.concatenate((amplitudes, amp))
+        # assign
+        spike_times[i_start_st:i_start_st + len(st)] = st[:, np.newaxis]
+        spike_clusters[i_start_st:i_start_st + len(st)] = np.array(cl)[:, np.newaxis]
+        spike_times_amps[i_start_amp:i_start_amp + len(st_amp)] = st_amp[:, np.newaxis]
+        spike_clusters_amps[i_start_amp:i_start_amp + len(st_amp)] = np.array(cl_amp)[:, np.newaxis]
+        amplitudes[i_start_amp:i_start_amp + len(st_amp)] = amp[:, np.newaxis]
+        i_start_st += len(st)
+        i_start_amp += len(st_amp)
 
-    sorting_idxs = np.argsort(spike_times)
-    spike_times = spike_times[sorting_idxs, np.newaxis]
-    spike_clusters = spike_clusters[sorting_idxs, np.newaxis].astype(int)
-    amplitudes = amplitudes[sorting_idxs, np.newaxis]
+    sorting_idxs = np.argsort(spike_times[:, 0])
+    sorting_idxs_amps = np.argsort(spike_times_amps[:, 0])
 
-    return spike_times, spike_clusters, amplitudes
+    if memmap:
+        spike_times[:] = spike_times[sorting_idxs]
+        spike_times_amps[:] = spike_times_amps[sorting_idxs_amps]
+        spike_clusters[:] = spike_clusters[sorting_idxs]
+        spike_clusters_amps[:] = spike_clusters_amps[sorting_idxs_amps]
+        amplitudes[:] = amplitudes[sorting_idxs_amps]
+    else:
+        spike_times = spike_times[sorting_idxs]
+        spike_times_amps = spike_times_amps[sorting_idxs_amps]
+        spike_clusters = spike_clusters[sorting_idxs]
+        spike_clusters_amps = spike_clusters_amps[sorting_idxs_amps]
+        amplitudes = amplitudes[sorting_idxs_amps]
+
+    return spike_times, spike_times_amps, spike_clusters, spike_clusters_amps, amplitudes
 
 
 def _get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, max_spikes_per_unit,
-                         max_spikes_for_pca,
-                         recompute_info, save_features_props, verbose, seed):
+                         max_spikes_for_pca, recompute_info, save_features_props, verbose, seed, memmap=True):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
 
-    pc_scores, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
-                                                  max_spikes_per_unit=max_spikes_per_unit, ms_before=ms_before,
-                                                  ms_after=ms_after, dtype=dtype, save_as_features=save_features_props,
-                                                  max_spikes_for_pca=max_spikes_for_pca, verbose=verbose, seed=seed,
-                                                  return_idxs=True)
+    if memmap:
+        if sorting.get_tmp_folder() is None:
+            tmp_folder = Path(tempfile.mkdtemp())
+            sorting.set_tmp_folder(tmp_folder)
+        else:
+            tmp_folder = sorting.get_tmp_folder()
 
-    # spike times.npy and spike clusters.npy
-    spike_times = np.array([])
-    spike_clusters = np.array([])
-    pc_features = np.array([])
+    pc_list, pca_idxs = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
+                                                max_spikes_per_unit=max_spikes_per_unit, ms_before=ms_before,
+                                                ms_after=ms_after, dtype=dtype, save_as_features=save_features_props,
+                                                max_spikes_for_pca=max_spikes_for_pca, verbose=verbose, seed=seed,
+                                                memmap=memmap, return_idxs=True)
 
+    # compute len of all waveforms (computed for all units)
+    n_spikes = 0
+    n_pca = 0  # n_pca and n_amps are he same (max_spikes_per_unit)
+    for i, (unit_id, pc) in enumerate(zip(sorting.get_unit_ids(), pc_list)):
+        n_spikes += len(sorting.get_unit_spike_train(unit_id))
+        n_pca += len(pc)
+    pc_shape = pc_list[0].shape
+
+    if memmap:
+        spike_times = np.memmap(tmp_folder / 'spike_times.raw', dtype=np.uint64, shape=(n_spikes, 1), mode='w+')
+        spike_clusters = np.memmap(tmp_folder / 'spike_clusters.raw', dtype=dtype, shape=(n_spikes, 1), mode='w+')
+        spike_times_pca = np.memmap(tmp_folder / 'spike_times_pca.raw', dtype=np.uint64, shape=(n_pca, 1),
+                                    mode='w+')
+        spike_clusters_pca = np.memmap(tmp_folder / 'spike_clusters_pca.raw', dtype=dtype, shape=(n_pca, 1),
+                                       mode='w+')
+        pc_features = np.memmap(tmp_folder / 'pc_features.raw', dtype=dtype,
+                                shape=(n_pca, pc_shape[2], pc_shape[1]), mode='w+')
+
+    else:
+        # spike times.npy and spike clusters.npy
+        spike_times = np.zeros((n_spikes, 1), dtype=np.uint64)
+        spike_clusters = np.zeros((n_spikes, 1), dtype=dtype)
+        spike_times_pca = np.zeros((n_pca, 1), dtype=np.uint64)
+        spike_clusters_pca = np.zeros((n_pca, 1), dtype=dtype)
+        pc_features = np.zeros((n_pca, pc_shape[2], pc_shape[1]), dtype=dtype)
+
+    i_start_st = 0
+    i_start_pc = 0
     for i_u, id in enumerate(sorting.get_unit_ids()):
         st = sorting.get_unit_spike_train(id)
-        pc = pc_scores[i_u]
+        cl = [i_u] * len(st)
+        pc = pc_list[i_u]
 
         # take care of amps and pca computed on subset of spikes
         if len(pc) < len(st):
-            cl = [i_u] * len(pc)
-            spike_times = np.concatenate((spike_times, st[pca_idxs[i_u]]))
+            cl_pca = [i_u] * len(pc)
+            st_pca = st[pca_idxs[i_u]]
         else:
-            cl = [i_u] * len(sorting.get_unit_spike_train(id))
-            spike_times = np.concatenate((spike_times, np.array(st)))
+            cl_pca = [i_u] * len(st)
+            st_pca = st
 
-        spike_clusters = np.concatenate((spike_clusters, np.array(cl)))
-        if i_u == 0:
-            pc_features = np.array(pc)
-        else:
-            pc_features = np.vstack((pc_features, np.array(pc)))
+        # assign
+        spike_times[i_start_st:i_start_st + len(st)] = st[:, np.newaxis]
+        spike_clusters[i_start_st:i_start_st + len(st)] = np.array(cl)[:, np.newaxis]
+        spike_times_pca[i_start_pc:i_start_pc + len(st_pca)] = st_pca[:, np.newaxis]
+        spike_clusters_pca[i_start_pc:i_start_pc + len(st_pca)] = np.array(cl_pca)[:, np.newaxis]
+        pc_features[i_start_pc:i_start_pc + len(st_pca)] = pc.swapaxes(1, 2)
+        i_start_st += len(st)
+        i_start_pc += len(st_pca)
 
-    sorting_idxs = np.argsort(spike_times)
-    spike_times = spike_times[sorting_idxs, np.newaxis]
-    spike_clusters = spike_clusters[sorting_idxs, np.newaxis].astype(int)
+    sorting_idxs = np.argsort(spike_times[:, 0])
+    sorting_idxs_pca = np.argsort(spike_times_pca[:, 0])
 
-    # pc_features (nSpikes, nPC, nPCFeatures)
-    pc_features = pc_features[sorting_idxs].swapaxes(1, 2)
+    if memmap:
+        spike_times[:] = spike_times[sorting_idxs]
+        spike_times_pca[:] = spike_times_pca[sorting_idxs_pca]
+        spike_clusters[:] = spike_clusters[sorting_idxs]
+        spike_clusters_pca[:] = spike_clusters_pca[sorting_idxs_pca]
+        pc_features[:] = pc_features[sorting_idxs_pca]
+    else:
+        spike_times = spike_times[sorting_idxs]
+        spike_times_pca = spike_times_pca[sorting_idxs_pca]
+        spike_clusters = spike_clusters[sorting_idxs]
+        spike_clusters_pca = spike_clusters_pca[sorting_idxs_pca]
+        pc_features = pc_features[sorting_idxs_pca]
     pc_feature_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
-    return spike_times, spike_clusters, pc_features, pc_feature_ind
+    return spike_times, spike_times_pca, spike_clusters, spike_clusters_pca, pc_features, pc_feature_ind
 
 
 def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method, amp_peak,
@@ -1125,7 +1215,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         spike_clusters = np.memmap(tmp_folder / 'spike_clusters.raw', dtype=dtype, shape=(n_spikes, 1), mode='w+')
         spike_times_pca = np.memmap(tmp_folder / 'spike_times_pca.raw', dtype=np.uint64, shape=(n_pca_amps, 1),
                                     mode='w+')
-        spike_clusters_pca = np.memmap(tmp_folder / ('spike_clusters_pca.raw'), dtype=dtype, shape=(n_pca_amps, 1),
+        spike_clusters_pca = np.memmap(tmp_folder / 'spike_clusters_pca.raw', dtype=dtype, shape=(n_pca_amps, 1),
                                        mode='w+')
         spike_times_amps = np.memmap(tmp_folder / 'spike_times_amps.raw', dtype=np.uint64, shape=(n_pca_amps, 1),
                                      mode='w+')

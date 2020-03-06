@@ -85,20 +85,19 @@ def get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, 
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, n_comp=n_comp,
-                                                                                    ms_before=ms_before,
-                                                                                    ms_after=ms_after,
-                                                                                    dtype=dtype,
-                                                                                    max_spikes_per_unit=
-                                                                                    max_spikes_per_unit,
-                                                                                    max_spikes_for_pca=
-                                                                                    max_spikes_for_pca,
-                                                                                    recompute_info=recompute_info,
-                                                                                    save_features_props=
-                                                                                    save_features_props,
-                                                                                    verbose=verbose, seed=seed)
+    spike_times, spike_times_pca, spike_clusters, \
+    spike_clusters_pca, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, n_comp=n_comp,
+                                                                           ms_before=ms_before,
+                                                                           ms_after=ms_after,
+                                                                           dtype=dtype,
+                                                                           max_spikes_per_unit=max_spikes_per_unit,
+                                                                           max_spikes_for_pca=max_spikes_for_pca,
+                                                                           recompute_info=recompute_info,
+                                                                           save_features_props=save_features_props,
+                                                                           verbose=verbose, seed=seed)
 
-    return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(spike_clusters), pc_features, pc_feature_ind
+    return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_pca)),\
+           np.squeeze(spike_clusters),  np.squeeze(spike_clusters_pca), pc_features, pc_feature_ind
 
 
 def get_amplitude_metric_data(recording, sorting, amp_method, amp_peak, amp_frames_before,
@@ -147,17 +146,19 @@ def get_amplitude_metric_data(recording, sorting, amp_method, amp_peak, amp_fram
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
-    spike_times, spike_clusters, amplitudes = _get_amp_metric_data(recording, sorting,
-                                                                   amp_method=amp_method,
-                                                                   amp_peak=amp_peak,
-                                                                   amp_frames_before=amp_frames_before,
-                                                                   amp_frames_after=amp_frames_after,
-                                                                   max_spikes_per_unit=max_spikes_per_unit,
-                                                                   save_features_props=save_features_props,
-                                                                   recompute_info=recompute_info,
-                                                                   seed=seed)
+    spike_times, spike_times_amp, spike_clusters, \
+    spike_clusters_amp, amplitudes = _get_amp_metric_data(recording, sorting,
+                                                          amp_method=amp_method,
+                                                          amp_peak=amp_peak,
+                                                          amp_frames_before=amp_frames_before,
+                                                          amp_frames_after=amp_frames_after,
+                                                          max_spikes_per_unit=max_spikes_per_unit,
+                                                          save_features_props=save_features_props,
+                                                          recompute_info=recompute_info,
+                                                          seed=seed)
 
-    return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(spike_clusters), np.squeeze(amplitudes)
+    return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_amp)),\
+           np.squeeze(spike_clusters), np.squeeze(spike_clusters_amp), np.squeeze(amplitudes)
 
 
 def get_all_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method,

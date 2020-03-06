@@ -210,7 +210,7 @@ class MetricData:
         seed: int
             Random seed for reproducibility
         """
-        spike_times, spike_clusters, amplitudes = get_amplitude_metric_data(
+        spike_times, spike_times_amp, spike_clusters, spike_clusters_amp, amplitudes = get_amplitude_metric_data(
             self._recording,
             self._sorting,
             amp_method=amp_method,
@@ -224,7 +224,8 @@ class MetricData:
         )
         self._amplitudes = amplitudes
         self._spike_clusters_amps = spike_clusters
-        self._spike_times_amps = spike_times
+        self._spike_times_amps = spike_times_amp
+        self._spike_clusters_amps = spike_clusters_amp
 
     def compute_pca_scores(
         self,
@@ -263,7 +264,8 @@ class MetricData:
             Random seed for reproducibility
         """
 
-        spike_times, spike_clusters, pc_features, pc_feature_ind = get_pca_metric_data(
+        spike_times, spike_times_pca, spike_clusters, spike_clusters_pca, pc_features, \
+        pc_feature_ind = get_pca_metric_data(
             self._recording,
             self._sorting,
             n_comp=n_comp,
@@ -279,7 +281,8 @@ class MetricData:
         )
         self._pc_features = pc_features
         self._spike_clusters_pca = spike_clusters
-        self._spike_times_pca = spike_times
+        self._spike_times_pca = spike_times_pca
+        self._spike_clusters_pca = spike_clusters_pca
         self._pc_feature_ind = pc_feature_ind
 
     def compute_all_metric_data(
