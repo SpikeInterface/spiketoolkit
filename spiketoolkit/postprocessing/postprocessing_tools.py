@@ -134,7 +134,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                             wf = wf.astype(dtype)
 
                             if memmap:
-                                waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id)), dtype=dtype,
+                                waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id) + '.raw'), dtype=dtype,
                                                       shape=wf.shape, mode='w+')
                                 waveforms[:] = wf
                                 del wf
@@ -182,8 +182,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                     wf = np.squeeze(wf[:, elec_group, :])
 
                     if memmap:
-                        waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id)), dtype=dtype, shape=wf.shape,
-                                              mode='w+')
+                        waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id) + '.raw'), dtype=dtype,
+                                              shape=wf.shape, mode='w+')
                         waveforms[:] = wf
                         del wf
                     else:
@@ -224,7 +224,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
             wf = wf.astype(dtype)
 
             if memmap:
-                waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id)), dtype=dtype, shape=wf.shape,
+                waveforms = np.memmap(tmp_folder / ('waveforms_' + str(unit_id) + '.raw'), dtype=dtype, shape=wf.shape,
                                       mode='w+')
                 waveforms[:] = wf
                 del wf
@@ -533,7 +533,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
         dtype = amps.dtype
 
         if memmap:
-            amplitudes = np.memmap(tmp_folder / ('amplitudes_' + str(unit_id)), dtype=dtype, shape=len(amps),
+            amplitudes = np.memmap(tmp_folder / ('amplitudes_' + str(unit_id) + '.raw'), dtype=dtype, shape=len(amps),
                                    mode='w+')
             amplitudes[:] = amps
             del amps
@@ -542,15 +542,15 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, method='absolute', sa
 
         if save_as_features:
             if len(indices) < len(spike_train):
-                if 'amps' not in sorting.get_unit_spike_feature_names(unit_id):
+                if 'amplitudes' not in sorting.get_unit_spike_feature_names(unit_id):
                     amp_features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
                 else:
-                    amp_features = np.array(sorting.get_unit_spike_features(unit_id, 'amps'))
+                    amp_features = np.array(sorting.get_unit_spike_features(unit_id, 'amplitudes'))
                 for i, ind in enumerate(indices):
                     amp_features[ind] = amplitudes[i]
             else:
                 amp_features = amplitudes
-            sorting.set_unit_spike_features(unit_id, 'amps', amp_features)
+            sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_features)
         amp_list.append(amplitudes)
         ind_list.append(indices)
 
@@ -607,6 +607,8 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         If True output is verbose
     seed: int
         Random seed for reproducibility
+    memmap: bool
+        If True, pca_scores are saved as memmap object (recommended for long recordings with many channels)
     return_idxs: list
         List of indexes of used spikes for each unit
 
@@ -633,15 +635,18 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         else:
             tmp_folder = sorting.get_tmp_folder()
 
-    # concatenate all waveforms
-    all_waveforms = np.array([])
+    if max_spikes_per_unit is None:
+        max_spikes_per_unit = np.inf
+    if max_spikes_for_pca is None:
+        max_spikes_for_pca = np.inf
+
     nspikes = []
     if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
         if verbose:
             print("Using 'waveforms' features")
         waveforms = []
         ind_list = []
-        for unit_id in unit_ids:
+        for unit_id in sorting.get_unit_ids():
             wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
             idxs = np.array([i for i in range(len(wf)) if wf[i] is not None])
             if len(idxs) != len(wf):
@@ -653,18 +658,41 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
     else:
         if verbose:
             print("Computing waveforms")
-        waveforms, ind_list = get_unit_waveforms(recording, sorting, unit_ids, max_spikes_per_unit=max_spikes_per_unit,
+        waveforms, ind_list = get_unit_waveforms(recording, sorting, max_spikes_per_unit=max_spikes_per_unit,
                                                  ms_before=ms_before, ms_after=ms_after,
                                                  grouping_property=grouping_property, dtype=dtype,
                                                  compute_property_from_recording=compute_property_from_recording,
                                                  save_as_features=save_waveforms_as_features,
-                                                 verbose=verbose, seed=seed, return_idxs=True)
+                                                 verbose=verbose, seed=seed, memmap=memmap, return_idxs=True)
 
+    # compute len of all waveforms (computed for all units)
+    n_waveforms = 0
+    for wf in waveforms:
+        n_spikes = len(wf)
+        n_waveforms += n_spikes
+
+    dtype = recording.get_dtype()
+    # prepare all waveforms
+    if memmap:
+        if by_electrode:
+            all_waveforms = np.memmap(tmp_folder / 'all_waveforms.raw', dtype=dtype,
+                                      shape=(n_waveforms * waveforms[0].shape[1], waveforms[0].shape[2]), mode='w+')
+        else:
+            all_waveforms = np.memmap(tmp_folder / 'all_waveforms.raw', dtype=dtype,
+                                      shape=(n_waveforms, waveforms[0].shape[1] * waveforms[0].shape[2]), mode='w+')
+    else:
+        if by_electrode:
+            all_waveforms = np.zeros((n_waveforms * waveforms[0].shape[1], waveforms[0].shape[2]), dtype=dtype)
+        else:
+            all_waveforms = np.zeros((n_waveforms, waveforms[0].shape[1] * waveforms[0].shape[2]), dtype=dtype)
+
+    # concatenate all waveforms
     if not isinstance(waveforms, list):
         # single unit
         waveforms = [waveforms]
         ind_list = [ind_list]
 
+    i_start = 0
     for i_w, wf in enumerate(waveforms):
         if by_electrode:
             wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
@@ -672,14 +700,12 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
         else:
             wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
             nspikes.append(len(wf))
-        if i_w == 0:
-            all_waveforms = wf_reshaped
-        else:
-            all_waveforms = np.concatenate((all_waveforms, wf_reshaped))
+        all_waveforms[i_start:i_start+wf_reshaped.shape[0]] = wf_reshaped
+        i_start += wf_reshaped.shape[0]
 
     pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
     if len(all_waveforms) < max_spikes_for_pca:
-        max_spikes_for_pca = len(all_waveforms)
+        max_spikes_for_pca = n_waveforms
     max_spikes_for_pca = int(max_spikes_for_pca)
     if verbose:
         print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_spikes_for_pca))
@@ -687,14 +713,23 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, n_comp=3, by_elec
 
     pca_scores_list = []
     # project waveforms on principal components
-    for wf in waveforms:
+    for unit_id in unit_ids:
+        idx_waveform = sorting.get_unit_ids().index(unit_id)
+        wf = waveforms[idx_waveform]
         if by_electrode:
             pct = np.dot(wf, pca.components_.T)
         else:
             pct = np.dot(wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2])), pca.components_.T)
         if whiten:
             pct /= np.sqrt(pca.explained_variance_)
-        pca_scores_list.append(pct)
+        if memmap:
+            pca_scores = np.memmap(tmp_folder / ('pcascores_' + str(unit_id) + '.raw'), dtype=dtype, shape=pct.shape,
+                                   mode='w+')
+            pca_scores[:] = pct
+            del pct
+        else:
+            pca_scores = pct
+        pca_scores_list.append(pca_scores)
 
     if save_as_features:
         for i, unit_id in enumerate(sorting.get_unit_ids()):
