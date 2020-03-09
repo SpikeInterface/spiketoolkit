@@ -97,5 +97,6 @@ class TestCuration(unittest.TestCase):
         self.assertTrue(np.array_equal(original_features[:10], split_features_1))
         self.assertTrue(np.array_equal(original_features[10:], split_features_2))
 
+
 if __name__ == '__main__':
     unittest.main()

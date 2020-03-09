@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from .utils import create_signal_with_known_waveforms
+from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
@@ -44,7 +44,8 @@ def test_waveforms():
         assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
     # test max_spikes_per_unit
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10, save_as_features=False)
+    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
+                             save_as_features=False)
     for w in wav:
         assert len(w) <= 10
 
@@ -124,13 +125,13 @@ def test_amplitudes():
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, np.abs(a_gt))
-    assert 'amps' not in sort.get_shared_unit_spike_feature_names()
+    assert 'amplitudes' not in sort.get_shared_unit_spike_feature_names()
 
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=True, peak='neg')
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, a_gt)
-    assert 'amps' in sort.get_shared_unit_spike_feature_names()
+    assert 'amplitudes' in sort.get_shared_unit_spike_feature_names()
 
     # relative
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=False, method='relative')
@@ -177,3 +178,7 @@ def test_set_unit_properties_by_max_channel_properties():
 @pytest.mark.notimplemented
 def test_compute_pca_scores():
     pass
+
+
+if __name__ == '__main__':
+    test_templates()
