@@ -39,9 +39,15 @@ class LRatio(QualityMetric):
 
         l_ratios_epochs = []
         for epoch in self._metric_data._epochs:
+            start_frame = epoch[1]
+            end_frame = epoch[2]
+            if start_frame is None:
+                start_frame = 0
+            if end_frame is None:
+                end_frame = np.inf
             in_epoch = np.logical_and(
-                self._metric_data._spike_times_pca > epoch[1],
-                self._metric_data._spike_times_pca < epoch[2],
+                self._metric_data._spike_times_pca > start_frame,
+                self._metric_data._spike_times_pca < end_frame,
             )
             l_ratios_all = metrics.calculate_pc_metrics(
                 spike_clusters=self._metric_data._spike_clusters_pca[in_epoch],

@@ -42,8 +42,14 @@ class DriftMetric(QualityMetric):
         max_drifts_epochs = []
         cumulative_drifts_epochs = []
         for epoch in self._metric_data._epochs:
+            start_frame = epoch[1]
+            end_frame = epoch[2]
+            if start_frame is None:
+                start_frame = 0
+            if end_frame is None:
+                end_frame = np.inf
             in_epoch = np.logical_and(
-                self._metric_data._spike_times_pca > epoch[1], self._metric_data._spike_times_pca < epoch[2]
+                self._metric_data._spike_times_pca > start_frame, self._metric_data._spike_times_pca < end_frame
             )
             max_drifts_all, cumulative_drifts_all = metrics.calculate_drift_metrics(
                 self._metric_data._spike_times_pca[in_epoch],

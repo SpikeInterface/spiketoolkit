@@ -16,6 +16,8 @@ from .utils.validation_tools import (
     get_spike_times_metrics_data,
 )
 
+from .utils.thresholdcurator import ThresholdCurator
+
 # Baseclass for each quality metric
 
 class MetricData:
@@ -71,14 +73,6 @@ class MetricData:
         for unit_id in sorting.get_unit_ids():
             if len(sorting.get_unit_spike_train(unit_id)) == 0:
                 raise ValueError("Spike trains must have none zero length. Please remove all zero length spike trains")
-        
-        #old code causes issues with saving properties
-        # num_spikes_per_unit = [
-        #     len(sorting.get_unit_spike_train(unit_id))
-        #     for unit_id in sorting.get_unit_ids()
-        # ]
-        # sorting = ThresholdCurator(sorting=sorting, metrics_epoch=num_spikes_per_unit)
-        # sorting.threshold_sorting(0, "less_or_equal")
 
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
@@ -113,10 +107,16 @@ class MetricData:
         self.verbose = verbose
 
         for epoch in self._epochs:
+            start_frame = epoch[1]
+            end_frame = epoch[2]
+            if start_frame is not None:
+                start_frame = start_frame * self._sampling_frequency
+            if end_frame is not None:
+                end_frame = end_frame * self._sampling_frequency
             self._sorting.add_epoch(
                 epoch_name=epoch[0],
-                start_frame=epoch[1] * self._sampling_frequency,
-                end_frame=epoch[2] * self._sampling_frequency,
+                start_frame=start_frame,
+                end_frame=end_frame,
             )
         if recording is not None:
             assert isinstance(
@@ -158,10 +158,16 @@ class MetricData:
             self._is_filtered = False
         self._recording = recording
         for epoch in self._epochs:
+            start_frame = epoch[1]
+            end_frame = epoch[2]
+            if start_frame is not None:
+                start_frame = start_frame * self._sampling_frequency
+            if end_frame is not None:
+                end_frame = end_frame * self._sampling_frequency
             self._recording.add_epoch(
                 epoch_name=epoch[0],
-                start_frame=epoch[1] * self._sampling_frequency,
-                end_frame=epoch[2] * self._sampling_frequency,
+                start_frame=start_frame,
+                end_frame=end_frame,
             )
 
     def is_filtered(self):
@@ -384,7 +390,7 @@ class MetricData:
     def _set_epochs(self, epoch_tuples, epoch_names):
         if epoch_tuples is None:
             if epoch_names is None:
-                epochs = [("complete_session", 0, np.inf)]
+                epochs = [("complete_session", 0, None)]
             else:
                 raise ValueError("No epoch tuples specified, but names given.")
         else:
