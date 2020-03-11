@@ -7,6 +7,7 @@ import warnings
 import tempfile
 import shutil
 from joblib import Parallel, delayed
+from spikeextractors import RecordingExtractor, SortingExtractor
 import csv
 
 
@@ -78,6 +79,9 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     if n_jobs is None:
         n_jobs = 0
 
+    fs = recording.get_sampling_frequency()
+    n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
+
     waveform_list = []
     spike_index_list = []
     channel_index_list = []
@@ -88,26 +92,75 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                                          unit_ids, grouping_property,
                                                                          compute_property_from_recording,
                                                                          max_channels_per_waveforms,
-                                                                         max_spikes_per_unit, ms_before, ms_after,
+                                                                         max_spikes_per_unit, n_pad,
                                                                          dtype, memmap, seed, save_as_features, verbose)
 
             waveform_list.append(waveforms)
             spike_index_list.append(indices)
             channel_index_list.append(max_channel_idxs)
     else:
-        output_list = Parallel(n_jobs=n_jobs)(delayed(_compute_one_waveform)(unit, recording, sorting, channel_ids,
-                                                                             unit_ids, grouping_property,
-                                                                             compute_property_from_recording,
-                                                                             max_channels_per_waveforms,
-                                                                             max_spikes_per_unit, ms_before, ms_after,
-                                                                             dtype, memmap, seed, save_as_features,
-                                                                             verbose, )
-                                              for unit in unit_ids)
+        # if parallel and memmap, we need to allocate arrays before
+        if memmap:
+            memmap_fnames = []
+            memmap_shapes = []
+            if grouping_property is None:
+                if max_channels_per_waveforms is None:
+                    n_channels = recording.get_num_channels()
+                elif max_channels_per_waveforms >= recording.get_num_channels():
+                    n_channels = recording.get_num_channels()
+                else:
+                    n_channels = max_channels_per_waveforms
+            else:
+                pass
 
-        for out in output_list:
-            waveform_list.append(out[0])
-            spike_index_list.append(out[2])
-            channel_index_list.append(out[1])
+            for unit_id in unit_ids:
+                fname = 'waveforms_' + str(unit_id) + '.raw'
+                len_wf = len(sorting.get_unit_spike_train(unit_id))
+                if max_spikes_per_unit is not None:
+                    if len_wf > max_spikes_per_unit:
+                        len_wf = max_spikes_per_unit
+                shape = (len_wf, n_channels, sum(n_pad))
+                sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
+                memmap_fnames.append(fname)
+                memmap_shapes.append(shape)
+            output_list = Parallel(n_jobs=n_jobs)(delayed(_compute_one_waveform)(unit, recording, sorting, channel_ids,
+                                                                                 unit_ids, grouping_property,
+                                                                                 compute_property_from_recording,
+                                                                                 max_channels_per_waveforms,
+                                                                                 max_spikes_per_unit, n_pad,
+                                                                                 dtype, memmap, seed, save_as_features,
+                                                                                 verbose, fname)
+                                                  for (unit, fname) in zip(unit_ids, memmap_fnames))
+
+            for i, out in enumerate(output_list):
+                waveforms = np.memmap(memmap_fnames[i], dtype=dtype, mode='r+', shape=memmap_shapes[i])
+                waveform_list.append(waveforms)
+                spike_index_list.append(out[1])
+                channel_index_list.append(out[2])
+        else:
+            output_list = Parallel(n_jobs=n_jobs)(delayed(_compute_one_waveform)(unit, recording, sorting, channel_ids,
+                                                                                 unit_ids, grouping_property,
+                                                                                 compute_property_from_recording,
+                                                                                 max_channels_per_waveforms,
+                                                                                 max_spikes_per_unit, n_pad,
+                                                                                 dtype, memmap, seed, save_as_features,
+                                                                                 verbose, None, )
+                                                  for unit in unit_ids)
+
+            for out in output_list:
+                raise Exception
+                waveform_list.append(out[0])
+                spike_index_list.append(out[1])
+                channel_index_list.append(out[2])
+
+    # if save_as_features:
+    #     if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
+    #         features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
+    #         for i, ind in enumerate(indices):
+    #             features[ind] = waveforms[i]
+    #     else:
+    #         features = waveforms
+    #     sorting.set_unit_spike_features(unit_id, 'waveforms', features)
 
     # if grouping_property is not None:
     #     if grouping_property not in recording.get_shared_channel_property_names():
@@ -1449,7 +1502,7 @@ def _select_max_channels(wf, recording, max_channels):
 
 def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, grouping_property,
                           compute_property_from_recording, max_channels_per_waveforms, max_spikes_per_unit,
-                          ms_before, ms_after, dtype, memmap, seed, save_as_features, verbose):
+                          n_pad, dtype, memmap, seed, save_as_features, verbose, memmap_fname=None):
     if grouping_property is not None:
         if grouping_property not in recording.get_shared_channel_property_names():
             raise ValueError("'grouping_property' should be a property of recording extractors")
@@ -1489,9 +1542,6 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
                 if sort is not None and rec is not None:
                     for i, unit_id in enumerate(unit_ids):
                         if unit == unit_id:
-                            fs = rec.get_sampling_frequency()
-                            n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
-
                             if channel_ids is None:
                                 channel_ids = rec.get_channel_ids()
 
@@ -1520,9 +1570,15 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
                                 max_channel_idxs = np.arange(rec.get_num_channels())
                             wf = wf[:, max_channel_idxs]
 
-                            waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
-                                                               memmap=memmap)
+                            if memmap_fname is None:
+                                waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
+                                                                   memmap=memmap)
+                            else:
+                                arr = np.memmap(memmap_fname, dtype, mode='r+', shape=wf.shape)
+                                arr[:] = wf
+                                waveforms = 0
 
+                            # move out
                             if save_as_features:
                                 if len(indices) < len(sort.get_unit_spike_train(unit_id)):
                                     features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
@@ -1543,9 +1599,6 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
 
                     if max_channels_per_waveforms is None:
                         max_channels_per_waveforms = np.max(count)
-
-                    fs = rec.get_sampling_frequency()
-                    n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
                     if max_spikes_per_unit is None:
                         max_spikes = len(sorting.get_unit_spike_train(unit_id))
@@ -1575,8 +1628,13 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
                         max_channel_idxs = np.arange(len(elec_group[0]))
                     wf = wf[:, max_channel_idxs]
 
-                    waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
-                                                       memmap=memmap)
+                    if memmap_fname is None:
+                        waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
+                                                           memmap=memmap)
+                    else:
+                        arr = np.memmap(memmap_fname, dtype, mode='r+', shape=wf.shape)
+                        arr[:] = wf
+                        waveforms = 0
 
                     if save_as_features:
                         if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
@@ -1594,9 +1652,6 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
 
                 if max_channels_per_waveforms is None:
                     max_channels_per_waveforms = len(channel_ids)
-
-                fs = recording.get_sampling_frequency()
-                n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
 
                 if max_spikes_per_unit is None:
                     max_spikes = len(sorting.get_unit_spike_train(unit_id))
@@ -1620,16 +1675,13 @@ def _compute_one_waveform(unit, recording, sorting, channel_ids, unit_ids, group
                     max_channel_idxs = np.arange(len(channel_ids))
                 wf = wf[:, max_channel_idxs]
 
-                waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
-                                                   memmap=memmap)
+                if memmap_fname is None:
+                    waveforms = sorting.allocate_array(array=wf, name='waveforms_' + str(unit_id) + '.raw',
+                                                       memmap=memmap)
+                else:
+                    arr = np.memmap(sorting.get_tmp_folder() / memmap_fname, dtype, mode='r+', shape=wf.shape)
+                    arr[:] = wf
+                    waveforms = 0
 
-                if save_as_features:
-                    if len(indices) < len(sorting.get_unit_spike_train(unit_id)):
-                        features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                        for i, ind in enumerate(indices):
-                            features[ind] = waveforms[i]
-                    else:
-                        features = waveforms
-                    sorting.set_unit_spike_features(unit_id, 'waveforms', features)
+    return waveforms, np.array(indices), np.array(channel_ids)
 
-    return waveforms, indices, max_channel_idxs
