@@ -35,15 +35,7 @@ class ISIViolation(QualityMetric):
     def compute_metric(self, isi_threshold, min_isi, save_as_property):
         isi_violation_epochs = []
         for epoch in self._metric_data._epochs:
-            start_frame = epoch[1]
-            end_frame = epoch[2]
-            if start_frame is None:
-                start_frame = 0
-            if end_frame is None:
-                end_frame = np.inf
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times > start_frame, self._metric_data._spike_times < end_frame
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
             isi_violation_all = metrics.calculate_isi_violations(
                 self._metric_data._spike_times[in_epoch],
                 self._metric_data._spike_clusters[in_epoch],

@@ -37,16 +37,7 @@ class SilhouetteScore(QualityMetric):
 
         silhouette_scores_epochs = []
         for epoch in self._metric_data._epochs:
-            start_frame = epoch[1]
-            end_frame = epoch[2]
-            if start_frame is None:
-                start_frame = 0
-            if end_frame is None:
-                end_frame = np.inf
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times_pca > start_frame,
-                self._metric_data._spike_times_pca < end_frame,
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_pca)
             spikes_in_epoch = np.sum(in_epoch)
             spikes_for_silhouette = np.min([spikes_in_epoch, max_spikes_for_silhouette])
 

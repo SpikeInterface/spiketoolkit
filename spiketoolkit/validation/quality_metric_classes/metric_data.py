@@ -418,6 +418,18 @@ class MetricData:
     def get_unit_ids(self):
         return self._unit_ids
 
+    def get_in_epoch_bool_mask(self, epoch, spike_times):
+        start_frame = epoch[1]
+        end_frame = epoch[2]
+        if start_frame is None:
+            start_frame = 0
+        if end_frame is None:
+            end_frame = np.inf
+        in_epoch = np.logical_and(
+            spike_times >= start_frame, spike_times < end_frame
+        )
+        return in_epoch
+
 
 def _get_unit_indices(sorting, unit_ids):
     unit_indices = []
