@@ -2,6 +2,7 @@ from .filterrecording import FilterRecording
 import numpy as np
 from scipy import special
 import spikeextractors as se
+from copy import deepcopy
 
 try:
     import scipy.signal as ss
@@ -28,13 +29,13 @@ class BandpassFilterRecording(FilterRecording):
     ]
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
-    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3,
+    def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, filter_type='fft', order=3,
                  chunk_size=30000, cache_chunks=False):
         assert HAVE_BFR, "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
-        self._type = type
+        self._type = filter_type
         self._order = order
         self._chunk_size = chunk_size
 
@@ -48,6 +49,13 @@ class BandpassFilterRecording(FilterRecording):
                 raise ValueError('Filter is not stable')
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
         self.copy_channel_properties(recording)
+
+        # update dump dict
+        self._dump_dict = deepcopy(recording._dump_dict)
+        self.kwargs = {'freq_min': freq_min, 'freq_max': freq_max,
+                       'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,
+                       'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
+        self.append_to_dump_dict()
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
@@ -117,7 +125,7 @@ def _create_filter_kernel(N, sampling_frequency, freq_min, freq_max, freq_wid=10
     return val
 
 
-def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type='fft', order=3,
+def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, filter_type='fft', order=3,
                     chunk_size=30000, cache_to_file=False, cache_chunks=False):
     '''
     Performs a lazy filter on the recording extractor traces.
@@ -156,7 +164,7 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, type=
         freq_min=freq_min,
         freq_max=freq_max,
         freq_wid=freq_wid,
-        type=type,
+        filter_type=filter_type,
         order=order,
         chunk_size=chunk_size,
         cache_chunks=cache_chunks,

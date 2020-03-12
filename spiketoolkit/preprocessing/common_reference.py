@@ -1,8 +1,10 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
+from copy import deepcopy
 
 
 class CommonReferenceRecording(RecordingExtractor):
+
     preprocessor_name = 'CommonReference'
     installed = True  # check at class level if installed or not
     preprocessor_gui_params = [
@@ -46,6 +48,12 @@ class CommonReferenceRecording(RecordingExtractor):
         self.verbose = verbose
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+
+        # update dump dict
+        self._dump_dict = deepcopy(recording._dump_dict)
+        self.kwargs = {'reference': reference, 'groups': groups,
+                       'ref_channels': ref_channels, 'dtype': dtype, 'verbose': verbose}
+        self.append_to_dump_dict()
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
