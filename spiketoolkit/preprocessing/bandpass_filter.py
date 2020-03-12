@@ -15,6 +15,7 @@ class BandpassFilterRecording(FilterRecording):
 
     preprocessor_name = 'BandpassFilter'
     installed = HAVE_BFR  # check at class level if installed or not
+    is_dumpable = True
     preprocessor_gui_params = [
         {'name': 'freq_min', 'type': 'float', 'value': 300.0, 'default': 300.0, 'title': "High-pass frequency"},
         {'name': 'freq_max', 'type': 'float', 'value': 6000.0, 'default': 6000.0, 'title': "Low-pass frequency"},
@@ -51,11 +52,11 @@ class BandpassFilterRecording(FilterRecording):
         self.copy_channel_properties(recording)
 
         # update dump dict
-        self._dump_dict = deepcopy(recording._dump_dict)
-        self.kwargs = {'freq_min': freq_min, 'freq_max': freq_max,
-                       'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,
-                       'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
-        self.append_to_dump_dict()
+        # self._dump_dict = deepcopy(recording._dump_dict)
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'freq_min': freq_min, 'freq_max': freq_max,
+                        'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,
+                        'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
+        #self.append_to_dump_dict()
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
