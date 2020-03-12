@@ -11,21 +11,21 @@ from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, clip_t
 def test_bandpass_filter():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
 
-    rec_fft = bandpass_filter(rec, freq_min=5000, freq_max=10000, type='fft')
+    rec_fft = bandpass_filter(rec, freq_min=5000, freq_max=10000, filter_type='fft')
 
     assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(), rec.get_traces(), freq_range=[1000, 5000],
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(), rec.get_traces(), freq_range=[10000, 15000],
                                                     fs=rec.get_sampling_frequency())
 
-    rec_sci = bandpass_filter(rec, freq_min=3000, freq_max=6000, type='butter', order=3)
+    rec_sci = bandpass_filter(rec, freq_min=3000, freq_max=6000, filter_type='butter', order=3)
 
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
-    rec_cache = bandpass_filter(rec, freq_min=3000, freq_max=6000, type='butter', order=3, cache_to_file=True)
+    rec_cache = bandpass_filter(rec, freq_min=3000, freq_max=6000, filter_type='butter', order=3, cache_to_file=True)
 
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
                                                     fs=rec.get_sampling_frequency())
