@@ -25,6 +25,9 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._subrecording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'bad_channel_ids': bad_channel_ids,
+                        'bad_threshold': bad_threshold, 'seconds': seconds, 'verbose': verbose}
+
     def get_sampling_frequency(self):
         return self._subrecording.get_sampling_frequency()
 

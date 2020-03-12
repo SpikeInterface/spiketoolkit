@@ -13,6 +13,8 @@ class RectifyRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict()}
+
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 

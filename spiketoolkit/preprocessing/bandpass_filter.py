@@ -56,7 +56,6 @@ class BandpassFilterRecording(FilterRecording):
         self._kwargs = {'recording': recording.make_serialized_dict(), 'freq_min': freq_min, 'freq_max': freq_max,
                         'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,
                         'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
-        #self.append_to_dump_dict()
 
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
