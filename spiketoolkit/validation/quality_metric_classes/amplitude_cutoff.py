@@ -20,6 +20,7 @@ def make_curator_gui_params(params):
     gui_params = curator_gui_params + gui_params + get_amplitude_gui_params()
     return gui_params
 
+
 class AmplitudeCutoff(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -57,6 +58,7 @@ class AmplitudeCutoff(QualityMetric):
 
     def threshold_metric(self, threshold, threshold_sign, save_as_property):
         amplitude_cutoff_epochs = self.compute_metric(save_as_property=save_as_property)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=amplitude_cutoff_epochs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting,
+                                             metrics_epoch=amplitude_cutoff_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator
