@@ -47,6 +47,4 @@ class QualityMetric(ABC):
             for i_u, u in enumerate(sorting.get_unit_ids()):
                 sorting.set_unit_property(u, metric_name, metric[i_u])
         else:
-            raise NotImplementedError(
-                "Quality metrics cannot be saved as properties if more than one epoch is computed."
-            )
+            pass

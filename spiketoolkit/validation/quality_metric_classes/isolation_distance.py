@@ -39,10 +39,7 @@ class IsolationDistance(QualityMetric):
 
         isolation_distances_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times_pca > epoch[1],
-                self._metric_data._spike_times_pca < epoch[2],
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_pca)
             isolation_distances_all = metrics.calculate_pc_metrics(
                 spike_clusters=self._metric_data._spike_clusters_pca[in_epoch],
                 total_units=self._metric_data._total_units,
