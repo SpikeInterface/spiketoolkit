@@ -53,3 +53,5 @@ class ThresholdCurator(CurationSortingExtractor):
             else:
                 raise ValueError('Not a correct threshold sign.')
         self.exclude_units(units_to_be_excluded)
+        self._kwargs['threshold'] = threshold
+        self._kwargs['threshold_sign'] = threshold_sign
