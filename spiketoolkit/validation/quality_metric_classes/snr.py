@@ -54,7 +54,6 @@ class SNR(QualityMetric):
                 noise_duration=snr_noise_duration,
                 seed=seed,
             )
-
             templates = st.postprocessing.get_unit_templates(
                 epoch_recording,
                 epoch_sorting,

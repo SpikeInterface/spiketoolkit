@@ -33,9 +33,7 @@ class PresenceRatio(QualityMetric):
     def compute_metric(self, save_as_property):
         presence_ratios_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times > epoch[1], self._metric_data._spike_times < epoch[2]
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
             presence_ratios_all = metrics.calculate_presence_ratio(
                 self._metric_data._spike_times[in_epoch],
                 self._metric_data._spike_clusters[in_epoch],

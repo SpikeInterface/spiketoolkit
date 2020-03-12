@@ -37,9 +37,7 @@ class AmplitudeCutoff(QualityMetric):
     def compute_metric(self, save_as_property):
         amplitude_cutoffs_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times_amps > epoch[1], self._metric_data._spike_times_amps < epoch[2]
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_amps)
             amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(
                 self._metric_data._spike_clusters_amps[in_epoch],
                 self._metric_data._amplitudes[in_epoch],
