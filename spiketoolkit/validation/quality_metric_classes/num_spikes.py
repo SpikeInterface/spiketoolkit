@@ -18,6 +18,7 @@ def make_curator_gui_params(params):
     gui_params = curator_gui_params + gui_params
     return gui_params
 
+
 class NumSpikes(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -33,9 +34,7 @@ class NumSpikes(QualityMetric):
     def compute_metric(self, save_as_property):
         num_spikes_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times > epoch[1], self._metric_data._spike_times < epoch[2]
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
             _, num_spikes_all = metrics.calculate_firing_rate_and_spikes(
                 self._metric_data._spike_times[in_epoch],
                 self._metric_data._spike_clusters[in_epoch],

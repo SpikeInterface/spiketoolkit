@@ -31,7 +31,7 @@ def test_waveforms():
     assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
 
     # by group
-    rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 1, 1])
+    rec.set_channel_groups([0, 0, 1, 1])
     wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group')
 
     for (w, w_gt) in zip(wav, waveforms):
@@ -84,7 +84,7 @@ def test_templates():
     assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
 
     # by group
-    rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 1, 1])
+    rec.set_channel_groups([0, 0, 1, 1])
     temp = get_unit_templates(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
                               recompute_waveforms=True)
 
@@ -147,7 +147,7 @@ def test_export_to_phy():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
 
     export_to_phy(rec, sort, output_folder='phy')
-    rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 0, 0, 1, 1, 1, 1])
+    rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group')
 
     rec_phy = se.PhyRecordingExtractor('phy')
@@ -168,7 +168,7 @@ def test_export_to_phy():
 def test_set_unit_properties_by_max_channel_properties():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
 
-    rec.set_channel_groups(rec.get_channel_ids(), [0, 0, 0, 0, 1, 1, 1, 1])
+    rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     set_unit_properties_by_max_channel_properties(rec, sort, property='group')
     assert 'group' in sort.get_shared_unit_property_names()
     sort_groups = [sort.get_unit_property(u, 'group') for u in sort.get_unit_ids()]
@@ -181,4 +181,6 @@ def test_compute_pca_scores():
 
 
 if __name__ == '__main__':
+    test_waveforms()
     test_templates()
+    test_export_to_phy()

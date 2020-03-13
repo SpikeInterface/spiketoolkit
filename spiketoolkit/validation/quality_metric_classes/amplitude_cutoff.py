@@ -20,6 +20,7 @@ def make_curator_gui_params(params):
     gui_params = curator_gui_params + gui_params + get_amplitude_gui_params()
     return gui_params
 
+
 class AmplitudeCutoff(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -37,9 +38,7 @@ class AmplitudeCutoff(QualityMetric):
     def compute_metric(self, save_as_property):
         amplitude_cutoffs_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times_amps > epoch[1], self._metric_data._spike_times_amps < epoch[2]
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_amps)
             amplitude_cutoffs_all = metrics.calculate_amplitude_cutoff(
                 self._metric_data._spike_clusters_amps[in_epoch],
                 self._metric_data._amplitudes[in_epoch],
@@ -57,6 +56,7 @@ class AmplitudeCutoff(QualityMetric):
 
     def threshold_metric(self, threshold, threshold_sign, save_as_property):
         amplitude_cutoff_epochs = self.compute_metric(save_as_property=save_as_property)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=amplitude_cutoff_epochs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting,
+                                             metrics_epoch=amplitude_cutoff_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

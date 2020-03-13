@@ -1,5 +1,6 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
+from copy import deepcopy
 
 
 class CommonReferenceRecording(RecordingExtractor):
@@ -46,6 +47,10 @@ class CommonReferenceRecording(RecordingExtractor):
         self.verbose = verbose
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+
+        # update dump dict
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'reference': reference, 'groups': groups,
+                        'ref_channels': ref_channels, 'dtype': dtype, 'verbose': verbose}
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
@@ -133,10 +138,10 @@ class CommonReferenceRecording(RecordingExtractor):
                 if self.verbose:
                     print('Reference', new_groups, 'to channels', self._ref_channel)
                 traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                      start_frame=start_frame, end_frame=end_frame)
-                                           - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
-                                                                        end_frame=end_frame)
-                                           for (split_group, ref) in zip(new_groups, self._ref_channel)]))
+                                                                        start_frame=start_frame, end_frame=end_frame)
+                                             - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
+                                                                          end_frame=end_frame)
+                                             for (split_group, ref) in zip(new_groups, self._ref_channel)]))
                 return traces.astype(self._dtype)
 
 
