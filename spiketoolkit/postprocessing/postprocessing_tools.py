@@ -7,6 +7,7 @@ import warnings
 import tempfile
 import shutil
 from joblib import Parallel, delayed
+from spikeextractors import RecordingExtractor, SortingExtractor
 import csv
 
 
@@ -78,6 +79,9 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     if n_jobs is None:
         n_jobs = 0
 
+    fs = recording.get_sampling_frequency()
+    n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
+
     waveform_list = []
     spike_index_list = []
     channel_index_list = []
@@ -103,6 +107,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
     else:
         if memmap:
             memmap_arrays = []
+
             if grouping_property is None:
                 if max_channels_per_waveforms is None:
                     n_channels = recording.get_num_channels()
@@ -1315,6 +1320,7 @@ def _extract_waveforms_one_unit(unit, rec_dict, sort_dict, channel_ids, unit_ids
                                 n_pad, dtype, memmap, seed, save_as_features, verbose, memmap_array=None):
     recording = se.load_extractor_from_dict(rec_dict)
     sorting = se.load_extractor_from_dict(sort_dict)
+
     if grouping_property is not None:
         if grouping_property not in recording.get_shared_channel_property_names():
             raise ValueError("'grouping_property' should be a property of recording extractors")
@@ -1437,6 +1443,7 @@ def _extract_waveforms_one_unit(unit, rec_dict, sort_dict, channel_ids, unit_ids
                         memmap_array[:] = wf
                         waveforms = memmap_array
                     return waveforms, list(indices), list(max_channel_idxs),
+
     else:
         for i, unit_id in enumerate(unit_ids):
             if unit == unit_id:
@@ -1475,3 +1482,4 @@ def _extract_waveforms_one_unit(unit, rec_dict, sort_dict, channel_ids, unit_ids
                     memmap_array[:] = wf
                     waveforms = memmap_array
                 return waveforms, list(indices), list(max_channel_idxs),
+
