@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 import spikeextractors as se
 import numpy as np
 from spikeextractors import RecordingExtractor
+from .transform import TransformRecording
 
 
 class FilterRecording(RecordingExtractor):
@@ -17,6 +18,14 @@ class FilterRecording(RecordingExtractor):
             self._filtered_cache_chunks = None
         self._traces = None
         se.RecordingExtractor.__init__(self)
+        dtype = str(self._recording.get_dtype())
+        if dtype.startswith('uint'):
+            dtype_signed = dtype[1:]
+            exp_idx = dtype.find('int') + 3
+            exp = int(dtype[exp_idx:])
+            offset = - 2**(exp - 1) - 1
+            self._recording = TransformRecording(self._recording, offset=offset)
+            print(f"dtype converted from {dtype} to {dtype_signed} before filtering")
         self.copy_channel_properties(recording)
 
     def get_channel_ids(self):

@@ -3,8 +3,8 @@ import spikeextractors as se
 import pytest
 import shutil
 from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
-from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, clip_traces, common_reference, \
-    normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform_traces, \
+from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
+    normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform, \
     whiten
 from spiketoolkit.tests.utils import check_dumping, create_dumpable_recording
 
@@ -34,9 +34,19 @@ def test_bandpass_filter():
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
+    traces = rec.get_traces().astype('uint16')
+    rec_u = se.NumpyRecordingExtractor(traces, sampling_frequency=rec.get_sampling_frequency())
+    rec_fu = bandpass_filter(rec_u, freq_min=5000, freq_max=10000, filter_type='fft')
+
+    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(), rec_u.get_traces(), freq_range=[1000, 5000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(), rec_u.get_traces(), freq_range=[10000, 15000],
+                                                    fs=rec.get_sampling_frequency())
+    assert not str(rec_fu.get_dtype()).startswith('u')
+
     check_dumping(rec_fft)
     check_dumping(rec_cache)
-    
+
     shutil.rmtree('test')
 
 
@@ -61,7 +71,7 @@ def test_bandpass_filter_with_cache():
     check_dumping(rec_filtered)
     check_dumping(rec_filtered2)
     check_dumping(rec_filtered3)
-    
+
     shutil.rmtree('test')
 
 
@@ -80,10 +90,25 @@ def test_blank_saturation():
 
 
 @pytest.mark.implemented
-def test_clip_traces():
+def test_center():
+    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+
+    rec_c = center(rec, mode='mean')
+    assert np.allclose(np.mean(rec_c.get_traces(), axis=1), 0, atol=0.001)
+    check_dumping(rec_c)
+
+    rec_c = center(rec, mode='median')
+    assert np.allclose(np.median(rec_c.get_traces(), axis=1), 0, atol=0.001)
+    check_dumping(rec_c)
+
+    shutil.rmtree('test')
+
+
+@pytest.mark.implemented
+def test_clip():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
     threshold = 5
-    rec_clip = clip_traces(rec, a_min=-threshold, a_max=threshold)
+    rec_clip = clip(rec, a_min=-threshold, a_max=threshold)
 
     index_below_threshold = np.where(rec.get_traces() < -threshold)
     index_above_threshold = np.where(rec.get_traces() > threshold)
@@ -93,6 +118,7 @@ def test_clip_traces():
 
     check_dumping(rec_clip)
     shutil.rmtree('test')
+
 
 @pytest.mark.implemented
 def test_common_reference():
@@ -135,6 +161,7 @@ def test_common_reference():
     check_dumping(rec_cmr_int16)
     shutil.rmtree('test')
 
+
 @pytest.mark.notimplemented
 def test_norm_by_quantile():
     pass
@@ -152,6 +179,7 @@ def test_notch_filter():
     check_dumping(rec_n)
     shutil.rmtree('test')
 
+
 @pytest.mark.implemented
 def test_rectify():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
@@ -162,6 +190,7 @@ def test_rectify():
 
     check_dumping(rec_rect)
     shutil.rmtree('test')
+
 
 @pytest.mark.implemented
 def test_remove_artifacts():
@@ -183,6 +212,7 @@ def test_remove_artifacts():
 
     check_dumping(rec_rmart)
     shutil.rmtree('test')
+
 
 @pytest.mark.implemented
 def test_remove_bad_channels():
@@ -214,6 +244,7 @@ def test_remove_bad_channels():
     check_dumping(rec_rm)
     shutil.rmtree('test')
 
+
 @pytest.mark.implemented
 def test_resample():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
@@ -231,19 +262,27 @@ def test_resample():
     check_dumping(rec_rsh)
     shutil.rmtree('test')
 
+
 @pytest.mark.implemented
-def test_transform_traces():
+def test_transform():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
 
     scalar = 3
     offset = 50
 
-    rec_t = transform_traces(rec, scalar=scalar, offset=offset)
+    rec_t = transform(rec, scalar=scalar, offset=offset)
+    assert np.allclose(rec_t.get_traces(), scalar * rec.get_traces() + offset, atol=0.001)
 
-    assert np.allclose(rec_t.get_traces(), scalar * rec.get_traces() + offset)
+    scalars = np.random.randn(4)
+    offsets = np.random.randn(4)
+    rec_t_arr = transform(rec, scalar=scalars, offset=offsets)
+    for (tt, to, s, o) in zip(rec_t_arr.get_traces(), rec.get_traces(), scalars, offsets):
+        assert np.allclose(tt, s * to + o, atol=0.001)
 
     check_dumping(rec_t)
+    check_dumping(rec_t_arr)
     shutil.rmtree('test')
+
 
 @pytest.mark.implemented
 def test_whiten():
@@ -262,18 +301,18 @@ def test_whiten():
     check_dumping(rec_w)
     shutil.rmtree('test')
 
-
 if __name__ == '__main__':
     # test_bandpass_filter()
     # test_bandpass_filter_with_cache()
     # test_blank_saturation()
     # test_clip_traces()
+    test_center()
     # test_common_reference()
     # test_norm_by_quantile()
     # test_notch_filter()
     # test_rectify()
     # test_remove_artifacts()
-    test_remove_bad_channels()
+    # test_remove_bad_channels()
     # test_resample()
-    # test_transform_traces()
+    # test_transform()
     # test_whiten()

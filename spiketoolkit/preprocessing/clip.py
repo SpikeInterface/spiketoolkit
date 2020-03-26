@@ -2,8 +2,8 @@ from spikeextractors import RecordingExtractor
 import numpy as np
 
 
-class ClipTracesRecording(RecordingExtractor):
-    preprocessor_name = 'ClipTraces'
+class ClipRecording(RecordingExtractor):
+    preprocessor_name = 'Clip'
     installed = True  # check at class level if installed or not
     preprocessor_gui_params = [
         {'name': 'a_min', 'type': 'float',
@@ -51,7 +51,7 @@ class ClipTracesRecording(RecordingExtractor):
         return traces
 
 
-def clip_traces(recording, a_min=None, a_max=None):
+def clip(recording, a_min=None, a_max=None):
     '''
     Limit the values of the data between a_min and a_max. Values exceeding the
     range will be set to the minimum or maximum, respectively.
@@ -72,6 +72,6 @@ def clip_traces(recording, a_min=None, a_max=None):
     rescaled_traces: ClipTracesRecording
         The clipped traces recording extractor object
     '''
-    return ClipTracesRecording(
+    return ClipRecording(
         recording=recording, a_min=a_min, a_max=a_max
     )
