@@ -18,6 +18,7 @@ def make_curator_gui_params(params):
     gui_params = curator_gui_params + gui_params
     return gui_params
 
+
 class NumSpikes(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err

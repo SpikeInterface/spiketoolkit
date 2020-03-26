@@ -34,6 +34,9 @@ class NormalizeByQuantileRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'scale': scale, 'median': median,
+                        'q1': q1, 'q2': q2, 'seed': seed}
+
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
         random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)

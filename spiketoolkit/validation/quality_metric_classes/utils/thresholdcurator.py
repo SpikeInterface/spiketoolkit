@@ -1,7 +1,8 @@
 from .curationsortingextractor import CurationSortingExtractor
 
+
 class ThresholdCurator(CurationSortingExtractor):
-    def __init__(self, sorting, metrics_epoch):
+    def __init__(self, sorting, metrics_epoch, threshold=None, threshold_sign=None):
         '''
         Parent class for all threshold-based curators.
         
@@ -14,6 +15,14 @@ class ThresholdCurator(CurationSortingExtractor):
         '''
         CurationSortingExtractor.__init__(self, parent_sorting=sorting)
         self._metrics_epoch = metrics_epoch
+        self._threshold = threshold
+        self._threshold_sign = threshold_sign
+
+        if threshold is not None and threshold_sign is not None:
+            self.threshold_sorting(threshold, threshold_sign)
+
+        self._kwargs = {'sorting': sorting.make_serialized_dict(), 'metrics_epoch': metrics_epoch,
+                        'threshold': threshold, 'threshold_sign': threshold_sign}
 
     def threshold_sorting(self, threshold, threshold_sign):
         '''
@@ -44,3 +53,5 @@ class ThresholdCurator(CurationSortingExtractor):
             else:
                 raise ValueError('Not a correct threshold sign.')
         self.exclude_units(units_to_be_excluded)
+        self._kwargs['threshold'] = threshold
+        self._kwargs['threshold_sign'] = threshold_sign

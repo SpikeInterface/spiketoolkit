@@ -11,15 +11,17 @@ from spiketoolkit.validation.quality_metric_classes.snr import SNR
 from spiketoolkit.validation.quality_metric_classes.isolation_distance import IsolationDistance
 from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import NearestNeighbor
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
-from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import get_recording_params, get_amplitude_params, get_pca_scores_params, get_feature_params, update_param_dicts
+from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import get_recording_params, \
+    get_amplitude_params, get_pca_scores_params, get_feature_params, update_param_dicts
+
 
 def threshold_num_spikes(
-    sorting,
-    threshold,
-    threshold_sign,
-    sampling_frequency=None,
-    save_as_property=True,
-    verbose=NumSpikes.params['verbose'],
+        sorting,
+        threshold,
+        threshold_sign,
+        sampling_frequency=None,
+        save_as_property=True,
+        verbose=NumSpikes.params['verbose'],
 ):
     """
     Computes and thresholds the num spikes in the sorted dataset with the given sign and value.
@@ -63,13 +65,14 @@ def threshold_num_spikes(
     threshold_sorting = ns.threshold_metric(threshold, threshold_sign, save_as_property)
     return threshold_sorting
 
+
 def threshold_firing_rates(
-    sorting,
-    threshold,
-    threshold_sign,
-    sampling_frequency=None,
-    save_as_property=True,
-    verbose=FiringRate.params['verbose'],
+        sorting,
+        threshold,
+        threshold_sign,
+        sampling_frequency=None,
+        save_as_property=True,
+        verbose=FiringRate.params['verbose'],
 ):
     """
     Computes and thresholds the firing rates in the sorted dataset with the given sign and value.
@@ -114,12 +117,12 @@ def threshold_firing_rates(
 
 
 def threshold_presence_ratios(
-    sorting,
-    threshold,
-    threshold_sign,
-    sampling_frequency=None,
-    save_as_property=True,
-    verbose=PresenceRatio.params['verbose'],
+        sorting,
+        threshold,
+        threshold_sign,
+        sampling_frequency=None,
+        save_as_property=True,
+        verbose=PresenceRatio.params['verbose'],
 ):
     """
     Computes and thresholds the presence ratios in the sorted dataset with the given sign and value.
@@ -162,15 +165,16 @@ def threshold_presence_ratios(
     threshold_sorting = pr.threshold_metric(threshold, threshold_sign, save_as_property)
     return threshold_sorting
 
+
 def threshold_isi_violations(
-    sorting,
-    threshold,
-    threshold_sign,
-    isi_threshold=ISIViolation.params['isi_threshold'],
-    min_isi=ISIViolation.params['min_isi'],
-    sampling_frequency=None,
-    save_as_property=True,
-    verbose=ISIViolation.params['verbose']
+        sorting,
+        threshold,
+        threshold_sign,
+        isi_threshold=ISIViolation.params['isi_threshold'],
+        min_isi=ISIViolation.params['min_isi'],
+        sampling_frequency=None,
+        save_as_property=True,
+        verbose=ISIViolation.params['verbose']
 ):
     """
     Computes and thresholds the isi violations in the sorted dataset with the given sign and value.
@@ -217,17 +221,18 @@ def threshold_isi_violations(
     threshold_sorting = iv.threshold_metric(threshold, threshold_sign, isi_threshold, min_isi, save_as_property)
     return threshold_sorting
 
+
 def threshold_amplitude_cutoffs(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    recording_params=get_recording_params(),
-    amplitude_params=get_amplitude_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=AmplitudeCutoff.params['seed'],
-    verbose=AmplitudeCutoff.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        recording_params=get_recording_params(),
+        amplitude_params=get_amplitude_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=AmplitudeCutoff.params['seed'],
+        verbose=AmplitudeCutoff.params['verbose']
 ):
     """
     Computes and thresholds the amplitude cutoffs in the sorted dataset with the given sign and value.
@@ -282,8 +287,8 @@ def threshold_amplitude_cutoffs(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   amplitude_params=amplitude_params, 
+    rp_dict, ap_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   amplitude_params=amplitude_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -312,21 +317,22 @@ def threshold_amplitude_cutoffs(
     threshold_sorting = ac.threshold_metric(threshold, threshold_sign, save_as_property)
     return threshold_sorting
 
+
 def threshold_snrs(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    snr_mode=SNR.params['snr_mode'],
-    snr_noise_duration=SNR.params['snr_noise_duration'],
-    max_spikes_per_unit_for_snr=SNR.params['max_spikes_per_unit_for_snr'],
-    template_mode=SNR.params['template_mode'], 
-    max_channel_peak=SNR.params['max_channel_peak'], 
-    recording_params=get_recording_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=SNR.params['seed'],
-    verbose=SNR.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        snr_mode=SNR.params['snr_mode'],
+        snr_noise_duration=SNR.params['snr_noise_duration'],
+        max_spikes_per_unit_for_snr=SNR.params['max_spikes_per_unit_for_snr'],
+        template_mode=SNR.params['template_mode'],
+        max_channel_peak=SNR.params['max_channel_peak'],
+        recording_params=get_recording_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=SNR.params['seed'],
+        verbose=SNR.params['verbose']
 ):
     """
     Computes and thresholds the snrs in the sorted dataset with the given sign and value.
@@ -397,7 +403,7 @@ def threshold_snrs(
     ----------
     threshold sorting extractor
     """
-    rp_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
+    rp_dict, fp_dict = update_param_dicts(recording_params=recording_params,
                                           feature_params=feature_params)
     md = MetricData(
         sorting=sorting,
@@ -413,23 +419,25 @@ def threshold_snrs(
     )
 
     snr = SNR(metric_data=md)
-    threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration, 
-                                             max_spikes_per_unit_for_snr, template_mode, max_channel_peak, 
-                                             fp_dict['save_features_props'], fp_dict['recompute_info'], seed, save_as_property)
+    threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration,
+                                             max_spikes_per_unit_for_snr, template_mode, max_channel_peak,
+                                             fp_dict['save_features_props'], fp_dict['recompute_info'], seed,
+                                             save_as_property)
     return threshold_sorting
 
+
 def threshold_silhouette_scores(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    max_spikes_for_silhouette=SilhouetteScore.params['max_spikes_for_silhouette'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=SilhouetteScore.params['seed'],
-    verbose=SilhouetteScore.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        max_spikes_for_silhouette=SilhouetteScore.params['max_spikes_for_silhouette'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=SilhouetteScore.params['seed'],
+        verbose=SilhouetteScore.params['verbose']
 ):
     """
     Computes and thresholds the silhouette scores in the sorted dataset with the given sign and value.
@@ -501,8 +509,8 @@ def threshold_silhouette_scores(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -537,18 +545,18 @@ def threshold_silhouette_scores(
 
 
 def threshold_d_primes(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    num_channels_to_compare=DPrime.params['num_channels_to_compare'],
-    max_spikes_per_cluster=DPrime.params['max_spikes_per_cluster'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=DPrime.params['seed'],
-    verbose=DPrime.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        num_channels_to_compare=DPrime.params['num_channels_to_compare'],
+        max_spikes_per_cluster=DPrime.params['max_spikes_per_cluster'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=DPrime.params['seed'],
+        verbose=DPrime.params['verbose']
 ):
     """
     Computes and thresholds the d primes in the sorted dataset with the given sign and value.
@@ -623,8 +631,8 @@ def threshold_d_primes(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -653,24 +661,24 @@ def threshold_d_primes(
     )
 
     d_prime = DPrime(metric_data=md)
-    threshold_sorting = d_prime.threshold_metric(threshold, threshold_sign, num_channels_to_compare, 
+    threshold_sorting = d_prime.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
                                                  max_spikes_per_cluster, seed, save_as_property)
     return threshold_sorting
 
 
 def threshold_l_ratios(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    num_channels_to_compare=LRatio.params['num_channels_to_compare'],
-    max_spikes_per_cluster=LRatio.params['max_spikes_per_cluster'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=LRatio.params['seed'],
-    verbose=LRatio.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        num_channels_to_compare=LRatio.params['num_channels_to_compare'],
+        max_spikes_per_cluster=LRatio.params['max_spikes_per_cluster'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=LRatio.params['seed'],
+        verbose=LRatio.params['verbose']
 ):
     """
     Computes and thresholds the l ratios in the sorted dataset with the given sign and value.
@@ -745,8 +753,8 @@ def threshold_l_ratios(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -775,23 +783,24 @@ def threshold_l_ratios(
     )
 
     l_ratio = LRatio(metric_data=md)
-    threshold_sorting = l_ratio.threshold_metric(threshold, threshold_sign, num_channels_to_compare, 
+    threshold_sorting = l_ratio.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
                                                  max_spikes_per_cluster, seed, save_as_property)
     return threshold_sorting
 
+
 def threshold_isolation_distances(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    num_channels_to_compare=IsolationDistance.params['num_channels_to_compare'],
-    max_spikes_per_cluster=IsolationDistance.params['max_spikes_per_cluster'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=IsolationDistance.params['seed'],
-    verbose=IsolationDistance.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        num_channels_to_compare=IsolationDistance.params['num_channels_to_compare'],
+        max_spikes_per_cluster=IsolationDistance.params['max_spikes_per_cluster'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=IsolationDistance.params['seed'],
+        verbose=IsolationDistance.params['verbose']
 ):
     """
     Computes and thresholds the isolation distances in the sorted dataset with the given sign and value.
@@ -866,8 +875,8 @@ def threshold_isolation_distances(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -896,27 +905,27 @@ def threshold_isolation_distances(
     )
 
     isolaiton_distance = IsolationDistance(metric_data=md)
-    threshold_sorting = isolaiton_distance.threshold_metric(threshold, threshold_sign, num_channels_to_compare, 
+    threshold_sorting = isolaiton_distance.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
                                                             max_spikes_per_cluster, seed, save_as_property)
     return threshold_sorting
 
 
 def threshold_nn_metrics(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    metric_name="nn_hit_rate",
-    num_channels_to_compare=NearestNeighbor.params['num_channels_to_compare'],
-    max_spikes_per_cluster=NearestNeighbor.params['max_spikes_per_cluster'],
-    max_spikes_for_nn=NearestNeighbor.params['max_spikes_for_nn'],
-    n_neighbors=NearestNeighbor.params['n_neighbors'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=NearestNeighbor.params['seed'],
-    verbose=NearestNeighbor.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        metric_name="nn_hit_rate",
+        num_channels_to_compare=NearestNeighbor.params['num_channels_to_compare'],
+        max_spikes_per_cluster=NearestNeighbor.params['max_spikes_per_cluster'],
+        max_spikes_for_nn=NearestNeighbor.params['max_spikes_for_nn'],
+        n_neighbors=NearestNeighbor.params['n_neighbors'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=NearestNeighbor.params['seed'],
+        verbose=NearestNeighbor.params['verbose']
 ):
     """
     Computes and thresholds the specified nearest neighbor metric for the sorted dataset with the given sign and value.
@@ -1000,8 +1009,8 @@ def threshold_nn_metrics(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -1029,24 +1038,26 @@ def threshold_nn_metrics(
     )
 
     nn = NearestNeighbor(metric_data=md)
-    threshold_sorting = nn.threshold_metric(threshold, threshold_sign, metric_name, num_channels_to_compare, 
-                                            max_spikes_per_cluster, max_spikes_for_nn, n_neighbors, seed, save_as_property)
+    threshold_sorting = nn.threshold_metric(threshold, threshold_sign, metric_name, num_channels_to_compare,
+                                            max_spikes_per_cluster, max_spikes_for_nn, n_neighbors, seed,
+                                            save_as_property)
     return threshold_sorting
 
+
 def threshold_drift_metrics(
-    sorting,
-    recording,
-    threshold,
-    threshold_sign,
-    metric_name="max_drift",
-    drift_metrics_interval_s=DriftMetric.params['drift_metrics_interval_s'],
-    drift_metrics_min_spikes_per_interval=DriftMetric.params['drift_metrics_min_spikes_per_interval'],
-    recording_params=get_recording_params(),
-    pca_scores_params=get_pca_scores_params(),
-    feature_params=get_feature_params(),
-    save_as_property=True,
-    seed=DriftMetric.params['seed'],
-    verbose=DriftMetric.params['verbose']
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        metric_name="max_drift",
+        drift_metrics_interval_s=DriftMetric.params['drift_metrics_interval_s'],
+        drift_metrics_min_spikes_per_interval=DriftMetric.params['drift_metrics_min_spikes_per_interval'],
+        recording_params=get_recording_params(),
+        pca_scores_params=get_pca_scores_params(),
+        feature_params=get_feature_params(),
+        save_as_property=True,
+        seed=DriftMetric.params['seed'],
+        verbose=DriftMetric.params['verbose']
 ):
     """
     Computes and thresholds the specified drift metric for the sorted dataset with the given sign and value.
@@ -1121,8 +1132,8 @@ def threshold_drift_metrics(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params, 
-                                                   pca_scores_params=pca_scores_params, 
+    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
+                                                   pca_scores_params=pca_scores_params,
                                                    feature_params=feature_params)
 
     md = MetricData(
@@ -1151,6 +1162,6 @@ def threshold_drift_metrics(
     )
 
     dm = DriftMetric(metric_data=md)
-    threshold_sorting = dm.threshold_metric(threshold, threshold_sign, metric_name, drift_metrics_interval_s, 
+    threshold_sorting = dm.threshold_metric(threshold, threshold_sign, metric_name, drift_metrics_interval_s,
                                             drift_metrics_min_spikes_per_interval, save_as_property)
     return threshold_sorting

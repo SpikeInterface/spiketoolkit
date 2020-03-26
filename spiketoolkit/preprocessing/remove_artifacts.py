@@ -22,6 +22,9 @@ class RemoveArtifactsRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'triggers': triggers,
+                        'ms_before': ms_before, 'ms_after': ms_after}
+
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 

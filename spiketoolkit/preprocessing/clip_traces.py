@@ -22,6 +22,9 @@ class ClipTracesRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'a_min': a_min, 'a_max': a_max}
+
+
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 
