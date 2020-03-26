@@ -21,6 +21,9 @@ class WhitenRecording(FilterRecording):
         self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'chunk_size': chunk_size,
+                        'cache_chunks': cache_chunks, 'seed': seed}
+
     def _get_random_data_for_whitening(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
         random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)

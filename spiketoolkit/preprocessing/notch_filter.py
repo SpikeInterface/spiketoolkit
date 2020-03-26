@@ -35,6 +35,9 @@ class NotchFilterRecording(FilterRecording):
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
         self.copy_channel_properties(recording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'freq': freq,
+                        'q': q, 'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
+
     def filter_chunk(self, *, start_frame, end_frame):
         padding = 3000
         i1 = start_frame - padding

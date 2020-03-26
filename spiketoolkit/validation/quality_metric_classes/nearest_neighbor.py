@@ -46,9 +46,7 @@ class NearestNeighbor(QualityMetric):
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
         for epoch in self._metric_data._epochs:
-            in_epoch = np.logical_and(
-                self._metric_data._spike_times_pca > epoch[1], self._metric_data._spike_times_pca < epoch[2]
-            )
+            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_pca)
             spikes_in_epoch = np.sum(in_epoch)
             spikes_for_nn = np.min([spikes_in_epoch, max_spikes_for_nn])
             nn_hit_rates_all, nn_miss_rates_all = metrics.calculate_pc_metrics(

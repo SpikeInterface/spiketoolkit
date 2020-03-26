@@ -25,6 +25,9 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._subrecording)
 
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'bad_channel_ids': bad_channel_ids,
+                        'bad_threshold': bad_threshold, 'seconds': seconds, 'verbose': verbose}
+
     def get_sampling_frequency(self):
         return self._subrecording.get_sampling_frequency()
 
@@ -54,6 +57,8 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         elif self._bad_channel_ids is None:
             start_frame = self._recording.get_num_frames() // 2
             end_frame = int(start_frame + self._seconds * self._recording.get_sampling_frequency())
+            if end_frame > self._recording.get_num_frames():
+                end_frame = self._recording.get_num_frames()
             traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
             stds = np.std(traces, axis=1)
             bad_channel_ids = [ch for ch, std in enumerate(stds) if std > self._bad_threshold * np.median(stds)]
