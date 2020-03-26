@@ -32,27 +32,24 @@ def test_bandpass_filter():
     assert check_signal_power_signal1_below_signal2(rec_cache.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
+
 @pytest.mark.implemented
 def test_bandpass_filter_with_cache():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
-    
+
     rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=10000)
-    
+
     rec_filtered2 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=None)
-    
+
     rec_filtered3 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=10000)
     rec_filtered3.get_traces()
     assert rec_filtered3._filtered_cache_chunks.get('0') is not None
-    
+
     rec_filtered4 = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_chunks=True, chunk_size=None)
-    
+
     assert np.allclose(rec_filtered.get_traces(), rec_filtered2.get_traces(), rtol=1e-02, atol=1e-02)
     assert np.allclose(rec_filtered.get_traces(), rec_filtered3.get_traces(), rtol=1e-02, atol=1e-02)
     assert np.allclose(rec_filtered.get_traces(), rec_filtered4.get_traces(), rtol=1e-02, atol=1e-02)
-    
-    
-    
-
 
 
 @pytest.mark.implemented
@@ -102,7 +99,6 @@ def test_common_reference():
     rec_car_g = common_reference(rec, reference='average', groups=groups)
     rec_sin_g = common_reference(rec, reference='single', ref_channels=[0, 2], groups=groups)
     rec_cmr_int16_g = common_reference(rec, groups=groups, dtype='int16')
-
 
     traces = rec.get_traces()
     assert np.allclose(traces[:2], rec_cmr_g.get_traces()[:2] + np.median(traces[:2], axis=0, keepdims=True))
@@ -211,32 +207,28 @@ def test_transform_traces():
 @pytest.mark.implemented
 def test_whiten():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
-    
+
     rec_w = whiten(rec)
     cov_w = np.cov(rec_w.get_traces())
 
     assert np.allclose(cov_w, np.eye(4), atol=0.3)
-    
+
     # should size should not affect
     rec_w2 = whiten(rec, chunk_size=30000)
-    
+
     assert np.array_equal(rec_w.get_traces(), rec_w2.get_traces())
-    
-    
-    
 
 
 if __name__ == '__main__':
-    #~ test_bandpass_filter()
+    # ~ test_bandpass_filter()
     test_bandpass_filter_with_cache()
-    #~ test_blank_saturation()
-    #~ test_clip_traces()
-    #~ test_common_reference()
-    #~ test_norm_by_quantile()
-    #~ test_notch_filter()
-    #~ test_rectify()
-    #~ test_remove_artifacts()
-    #~ test_resample()
-    #~ test_transform_traces()
-    #~ test_whiten()
-
+    # ~ test_blank_saturation()
+    # ~ test_clip_traces()
+    # ~ test_common_reference()
+    # ~ test_norm_by_quantile()
+    # ~ test_notch_filter()
+    # ~ test_rectify()
+    # ~ test_remove_artifacts()
+    # ~ test_resample()
+    # ~ test_transform_traces()
+    # ~ test_whiten()
