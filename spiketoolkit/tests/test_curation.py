@@ -14,6 +14,7 @@ from spiketoolkit.curation import (
     threshold_isolation_distances,
     threshold_nn_metrics,
     threshold_drift_metrics,
+    get_kwargs_params
 )
 
 
@@ -117,6 +118,9 @@ def test_thresh_frs():
 
     assert np.all(new_fr >= fr_thresh)
     check_dumping(sort_fr)
+
+def test_kwarg_params():
+    print(get_kwargs_params())
 
 
 if __name__ == "__main__":
