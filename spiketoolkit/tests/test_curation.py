@@ -14,6 +14,7 @@ from spiketoolkit.curation import (
     threshold_isolation_distances,
     threshold_nn_metrics,
     threshold_drift_metrics,
+    get_kwargs_params
 )
 
 
@@ -33,7 +34,7 @@ from spiketoolkit.validation import (
     compute_metrics,
 )
 
-from .utils import check_dumping, create_dumpable_sorting, create_dumpable_extractors
+from spiketoolkit.tests.utils import check_dumping, create_dumpable_sorting, create_dumpable_extractors
 
 
 def test_thresh_num_spikes():
@@ -64,10 +65,8 @@ def test_thresh_silhouettes():
 
     silhouette_thresh = .5
 
-    sort_silhouette = threshold_silhouette_scores(
-        sort, rec, silhouette_thresh, "less"
-    )
-    silhouette = np.asarray(compute_silhouette_scores(sort, rec)[0])
+    sort_silhouette = threshold_silhouette_scores(sort, rec, silhouette_thresh, "less", apply_filter=False)
+    silhouette = np.asarray(compute_silhouette_scores(sort, rec, apply_filter=False)[0])
     new_silhouette = silhouette[np.where(silhouette >= silhouette_thresh)]
 
     assert np.all(new_silhouette >= silhouette_thresh)
@@ -79,9 +78,7 @@ def test_thresh_d_primes():
 
     d_primes_thresh = .5
 
-    sort_d_primes = threshold_d_primes(
-        sort, rec, d_primes_thresh, "less"
-    )
+    sort_d_primes = threshold_d_primes(sort, rec, d_primes_thresh, "less", apply_filter=False)
     new_d_primes = compute_d_primes(sort_d_primes, rec)[0]
 
     assert np.all(new_d_primes >= d_primes_thresh)
@@ -93,9 +90,7 @@ def test_thresh_l_ratios():
 
     l_ratios_thresh = 0
 
-    sort_l_ratios = threshold_l_ratios(
-        sort, rec, l_ratios_thresh, "less"
-    )
+    sort_l_ratios = threshold_l_ratios(sort, rec, l_ratios_thresh, "less", apply_filter=False)
     new_l_ratios = compute_l_ratios(sort_l_ratios, rec)[0]
 
     assert np.all(new_l_ratios >= l_ratios_thresh)
@@ -107,13 +102,12 @@ def test_thresh_amplitude_cutoffs():
 
     amplitude_cutoff_thresh = 0
 
-    sort_amplitude_cutoff = threshold_amplitude_cutoffs(
-        sort, rec, amplitude_cutoff_thresh, "less"
-    )
+    sort_amplitude_cutoff = threshold_amplitude_cutoffs(sort, rec, amplitude_cutoff_thresh, "less", apply_filter=False)
     new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec)[0]
 
     assert np.all(new_amplitude_cutoff >= amplitude_cutoff_thresh)
     check_dumping(sort_amplitude_cutoff)
+
 
 def test_thresh_frs():
     sort = create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test')
@@ -125,11 +119,16 @@ def test_thresh_frs():
     assert np.all(new_fr >= fr_thresh)
     check_dumping(sort_fr)
 
+def test_kwarg_params():
+    print(get_kwargs_params())
+
 
 if __name__ == "__main__":
     test_thresh_silhouettes()
-    test_thresh_snrs()
-    test_thresh_frs()
-    test_thresh_amplitude_cutoffs()
-    test_thresh_silhouettes()
-    test_thresh_l_ratios()
+    # test_thresh_snrs()
+    # test_thresh_frs()
+    # test_thresh_amplitude_cutoffs()
+    # test_thresh_silhouettes()
+    # test_thresh_l_ratios()
+    # test_thresh_snrs()
+    # test_thresh_num_spikes()
