@@ -51,7 +51,7 @@ class ClipRecording(RecordingExtractor):
         return traces
 
 
-def clip_traces(recording, a_min=None, a_max=None):
+def clip(recording, a_min=None, a_max=None):
     '''
     Limit the values of the data between a_min and a_max. Values exceeding the
     range will be set to the minimum or maximum, respectively.

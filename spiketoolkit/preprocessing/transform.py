@@ -1,6 +1,7 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 
+
 class TransformRecording(RecordingExtractor):
 
     preprocessor_name = 'Transform'
@@ -13,7 +14,7 @@ class TransformRecording(RecordingExtractor):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, scalar=1, offset=0):
+    def __init__(self, recording, scalar=1., offset=0.):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
@@ -48,7 +49,7 @@ class TransformRecording(RecordingExtractor):
                 scalar = self._scalar
             else:
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
-                scalar = self._scalar[channel_idxs]
+                scalar = np.array(self._scalar)[channel_idxs]
             traces = np.array([t * s for (t, s) in zip(traces, scalar)])
         if isinstance(self._offset, (int, float, np.integer, np.float)):
             traces = traces + self._offset
@@ -57,12 +58,12 @@ class TransformRecording(RecordingExtractor):
                 offset = self._offset
             else:
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
-                offset = self._offset[channel_idxs]
+                offset = np.array(self._offset)[channel_idxs]
             traces = np.array([(t + o) for (t, o) in zip(traces, offset)])
         return traces
 
 
-def transform_traces(recording, scalar=1, offset=0):
+def transform(recording, scalar=1, offset=0):
     '''
     Transforms the traces from the given recording extractor with a scalar
     and offset. New traces = traces*scalar + offset.

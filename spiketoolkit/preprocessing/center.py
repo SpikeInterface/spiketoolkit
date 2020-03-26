@@ -33,6 +33,4 @@ def center(recording):
     rcenter: CenterRecording
         The output recording extractor object
     '''
-    return CenterRecording(
-        recording=recording
-    )
+    return CenterRecording(recording=recording)

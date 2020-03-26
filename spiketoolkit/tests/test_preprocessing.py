@@ -3,8 +3,8 @@ import spikeextractors as se
 import pytest
 import shutil
 from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
-from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip_traces, common_reference, \
-    normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform_traces, \
+from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
+    normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform, \
     whiten
 from spiketoolkit.tests.utils import check_dumping, create_dumpable_recording
 
@@ -98,10 +98,10 @@ def test_center():
 
 
 @pytest.mark.implemented
-def test_clip_traces():
+def test_clip():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
     threshold = 5
-    rec_clip = clip_traces(rec, a_min=-threshold, a_max=threshold)
+    rec_clip = clip(rec, a_min=-threshold, a_max=threshold)
 
     index_below_threshold = np.where(rec.get_traces() < -threshold)
     index_above_threshold = np.where(rec.get_traces() > threshold)
@@ -257,18 +257,18 @@ def test_resample():
 
 
 @pytest.mark.implemented
-def test_transform_traces():
+def test_transform():
     rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
 
     scalar = 3
     offset = 50
 
-    rec_t = transform_traces(rec, scalar=scalar, offset=offset)
+    rec_t = transform(rec, scalar=scalar, offset=offset)
     assert np.allclose(rec_t.get_traces(), scalar * rec.get_traces() + offset)
 
     scalars = np.random.randn(4)
     offsets = np.random.randn(4)
-    rec_t_arr = transform_traces(rec, scalar=scalars, offset=offsets)
+    rec_t_arr = transform(rec, scalar=scalars, offset=offsets)
     for (tt, to, s, o) in zip(rec_t_arr.get_traces(), rec.get_traces(), scalars, offsets):
         assert np.allclose(tt, s * to + o)
 
@@ -294,17 +294,17 @@ def test_whiten():
     check_dumping(rec_w)
     shutil.rmtree('test')
 
-# if __name__ == '__main__':
-# test_bandpass_filter()
-# test_bandpass_filter_with_cache()
-# test_blank_saturation()
-# test_clip_traces()
-# test_common_reference()
-# test_norm_by_quantile()
-# test_notch_filter()
-# test_rectify()
-# test_remove_artifacts()
-# test_remove_bad_channels()
-# test_resample()
-# test_transform_traces()
-# test_whiten()
+if __name__ == '__main__':
+    # test_bandpass_filter()
+    # test_bandpass_filter_with_cache()
+    # test_blank_saturation()
+    # test_clip_traces()
+    # test_common_reference()
+    # test_norm_by_quantile()
+    # test_notch_filter()
+    # test_rectify()
+    # test_remove_artifacts()
+    # test_remove_bad_channels()
+    # test_resample()
+    test_transform_traces()
+    # test_whiten()

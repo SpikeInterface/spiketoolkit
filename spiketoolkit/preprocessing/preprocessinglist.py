@@ -5,10 +5,10 @@ from .common_reference import common_reference, CommonReferenceRecording
 from .resample import resample, ResampleRecording
 from .rectify import rectify, RectifyRecording
 from .remove_artifacts import remove_artifacts, RemoveArtifactsRecording
-from .transform import transform_traces, TransformRecording
+from .transform import transform, TransformRecording
 from .remove_bad_channels import remove_bad_channels, RemoveBadChannelsRecording
 from .normalize_by_quantile import normalize_by_quantile, NormalizeByQuantileRecording
-from .clip import clip_traces, ClipRecording
+from .clip import clip, ClipRecording
 from .blank_saturation import blank_saturation, BlankSaturationRecording
 from .center import center, CenterRecording
 
