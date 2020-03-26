@@ -13,7 +13,9 @@ from .quality_metric_classes.nearest_neighbor import NearestNeighbor
 from .quality_metric_classes.drift_metric import DriftMetric   
 from .quality_metric_classes.parameter_dictionaries import get_recording_params, get_amplitude_params, get_pca_scores_params, get_epoch_params, update_param_dicts, get_feature_params
 from collections import OrderedDict
+from copy import deepcopy
 # All parameter values are stored in the class definitions
+
 
 def compute_num_spikes(
     sorting,
@@ -55,7 +57,7 @@ def compute_num_spikes(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=sampling_frequency,
         recording=None,
         apply_filter=False,
@@ -443,7 +445,7 @@ def compute_snrs(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -552,7 +554,7 @@ def compute_silhouette_scores(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -676,7 +678,7 @@ def compute_d_primes(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -798,7 +800,7 @@ def compute_l_ratios(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -921,7 +923,7 @@ def compute_isolation_distances(
        unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -1052,7 +1054,7 @@ def compute_nn_metrics(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -1176,7 +1178,7 @@ def compute_drift_metrics(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],
@@ -1404,7 +1406,7 @@ def compute_metrics(
         unit_ids = sorting.get_unit_ids()
 
     md = MetricData(
-        sorting=sorting,
+        sorting=deepcopy(sorting),
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
         apply_filter=rp_dict["apply_filter"],

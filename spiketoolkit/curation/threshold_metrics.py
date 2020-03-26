@@ -12,7 +12,7 @@ from spiketoolkit.validation.quality_metric_classes.isolation_distance import Is
 from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import NearestNeighbor
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
 from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import get_recording_params, \
-    get_amplitude_params, get_pca_scores_params, get_feature_params, update_param_dicts
+    get_amplitude_params, get_pca_scores_params, get_feature_params, update_param_dicts, update_param_dicts_with_kwargs
 
 
 def threshold_num_spikes(
@@ -47,7 +47,6 @@ def threshold_num_spikes(
     ----------
     threshold sorting extractor
     """
-
     md = MetricData(
         sorting=sorting,
         sampling_frequency=sampling_frequency,
@@ -227,12 +226,10 @@ def threshold_amplitude_cutoffs(
         recording,
         threshold,
         threshold_sign,
-        recording_params=get_recording_params(),
-        amplitude_params=get_amplitude_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=AmplitudeCutoff.params['seed'],
-        verbose=AmplitudeCutoff.params['verbose']
+        verbose=AmplitudeCutoff.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the amplitude cutoffs in the sorted dataset with the given sign and value.
@@ -250,8 +247,14 @@ def threshold_amplitude_cutoffs(
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-    amplitude_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
             amp_method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
@@ -261,35 +264,23 @@ def threshold_amplitude_cutoffs(
                 Frames before peak to compute amplitude.
             amp_frames_after: int
                 Frames after peak to compute amplitude.
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    seed: int
-        Random seed for reproducibility
-    verbose: bool
-        If True, will be verbose in metric computation.
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   amplitude_params=amplitude_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -328,11 +319,10 @@ def threshold_snrs(
         max_spikes_per_unit_for_snr=SNR.params['max_spikes_per_unit_for_snr'],
         template_mode=SNR.params['template_mode'],
         max_channel_peak=SNR.params['max_channel_peak'],
-        recording_params=get_recording_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=SNR.params['seed'],
-        verbose=SNR.params['verbose']
+        verbose=SNR.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the snrs in the sorted dataset with the given sign and value.
@@ -341,45 +331,50 @@ def threshold_snrs(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     snr_mode: str
             Mode to compute noise SNR ('mad' | 'std' - default 'mad')
-            
     snr_noise_duration: float
         Number of seconds to compute noise level from (default 10.0)
-
     max_spikes_per_unit_for_snr: int
         Maximum number of spikes to compute templates from (default 1000)
-
     template_mode: str
         Use 'mean' or 'median' to compute templates
-
     max_channel_peak: str
         If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    recompute_info: bool
+            If True, waveforms are recomputed
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -387,24 +382,12 @@ def threshold_snrs(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    recompute_info: bool
-            If True, waveforms are recomputed
-
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                          feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
@@ -432,12 +415,10 @@ def threshold_silhouette_scores(
         threshold,
         threshold_sign,
         max_spikes_for_silhouette=SilhouetteScore.params['max_spikes_for_silhouette'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=SilhouetteScore.params['seed'],
-        verbose=SilhouetteScore.params['verbose']
+        verbose=SilhouetteScore.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the silhouette scores in the sorted dataset with the given sign and value.
@@ -446,72 +427,51 @@ def threshold_silhouette_scores(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     max_spikes_for_silhouette: int
         Max spikes to be used for silhouette metric.
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
-
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -527,12 +487,12 @@ def threshold_silhouette_scores(
     )
 
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,
@@ -551,12 +511,10 @@ def threshold_d_primes(
         threshold_sign,
         num_channels_to_compare=DPrime.params['num_channels_to_compare'],
         max_spikes_per_cluster=DPrime.params['max_spikes_per_cluster'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=DPrime.params['seed'],
-        verbose=DPrime.params['verbose']
+        verbose=DPrime.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the d primes in the sorted dataset with the given sign and value.
@@ -565,49 +523,42 @@ def threshold_d_primes(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-        
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -615,25 +566,11 @@ def threshold_d_primes(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -649,12 +586,12 @@ def threshold_d_primes(
     )
 
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,
@@ -673,12 +610,10 @@ def threshold_l_ratios(
         threshold_sign,
         num_channels_to_compare=LRatio.params['num_channels_to_compare'],
         max_spikes_per_cluster=LRatio.params['max_spikes_per_cluster'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=LRatio.params['seed'],
-        verbose=LRatio.params['verbose']
+        verbose=LRatio.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the l ratios in the sorted dataset with the given sign and value.
@@ -687,49 +622,42 @@ def threshold_l_ratios(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-        
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -737,25 +665,11 @@ def threshold_l_ratios(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -771,12 +685,12 @@ def threshold_l_ratios(
     )
 
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,
@@ -795,12 +709,10 @@ def threshold_isolation_distances(
         threshold_sign,
         num_channels_to_compare=IsolationDistance.params['num_channels_to_compare'],
         max_spikes_per_cluster=IsolationDistance.params['max_spikes_per_cluster'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=IsolationDistance.params['seed'],
-        verbose=IsolationDistance.params['verbose']
+        verbose=IsolationDistance.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the isolation distances in the sorted dataset with the given sign and value.
@@ -809,49 +721,42 @@ def threshold_isolation_distances(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-        
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -859,25 +764,11 @@ def threshold_isolation_distances(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -893,12 +784,12 @@ def threshold_isolation_distances(
     )
 
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,
@@ -920,12 +811,10 @@ def threshold_nn_metrics(
         max_spikes_per_cluster=NearestNeighbor.params['max_spikes_per_cluster'],
         max_spikes_for_nn=NearestNeighbor.params['max_spikes_for_nn'],
         n_neighbors=NearestNeighbor.params['n_neighbors'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=NearestNeighbor.params['seed'],
-        verbose=NearestNeighbor.params['verbose']
+        verbose=NearestNeighbor.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the specified nearest neighbor metric for the sorted dataset with the given sign and value.
@@ -934,58 +823,48 @@ def threshold_nn_metrics(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     metric_name: str
         The name of the nearest neighbor metric to be thresholded (either "nn_hit_rate" or "nn_miss_rate").
-
     num_channels_to_compare: int
         The number of channels to be used for the PC extraction and comparison
-        
     max_spikes_per_cluster: int
         Max spikes to be used from each unit
-
     max_spikes_for_nn: int
         Max spikes to be used for nearest-neighbors calculation.
-    
     n_neighbors: int
         Number of neighbors to compare.
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -993,25 +872,11 @@ def threshold_nn_metrics(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-        
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -1026,12 +891,12 @@ def threshold_nn_metrics(
         verbose=verbose
     )
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,
@@ -1052,12 +917,10 @@ def threshold_drift_metrics(
         metric_name="max_drift",
         drift_metrics_interval_s=DriftMetric.params['drift_metrics_interval_s'],
         drift_metrics_min_spikes_per_interval=DriftMetric.params['drift_metrics_min_spikes_per_interval'],
-        recording_params=get_recording_params(),
-        pca_scores_params=get_pca_scores_params(),
-        feature_params=get_feature_params(),
         save_as_property=True,
         seed=DriftMetric.params['seed'],
-        verbose=DriftMetric.params['verbose']
+        verbose=DriftMetric.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the specified drift metric for the sorted dataset with the given sign and value.
@@ -1066,52 +929,44 @@ def threshold_drift_metrics(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
-
     recording: RecordingExtractor
         The given recording extractor
-
     threshold: int or float
         The threshold for the given metric.
-
     threshold_sign: str
         If 'less', will threshold any metric less than the given threshold.
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
-
     metric_name: str
         The name of the nearest neighbor metric to be thresholded (either "max_drift" or "cumulative_drift").
-
     drift_metrics_interval_s: float
         Time period for evaluating drift.
-
     drift_metrics_min_spikes_per_interval: int
         Minimum number of spikes for evaluating drift metrics per interval.
-
-    recording_params: dict
-        This dictionary should contain any subset of the following parameters:
+    save_as_property: bool
+        If True, the metric is saved as sorting property
+    seed: int
+        Random seed for reproducibility
+    verbose: bool
+        If True, will be verbose in metric computation.
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            amp_method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+            amp_peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+            amp_frames_before: int
+                Frames before peak to compute amplitude.
+            amp_frames_after: int
+                Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-
-    pca_scores_params: dict
-        This dictionary should contain any subset of the following parameters:
-            ms_before: float
-                Time period in ms to cut waveforms before the spike events
-            ms_after: float
-                Time period in ms to cut waveforms after the spike events
-            dtype: dtype
-                The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
-
-    feature_params: dict
-        This dictionary should contain any subset of the following parameters:
             save_features_props: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
@@ -1119,22 +974,11 @@ def threshold_drift_metrics(
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit.
 
-    save_as_property: bool
-        If True, the metric is saved as sorting property
-    
-    seed: int
-        Random seed for reproducibility
-
-    verbose: bool
-        If True, will be verbose in metric computation.
-
     Returns
     ----------
     threshold sorting extractor
     """
-    rp_dict, ps_dict, fp_dict = update_param_dicts(recording_params=recording_params,
-                                                   pca_scores_params=pca_scores_params,
-                                                   feature_params=feature_params)
+    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
@@ -1150,12 +994,12 @@ def threshold_drift_metrics(
     )
 
     md.compute_pca_scores(
-        n_comp=ps_dict["n_comp"],
-        ms_before=ps_dict["ms_before"],
-        ms_after=ps_dict["ms_after"],
-        dtype=ps_dict["dtype"],
+        n_comp=pca_dict["n_comp"],
+        ms_before=pca_dict["ms_before"],
+        ms_after=pca_dict["ms_after"],
+        dtype=pca_dict["dtype"],
         max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=ps_dict["max_spikes_for_pca"],
+        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
         save_features_props=fp_dict['save_features_props'],
         recompute_info=fp_dict['recompute_info'],
         seed=seed,

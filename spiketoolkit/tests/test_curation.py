@@ -65,9 +65,9 @@ def test_thresh_silhouettes():
     silhouette_thresh = .5
 
     sort_silhouette = threshold_silhouette_scores(
-        sort, rec, silhouette_thresh, "less"
+        sort, rec, silhouette_thresh, "less", recording_params={'apply_filter': False}
     )
-    silhouette = np.asarray(compute_silhouette_scores(sort, rec)[0])
+    silhouette = np.asarray(compute_silhouette_scores(sort, rec, recording_params={'apply_filter': False})[0])
     new_silhouette = silhouette[np.where(silhouette >= silhouette_thresh)]
 
     assert np.all(new_silhouette >= silhouette_thresh)
@@ -127,10 +127,11 @@ def test_thresh_frs():
 
 
 if __name__ == "__main__":
-    # test_thresh_silhouettes()
+    test_thresh_silhouettes()
     # test_thresh_snrs()
     # test_thresh_frs()
     # test_thresh_amplitude_cutoffs()
     # test_thresh_silhouettes()
     # test_thresh_l_ratios()
-    test_thresh_snrs()
+    # test_thresh_snrs()
+    # test_thresh_num_spikes()
