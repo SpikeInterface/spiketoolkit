@@ -33,52 +33,50 @@ from spiketoolkit.validation import (
     compute_metrics,
 )
 
+from .utils import check_dumping, create_dumpable_sorting, create_dumpable_extractors
+
 
 def test_thresh_num_spikes():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10,
-        num_channels=4,
-        seed=0
-    )
+    sort = create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test')
     s_threshold = 25
 
     sort_ns = threshold_num_spikes(sort, s_threshold, 'less')
-    new_ns = compute_num_spikes(sort_ns, rec.get_sampling_frequency())[0]
+    new_ns = compute_num_spikes(sort_ns, sort.get_sampling_frequency())[0]
 
     assert np.all(new_ns >= s_threshold)
+    check_dumping(sort_ns)
 
 
 def test_thresh_snrs():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-    )
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+
     snr_thresh = 4
 
     sort_snr = threshold_snrs(sort, rec, snr_thresh, 'less')
     new_snr = compute_snrs(sort_snr, rec)[0]
 
     assert np.all(new_snr >= snr_thresh)
+    check_dumping(sort_snr)
 
 
 def test_thresh_silhouettes():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-    )
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+
     silhouette_thresh = .5
 
-    _ = threshold_silhouette_scores(
+    sort_silhouette = threshold_silhouette_scores(
         sort, rec, silhouette_thresh, "less"
     )
     silhouette = np.asarray(compute_silhouette_scores(sort, rec)[0])
     new_silhouette = silhouette[np.where(silhouette >= silhouette_thresh)]
 
     assert np.all(new_silhouette >= silhouette_thresh)
+    check_dumping(sort_silhouette)
 
 
 def test_thresh_d_primes():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-    )
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+
     d_primes_thresh = .5
 
     sort_d_primes = threshold_d_primes(
@@ -87,12 +85,12 @@ def test_thresh_d_primes():
     new_d_primes = compute_d_primes(sort_d_primes, rec)[0]
 
     assert np.all(new_d_primes >= d_primes_thresh)
+    check_dumping(sort_d_primes)
 
 
 def test_thresh_l_ratios():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-    )
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+
     l_ratios_thresh = 0
 
     sort_l_ratios = threshold_l_ratios(
@@ -101,12 +99,12 @@ def test_thresh_l_ratios():
     new_l_ratios = compute_l_ratios(sort_l_ratios, rec)[0]
 
     assert np.all(new_l_ratios >= l_ratios_thresh)
+    check_dumping(sort_l_ratios)
 
 
 def test_thresh_amplitude_cutoffs():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-    )
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+
     amplitude_cutoff_thresh = 0
 
     sort_amplitude_cutoff = threshold_amplitude_cutoffs(
@@ -115,18 +113,17 @@ def test_thresh_amplitude_cutoffs():
     new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec)[0]
 
     assert np.all(new_amplitude_cutoff >= amplitude_cutoff_thresh)
-
+    check_dumping(sort_amplitude_cutoff)
 
 def test_thresh_frs():
-    rec, sort = se.example_datasets.toy_example(
-        duration=10, num_channels=4, seed=0
-     )
+    sort = create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test')
     fr_thresh = 2
 
     sort_fr = threshold_firing_rates(sort, fr_thresh, 'less')
     new_fr = compute_firing_rates(sort_fr)[0]
 
     assert np.all(new_fr >= fr_thresh)
+    check_dumping(sort_fr)
 
 
 if __name__ == "__main__":

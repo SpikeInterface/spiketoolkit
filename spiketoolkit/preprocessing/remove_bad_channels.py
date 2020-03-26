@@ -57,6 +57,8 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         elif self._bad_channel_ids is None:
             start_frame = self._recording.get_num_frames() // 2
             end_frame = int(start_frame + self._seconds * self._recording.get_sampling_frequency())
+            if end_frame > self._recording.get_num_frames():
+                end_frame = self._recording.get_num_frames()
             traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
             stds = np.std(traces, axis=1)
             bad_channel_ids = [ch for ch, std in enumerate(stds) if std > self._bad_threshold * np.median(stds)]
