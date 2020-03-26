@@ -33,7 +33,7 @@ from spiketoolkit.validation import (
     compute_metrics,
 )
 
-from .utils import check_dumping, create_dumpable_sorting, create_dumpable_extractors
+from spiketoolkit.tests.utils import check_dumping, create_dumpable_sorting, create_dumpable_extractors
 
 
 def test_thresh_num_spikes():
@@ -127,9 +127,10 @@ def test_thresh_frs():
 
 
 if __name__ == "__main__":
-    test_thresh_silhouettes()
+    # test_thresh_silhouettes()
+    # test_thresh_snrs()
+    # test_thresh_frs()
+    # test_thresh_amplitude_cutoffs()
+    # test_thresh_silhouettes()
+    # test_thresh_l_ratios()
     test_thresh_snrs()
-    test_thresh_frs()
-    test_thresh_amplitude_cutoffs()
-    test_thresh_silhouettes()
-    test_thresh_l_ratios()
