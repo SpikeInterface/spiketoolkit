@@ -130,19 +130,19 @@ def update_param_dicts_with_kwargs(kwargs):
         for k in kwargs.keys():
             if k in recording_params.keys():
                 recording_params[k] = kwargs[k]
-    if np.any([k in amplitude_params.keys() for k in kwargs.keys()]):
+    elif np.any([k in amplitude_params.keys() for k in kwargs.keys()]):
         for k in kwargs.keys():
             if k in amplitude_params.keys():
                 amplitude_params[k] = kwargs[k]
-    if np.any([k in pca_scores_params.keys() for k in kwargs.keys()]):
+    elif np.any([k in pca_scores_params.keys() for k in kwargs.keys()]):
         for k in kwargs.keys():
             if k in pca_scores_params.keys():
                 pca_scores_params[k] = kwargs[k]
-    if np.any([k in epoch_params.keys() for k in kwargs.keys()]):
+    elif np.any([k in epoch_params.keys() for k in kwargs.keys()]):
         for k in kwargs.keys():
             if k in epoch_params.keys():
                 epoch_params[k] = kwargs[k]
-    if np.any([k in feature_params.keys()for k in kwargs.keys()]):
+    elif np.any([k in feature_params.keys()for k in kwargs.keys()]):
         for k in kwargs.keys():
             if k in feature_params.keys():
                 feature_params[k] = kwargs[k]
