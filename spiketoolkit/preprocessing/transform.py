@@ -1,9 +1,9 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 
-class TransformTracesRecording(RecordingExtractor):
+class TransformRecording(RecordingExtractor):
 
-    preprocessor_name = 'TransformTraces'
+    preprocessor_name = 'Transform'
     installed = True  # check at class level if installed or not
     preprocessor_gui_params = [
         {'name': 'scalar', 'type': 'float or array', 'title': "Scalar for all traces or each channel "
@@ -58,7 +58,7 @@ class TransformTracesRecording(RecordingExtractor):
             else:
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
                 offset = self._offset[channel_idxs]
-            traces = np.array([t + o for (t, o) in zip(traces, offset)])
+            traces = np.array([(t + o) for (t, o) in zip(traces, offset)])
         return traces
 
 
@@ -80,6 +80,6 @@ def transform_traces(recording, scalar=1, offset=0):
     transform_traces: TransformTracesRecording
         The transformed traces recording extractor object
     '''
-    return TransformTracesRecording(
+    return TransformRecording(
         recording=recording, scalar=scalar, offset=offset
     )
