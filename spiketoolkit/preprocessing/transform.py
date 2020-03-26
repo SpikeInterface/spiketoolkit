@@ -46,20 +46,20 @@ class TransformRecording(RecordingExtractor):
             traces = traces*self._scalar
         else:
             if len(self._scalar) == len(channel_ids):
-                scalar = self._scalar
+                scalar = np.array(self._scalar)
             else:
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
                 scalar = np.array(self._scalar)[channel_idxs]
-            traces = np.array([t * s for (t, s) in zip(traces, scalar)])
+            traces = traces * scalar[:, np.newaxis]
         if isinstance(self._offset, (int, float, np.integer, np.float)):
             traces = traces + self._offset
         else:
             if len(self._offset) == len(channel_ids):
-                offset = self._offset
+                offset = np.array(self._offset)
             else:
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
                 offset = np.array(self._offset)[channel_idxs]
-            traces = np.array([(t + o) for (t, o) in zip(traces, offset)])
+            traces = traces + offset[:, np.newaxis]
         return traces
 
 

@@ -11,8 +11,7 @@ from spiketoolkit.validation.quality_metric_classes.snr import SNR
 from spiketoolkit.validation.quality_metric_classes.isolation_distance import IsolationDistance
 from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import NearestNeighbor
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
-from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import get_recording_params, \
-    get_amplitude_params, get_pca_scores_params, get_feature_params, update_param_dicts, update_param_dicts_with_kwargs
+from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import update_param_dicts_with_kwargs
 
 
 def threshold_num_spikes(

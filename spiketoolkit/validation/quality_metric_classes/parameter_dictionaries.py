@@ -99,65 +99,31 @@ def get_pca_scores_gui_params():
 def get_feature_gui_params():
     return feature_gui_params.copy()
 
+def get_kwargs_params():
+    '''
+    Returns all available keyword argument params
 
-def update_param_dicts(recording_params=None, amplitude_params=None,
-                       pca_scores_params=None, epoch_params=None,
-                       feature_params=None):
-    param_dicts = []
-    if recording_params is not None:
-        if not set(recording_params.keys()).issubset(
-                set(get_recording_params().keys())
-        ):
-            raise ValueError("Improper parameter entered into the recording param dict.")
-        else:
-            recording_params = OrderedDict(get_recording_params(), **recording_params)
-            param_dicts.append(recording_params)
+    Returns
+    -------
+    all_params: dict
+        Dictionary with all available keyword arguments for validation and curation functions.
+    '''
+    all_params = {}
+    all_params.update(get_recording_params())
+    all_params.update(get_amplitude_params())
+    all_params.update(get_pca_scores_params())
+    all_params.update(get_epoch_params())
+    all_params.update(get_feature_params())
 
-    if amplitude_params is not None:
-        if not set(amplitude_params.keys()).issubset(
-                set(get_amplitude_params().keys())
-        ):
-            raise ValueError("Improper parameter entered into the amplitude param dict.")
-        else:
-            amplitude_params = OrderedDict(get_amplitude_params(), **amplitude_params)
-            param_dicts.append(amplitude_params)
-
-    if pca_scores_params is not None:
-        if not set(pca_scores_params.keys()).issubset(
-                set(get_pca_scores_params().keys())
-        ):
-            raise ValueError("Improper parameter entered into the amplitude param dict.")
-        else:
-            pca_scores_params = OrderedDict(get_pca_scores_params(), **pca_scores_params)
-            param_dicts.append(pca_scores_params)
-
-    if epoch_params is not None:
-        if not set(epoch_params.keys()).issubset(
-                set(get_epoch_params().keys())
-        ):
-            raise ValueError("Improper parameter entered into the epoch params dict")
-        else:
-            epoch_params = OrderedDict(get_epoch_params(), **epoch_params)
-            param_dicts.append(epoch_params)
-
-    if feature_params is not None:
-        if not set(feature_params.keys()).issubset(
-                set(get_feature_params().keys())
-        ):
-            raise ValueError("Improper parameter entered into the feature param dict.")
-        else:
-            feature_params = OrderedDict(get_feature_params(), **feature_params)
-            param_dicts.append(feature_params)
-
-    return param_dicts
+    return all_params
 
 
 def update_param_dicts_with_kwargs(kwargs):
     recording_params = get_recording_params()
     amplitude_params = get_amplitude_params()
-    pca_scores_params = get_recording_params()
-    epoch_params = get_amplitude_params()
-    feature_params = get_recording_params()
+    pca_scores_params = get_pca_scores_params()
+    epoch_params = get_epoch_params()
+    feature_params = get_feature_params()
 
     if np.any([k in recording_params.keys() for k in kwargs.keys()]):
         for k in kwargs.keys():
