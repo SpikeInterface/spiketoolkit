@@ -91,10 +91,17 @@ def test_blank_saturation():
 
 @pytest.mark.implemented
 def test_center():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4)
+    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
 
-    rec_c = center(rec)
-    assert np.allclose(rec_c.get_traces().mean(axis=1), 0)
+    rec_c = center(rec, mode='mean')
+    assert np.allclose(np.mean(rec_c.get_traces(), axis=1), 0, atol=0.001)
+    check_dumping(rec_c)
+
+    rec_c = center(rec, mode='median')
+    assert np.allclose(np.median(rec_c.get_traces(), axis=1), 0, atol=0.001)
+    check_dumping(rec_c)
+
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -264,13 +271,13 @@ def test_transform():
     offset = 50
 
     rec_t = transform(rec, scalar=scalar, offset=offset)
-    assert np.allclose(rec_t.get_traces(), scalar * rec.get_traces() + offset)
+    assert np.allclose(rec_t.get_traces(), scalar * rec.get_traces() + offset, atol=0.001)
 
     scalars = np.random.randn(4)
     offsets = np.random.randn(4)
     rec_t_arr = transform(rec, scalar=scalars, offset=offsets)
     for (tt, to, s, o) in zip(rec_t_arr.get_traces(), rec.get_traces(), scalars, offsets):
-        assert np.allclose(tt, s * to + o)
+        assert np.allclose(tt, s * to + o, atol=0.001)
 
     check_dumping(rec_t)
     check_dumping(rec_t_arr)
@@ -299,6 +306,7 @@ if __name__ == '__main__':
     # test_bandpass_filter_with_cache()
     # test_blank_saturation()
     # test_clip_traces()
+    test_center()
     # test_common_reference()
     # test_norm_by_quantile()
     # test_notch_filter()
@@ -306,5 +314,5 @@ if __name__ == '__main__':
     # test_remove_artifacts()
     # test_remove_bad_channels()
     # test_resample()
-    test_transform_traces()
+    # test_transform()
     # test_whiten()
