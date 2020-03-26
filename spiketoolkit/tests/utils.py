@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as ss
 import spikeextractors as se
-import os
+import os, shutil
 
 
 def check_signal_power_signal1_below_signal2(signals1, signals2, freq_range, fs):
@@ -208,15 +208,17 @@ def create_dumpable_recording(duration=10, num_channels=4, K=10, seed=0, folder=
     return rec_mda
 
 
-def create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test', fs=30000):
-    rec, sort = se.example_datasets.toy_example(duration=duration, num_channels=num_channels, K=K, seed=seed)
-
+def create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test', fs=30000, sorting=None):
+    if sorting is not None:
+        sort = sorting
+    else:
+        rec, sort = se.example_datasets.toy_example(duration=duration, num_channels=num_channels, K=K, seed=seed)
     if not os.path.isdir(folder):
         os.mkdir(folder)
-    se.MdaSortingExtractor.write_sorting(sort, folder + '/firing.mda')
-    sort_mda = se.MdaSortingExtractor(folder + '/firing.mda', sampling_frequency=fs)
+    se.NpzSortingExtractor.write_sorting(sort, folder + '/sorting.npz')
+    sort_npz = se.NpzSortingExtractor(folder + '/sorting.npz')
 
-    return sort_mda
+    return sort_npz
 
 
 def create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test'):
@@ -224,7 +226,7 @@ def create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder
 
     se.MdaRecordingExtractor.write_recording(rec, folder)
     rec_mda = se.MdaRecordingExtractor(folder)
-    se.MdaSortingExtractor.write_sorting(sort, folder + '/firing.mda')
-    sort_mda = se.MdaSortingExtractor(folder + '/firing.mda', sampling_frequency=rec_mda.get_sampling_frequency())
+    se.NpzSortingExtractor.write_sorting(sort, folder + '/sorting.npz')
+    sort_npz = se.NpzSortingExtractor(folder + '/sorting.npz')
 
-    return rec_mda, sort_mda
+    return rec_mda, sort_npz
