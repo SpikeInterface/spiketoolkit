@@ -117,7 +117,6 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, grouping_property=None
                                                                                max_spikes_per_unit, n_pad,
                                                                                dtype, memmap, seed,
                                                                                verbose, memmap_array=None)
-
             waveform_list.append(waveforms)
             spike_index_list.append(indices)
             channel_index_list.append(max_channel_idxs)
@@ -1343,17 +1342,17 @@ def _select_max_channels(wf, recording, max_channels):
     return max_channel_idxs
 
 
-def _extract_waveforms_one_unit(unit, rec, sort, channel_ids, unit_ids, grouping_property,
+def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, grouping_property,
                                 compute_property_from_recording, max_channels_per_waveforms, max_spikes_per_unit,
                                 n_pad, dtype, memmap, seed, verbose, memmap_array=None):
-    if isinstance(rec, dict):
-        recording = se.load_extractor_from_dict(rec)
+    if isinstance(rec_arg, dict):
+        recording = se.load_extractor_from_dict(rec_arg)
     else:
-        recording = rec
-    if isinstance(sort, dict):
-        sorting = se.load_extractor_from_dict(sort)
+        recording = rec_arg
+    if isinstance(sort_arg, dict):
+        sorting = se.load_extractor_from_dict(sort_arg)
     else:
-        sorting = sort
+        sorting = sort_arg
 
     if grouping_property is not None:
         if grouping_property not in recording.get_shared_channel_property_names():
@@ -1386,9 +1385,6 @@ def _extract_waveforms_one_unit(unit, rec, sort, channel_ids, unit_ids, grouping
                             rec_list.insert(i_s, None)
             else:
                 assert len(rec_list) == len(sort_list)
-
-            if max_channels_per_waveforms is None:
-                max_channels_per_waveforms = rec_list[0].get_num_channels()
 
             for i_list, (rec, sort) in enumerate(zip(rec_list, sort_list)):
                 if sort is not None and rec is not None:
@@ -1502,7 +1498,6 @@ def _extract_waveforms_one_unit(unit, rec, sort, channel_ids, unit_ids, grouping
                                                           channel_ids=channel_ids,
                                                           seed=seed)
                 wf = wf.astype(dtype)
-
                 if max_channels_per_waveforms < len(channel_ids):
                     max_channel_idxs = _select_max_channels(wf, recording, max_channels_per_waveforms)
                 else:

@@ -418,7 +418,6 @@ def compute_snrs(
 
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
-
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
