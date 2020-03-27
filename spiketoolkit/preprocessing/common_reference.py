@@ -1,6 +1,7 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
 from copy import deepcopy
+from spikeextractors.extraction_tools import check_get_traces_args
 
 
 class CommonReferenceRecording(RecordingExtractor):
@@ -61,15 +62,8 @@ class CommonReferenceRecording(RecordingExtractor):
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
 
+    @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames()
-        if channel_ids is None:
-            channel_ids = self.get_channel_ids()
-        if isinstance(channel_ids, (int, np.integer)):
-            channel_ids = [channel_ids]
         if self._ref == 'median':
             if self._groups is None:
                 if self.verbose:

@@ -3,6 +3,7 @@ import spikeextractors as se
 import numpy as np
 from spikeextractors import RecordingExtractor
 from .transform import TransformRecording
+from spikeextractors.extraction_tools import check_get_traces_args
 
 
 class FilterRecording(RecordingExtractor):
@@ -37,15 +38,8 @@ class FilterRecording(RecordingExtractor):
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
 
+    @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames()
-        if channel_ids is None:
-            channel_ids = self.get_channel_ids()
-        if isinstance(channel_ids, (int, np.integer)):
-            channel_ids = [channel_ids]
         if self._chunk_size is not None:
             ich1 = int(start_frame / self._chunk_size)
             ich2 = int((end_frame - 1) / self._chunk_size)
