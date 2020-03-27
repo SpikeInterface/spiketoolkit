@@ -99,7 +99,6 @@ def get_pca_scores_gui_params():
 def get_feature_gui_params():
     return feature_gui_params.copy()
 
-
 def get_kwargs_params():
     '''
     Returns all available keyword argument params

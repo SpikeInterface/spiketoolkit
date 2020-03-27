@@ -15,7 +15,6 @@ from .quality_metric_classes.parameter_dictionaries import update_param_dicts_wi
 from collections import OrderedDict
 from copy import deepcopy
 
-
 # All parameter values are stored in the class definitions
 
 
@@ -419,7 +418,6 @@ def compute_snrs(
 
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
-
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),

@@ -90,7 +90,7 @@ class MetricData:
         assert isinstance(
             sorting, SortingExtractor
         ), "'sorting' must be  a SortingExtractor object"
-        self._sorting = deepcopy(sorting)
+        self._sorting = sorting
         self._set_unit_ids(unit_ids)
         self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times

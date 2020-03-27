@@ -4,64 +4,89 @@ from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
+from spiketoolkit.tests.utils import create_dumpable_recording, create_dumpable_sorting, create_dumpable_extractors
+import os, shutil
 
 
 @pytest.mark.implemented
 def test_waveforms():
     n_wf_samples = 100
-    rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
-                                                                                          n_channels=4,
-                                                                                          n_wf_samples=n_wf_samples)
-    # get num samples in ms
-    ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
+    n_jobs = [0, 2]
+    memmap = [True, False]
+    for n in n_jobs:
+        for m in memmap:
+            print('N jobs', n, 'memmap', m)
+            folder = 'test'
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
+            rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
+                                                                                                  n_channels=4,
+                                                                                                  n_wf_samples=
+                                                                                                  n_wf_samples)
+            rec = create_dumpable_recording(recording=rec, folder=folder)
+            sort = create_dumpable_sorting(sorting=sort, folder=folder)
+            # get num samples in ms
+            ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
-    # no group
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_as_features=False)
 
-    for (w, w_gt) in zip(wav, waveforms):
-        assert np.allclose(w, w_gt)
-    assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
+            # no group
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_as_features=False, n_jobs=n,
+                                     memmap=m)
 
-    # change cut ms
-    wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_as_features=True)
+            for (w, w_gt) in zip(wav, waveforms):
+                assert np.allclose(w, w_gt)
+            assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
-    for (w, w_gt) in zip(wav, waveforms):
-        _, _, samples = w.shape
-        assert np.allclose(w[:, :, samples // 2 - n_wf_samples // 2: samples // 2 + n_wf_samples // 2], w_gt)
-    assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
+            # change cut ms
+            wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_as_features=True, n_jobs=n,
+                                     memmap=m)
 
-    # by group
-    rec.set_channel_groups([0, 0, 1, 1])
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group')
+            for (w, w_gt) in zip(wav, waveforms):
+                _, _, samples = w.shape
+                assert np.allclose(w[:, :, samples // 2 - n_wf_samples // 2: samples // 2 + n_wf_samples // 2], w_gt)
+            assert 'waveforms' in sort.get_shared_unit_spike_feature_names()
 
-    for (w, w_gt) in zip(wav, waveforms):
-        assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
+            # by group
+            rec.set_channel_groups([0, 0, 1, 1])
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group', n_jobs=n,
+                                     memmap=m)
 
-    # test compute_property_from_recordings
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
-                             compute_property_from_recording=True)
-    for (w, w_gt) in zip(wav, waveforms):
-        assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
+            for (w, w_gt) in zip(wav, waveforms):
+                assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
-    # test max_spikes_per_unit
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
-                             save_as_features=False)
-    for w in wav:
-        assert len(w) <= 10
+            # test compute_property_from_recordings
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
+                                     compute_property_from_recording=True, n_jobs=n,
+                                     memmap=m)
+            for (w, w_gt) in zip(wav, waveforms):
+                assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
-    # test channels
-    wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, channel_ids=[0, 1, 2])
+            # test max_spikes_per_unit
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
+                                     save_as_features=False, n_jobs=n,
+                                     memmap=m)
+            for w in wav:
+                assert len(w) <= 10
 
-    for (w, w_gt) in zip(wav, waveforms):
-        assert np.allclose(w, w_gt[:, :3])
+            # test channels
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, channel_ids=[0, 1, 2], n_jobs=n,
+                                     memmap=m)
+
+            for (w, w_gt) in zip(wav, waveforms):
+                assert np.allclose(w, w_gt[:, :3])
 
 
 @pytest.mark.implemented
 def test_templates():
     n_wf_samples = 100
+    folder = 'test'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
+    rec = create_dumpable_recording(recording=rec, folder=folder)
+    sort = create_dumpable_sorting(sorting=sort, folder=folder)
     # get num samples in ms
     ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
@@ -95,9 +120,14 @@ def test_templates():
 @pytest.mark.implemented
 def test_max_chan():
     n_wf_samples = 100
+    folder = 'test'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
+    rec = create_dumpable_recording(recording=rec, folder=folder)
+    sort = create_dumpable_sorting(sorting=sort, folder=folder)
     max_channels = get_unit_max_channels(rec, sort, save_as_property=False)
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' not in sort.get_shared_unit_property_names()
@@ -117,9 +147,14 @@ def test_max_chan():
 @pytest.mark.implemented
 def test_amplitudes():
     n_wf_samples = 100
+    folder = 'test'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
+    rec = create_dumpable_recording(recording=rec, folder=folder)
+    sort = create_dumpable_sorting(sorting=sort, folder=folder)
 
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=False)
 
@@ -145,6 +180,11 @@ def test_amplitudes():
 @pytest.mark.implemented
 def test_export_to_phy():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
+    folder = 'test'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
+    rec = create_dumpable_recording(recording=rec, folder=folder)
+    sort = create_dumpable_sorting(sorting=sort, folder=folder)
 
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
@@ -166,7 +206,10 @@ def test_export_to_phy():
 
 @pytest.mark.implemented
 def test_set_unit_properties_by_max_channel_properties():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
+    folder = 'test'
+    if os.path.isdir(folder):
+        shutil.rmtree(folder)
+    rec, sort = create_dumpable_extractors(duration=10, num_channels=8, folder=folder)
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     set_unit_properties_by_max_channel_properties(rec, sort, property='group')
@@ -181,6 +224,6 @@ def test_compute_pca_scores():
 
 
 if __name__ == '__main__':
-    test_waveforms()
+    test_max_chan()
     test_templates()
     test_export_to_phy()

@@ -65,7 +65,6 @@ class SNR(QualityMetric):
                 save_as_property=save_features_props,
                 seed=seed,
             )
-
             max_channels = st.postprocessing.get_unit_max_channels(
                 epoch_recording,
                 epoch_sorting,
