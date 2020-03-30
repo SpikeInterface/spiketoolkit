@@ -909,7 +909,7 @@ def _compute_templates_similarity(templates, template_ind):
     for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
             shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j]
-            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs) != t_i.shape[0]:
+            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs):
                 # reorder channels
                 reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
                 reorder_t_ind_j = np.zeros(len(shared_channel_idxs), dtype='int')
