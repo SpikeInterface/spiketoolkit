@@ -888,8 +888,9 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, compute_pc_featur
     np.save(str(output_folder / 'spike_times.npy'), spike_times)
     np.save(str(output_folder / 'spike_templates.npy'), spike_templates)
     np.save(str(output_folder / 'spike_clusters.npy'), spike_clusters)
-    np.save(str(output_folder / 'pc_features.npy'), pc_features)
-    np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind)
+    if compute_pc_features:
+        np.save(str(output_folder / 'pc_features.npy'), pc_features)
+        np.save(str(output_folder / 'pc_feature_ind.npy'), pc_feature_ind)
     np.save(str(output_folder / 'templates.npy'), templates)
     np.save(str(output_folder / 'template_ind.npy'), templates_ind)
     np.save(str(output_folder / 'similar_templates.npy'), similar_templates.astype('float32'))
@@ -1109,19 +1110,15 @@ def _get_pca_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype,
 
 
 def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method, amp_peak,
-                             amp_frames_before, amp_frames_after, max_spikes_per_unit, max_spikes_for_pca,
-                             recompute_info, max_channels_per_waveforms, save_features_props, verbose, seed, memmap,
+                             amp_frames_before, amp_frames_after, max_spikes_per_unit, max_spikes_for_amplitudes,
+                             max_spikes_for_pca, recompute_info, max_channels_per_waveforms, save_features_props, verbose, seed, memmap,
                              compute_pc_features=True):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
         sorting.clear_units_spike_features(feature_name='amplitudes')
 
     if memmap:
-        if sorting.get_tmp_folder() is None:
-            tmp_folder = Path(tempfile.mkdtemp())
-            sorting.set_tmp_folder(tmp_folder)
-        else:
-            tmp_folder = sorting.get_tmp_folder()
+        tmp_folder = sorting.get_tmp_folder()
 
     if 'waveforms' not in sorting.get_shared_unit_spike_feature_names():
         waveforms, spike_index_list, channel_list = get_unit_waveforms(recording, sorting,
@@ -1157,7 +1154,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     # amplitudes
     amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
                                                     save_as_features=save_features_props, peak=amp_peak,
-                                                    max_spikes_per_unit=max_spikes_per_unit,
+                                                    max_spikes_per_unit=max_spikes_for_amplitudes,
                                                     frames_before=amp_frames_before, frames_after=amp_frames_after,
                                                     seed=seed, memmap=memmap, return_idxs=True)
 
@@ -1168,7 +1165,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
 
     # compute len of all waveforms (computed for all units)
     n_spikes = 0
-    n_pca_amps = 0  # n_pca and n_amps are he same (max_spikes_per_unit)
+    n_pca_amps = 0  # n_pca and n_amps are the same (max_spikes_per_unit)
     for i, (unit_id, amp) in enumerate(zip(sorting.get_unit_ids(), amplitudes_list)):
         n_spikes += len(sorting.get_unit_spike_train(unit_id))
         n_pca_amps += len(amp)
@@ -1213,12 +1210,12 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                 cl_pca = [i_u] * len(st)
                 st_pca = st
 
-            if len(amp) < len(st):
-                cl_amp = [i_u] * len(amp)
-                st_amp = st[amp_idxs[i_u]]
-            else:
-                cl_amp = [i_u] * len(st)
-                st_amp = st
+        if len(amp) < len(st):
+            cl_amp = [i_u] * len(amp)
+            st_amp = st[amp_idxs[i_u]]
+        else:
+            cl_amp = [i_u] * len(st)
+            st_amp = st
 
         # assign
         spike_times[i_start_st:i_start_st + len(st)] = st[:, np.newaxis]
@@ -1226,12 +1223,13 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         spike_times_amps[i_start_pc_amp:i_start_pc_amp + len(st_amp)] = st_amp[:, np.newaxis]
         spike_clusters_amps[i_start_pc_amp:i_start_pc_amp + len(st_amp)] = np.array(cl_amp)[:, np.newaxis]
         amplitudes[i_start_pc_amp:i_start_pc_amp + len(st_amp)] = amp[:, np.newaxis]
-        i_start_st += len(st)
-        i_start_pc_amp += len(st_amp)
+
         if compute_pc_features:
             spike_times_pca[i_start_pc_amp:i_start_pc_amp + len(st_pca)] = st_pca[:, np.newaxis]
             spike_clusters_pca[i_start_pc_amp:i_start_pc_amp + len(st_pca)] = np.array(cl_pca)[:, np.newaxis]
             pc_features[i_start_pc_amp:i_start_pc_amp + len(st_amp)] = pc.swapaxes(1, 2)
+        i_start_st += len(st)
+        i_start_pc_amp += len(st_amp)
 
     sorting_idxs = np.argsort(spike_times[:, 0])
     spike_times[:] = spike_times[sorting_idxs]
@@ -1287,6 +1285,7 @@ def _get_phy_data(recording, sorting, n_comp, compute_pc_features, grouping_prop
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
                                    amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit,
+                                   max_spikes_for_amplitudes=np.inf,
                                    max_spikes_for_pca=max_spikes_for_pca,
                                    recompute_info=recompute_info, max_channels_per_waveforms=max_channels_per_template,
                                    save_features_props=save_features_props, verbose=verbose, memmap=memmap, seed=seed,
@@ -1339,7 +1338,9 @@ def _get_phy_data(recording, sorting, n_comp, compute_pc_features, grouping_prop
         if pc_feature_ind is not None:
             templates_ind = pc_feature_ind
         else:
-
+            templates_ind = np.zeros((len(templates), max_channels_per_template), dtype='int')
+            for i, temp in enumerate(templates):
+                templates_ind[i] = _select_max_channels_from_templates(temp, recording, max_channels_per_template)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
@@ -1353,8 +1354,29 @@ def _get_phy_data(recording, sorting, n_comp, compute_pc_features, grouping_prop
            spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, positions
 
 
-def _select_max_channels(wf, recording, max_channels):
+def _select_max_channels_from_waveforms(wf, recording, max_channels):
     template = np.mean(wf, axis=0)
+    # select based on adjacency
+    if max_channels < recording.get_num_channels():
+        if 'location' in recording.get_shared_channel_property_names():
+            max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                               template.shape)[0]
+            locs = recording.get_channel_locations()
+            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            distances = [np.linalg.norm(l - loc_max) for l in locs]
+            max_channel_idxs = np.argsort(distances)[:max_channels]
+        else:  # select based on amplitude
+            peak_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                        template.shape)[1]
+            max_channel_idxs = np.argsort(np.abs(
+                template[:, peak_idx]))[::-1][:max_channels]
+    else:
+        max_channel_idxs = np.arange(recording.get_num_channels())
+
+    return max_channel_idxs
+
+
+def _select_max_channels_from_templates(template, recording, max_channels):
     # select based on adjacency
     if max_channels < recording.get_num_channels():
         if 'location' in recording.get_shared_channel_property_names():
@@ -1446,7 +1468,8 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                             wf = wf.astype(dtype)
 
                             if max_channels_per_waveforms < len(channel_ids):
-                                max_channel_idxs = _select_max_channels(wf, rec, max_channels_per_waveforms)
+                                max_channel_idxs = _select_max_channels_from_waveforms(wf, rec,
+                                                                                       max_channels_per_waveforms)
                             else:
                                 max_channel_idxs = np.arange(rec.get_num_channels())
                             wf = wf[:, max_channel_idxs]
@@ -1494,7 +1517,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                     wf = np.squeeze(wf[:, elec_group, :])
 
                     if max_channels_per_waveforms < len(elec_group[0]):
-                        max_channel_idxs = _select_max_channels(wf, rec, max_channels_per_waveforms)
+                        max_channel_idxs = _select_max_channels_from_waveforms(wf, rec, max_channels_per_waveforms)
                     else:
                         max_channel_idxs = np.arange(len(elec_group[0]))
                     wf = wf[:, max_channel_idxs]
@@ -1532,7 +1555,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                                                           seed=seed)
                 wf = wf.astype(dtype)
                 if max_channels_per_waveforms < len(channel_ids):
-                    max_channel_idxs = _select_max_channels(wf, recording, max_channels_per_waveforms)
+                    max_channel_idxs = _select_max_channels_from_waveforms(wf, recording, max_channels_per_waveforms)
                 else:
                     max_channel_idxs = np.arange(len(channel_ids))
                 wf = wf[:, max_channel_idxs]

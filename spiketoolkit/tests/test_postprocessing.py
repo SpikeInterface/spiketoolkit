@@ -5,7 +5,9 @@ import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
 from spiketoolkit.tests.utils import create_dumpable_recording, create_dumpable_sorting, create_dumpable_extractors
-import os, shutil
+import os
+import shutil
+from pathlib import Path
 
 
 @pytest.mark.implemented
@@ -189,11 +191,14 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group')
+    export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False)
 
     rec_phy = se.PhyRecordingExtractor('phy')
     rec_phyg = se.PhyRecordingExtractor('phy_group')
     assert np.allclose(rec.get_traces(), rec_phy.get_traces())
     assert np.allclose(rec.get_traces(), rec_phyg.get_traces())
+    assert not (Path('phy_no_feat') / 'pc_features.npy').is_file()
+    assert not (Path('phy_no_feat') / 'pc_feature_ind.npy').is_file()
 
     sort_phy = se.PhySortingExtractor('phy', load_waveforms=True)
     sort_phyg = se.PhySortingExtractor('phy_group', load_waveforms=True)
