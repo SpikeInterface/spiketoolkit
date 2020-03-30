@@ -147,17 +147,16 @@ class MetricData:
         freq_max: float
             Low-pass frequency for optional filter (default 6000 Hz).
         """
-        if apply_filter:
-            self._is_filtered = True
-            recording = bandpass_filter(
+        if apply_filter and not recording.is_filtered:
+            recording_filter = bandpass_filter(
                 recording=recording,
                 freq_min=freq_min,
                 freq_max=freq_max,
                 cache_to_file=True,
             )
         else:
-            self._is_filtered = False
-        self._recording = recording
+            recording_filter = recording
+        self._recording = recording_filter
         for epoch in self._epochs:
             start_frame = epoch[1]
             end_frame = epoch[2]
@@ -172,7 +171,7 @@ class MetricData:
             )
 
     def is_filtered(self):
-        return self._is_filtered
+        return self._recording.is_filtered
 
     def has_recording(self):
         return self._recording is not None
