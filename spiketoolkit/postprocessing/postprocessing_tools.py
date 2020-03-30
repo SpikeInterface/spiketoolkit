@@ -920,7 +920,6 @@ def _compute_templates_similarity(templates, template_ind):
                 t_j_lin = t_j_shared.reshape(t_i_shared.shape[0] * t_i_shared.shape[1])
                 a = np.corrcoef(t_i_lin, t_j_lin)
                 # weight similarity based on proportion of shared channels
-                print(i, j, len(shared_channel_idxs), t_i.shape[0], len(t_ind_i))
                 sim = np.abs(a[0, 1]) * len(shared_channel_idxs) / len(t_ind_i)
                 similarity[i, j] = sim
             else:
@@ -1326,7 +1325,6 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
     # similar_templates.npy - [nTemplates, nTemplates] single
-    # templates = get_unit_templates(recording, sorting, save_as_property=save_features_props, seed=seed)
     similar_templates = _compute_templates_similarity(templates, templates_ind)
 
     # spike_templates.npy - [nSpikes, ] uint32
