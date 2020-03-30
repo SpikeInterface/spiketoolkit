@@ -902,14 +902,30 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
         print('Run:\n\nphy template-gui ', str(output_folder / 'params.py'))
 
 
-def _compute_templates_similarity(templates):
+def _compute_templates_similarity(templates, template_ind):
     similarity = np.zeros((len(templates), len(templates)))
-    for i, t_i in enumerate(templates):
-        for j, t_j in enumerate(templates):
-            t_i_lin = t_i.reshape(t_i.shape[0] * t_i.shape[1])
-            t_j_lin = t_j.reshape(t_j.shape[0] * t_j.shape[1])
-            a = np.corrcoef(t_i_lin, t_j_lin)
-            similarity[i, j] = np.abs(a[0, 1])
+    for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
+        for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
+            shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j]
+            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs) != t_i.shape[0]:
+                # reorder channels
+                reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
+                reorder_t_ind_j = np.zeros(len(shared_channel_idxs), dtype='int')
+                for s, sc in enumerate(shared_channel_idxs):
+                    reorder_t_ind_i[s] = np.where(t_ind_i == sc)[0]
+                    reorder_t_ind_j[s] = np.where(t_ind_j == sc)[0]
+                t_i_shared = t_i[reorder_t_ind_i]
+                t_j_shared = t_j[reorder_t_ind_j]
+                t_i_lin = t_i_shared.reshape(t_i_shared.shape[0] * t_i_shared.shape[1])
+                t_j_lin = t_j_shared.reshape(t_i_shared.shape[0] * t_i_shared.shape[1])
+                a = np.corrcoef(t_i_lin, t_j_lin)
+                # weight similarity based on proportion of shared channels
+                print(i, j, len(shared_channel_idxs), t_i.shape[0], len(t_ind_i))
+                sim = np.abs(a[0, 1]) * len(shared_channel_idxs) / len(t_ind_i)
+                similarity[i, j] = sim
+            else:
+                # no channels are shared
+                similarity[i, j] = 0
     return similarity
 
 
@@ -927,7 +943,7 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, s
     return spikes, event_indices
 
 
-def _get_spike_times_clusters(sorting, memmap=True):
+def _get_spike_times_clusters(sorting):
     if not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
     if len(sorting.get_unit_ids()) == 0:
@@ -1274,10 +1290,6 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
         positions = np.zeros((recording.get_num_channels(), 2))
         positions[:, 1] = np.arange(recording.get_num_channels())
 
-    # similar_templates.npy - [nTemplates, nTemplates] single
-    # templates = get_unit_templates(recording, sorting, save_as_property=save_features_props, seed=seed)
-    similar_templates = _compute_templates_similarity(templates)
-
     # templates.npy
     templates = np.array(templates, dtype='float32').swapaxes(1, 2)
 
@@ -1312,6 +1324,10 @@ def _get_phy_data(recording, sorting, n_comp, electrode_dimensions, grouping_pro
         templates_ind = pc_feature_ind
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
+
+    # similar_templates.npy - [nTemplates, nTemplates] single
+    # templates = get_unit_templates(recording, sorting, save_as_property=save_features_props, seed=seed)
+    similar_templates = _compute_templates_similarity(templates, templates_ind)
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
