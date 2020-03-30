@@ -902,10 +902,11 @@ def export_to_phy(recording, sorting, output_folder, n_comp=3, electrode_dimensi
         print('Run:\n\nphy template-gui ', str(output_folder / 'params.py'))
 
 
-def _compute_templates_similarity(templates):
+def _compute_templates_similarity(templates, templates_ind):
     similarity = np.zeros((len(templates), len(templates)))
-    for i, t_i in enumerate(templates):
-        for j, t_j in enumerate(templates):
+    for i, (t_i, t_i_idx) in enumerate(zip(templates, templates_ind)):
+        for j, (t_j, t_j_idx) in enumerate(zip(templates, templates_ind)):
+            # TODO fix this
             t_i_lin = t_i.reshape(t_i.shape[0] * t_i.shape[1])
             t_j_lin = t_j.reshape(t_j.shape[0] * t_j.shape[1])
             a = np.corrcoef(t_i_lin, t_j_lin)
