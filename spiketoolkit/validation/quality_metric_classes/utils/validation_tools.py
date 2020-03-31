@@ -239,10 +239,12 @@ def get_all_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, 
         amp_frames_before=amp_frames_before,
         amp_frames_after=amp_frames_after,
         max_spikes_per_unit=max_spikes_per_unit,
+        max_spikes_for_amplitudes=max_spikes_per_unit,
         max_spikes_for_pca=max_spikes_for_pca,
         recompute_info=recompute_info,
         save_features_props=save_features_props,
-        verbose=verbose, seed=seed)
+        verbose=verbose, seed=seed,
+        compute_pc_features=True)
 
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_amps)), \
            np.squeeze(recording.frame_to_time(spike_times_pca)), np.squeeze(spike_clusters), \
