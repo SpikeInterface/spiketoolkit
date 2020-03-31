@@ -6,12 +6,6 @@ import numpy as np
 class ClipRecording(RecordingExtractor):
     preprocessor_name = 'Clip'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'a_min', 'type': 'float',
-         'title': "Minimum value. If `None`, clipping is not performed on lower interval edge."},
-        {'name': 'a_max', 'type': 'float',
-         'title': "Maximum value. If `None`, clipping is not performed on upper interval edge."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, a_min=None, a_max=None):

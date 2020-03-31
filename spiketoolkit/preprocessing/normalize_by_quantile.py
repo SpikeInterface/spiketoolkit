@@ -6,18 +6,6 @@ class NormalizeByQuantileRecording(RecordingExtractor):
 
     preprocessor_name = 'NormalizeByQuantile'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'scale', 'type': 'float',
-            'title': "Scale for the output distribution"},
-        {'name': 'median', 'type': 'float',
-            'title': "Median for the output distribution"},
-        {'name': 'q1', 'type': 'float',
-            'title': "Lower quantile used for measuring the scale"},
-        {'name': 'q2', 'type': 'float',
-            'title': "Upper quantile used for measuring the scale"},
-        {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
-         'title': "Random seed for reproducibility."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, scale=1.0, median=0.0, q1=0.01, q2=0.99, seed=0):
