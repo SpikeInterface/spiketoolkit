@@ -14,7 +14,7 @@ from .quality_metrics import (
     compute_metrics,
 )
 
-from .quality_metric_classes.utils.validation_tools import get_all_metric_data, get_pca_metric_data, \
+from .quality_metric_classes.utils.validation_tools import get_pca_metric_data, \
     get_amplitude_metric_data, get_spike_times_metrics_data
 
 from .quality_metric_classes.parameter_dictionaries import get_kwargs_params

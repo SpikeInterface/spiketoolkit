@@ -235,6 +235,5 @@ def test_compute_pca_scores():
 
 
 if __name__ == '__main__':
-    test_max_chan()
-    test_templates()
+    test_set_unit_properties_by_max_channel_properties()
     test_export_to_phy()

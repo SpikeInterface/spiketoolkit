@@ -14,7 +14,7 @@ def test_functions():
     isi = compute_isi_violations(sort, seed=0)[0]
     presence = compute_presence_ratios(sort, seed=0)[0]
     amp_cutoff = compute_amplitude_cutoffs(sort, rec, seed=0)[0]
-    max_drift, cum_drift = compute_drift_metrics(sort, rec, seed=0)[0]
+    max_drift, cum_drift = compute_drift_metrics(sort, rec, seed=0, memmap=False)[0]
     silh = compute_silhouette_scores(sort, rec, seed=0)[0]
     iso = compute_isolation_distances(sort, rec, seed=0)[0]
     l_ratio = compute_l_ratios(sort, rec, seed=0)[0]

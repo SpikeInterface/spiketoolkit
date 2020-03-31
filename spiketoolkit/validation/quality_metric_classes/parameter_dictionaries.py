@@ -45,7 +45,9 @@ amplitude_gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value
                          'title': "Frames after peak to compute amplitude"}]
 
 pca_scores_params_dict = OrderedDict(
-    [('n_comp', 3), ('ms_before', 1.0), ('ms_after', 2.0), ('dtype', None), ('max_spikes_for_pca', 100000)])
+    [('n_comp', 3), ('ms_before', 1.0), ('ms_after', 2.0), ('dtype', None), ('max_spikes_for_pca', 100000),
+     ('m_jobs', None), ('memmap', True)])
+
 # Defining GUI Params
 keys = list(pca_scores_params_dict.keys())
 types = [type(pca_scores_params_dict[key]) for key in keys]

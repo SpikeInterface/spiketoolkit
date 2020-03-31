@@ -46,12 +46,12 @@ def compute_num_spikes(
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
-                A list of strings for the names of the given epochs.
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
     num_spikes_epochs: list of lists
-        The num spikes of the sorted units in the given epochs.
+        The num spikes of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -104,12 +104,12 @@ def compute_firing_rates(
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
-                A list of strings for the names of the given epochs.
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
     firing_rate_epochs: list of lists
-        The firing rates of the sorted units in the given epochs.
+        The firing rates of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -162,12 +162,12 @@ def compute_presence_ratios(
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
-                A list of strings for the names of the given epochs.
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
     presence_ratio_epochs: list of lists
-        The presence ratios of the sorted units in the given epochs.
+        The presence ratios of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -227,12 +227,12 @@ def compute_isi_violations(
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
-                A list of strings for the names of the given epochs.
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
     isi_violation_epochs: list of lists
-        The isi violations of the sorted units in the given epochs.
+        The isi violations of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -299,23 +299,23 @@ def compute_amplitude_cutoffs(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
     Returns
     ----------
     amplitude_cutoffs_epochs: list of lists
-        The amplitude cutoffs of the sorted units in the given epochs.
+        The amplitude cutoffs of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -395,24 +395,24 @@ def compute_snrs(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
-                A list of strings for the names of the given epochs.
+                A list of strings for the names of the given epochs
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     snr_epochs: list of lists
-        The snrs of the sorted units in the given epochs.
+        The snrs of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -472,9 +472,9 @@ def compute_silhouette_scores(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -482,24 +482,28 @@ def compute_silhouette_scores(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     silhouette_score_epochs: list of lists
-        The sihouette scores of the sorted units in the given epochs.
+        The sihouette scores of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -573,9 +577,9 @@ def compute_d_primes(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -583,24 +587,28 @@ def compute_d_primes(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     d_prime_epochs: list of lists
-        The d primes of the sorted units in the given epochs.
+        The d primes of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -674,9 +682,9 @@ def compute_l_ratios(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -684,24 +692,28 @@ def compute_l_ratios(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     l_ratio_epochs: list of lists
-        The l ratios of the sorted units in the given epochs.
+        The l ratios of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -776,9 +788,9 @@ def compute_isolation_distances(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -786,24 +798,28 @@ def compute_isolation_distances(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     isolation_distance_epochs: list of lists
-        The isolation distances of the sorted units in the given epochs.
+        The isolation distances of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -884,9 +900,9 @@ def compute_nn_metrics(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -894,24 +910,28 @@ def compute_nn_metrics(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     nn_metrics_epochs: list of lists
-        The nearest neighbor metrics of the sorted units in the given epochs.
+        The nearest neighbor metrics of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -986,9 +1006,9 @@ def compute_drift_metrics(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -996,24 +1016,28 @@ def compute_drift_metrics(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     dm_metrics_epochs: list of lists
-        The drift metrics of the sorted units in the given epochs.
+        The drift metrics of the sorted units in the given epochs
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
 
@@ -1133,9 +1157,9 @@ def compute_metrics(
             apply_filter: bool
                 If True, recording is bandpass-filtered.
             freq_min: float
-                High-pass frequency for optional filter (default 300 Hz).
+                High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
-                Low-pass frequency for optional filter (default 6000 Hz).
+                Low-pass frequency for optional filter (default 6000 Hz)
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
@@ -1143,27 +1167,31 @@ def compute_metrics(
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA.
+                The maximum number of spikes to use to compute PCA
+            n_jobs: int
+                Number of parallel jobs to compute waveforms
+            memmap: bool
+                If True all processing is done on memmap arrays (default)
             epoch_tuples: list
                 A list of tuples with a start and end time for each epoch
             epoch_names: list
                 A list of strings for the names of the given epochs.
             save_features_props: bool
-                If true, it will save amplitudes in the sorting extractor.
+                If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
 
     Returns
     ----------
     metrics_epochs : list of lists
-        List of metrics data. The list consists of lists of metric data for each given epoch.
+        List of metrics data. The list consists of lists of metric data for each given epoch
     OR
     metrics_dict: OrderedDict
-        Dict of metrics data. The dict consists of lists of metric data for each given epoch for each metric.
+        Dict of metrics data. The dict consists of lists of metric data for each given epoch for each metric
     
     """
     rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)

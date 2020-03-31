@@ -10,17 +10,10 @@ import spikemetrics.metrics as metrics
 from spiketoolkit.preprocessing.bandpass_filter import bandpass_filter
 from spikemetrics.utils import Epoch, printProgressBar
 
-from .utils.validation_tools import (
-    get_all_metric_data,
-    get_amplitude_metric_data,
-    get_pca_metric_data,
-    get_spike_times_metrics_data,
-)
+from .utils.validation_tools import get_amplitude_metric_data, get_pca_metric_data, get_spike_times_metrics_data
 
-from .utils.thresholdcurator import ThresholdCurator
 
 # Baseclass for each quality metric
-
 class MetricData:
     def __init__(
         self,
@@ -289,93 +282,6 @@ class MetricData:
         self._spike_clusters_pca = spike_clusters
         self._spike_times_pca = spike_times_pca
         self._spike_clusters_pca = spike_clusters_pca
-        self._pc_feature_ind = pc_feature_ind
-
-    def compute_all_metric_data(
-        self,
-        n_comp,
-        ms_before,
-        ms_after,
-        dtype,
-        max_spikes_per_unit,
-        amp_method,
-        amp_peak,
-        amp_frames_before,
-        amp_frames_after,
-        recompute_info,
-        max_spikes_for_pca,
-        save_features_props,
-        seed,
-    ):
-        """
-        Computes and stores data for all metrics (all metrics can be run after calling this function).
-
-        Parameters
-        ----------
-        n_comp: int
-            n_compFeatures in template-gui format
-        ms_before: float
-            Time period in ms to cut waveforms before the spike events
-        ms_after: float
-            Time period in ms to cut waveforms after the spike events
-        dtype: dtype
-            The numpy dtype of the waveforms
-        max_spikes_per_unit: int
-            The maximum number of spikes to extract per unit.
-        amp_method: str
-            If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-            If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-        amp_peak: str
-            If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-        amp_frames_before: int
-            Frames before peak to compute amplitude
-        amp_frames_after: int
-            Frames after peak to compute amplitude
-        recompute_info: bool
-            If True, will always re-extract waveforms.
-        max_spikes_for_pca: int
-            The maximum number of spikes to use to compute PCA.
-        save_features_props: bool
-            If True, save all features and properties in the sorting extractor.
-        seed: int
-            Random seed for reproducibility
-        """
-
-        (
-            spike_times,
-            spike_times_amps,
-            spike_times_pca,
-            spike_clusters,
-            spike_clusters_amps,
-            spike_clusters_pca,
-            amplitudes,
-            pc_features,
-            pc_feature_ind,
-        ) = get_all_metric_data(
-            self._recording,
-            self._sorting,
-            n_comp=n_comp,
-            ms_before=ms_before,
-            ms_after=ms_after,
-            dtype=dtype,
-            amp_method=amp_method,
-            amp_peak=amp_peak,
-            amp_frames_before=amp_frames_before,
-            amp_frames_after=amp_frames_after,
-            max_spikes_per_unit=max_spikes_per_unit,
-            max_spikes_for_pca=max_spikes_for_pca,
-            recompute_info=recompute_info,
-            save_features_props=save_features_props,
-            seed=seed,
-            verbose=self.verbose
-        )
-
-        self._amplitudes = amplitudes
-        self._spike_clusters_amps = spike_clusters_amps
-        self._spike_times_amps = spike_times_amps
-        self._pc_features = pc_features
-        self._spike_clusters_pca = spike_clusters_pca
-        self._spike_times_pca = spike_times_pca
         self._pc_feature_ind = pc_feature_ind
 
     def set_amplitudes(self, amplitudes):
