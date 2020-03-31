@@ -64,11 +64,11 @@ def center(recording, mode='median', seconds=10, n_snippets=10):
     seconds: float
         Number of seconds used to compute center
     n_snippets: int
-        Number of snippets in which the total 'seconds' are divided spannign the recording duration
+        Number of snippets in which the total 'seconds' are divided spanning the recording duration
 
     Returns
     -------
-    rcenter: CenterRecording
+    center: CenterRecording
         The output recording extractor object
     '''
     return CenterRecording(recording=recording, mode=mode, seconds=seconds, n_snippets=n_snippets)
