@@ -1,4 +1,6 @@
 from collections import OrderedDict
+from spiketoolkit.postprocessing.postprocessing_tools import waveforms_params_dict, pca_params_dict, \
+    amplitudes_params_dict, get_amplitudes_params, get_waveforms_params, get_pca_params
 import numpy as np
 
 recording_params_dict = OrderedDict([('apply_filter', True), ('freq_min', 300.0), ('freq_max', 6000.0)])
@@ -26,12 +28,10 @@ feature_gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value':
                       {'name': keys[2], 'type': str(types[2].__name__), 'value': values[2], 'default': values[2],
                        'title': "If true, it will save the features in the sorting extractor."}]
 
-amplitude_params_dict = OrderedDict(
-    [('amp_method', "absolute"), ('amp_peak', "both"), ('amp_frames_before', 3), ('amp_frames_after', 3)])
 # Defining GUI Params
-keys = list(amplitude_params_dict.keys())
-types = [type(amplitude_params_dict[key]) for key in keys]
-values = [amplitude_params_dict[key] for key in keys]
+keys = list(amplitudes_params_dict.keys())
+types = [type(amplitudes_params_dict[key]) for key in keys]
+values = [amplitudes_params_dict[key] for key in keys]
 amplitude_gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0],
                          'title': "If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned. "
                                   "If 'relative', amplitudes are returned as ratios between waveform amplitudes and "
@@ -44,14 +44,10 @@ amplitude_gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value
                         {'name': keys[3], 'type': str(types[3].__name__), 'value': values[3], 'default': values[3],
                          'title': "Frames after peak to compute amplitude"}]
 
-pca_scores_params_dict = OrderedDict(
-    [('n_comp', 3), ('ms_before', 1.0), ('ms_after', 2.0), ('dtype', None), ('max_spikes_for_pca', 100000),
-     ('m_jobs', None), ('memmap', True)])
-
 # Defining GUI Params
-keys = list(pca_scores_params_dict.keys())
-types = [type(pca_scores_params_dict[key]) for key in keys]
-values = [pca_scores_params_dict[key] for key in keys]
+keys = list(pca_params_dict.keys())
+types = [type(pca_params_dict[key]) for key in keys]
+values = [pca_params_dict[key] for key in keys]
 pca_scores_gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0],
                           'title': "n_compFeatures in template-gui format"},
                          {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1],
@@ -68,14 +64,6 @@ epoch_params_dict = OrderedDict([('epoch_tuples', None), ('epoch_names', None)])
 
 def get_recording_params():
     return recording_params_dict.copy()
-
-
-def get_amplitude_params():
-    return amplitude_params_dict.copy()
-
-
-def get_pca_scores_params():
-    return pca_scores_params_dict.copy()
 
 
 def get_epoch_params():
@@ -112,8 +100,8 @@ def get_kwargs_params():
     '''
     all_params = {}
     all_params.update(get_recording_params())
-    all_params.update(get_amplitude_params())
-    all_params.update(get_pca_scores_params())
+    all_params.update(get_amplitudes_params())
+    all_params.update(get_pca_params())
     all_params.update(get_epoch_params())
     all_params.update(get_feature_params())
 
@@ -122,8 +110,8 @@ def get_kwargs_params():
 
 def update_param_dicts_with_kwargs(kwargs):
     recording_params = get_recording_params()
-    amplitude_params = get_amplitude_params()
-    pca_scores_params = get_pca_scores_params()
+    amplitude_params = get_amplitudes_params()
+    pca_scores_params = get_pca_params()
     epoch_params = get_epoch_params()
     feature_params = get_feature_params()
 
