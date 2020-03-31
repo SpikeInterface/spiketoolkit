@@ -6,12 +6,6 @@ import numpy as np
 class BlankSaturationRecording(RecordingExtractor):
     preprocessor_name = 'BlankSaturation'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'threshold', 'type': 'float',
-         'title': "Scale for the output distribution"},
-        {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
-         'title': "Random seed for reproducibility."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, threshold=None, seed=0):

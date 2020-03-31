@@ -21,7 +21,7 @@ pca_params_dict = OrderedDict([('n_comp', 3), ('by_electrode', True), ('max_spik
                                ('whiten', False)])
 
 common_params_dict = OrderedDict([('max_spikes_per_unit', 300), ('recompute_info', True),
-                                  ('save_as_property_features', True), ('memmap', False), ('seed', 0),
+                                  ('save_property_or_features', True), ('memmap', False), ('seed', 0),
                                   ('verbose', False)])
 
 
@@ -39,28 +39,6 @@ def get_pca_params():
 
 def get_common_params():
     return common_params_dict.copy()
-
-
-def update_wf_param_dicts_with_kwargs(kwargs):
-    waveform_params = get_waveforms_params()
-
-    if np.any([k in waveform_params.keys() for k in kwargs.keys()]):
-        for k in kwargs.keys():
-            if k in waveform_params.keys():
-                waveform_params[k] = kwargs[k]
-
-    return waveform_params
-
-
-def update_amp_param_dicts_with_kwargs(kwargs):
-    amplitudes_params = get_amplitudes_params()
-
-    if np.any([k in amplitudes_params.keys() for k in kwargs.keys()]):
-        for k in kwargs.keys():
-            if k in amplitudes_params.keys():
-                amplitudes_params[k] = kwargs[k]
-
-    return amplitudes_params
 
 
 def get_postprocessing_params():
@@ -779,7 +757,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
 
     memmap = params_dict['memmap']
     seed = params_dict['seed']
-    by_electrode = params_dict['by_elcetrodes']
+    by_electrode = params_dict['by_electrode']
     n_comp = params_dict['n_comp']
     whiten = params_dict['whiten']
 
@@ -1084,7 +1062,7 @@ def _compute_templates_similarity(templates, template_ind):
     for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
             shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j]
-            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs) != t_i.shape[0]:
+            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs):
                 # reorder channels
                 reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
                 reorder_t_ind_j = np.zeros(len(shared_channel_idxs), dtype='int')
@@ -1142,18 +1120,13 @@ def _get_spike_times_clusters(sorting):
     return spike_times, spike_clusters
 
 
-def _get_amp_metric_data(recording, sorting,  recompute_info,
-                         save_property_or_features, **amp_args):
-    if recompute_info:
-        sorting.clear_units_spike_features(feature_name='amplitudes')
-
-    if 'memmap' in amp_args.keys():
-        memmap = amp_args['memmap']
-    else:
-        memmap = get_waveforms_params()['memmap']
+def _get_amp_metric_data(recording, sorting, **kwargs):
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
+    recompute_info = params_dict['recompute_info']
+    memmap = params_dict['recompute_info']
 
     # amplitudes.npy
-    amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, return_idxs=True, **amp_args)
+    amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, return_idxs=True, **kwargs)
 
     # compute len of all waveforms (computed for all units)
     n_spikes = 0
@@ -1208,20 +1181,14 @@ def _get_amp_metric_data(recording, sorting,  recompute_info,
     return spike_times, spike_times_amps, spike_clusters, spike_clusters_amps, amplitudes
 
 
-def _get_pca_metric_data(recording, sorting, n_comp, max_spikes_for_pca, recompute_info, save_property_or_features, verbose,
-                         **wf_args):
+def _get_pca_metric_data(recording, sorting, **kwargs):
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
+    recompute_info = params_dict['recompute_info']
+    memmap = params_dict['recompute_info']
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
 
-    if 'memmap' in wf_args.keys():
-        memmap = wf_args['memmap']
-    else:
-        memmap = get_waveforms_params()['memmap']
-
-    pc_list, pca_idxs, pc_ind = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
-                                                        save_property_or_features=save_property_or_features,
-                                                        max_spikes_for_pca=max_spikes_for_pca, verbose=verbose,
-                                                        return_idxs=True, **wf_args)
+    pc_list, pca_idxs, pc_ind = compute_unit_pca_scores(recording, sorting, return_idxs=True, **kwargs)
 
     # compute len of all waveforms (computed for all units)
     n_spikes = 0

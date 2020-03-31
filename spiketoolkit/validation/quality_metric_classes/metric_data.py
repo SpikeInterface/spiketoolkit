@@ -177,12 +177,12 @@ class MetricData:
 
     def compute_amplitudes(
         self,
-        amp_method,
-        amp_peak,
-        amp_frames_before,
-        amp_frames_after,
+        method,
+        peak,
+        frames_before,
+        frames_after,
         max_spikes_per_unit,
-        save_features_props,
+        save_property_or_features,
         recompute_info,
         seed,
     ):
@@ -191,18 +191,18 @@ class MetricData:
 
         Parameters
         ----------
-        amp_method: str
+        method: str
             If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
             If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-        amp_peak: str
+        peak: str
             If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-        amp_frames_before: int
+        frames_before: int
             Frames before peak to compute amplitude
-        amp_frames_after: int
+        frames_after: int
             Frames after peak to compute amplitude
         max_spikes_per_unit: int
             The maximum number of spikes to use to compute amplitudes.
-        save_features_props: bool
+        save_property_or_features: bool
             If true, it will save amplitudes in the sorting extractor.
         recompute_info: bool
             If True, will always re-extract waveforms.
@@ -212,11 +212,11 @@ class MetricData:
         spike_times, spike_times_amp, spike_clusters, spike_clusters_amp, amplitudes = get_amplitude_metric_data(
             self._recording,
             self._sorting,
-            amp_method=amp_method,
-            save_features_props=save_features_props,
-            amp_peak=amp_peak,
-            amp_frames_before=amp_frames_before,
-            amp_frames_after=amp_frames_after,
+            method=method,
+            save_property_or_features=save_property_or_features,
+            peak=peak,
+            frames_before=frames_before,
+            frames_after=frames_after,
             max_spikes_per_unit=max_spikes_per_unit,
             recompute_info=recompute_info,
             seed=seed,
@@ -235,7 +235,7 @@ class MetricData:
         max_spikes_per_unit,
         recompute_info,
         max_spikes_for_pca,
-        save_features_props,
+        save_property_or_features,
         seed,
     ):
         """
@@ -257,7 +257,7 @@ class MetricData:
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
             The maximum number of spikes to use to compute PCA.
-        save_features_props: bool
+        save_property_or_features: bool
             If true, it will save amplitudes in the sorting extractor.
         seed: int
             Random seed for reproducibility
@@ -274,7 +274,7 @@ class MetricData:
             max_spikes_per_unit=max_spikes_per_unit,
             max_spikes_for_pca=max_spikes_for_pca,
             recompute_info=recompute_info,
-            save_features_props=save_features_props,
+            save_property_or_features=save_property_or_features,
             seed=seed,
             verbose=self.verbose
         )

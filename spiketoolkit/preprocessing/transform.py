@@ -7,12 +7,6 @@ class TransformRecording(RecordingExtractor):
 
     preprocessor_name = 'Transform'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'scalar', 'type': 'float or array', 'title': "Scalar for all traces or each channel "
-                                                              "of the recording extractor"},
-        {'name': 'offset', 'type': 'float or array', 'title': "Offset for all traces or each channel"
-                                                              "of the recording extractor"},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, scalar=1., offset=0., dtype=None):

@@ -3,30 +3,12 @@ import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
-from .parameter_dictionaries import get_amplitude_gui_params
-
-def make_curator_gui_params(params):
-    keys = list(params.keys())
-    types = [type(params[key]) for key in keys]
-    values = [params[key] for key in keys]
-    gui_params = [{'name': keys[0], 'type': 'int', 'value': values[0], 'default': values[0], 'title': "Random seed for reproducibility"},
-                  {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1], 'title': "If True, will be verbose in metric computation."},]
-    curator_gui_params =  [{'name': 'threshold', 'type': 'float', 'title': "The threshold for the given metric."},
-                           {'name': 'threshold_sign', 'type': 'str',
-                            'title': "If 'less', will threshold any metric less than the given threshold. "
-                            "If 'less_or_equal', will threshold any metric less than or equal to the given threshold. "
-                            "If 'greater', will threshold any metric greater than the given threshold. "
-                            "If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold."}]
-    gui_params = curator_gui_params + gui_params + get_amplitude_gui_params()
-    return gui_params
-
 
 class AmplitudeCutoff(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('seed',None), ('verbose',False)])
     curator_name = "ThresholdAmplitudeCutoff"
-    curator_gui_params = make_curator_gui_params(params)
     def __init__(
         self,
         metric_data,

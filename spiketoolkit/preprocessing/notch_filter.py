@@ -13,14 +13,6 @@ class NotchFilterRecording(FilterRecording):
 
     preprocessor_name = 'NotchFilter'
     installed = HAVE_NFR  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'freq', 'type': 'float', 'value':3000.0, 'default':3000.0, 'title': "Frequency"},
-        {'name': 'q', 'type': 'int', 'value':30, 'default':30, 'title': "Quality factor"},
-        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
-            "Chunk size for the filter."},
-        {'name': 'cache_chunks', 'type': 'bool', 'value': False, 'default': False, 'title':
-            "If True filtered traces are computed and cached"},
-    ]
     installation_mesg = "To use the NotchFilterRecording, install scipy: \n\n pip install scipy\n\n"  # error message when not installed
 
     def __init__(self, recording, freq=3000, q=30, chunk_size=30000, cache_chunks=False):

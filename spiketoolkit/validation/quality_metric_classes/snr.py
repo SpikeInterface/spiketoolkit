@@ -5,27 +5,6 @@ from .quality_metric import QualityMetric
 import spiketoolkit as st
 from spikemetrics.utils import Epoch, printProgressBar
 from collections import OrderedDict
-from .parameter_dictionaries import get_recording_gui_params, get_feature_gui_params
-
-def make_curator_gui_params(params):
-    keys = list(params.keys())
-    types = [type(params[key]) for key in keys]
-    values = [params[key] for key in keys]
-    gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0], 'title': "Mode to compute noise SNR ('mad' | 'std' - default 'mad')"},
-                  {'name': keys[1], 'type': str(types[1].__name__), 'value': values[1], 'default': values[1], 'title': "Number of seconds to compute noise level from (default 10.0)"},
-                  {'name': keys[2], 'type': str(types[2].__name__), 'value': values[2], 'default': values[2], 'title': "Maximum number of spikes to compute templates from (default 1000)"},
-                  {'name': keys[3], 'type': str(types[3].__name__), 'value': values[3], 'default': values[3], 'title': "Use 'mean' or 'median' to compute templates"},
-                  {'name': keys[4], 'type': str(types[4].__name__), 'value': values[4], 'default': values[4], 'title': "If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)"},
-                  {'name': keys[5], 'type': 'int', 'value': values[5], 'default': values[5], 'title': "Random seed for reproducibility"},
-                  {'name': keys[6], 'type': str(types[6].__name__), 'value': values[6], 'default': values[6], 'title': "If True, will be verbose in metric computation."},]
-    curator_gui_params =  [{'name': 'threshold', 'type': 'float', 'title': "The threshold for the given metric."},
-                           {'name': 'threshold_sign', 'type': 'str',
-                            'title': "If 'less', will threshold any metric less than the given threshold. "
-                            "If 'less_or_equal', will threshold any metric less than or equal to the given threshold. "
-                            "If 'greater', will threshold any metric greater than the given threshold. "
-                            "If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold."}]
-    gui_params = curator_gui_params + gui_params + get_recording_gui_params() + get_feature_gui_params()
-    return gui_params
 
 class SNR(QualityMetric):
     installed = True  # check at class level if installed or not
@@ -33,7 +12,6 @@ class SNR(QualityMetric):
     params = OrderedDict([('snr_mode',"mad"), ('snr_noise_duration',10.0), ('max_spikes_per_unit_for_snr',1000), 
                           ('template_mode', "median"), ('max_channel_peak', "both"), ('seed',None), ('verbose',False)])
     curator_name = "ThresholdSNR"
-    curator_gui_params = make_curator_gui_params(params)
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="snr")
 

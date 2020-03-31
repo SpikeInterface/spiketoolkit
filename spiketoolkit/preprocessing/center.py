@@ -7,7 +7,6 @@ class CenterRecording(TransformRecording):
 
     preprocessor_name = 'Center'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = []
     installation_mesg = ""  # err
 
     def __init__(self, recording, mode, seconds, n_snippets):

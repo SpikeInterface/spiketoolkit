@@ -30,9 +30,9 @@ def test_waveforms():
             # get num samples in ms
             ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
-
             # no group
-            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_as_features=False, n_jobs=n,
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_property_or_features=False,
+                                     n_jobs=n,
                                      memmap=m)
 
             for (w, w_gt) in zip(wav, waveforms):
@@ -40,7 +40,7 @@ def test_waveforms():
             assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
             # change cut ms
-            wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_as_features=True, n_jobs=n,
+            wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True, n_jobs=n,
                                      memmap=m)
 
             for (w, w_gt) in zip(wav, waveforms):
@@ -65,7 +65,7 @@ def test_waveforms():
 
             # test max_spikes_per_unit
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
-                                     save_as_features=False, n_jobs=n,
+                                     save_property_or_features=False, n_jobs=n,
                                      memmap=m)
             for w in wav:
                 assert len(w) <= 10
@@ -94,7 +94,7 @@ def test_templates():
     ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
     # no group
-    temp = get_unit_templates(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_as_property=False,
+    temp = get_unit_templates(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_property_or_features=False,
                               save_wf_as_features=False)
 
     for (t, t_gt) in zip(temp, templates):
@@ -103,7 +103,8 @@ def test_templates():
     assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
     # change cut ms
-    temp = get_unit_templates(rec, sort, ms_before=2, ms_after=2, save_as_property=True, recompute_waveforms=True)
+    temp = get_unit_templates(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True,
+                              recompute_waveforms=True)
 
     for (t, t_gt) in zip(temp, templates):
         _, samples = t.shape
@@ -132,11 +133,11 @@ def test_max_chan():
                                                                                           n_wf_samples=n_wf_samples)
     rec = create_dumpable_recording(recording=rec, folder=folder)
     sort = create_dumpable_sorting(sorting=sort, folder=folder)
-    max_channels = get_unit_max_channels(rec, sort, save_as_property=False)
+    max_channels = get_unit_max_channels(rec, sort, save_property_or_features=False)
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' not in sort.get_shared_unit_property_names()
 
-    max_channels = get_unit_max_channels(rec, sort, save_as_property=True, recompute_templates=True,
+    max_channels = get_unit_max_channels(rec, sort, save_property_or_features=True, recompute_templates=True,
                                          peak='neg')
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' in sort.get_shared_unit_property_names()
@@ -161,20 +162,21 @@ def test_amplitudes():
     rec = create_dumpable_recording(recording=rec, folder=folder)
     sort = create_dumpable_sorting(sorting=sort, folder=folder)
 
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=False)
+    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False)
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, np.abs(a_gt))
     assert 'amplitudes' not in sort.get_shared_unit_spike_feature_names()
 
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=True, peak='neg')
+    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=True, peak='neg')
 
     for (a, a_gt) in zip(amp, amps):
         assert np.allclose(a, a_gt)
     assert 'amplitudes' in sort.get_shared_unit_spike_feature_names()
 
     # relative
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_as_features=False, method='relative')
+    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False,
+                              method='relative')
 
     amps_rel = [a / np.median(a) for a in amps]
 

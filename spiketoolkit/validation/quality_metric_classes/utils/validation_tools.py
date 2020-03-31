@@ -37,7 +37,7 @@ def get_spike_times_metrics_data(sorting, sampling_frequency):
     return spike_times, spike_clusters
 
 
-def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_features_props, verbose, **wf_args):
+def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_property_or_features, verbose, **wf_args):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -51,7 +51,7 @@ def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_feature
         n_compFeatures in template-gui format
     recompute_info: bool
         If True, will always re-extract waveforms
-    save_features_props: bool
+    save_property_or_features: bool
         If True, save all features and properties in the sorting extractor
     verbose: bool
         If True output is verbose
@@ -100,7 +100,7 @@ def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_feature
     spike_times, spike_times_pca, spike_clusters, \
     spike_clusters_pca, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, n_comp=n_comp,
                                                                            recompute_info=recompute_info,
-                                                                           save_features_props=save_features_props,
+                                                                           save_property_or_features=save_property_or_features,
                                                                            verbose=verbose, **wf_args)
 
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_pca)),\
@@ -108,7 +108,7 @@ def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_feature
 
 
 def get_amplitude_metric_data(recording, sorting, recompute_info,
-                              save_features_props, **amp_args):
+                              save_property_or_features, **amp_args):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -120,7 +120,7 @@ def get_amplitude_metric_data(recording, sorting, recompute_info,
         The sorting extractor
     recompute_info: bool
         If True, will always re-extract waveforms
-    save_features_props: bool
+    save_property_or_features: bool
         If True, save all features and properties in the sorting extractor
     **amp_args: Keyword arguments
         Keyword arguments for amplitudes. A dictionary with default values can be retrieved with:
@@ -159,7 +159,7 @@ def get_amplitude_metric_data(recording, sorting, recompute_info,
 
     spike_times, spike_times_amp, spike_clusters, \
     spike_clusters_amp, amplitudes = _get_amp_metric_data(recording, sorting,
-                                                          save_features_props=save_features_props,
+                                                          save_property_or_features=save_property_or_features,
                                                           recompute_info=recompute_info, **amp_args)
 
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_amp)),\

@@ -3,7 +3,7 @@ import numpy as np
 from spiketoolkit.validation import compute_isolation_distances, compute_isi_violations, compute_snrs, \
     compute_amplitude_cutoffs, compute_d_primes, compute_drift_metrics, compute_firing_rates, compute_l_ratios, \
     compute_metrics, compute_nn_metrics, compute_num_spikes, compute_presence_ratios, compute_silhouette_scores, \
-    get_kwargs_params
+    get_validation_params
 
 
 def test_functions():
@@ -39,8 +39,8 @@ def test_functions():
     assert np.allclose(metrics['nn_miss_rate'][0], nn_miss)
 
 
-def test_kwarg_params():
-    print(get_kwargs_params())
+def test_validation_params():
+    print(get_validation_params())
 
 
 if __name__ == '__main__':

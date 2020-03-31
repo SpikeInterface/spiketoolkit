@@ -15,7 +15,7 @@ from spiketoolkit.curation import (
     threshold_isolation_distances,
     threshold_nn_metrics,
     threshold_drift_metrics,
-    get_kwargs_params
+    get_curation_params
 )
 
 
@@ -226,8 +226,8 @@ def test_thresh_l_ratios():
     shutil.rmtree('test')
 
 
-def test_kwarg_params():
-    print(get_kwargs_params())
+def test_curation_params():
+    print(get_curation_params())
 
 
 if __name__ == "__main__":

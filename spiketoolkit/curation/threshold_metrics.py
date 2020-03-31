@@ -11,7 +11,7 @@ from spiketoolkit.validation.quality_metric_classes.snr import SNR
 from spiketoolkit.validation.quality_metric_classes.isolation_distance import IsolationDistance
 from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import NearestNeighbor
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
-from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import update_param_dicts_with_kwargs
+from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 def threshold_num_spikes(
@@ -254,14 +254,14 @@ def threshold_amplitude_cutoffs(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -269,7 +269,7 @@ def threshold_amplitude_cutoffs(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -279,28 +279,28 @@ def threshold_amplitude_cutoffs(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
         verbose=verbose
     )
     md.compute_amplitudes(
-        amp_method=ap_dict["amp_method"],
-        amp_peak=ap_dict["amp_peak"],
-        amp_frames_before=ap_dict["amp_frames_before"],
-        amp_frames_after=ap_dict["amp_frames_after"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        method=params_dict["method"],
+        peak=params_dict["peak"],
+        frames_before=params_dict["frames_before"],
+        frames_after=params_dict["frames_after"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
     ac = AmplitudeCutoff(metric_data=md)
@@ -359,14 +359,14 @@ def threshold_snrs(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -374,7 +374,7 @@ def threshold_snrs(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -385,15 +385,15 @@ def threshold_snrs(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -403,7 +403,7 @@ def threshold_snrs(
     snr = SNR(metric_data=md)
     threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration,
                                              max_spikes_per_unit_for_snr, template_mode, max_channel_peak,
-                                             fp_dict['save_features_props'], fp_dict['recompute_info'], seed,
+                                             params_dict['save_property_or_features'], params_dict['recompute_info'], seed,
                                              save_as_property)
     return threshold_sorting
 
@@ -445,14 +445,14 @@ def threshold_silhouette_scores(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -460,7 +460,7 @@ def threshold_silhouette_scores(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -470,15 +470,15 @@ def threshold_silhouette_scores(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -486,14 +486,14 @@ def threshold_silhouette_scores(
     )
 
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 
@@ -543,14 +543,14 @@ def threshold_d_primes(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -558,7 +558,7 @@ def threshold_d_primes(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -569,15 +569,15 @@ def threshold_d_primes(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -585,14 +585,14 @@ def threshold_d_primes(
     )
 
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 
@@ -642,14 +642,14 @@ def threshold_l_ratios(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -657,7 +657,7 @@ def threshold_l_ratios(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -668,15 +668,15 @@ def threshold_l_ratios(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -684,14 +684,14 @@ def threshold_l_ratios(
     )
 
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 
@@ -741,14 +741,14 @@ def threshold_isolation_distances(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -756,7 +756,7 @@ def threshold_isolation_distances(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -767,15 +767,15 @@ def threshold_isolation_distances(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -783,14 +783,14 @@ def threshold_isolation_distances(
     )
 
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 
@@ -849,14 +849,14 @@ def threshold_nn_metrics(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -864,7 +864,7 @@ def threshold_nn_metrics(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -875,29 +875,29 @@ def threshold_nn_metrics(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
         verbose=verbose
     )
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 
@@ -951,14 +951,14 @@ def threshold_drift_metrics(
         If True, will be verbose in metric computation.
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            amp_method: str
+            method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
-            amp_peak: str
+            peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
-            amp_frames_before: int
+            frames_before: int
                 Frames before peak to compute amplitude.
-            amp_frames_after: int
+            frames_after: int
                 Frames after peak to compute amplitude.
             apply_filter: bool
                 If True, recording is bandpass-filtered.
@@ -966,7 +966,7 @@ def threshold_drift_metrics(
                 High-pass frequency for optional filter (default 300 Hz).
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz).
-            save_features_props: bool
+            save_property_or_features: bool
                 If true, it will save features in the sorting extractor.
             recompute_info: bool
                     If True, waveforms are recomputed
@@ -977,15 +977,15 @@ def threshold_drift_metrics(
     ----------
     threshold sorting extractor
     """
-    rp_dict, ap_dict, pca_dict, ep_dict, fp_dict = update_param_dicts_with_kwargs(kwargs)
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(
         sorting=sorting,
         sampling_frequency=recording.get_sampling_frequency(),
         recording=recording,
-        apply_filter=rp_dict["apply_filter"],
-        freq_min=rp_dict["freq_min"],
-        freq_max=rp_dict["freq_max"],
+        apply_filter=params_dict["apply_filter"],
+        freq_min=params_dict["freq_min"],
+        freq_max=params_dict["freq_max"],
         unit_ids=None,
         epoch_tuples=None,
         epoch_names=None,
@@ -993,14 +993,14 @@ def threshold_drift_metrics(
     )
 
     md.compute_pca_scores(
-        n_comp=pca_dict["n_comp"],
-        ms_before=pca_dict["ms_before"],
-        ms_after=pca_dict["ms_after"],
-        dtype=pca_dict["dtype"],
-        max_spikes_per_unit=fp_dict["max_spikes_per_unit"],
-        max_spikes_for_pca=pca_dict["max_spikes_for_pca"],
-        save_features_props=fp_dict['save_features_props'],
-        recompute_info=fp_dict['recompute_info'],
+        n_comp=params_dict["n_comp"],
+        ms_before=params_dict["ms_before"],
+        ms_after=params_dict["ms_after"],
+        dtype=params_dict["dtype"],
+        max_spikes_per_unit=params_dict["max_spikes_per_unit"],
+        max_spikes_for_pca=params_dict["max_spikes_for_pca"],
+        save_property_or_features=params_dict['save_property_or_features'],
+        recompute_info=params_dict['recompute_info'],
         seed=seed,
     )
 

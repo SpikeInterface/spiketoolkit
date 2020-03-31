@@ -6,14 +6,6 @@ class WhitenRecording(FilterRecording):
 
     preprocessor_name = 'Whiten'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'chunk_size', 'type': 'int', 'value': 30000, 'default': 30000, 'title':
-            "Chunk size for the filter."},
-        {'name': 'cache_chunks', 'type': 'bool', 'value': False, 'default': False, 'title':
-            "If True filtered traces are computed and cached"},
-         {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
-          'title': "Random seed for reproducibility."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, chunk_size=30000, cache_chunks=False, seed=0):

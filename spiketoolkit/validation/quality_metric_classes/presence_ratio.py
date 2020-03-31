@@ -4,26 +4,11 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
 
-def make_curator_gui_params(params):
-    keys = list(params.keys())
-    types = [type(params[key]) for key in keys]
-    values = [params[key] for key in keys]
-    gui_params = [{'name': keys[0], 'type': str(types[0].__name__), 'value': values[0], 'default': values[0], 'title': "If True, will be verbose in metric computation."}]
-    curator_gui_params =  [{'name': 'threshold', 'type': 'float', 'title': "The threshold for the given metric."},
-                           {'name': 'threshold_sign', 'type': 'str',
-                            'title': "If 'less', will threshold any metric less than the given threshold. "
-                            "If 'less_or_equal', will threshold any metric less than or equal to the given threshold. "
-                            "If 'greater', will threshold any metric greater than the given threshold. "
-                            "If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold."}]
-    gui_params = curator_gui_params + gui_params
-    return gui_params
-
 class PresenceRatio(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('verbose',False)])
     curator_name = "ThresholdPresenceRatio"
-    curator_gui_params = make_curator_gui_params(params)
     def __init__(
         self,
         metric_data,
