@@ -50,7 +50,7 @@ class CenterRecording(TransformRecording):
                         'n_snippets': n_snippets}
 
 
-def center(recording, mode='median', seconds=10, n_snippets=10):
+def center(recording, mode='median', seconds=10., n_snippets=10):
     '''
     Removes the offset of the traces channel by channel.
 
