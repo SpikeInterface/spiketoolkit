@@ -13,9 +13,6 @@ except ImportError:
 class ResampleRecording(RecordingExtractor):
     preprocessor_name = 'Resample'
     installed = HAVE_RR  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'resample_rate', 'type': 'float', 'title': "The resampling frequency"},
-    ]
     installation_mesg = "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
     def __init__(self, recording, resample_rate):
