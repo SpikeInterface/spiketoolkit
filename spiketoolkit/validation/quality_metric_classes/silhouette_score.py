@@ -24,7 +24,7 @@ def make_curator_gui_params(params):
 class SilhouetteScore(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('max_spikes_for_silhouette',10000), ('seed',None), ('verbose',False)])
+    params = OrderedDict([('max_spikes_for_silhouette',10000), ('seed', None), ('verbose', False)])
     curator_name = "ThresholdSilhouetteScore"
     curator_gui_params = make_curator_gui_params(params)
     def __init__(self, metric_data):

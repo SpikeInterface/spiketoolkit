@@ -20,12 +20,16 @@ class FilterRecording(RecordingExtractor):
         self._traces = None
         se.RecordingExtractor.__init__(self)
         dtype = str(self._recording.get_dtype())
-        if dtype.startswith('uint'):
+        if 'uint' in dtype:
+            if 'numpy' in dtype:
+                dtype = str(dtype).replace("<class '", "").replace("'>", "")
+                # drop 'numpy'
+                dtype = dtype.split('.')[1]
             dtype_signed = dtype[1:]
             exp_idx = dtype.find('int') + 3
             exp = int(dtype[exp_idx:])
             offset = - 2**(exp - 1) - 1
-            self._recording = TransformRecording(self._recording, offset=offset)
+            self._recording = TransformRecording(self._recording, offset=offset, dtype=dtype_signed)
             print(f"dtype converted from {dtype} to {dtype_signed} before filtering")
         self.copy_channel_properties(recording)
 

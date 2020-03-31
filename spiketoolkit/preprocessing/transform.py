@@ -15,16 +15,21 @@ class TransformRecording(RecordingExtractor):
     ]
     installation_mesg = ""  # err
 
-    def __init__(self, recording, scalar=1., offset=0.):
+    def __init__(self, recording, scalar=1., offset=0., dtype=None):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
         self._scalar = scalar
         self._offset = offset
+        if dtype is None:
+            self._dtype = recording.get_dtype()
+        else:
+            self._dtype = dtype
         RecordingExtractor.__init__(self)
+        self._recording = recording
         self.copy_channel_properties(recording=self._recording)
 
-        self._kwargs = {'recording': recording.make_serialized_dict(), 'scalar': scalar, 'offset': offset}
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'scalar': scalar, 'offset': offset,
+                        'dtype': dtype}
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
@@ -56,7 +61,7 @@ class TransformRecording(RecordingExtractor):
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
                 offset = np.array(self._offset)[channel_idxs]
             traces = traces + offset[:, np.newaxis]
-        return traces
+        return traces.astype(self._dtype)
 
 
 def transform(recording, scalar=1, offset=0):

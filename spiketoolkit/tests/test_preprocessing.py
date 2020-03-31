@@ -301,6 +301,7 @@ def test_whiten():
     check_dumping(rec_w)
     shutil.rmtree('test')
 
+
 if __name__ == '__main__':
     # test_bandpass_filter()
     # test_bandpass_filter_with_cache()

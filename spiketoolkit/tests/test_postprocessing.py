@@ -76,6 +76,7 @@ def test_waveforms():
 
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt[:, :3])
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -117,6 +118,7 @@ def test_templates():
 
     for (t, t_gt) in zip(temp, templates):
         assert np.allclose(t, t_gt[:2], atol=1) or np.allclose(t, t_gt[2:], atol=1)
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -144,6 +146,7 @@ def test_max_chan():
                                          peak='neg')
     assert np.allclose(np.array(max_chans), np.array(max_channels)[:, 0])
     assert np.array(max_channels).shape[1] == 2
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -177,6 +180,7 @@ def test_amplitudes():
 
     for (a, a_gt) in zip(amp, amps_rel):
         assert np.allclose(a, np.abs(a_gt), 0.02)
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -207,6 +211,7 @@ def test_export_to_phy():
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
     assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
     assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
+    shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -221,6 +226,7 @@ def test_set_unit_properties_by_max_channel_properties():
     assert 'group' in sort.get_shared_unit_property_names()
     sort_groups = [sort.get_unit_property(u, 'group') for u in sort.get_unit_ids()]
     assert np.all(np.unique(sort_groups) == [0, 1])
+    shutil.rmtree('test')
 
 
 @pytest.mark.notimplemented
