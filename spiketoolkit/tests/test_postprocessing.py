@@ -191,6 +191,7 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group')
+    export_to_phy(rec, sort, output_folder='max_channels', max_channels_per_template=4)
     export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False)
 
     rec_phy = se.PhyRecordingExtractor('phy')
