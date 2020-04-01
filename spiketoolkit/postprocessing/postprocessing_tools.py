@@ -1508,6 +1508,7 @@ def _select_max_channels_from_waveforms(wf, recording, max_channels):
 
 def _select_max_channels_from_templates(template, recording, max_channels):
     # select based on adjacency
+    template = template.swapaxes(0, 1)
     if max_channels < recording.get_num_channels():
         if 'location' in recording.get_shared_channel_property_names():
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
