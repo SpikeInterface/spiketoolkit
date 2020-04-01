@@ -1,12 +1,13 @@
 from abc import ABC, abstractmethod
 
+
 # Baseclass for each quality metric
 
 class QualityMetric(ABC):
     def __init__(
-        self,
-        metric_data,
-        metric_name
+            self,
+            metric_data,
+            metric_name
     ):
         '''
         Parameters
@@ -17,13 +18,13 @@ class QualityMetric(ABC):
         self._metric_data = metric_data
         self._metric_name = metric_name
 
-    #implemented by quality metric subclasses
+    # implemented by quality metric subclasses
     @abstractmethod
-    def compute_metric(self, save_as_property):
+    def compute_metric(self, **kwargs):
         pass
 
     @abstractmethod
-    def threshold_metric(self, threshold, threshold_sign, save_as_property):
+    def threshold_metric(self, threshold, threshold_sign, **kwargs):
         '''
         Parameters
         ----------
@@ -41,7 +42,7 @@ class QualityMetric(ABC):
         '''
         pass
 
-    def save_as_property(self, sorting, metric_epochs, metric_name):
+    def save_property_or_features(self, sorting, metric_epochs, metric_name):
         if len(self._metric_data.get_epochs()) == 1:
             metric = metric_epochs[0]
             for i_u, u in enumerate(sorting.get_unit_ids()):

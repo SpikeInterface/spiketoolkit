@@ -1,8 +1,7 @@
 import numpy as np
 import scipy.signal as ss
 import spikeextractors as se
-import os, shutil
-
+from pathlib import Path
 
 def check_signal_power_signal1_below_signal2(signals1, signals2, freq_range, fs):
     '''
@@ -133,100 +132,14 @@ def create_fake_waveforms_with_known_pc():
     pass
 
 
-def check_recordings_equal(RX1, RX2):
-    M = RX1.get_num_channels()
-    N = RX1.get_num_frames()
-    # get_channel_ids
-    assert np.allclose(RX1.get_channel_ids(), RX2.get_channel_ids())
-    # get_num_channels
-    assert np.allclose(RX1.get_num_channels(), RX2.get_num_channels())
-    # get_num_frames
-    assert np.allclose(RX1.get_num_frames(), RX2.get_num_frames())
-    # get_sampling_frequency
-    assert np.allclose(RX1.get_sampling_frequency(), RX2.get_sampling_frequency())
-    # get_traces
-    assert np.allclose(RX1.get_traces(), RX2.get_traces())
-    sf = 0
-    ef = N
-    ch = [RX1.get_channel_ids()[0], RX1.get_channel_ids()[-1]]
-    assert np.allclose(RX1.get_traces(channel_ids=ch, start_frame=sf, end_frame=ef),
-                       RX2.get_traces(channel_ids=ch, start_frame=sf, end_frame=ef))
-    for f in range(0, RX1.get_num_frames(), 10):
-        assert np.isclose(RX1.frame_to_time(f), RX2.frame_to_time(f))
-        assert np.isclose(RX1.time_to_frame(RX1.frame_to_time(f)), RX2.time_to_frame(RX2.frame_to_time(f)))
-    # get_snippets
-    frames = [30, 50, 80]
-    snippets1 = RX1.get_snippets(reference_frames=frames, snippet_len=20)
-    snippets2 = RX2.get_snippets(reference_frames=frames, snippet_len=(10, 10))
-    for ii in range(len(frames)):
-        assert np.allclose(snippets1[ii], snippets2[ii])
-        
+def create_dumpable_extractors_from_existing(folder, RX, SX):
+    folder = Path(folder)
 
-def check_sorting_return_types(SX):
-    unit_ids = SX.get_unit_ids()
-    assert (all(isinstance(id, int) or isinstance(id, np.integer) for id in unit_ids))
-    for id in unit_ids:
-        train = SX.get_unit_spike_train(id)
-        # print(train)
-        assert (all(isinstance(x, int) or isinstance(x, np.integer) for x in train))
+    if 'location' not in RX.get_shared_channel_property_names():
+        RX.set_channel_locations(np.random.randn(RX.get_num_channels(), 2))
+    se.MdaRecordingExtractor.write_recording(RX, folder)
+    RX_mda = se.MdaRecordingExtractor(folder)
+    se.NpzSortingExtractor.write_sorting(SX, folder / 'sorting.npz')
+    SX_npz = se.NpzSortingExtractor(folder / 'sorting.npz')
 
-
-def check_sortings_equal(self, SX1, SX2):
-    # get_unit_ids
-    ids1 = np.sort(np.array(SX1.get_unit_ids()))
-    ids2 = np.sort(np.array(SX2.get_unit_ids()))
-    assert (np.allclose(ids1, ids2))
-    for id in ids1:
-        train1 = np.sort(SX1.get_unit_spike_train(id))
-        train2 = np.sort(SX2.get_unit_spike_train(id))
-        assert np.array_equal(train1, train2)
-
-
-def check_dumping(extractor):
-    extractor.dump(file_name='test.json')
-    extractor_loaded = se.load_extractor_from_json('test.json')
-
-    if 'Recording' in str(type(extractor)):
-        check_recordings_equal(extractor, extractor_loaded)
-    elif 'Sorting' in str(type(extractor)):
-        check_sortings_equal(extractor, extractor_loaded)
-
-
-def create_dumpable_recording(duration=10, num_channels=4, K=10, seed=0, folder='test', recording=None):
-    if recording is not None:
-        rec = recording
-    else:
-        rec, sort = se.example_datasets.toy_example(duration=duration, num_channels=num_channels, K=K, seed=seed)
-
-    if 'location' not in rec.get_shared_channel_property_names():
-        rec.set_channel_locations(channel_ids=rec.get_channel_ids(),
-                                  locations=np.random.randn(rec.get_num_channels(), 2))
-
-    se.MdaRecordingExtractor.write_recording(rec, folder)
-    rec_mda = se.MdaRecordingExtractor(folder)
-
-    return rec_mda
-
-
-def create_dumpable_sorting(duration=10, num_channels=4, K=10, seed=0, folder='test', fs=30000, sorting=None):
-    if sorting is not None:
-        sort = sorting
-    else:
-        rec, sort = se.example_datasets.toy_example(duration=duration, num_channels=num_channels, K=K, seed=seed)
-    if not os.path.isdir(folder):
-        os.mkdir(folder)
-    se.NpzSortingExtractor.write_sorting(sort, folder + '/sorting.npz')
-    sort_npz = se.NpzSortingExtractor(folder + '/sorting.npz')
-
-    return sort_npz
-
-
-def create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test'):
-    rec, sort = se.example_datasets.toy_example(duration=duration, num_channels=num_channels, K=K, seed=seed)
-
-    se.MdaRecordingExtractor.write_recording(rec, folder)
-    rec_mda = se.MdaRecordingExtractor(folder)
-    se.NpzSortingExtractor.write_sorting(sort, folder + '/sorting.npz')
-    sort_npz = se.NpzSortingExtractor(folder + '/sorting.npz')
-
-    return rec_mda, sort_npz
+    return RX_mda, SX_npz

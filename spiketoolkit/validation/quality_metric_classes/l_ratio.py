@@ -3,19 +3,25 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
+
 
 class LRatio(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('num_channels_to_compare',13), ('max_spikes_per_cluster',500), ('seed',None), ('verbose',False)])
+    params = OrderedDict([('num_channels_to_compare', 13), ('max_spikes_per_cluster', 500)])
     curator_name = "ThresholdLRatio"
+
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="l_ratio")
 
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property):
+    def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
+        seed = params_dict['seed']
 
         l_ratios_epochs = []
         for epoch in self._metric_data._epochs:
@@ -38,12 +44,13 @@ class LRatio(QualityMetric):
                 l_ratios_list.append(l_ratios_all[i])
             l_ratios = np.asarray(l_ratios_list)
             l_ratios_epochs.append(l_ratios)
-        if save_as_property:
-            self.save_as_property(self._metric_data._sorting, l_ratios_epochs, self._metric_name)
+        if save_property_or_features:
+            self.save_property_or_features(self._metric_data._sorting, l_ratios_epochs, self._metric_name)
         return l_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property):
-        l_ratios_epochs = self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, seed, save_as_property=save_as_property)[0]
+    def threshold_metric(self, threshold, threshold_sign, num_channels_to_compare, max_spikes_per_cluster, **kwargs):
+        l_ratios_epochs = \
+        self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)[0]
         threshold_curator = ThresholdCurator(
             sorting=self._metric_data._sorting, metrics_epoch=l_ratios_epochs
         )

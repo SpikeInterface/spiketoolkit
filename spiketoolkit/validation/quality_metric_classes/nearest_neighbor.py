@@ -3,13 +3,17 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
+
 
 class NearestNeighbor(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('num_channels_to_compare',13), ('max_spikes_per_cluster',500), ('max_spikes_for_nn', 10000),
-                          ('n_neighbors',4), ('seed',None), ('verbose',False)])
+    params = OrderedDict(
+        [('num_channels_to_compare', 13), ('max_spikes_per_cluster', 500), ('max_spikes_for_nn', 10000),
+         ('n_neighbors', 4)])
     curator_name = "ThresholdNearestNeighbor"
+
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="nearest_neighbor")
 
@@ -17,7 +21,10 @@ class NearestNeighbor(QualityMetric):
             raise ValueError("MetricData object must have pca scores")
 
     def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
-                       n_neighbors, seed, save_as_property):
+                       n_neighbors, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
+        seed = params_dict['seed']
 
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
@@ -47,22 +54,23 @@ class NearestNeighbor(QualityMetric):
             nn_miss_rates = np.asarray(nn_miss_rates_list)
             nn_hit_rates_epochs.append(nn_hit_rates)
             nn_miss_rates_epochs.append(nn_miss_rates)
-        if save_as_property:
-            self.save_as_property(self._metric_data._sorting, nn_hit_rates_epochs, metric_name="nn_hit_rate")
-            self.save_as_property(self._metric_data._sorting, nn_miss_rates_epochs, metric_name="nn_miss_rate")
+        if save_property_or_features:
+            self.save_property_or_features(self._metric_data._sorting, nn_hit_rates_epochs, metric_name="nn_hit_rate")
+            self.save_property_or_features(self._metric_data._sorting, nn_miss_rates_epochs, metric_name="nn_miss_rate")
         return list(zip(nn_hit_rates_epochs, nn_miss_rates_epochs))
 
-    def threshold_metric(self, threshold, threshold_sign, metric_name, num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
-                         n_neighbors, seed, save_as_property):
-        nn_hit_rates_epochs, nn_miss_rates_epochs = self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn, 
-                                                                        n_neighbors, seed, save_as_property=save_as_property)[0]
+    def threshold_metric(self, threshold, threshold_sign, metric_name, num_channels_to_compare, max_spikes_per_cluster,
+                         max_spikes_for_nn, n_neighbors, **kwargs):
+        nn_hit_rates_epochs, nn_miss_rates_epochs = \
+        self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
+                            n_neighbors, **kwargs)[0]
         if metric_name == "nn_hit_rate":
             metrics_epoch = nn_hit_rates_epochs
         elif metric_name == "nn_miss_rate":
             metrics_epoch = nn_miss_rates_epochs
         else:
             raise ValueError("Invalid metric named entered")
-                                                                    
+
         threshold_curator = ThresholdCurator(
             sorting=self._metric_data._sorting, metrics_epoch=metrics_epoch
         )
