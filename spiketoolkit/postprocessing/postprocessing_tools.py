@@ -1087,7 +1087,6 @@ def _get_spike_times_clusters(sorting):
 
 def _get_amp_metric_data(recording, sorting, **kwargs):
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
-    recompute_info = params_dict['recompute_info']
     memmap = params_dict['recompute_info']
 
     # amplitudes.npy

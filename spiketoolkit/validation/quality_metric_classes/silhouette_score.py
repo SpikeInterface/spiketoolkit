@@ -4,18 +4,20 @@ from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
 
+
 class SilhouetteScore(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('max_spikes_for_silhouette',10000), ('seed', None), ('verbose', False)])
+    params = OrderedDict([('max_spikes_for_silhouette', 10000)])
     curator_name = "ThresholdSilhouetteScore"
+
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="silhouette_score")
 
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, max_spikes_for_silhouette, seed, save_as_property):
+    def compute_metric(self, max_spikes_for_silhouette, seed, save_property_or_features):
 
         silhouette_scores_epochs = []
         for epoch in self._metric_data._epochs:
@@ -37,12 +39,13 @@ class SilhouetteScore(QualityMetric):
                 silhouette_scores_list.append(silhouette_scores_all[index])
             silhouette_scores = np.asarray(silhouette_scores_list)
             silhouette_scores_epochs.append(silhouette_scores)
-        if save_as_property:
-            self.save_as_property(self._metric_data._sorting, silhouette_scores_epochs, self._metric_name)
+        if save_property_or_features:
+            self.save_property_or_features(self._metric_data._sorting, silhouette_scores_epochs, self._metric_name)
         return silhouette_scores_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, max_spikes_for_silhouette, seed, save_as_property):
-        silhouette_scores_epochs = self.compute_metric(max_spikes_for_silhouette, seed, save_as_property=save_as_property)[0]
+    def threshold_metric(self, threshold, threshold_sign, max_spikes_for_silhouette, seed, save_property_or_features):
+        silhouette_scores_epochs = \
+        self.compute_metric(max_spikes_for_silhouette, seed, save_property_or_features=save_property_or_features)[0]
         threshold_curator = ThresholdCurator(
             sorting=self._metric_data._sorting, metrics_epoch=silhouette_scores_epochs
         )

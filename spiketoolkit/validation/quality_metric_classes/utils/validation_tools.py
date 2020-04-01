@@ -37,7 +37,7 @@ def get_spike_times_metrics_data(sorting, sampling_frequency):
     return spike_times, spike_clusters
 
 
-def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_property_or_features, verbose, **wf_args):
+def get_pca_metric_data(recording, sorting, **kwargs):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -98,17 +98,13 @@ def get_pca_metric_data(recording, sorting, n_comp, recompute_info, save_propert
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
     spike_times, spike_times_pca, spike_clusters, \
-    spike_clusters_pca, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, n_comp=n_comp,
-                                                                           recompute_info=recompute_info,
-                                                                           save_property_or_features=save_property_or_features,
-                                                                           verbose=verbose, **wf_args)
+    spike_clusters_pca, pc_features, pc_feature_ind = _get_pca_metric_data(recording, sorting, **kwargs)
 
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_pca)),\
            np.squeeze(spike_clusters),  np.squeeze(spike_clusters_pca), pc_features, pc_feature_ind
 
 
-def get_amplitude_metric_data(recording, sorting, recompute_info,
-                              save_property_or_features, **amp_args):
+def get_amplitude_metric_data(recording, sorting, **kwargs):
     '''
     Computes and returns all data needed to compute all the quality metrics from SpikeMetrics
 
@@ -118,11 +114,7 @@ def get_amplitude_metric_data(recording, sorting, recompute_info,
         The recording extractor
     sorting: SortingExtractor
         The sorting extractor
-    recompute_info: bool
-        If True, will always re-extract waveforms
-    save_property_or_features: bool
-        If True, save all features and properties in the sorting extractor
-    **amp_args: Keyword arguments
+    **kwargs: Keyword arguments
         Keyword arguments for amplitudes. A dictionary with default values can be retrieved with:
         st.postprocessing.get_amplitude_params():
             method: str
@@ -138,6 +130,10 @@ def get_amplitude_metric_data(recording, sorting, recompute_info,
             max_spikes_per_unit: int
                 The maximum number of amplitudes to extract for each unit(default is np.inf). If less than np.inf,
                 the amplitudes will be returned from a random permutation of the spikes.
+            recompute_info: bool
+                If True, will always re-extract waveforms
+            save_property_or_features: bool
+                If True, save all features and properties in the sorting extractor
             seed: int
                     Random seed for reproducibility
             memmap: bool
@@ -158,9 +154,7 @@ def get_amplitude_metric_data(recording, sorting, recompute_info,
         raise Exception("No units in the sorting result, can't compute any metric information.")
 
     spike_times, spike_times_amp, spike_clusters, \
-    spike_clusters_amp, amplitudes = _get_amp_metric_data(recording, sorting,
-                                                          save_property_or_features=save_property_or_features,
-                                                          recompute_info=recompute_info, **amp_args)
+    spike_clusters_amp, amplitudes = _get_amp_metric_data(recording, sorting, **kwargs)
 
     return np.squeeze(recording.frame_to_time(spike_times)), np.squeeze(recording.frame_to_time(spike_times_amp)),\
            np.squeeze(spike_clusters), np.squeeze(spike_clusters_amp), np.squeeze(amplitudes)

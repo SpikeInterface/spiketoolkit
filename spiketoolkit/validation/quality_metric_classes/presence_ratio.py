@@ -4,18 +4,20 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
 
+
 class PresenceRatio(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('verbose',False)])
+    params = OrderedDict()
     curator_name = "ThresholdPresenceRatio"
+
     def __init__(
-        self,
-        metric_data,
+            self,
+            metric_data,
     ):
         QualityMetric.__init__(self, metric_data, metric_name="presence_ratio")
 
-    def compute_metric(self, save_as_property):
+    def compute_metric(self, save_property_or_features):
         presence_ratios_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
@@ -30,12 +32,12 @@ class PresenceRatio(QualityMetric):
                 presence_ratios_list.append(presence_ratios_all[i])
             presence_ratios = np.asarray(presence_ratios_list)
             presence_ratios_epochs.append(presence_ratios)
-        if save_as_property:
-            self.save_as_property(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
+        if save_property_or_features:
+            self.save_property_or_features(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
         return presence_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, save_as_property):
-        presence_ratios_epochs = self.compute_metric(save_as_property=save_as_property)[0]
+    def threshold_metric(self, threshold, threshold_sign, save_property_or_features):
+        presence_ratios_epochs = self.compute_metric(save_property_or_features=save_property_or_features)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=presence_ratios_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

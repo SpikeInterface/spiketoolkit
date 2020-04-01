@@ -4,20 +4,19 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
 
+
 class AmplitudeCutoff(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('seed',None), ('verbose',False)])
     curator_name = "ThresholdAmplitudeCutoff"
-    def __init__(
-        self,
-        metric_data,
-    ):
+    params = OrderedDict([])
+
+    def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="amplitude_cutoff")
         if not metric_data.has_amplitudes():
             raise ValueError("MetricData object must have amplitudes")
 
-    def compute_metric(self, save_as_property):
+    def compute_metric(self, save_property_or_features):
         amplitude_cutoffs_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_amps)
@@ -32,12 +31,12 @@ class AmplitudeCutoff(QualityMetric):
                 amplitude_cutoffs_list.append(amplitude_cutoffs_all[i])
             amplitude_cutoffs = np.asarray(amplitude_cutoffs_list)
             amplitude_cutoffs_epochs.append(amplitude_cutoffs)
-        if save_as_property:
-            self.save_as_property(self._metric_data._sorting, amplitude_cutoffs_epochs, self._metric_name)   
+        if save_property_or_features:
+            self.save_property_or_features(self._metric_data._sorting, amplitude_cutoffs_epochs, self._metric_name)
         return amplitude_cutoffs_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, save_as_property):
-        amplitude_cutoff_epochs = self.compute_metric(save_as_property=save_as_property)[0]
+    def threshold_metric(self, threshold, threshold_sign, save_property_or_features):
+        amplitude_cutoff_epochs = self.compute_metric(save_property_or_features=save_property_or_features)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting,
                                              metrics_epoch=amplitude_cutoff_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)

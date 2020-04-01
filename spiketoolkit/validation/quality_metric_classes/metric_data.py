@@ -175,17 +175,7 @@ class MetricData:
     def has_pca_scores(self):
         return self._pc_features is not None
 
-    def compute_amplitudes(
-        self,
-        method,
-        peak,
-        frames_before,
-        frames_after,
-        max_spikes_per_unit,
-        save_property_or_features,
-        recompute_info,
-        seed,
-    ):
+    def compute_amplitudes(self, **kwargs):
         """
         Computes and stores amplitudes for the amplitude cutoff metric
 
@@ -210,34 +200,13 @@ class MetricData:
             Random seed for reproducibility
         """
         spike_times, spike_times_amp, spike_clusters, spike_clusters_amp, amplitudes = get_amplitude_metric_data(
-            self._recording,
-            self._sorting,
-            method=method,
-            save_property_or_features=save_property_or_features,
-            peak=peak,
-            frames_before=frames_before,
-            frames_after=frames_after,
-            max_spikes_per_unit=max_spikes_per_unit,
-            recompute_info=recompute_info,
-            seed=seed,
-        )
+            self._recording, self._sorting, **kwargs)
         self._amplitudes = amplitudes
         self._spike_clusters_amps = spike_clusters
         self._spike_times_amps = spike_times_amp
         self._spike_clusters_amps = spike_clusters_amp
 
-    def compute_pca_scores(
-        self,
-        n_comp,
-        ms_before,
-        ms_after,
-        dtype,
-        max_spikes_per_unit,
-        recompute_info,
-        max_spikes_for_pca,
-        save_property_or_features,
-        seed,
-    ):
+    def compute_pca_scores(self, **kwargs):
         """
         Computes and stores pca for the metrics computation
 
@@ -264,20 +233,7 @@ class MetricData:
         """
 
         spike_times, spike_times_pca, spike_clusters, spike_clusters_pca, pc_features, \
-        pc_feature_ind = get_pca_metric_data(
-            self._recording,
-            self._sorting,
-            n_comp=n_comp,
-            ms_before=ms_before,
-            ms_after=ms_after,
-            dtype=dtype,
-            max_spikes_per_unit=max_spikes_per_unit,
-            max_spikes_for_pca=max_spikes_for_pca,
-            recompute_info=recompute_info,
-            save_property_or_features=save_property_or_features,
-            seed=seed,
-            verbose=self.verbose
-        )
+        pc_feature_ind = get_pca_metric_data(self._recording, self._sorting, **kwargs)
         self._pc_features = pc_features
         self._spike_clusters_pca = spike_clusters
         self._spike_times_pca = spike_times_pca
