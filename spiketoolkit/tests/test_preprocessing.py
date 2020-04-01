@@ -6,12 +6,12 @@ from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
 from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
     normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform, \
     whiten
-from spiketoolkit.tests.utils import check_dumping, create_dumpable_recording
+from spikeextractors.tests.utils import check_dumping
 
 
 @pytest.mark.implemented
 def test_bandpass_filter():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     rec_fft = bandpass_filter(rec, freq_min=5000, freq_max=10000, filter_type='fft')
 
@@ -52,7 +52,7 @@ def test_bandpass_filter():
 
 @pytest.mark.implemented
 def test_bandpass_filter_with_cache():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=10000)
 
@@ -77,7 +77,7 @@ def test_bandpass_filter_with_cache():
 
 @pytest.mark.implemented
 def test_blank_saturation():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
     threshold = 2
     rec_bs = blank_saturation(rec, threshold=threshold)
 
@@ -91,7 +91,7 @@ def test_blank_saturation():
 
 @pytest.mark.implemented
 def test_center():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     rec_c = center(rec, mode='mean')
     assert np.allclose(np.mean(rec_c.get_traces(), axis=1), 0, atol=0.001)
@@ -106,7 +106,7 @@ def test_center():
 
 @pytest.mark.implemented
 def test_clip():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
     threshold = 5
     rec_clip = clip(rec, a_min=-threshold, a_max=threshold)
 
@@ -122,7 +122,7 @@ def test_clip():
 
 @pytest.mark.implemented
 def test_common_reference():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     # no groups
     rec_cmr = common_reference(rec, reference='median')
@@ -169,7 +169,7 @@ def test_norm_by_quantile():
 
 @pytest.mark.implemented
 def test_notch_filter():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     rec_n = notch_filter(rec, 3000, q=10)
 
@@ -182,7 +182,7 @@ def test_notch_filter():
 
 @pytest.mark.implemented
 def test_rectify():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     rec_rect = rectify(rec)
 
@@ -194,7 +194,7 @@ def test_rectify():
 
 @pytest.mark.implemented
 def test_remove_artifacts():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
     triggers = [30000, 90000]
     ms = 10
     ms_frames = int(ms * rec.get_sampling_frequency() / 1000)
@@ -216,7 +216,7 @@ def test_remove_artifacts():
 
 @pytest.mark.implemented
 def test_remove_bad_channels():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
     rec_rm = remove_bad_channels(rec, bad_channel_ids=[0])
     assert 0 not in rec_rm.get_channel_ids()
 
@@ -230,7 +230,9 @@ def test_remove_bad_channels():
     timeseries[1] = 10 * timeseries[1]
 
     rec_np = se.NumpyRecordingExtractor(timeseries=timeseries, sampling_frequency=30000)
-    rec = create_dumpable_recording(recording=rec_np, duration=10, num_channels=4, folder='test')
+    rec_np.set_channel_locations(np.ones((rec_np.get_num_channels(), 2)))
+    se.MdaRecordingExtractor.write_recording(rec_np, 'test')
+    rec = se.MdaRecordingExtractor('test')
     rec_rm = remove_bad_channels(rec, bad_channel_ids=None, bad_threshold=2)
     assert 1 not in rec_rm.get_channel_ids()
     check_dumping(rec_rm)
@@ -247,7 +249,7 @@ def test_remove_bad_channels():
 
 @pytest.mark.implemented
 def test_resample():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     resample_rate_low = 0.1 * rec.get_sampling_frequency()
     resample_rate_high = 2 * rec.get_sampling_frequency()
@@ -265,7 +267,7 @@ def test_resample():
 
 @pytest.mark.implemented
 def test_transform():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test')
 
     scalar = 3
     offset = 50
@@ -286,11 +288,10 @@ def test_transform():
 
 @pytest.mark.implemented
 def test_whiten():
-    rec = create_dumpable_recording(duration=10, num_channels=4, folder='test')
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, folder='test', seed=0)
 
     rec_w = whiten(rec)
     cov_w = np.cov(rec_w.get_traces())
-
     assert np.allclose(cov_w, np.eye(4), atol=0.3)
 
     # should size should not affect
@@ -303,17 +304,17 @@ def test_whiten():
 
 
 if __name__ == '__main__':
-    # test_bandpass_filter()
-    # test_bandpass_filter_with_cache()
-    # test_blank_saturation()
-    # test_clip_traces()
+    test_bandpass_filter()
+    test_bandpass_filter_with_cache()
+    test_blank_saturation()
+    test_clip()
     test_center()
-    # test_common_reference()
-    # test_norm_by_quantile()
-    # test_notch_filter()
-    # test_rectify()
-    # test_remove_artifacts()
-    # test_remove_bad_channels()
-    # test_resample()
-    # test_transform()
-    # test_whiten()
+    test_common_reference()
+    test_norm_by_quantile()
+    test_notch_filter()
+    test_rectify()
+    test_remove_artifacts()
+    test_remove_bad_channels()
+    test_resample()
+    test_transform()
+    test_whiten()

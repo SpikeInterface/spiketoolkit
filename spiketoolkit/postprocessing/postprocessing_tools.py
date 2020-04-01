@@ -122,7 +122,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
     waveforms: list
         List of np.array (n_spikes, n_channels, n_timepoints) containing extracted waveforms for each unit
     spike_indexes: list
-        List of spike indices for which waveforms are computed. Returned if 'return_idxs' is True
+        List of spike indexes for which waveforms are computed. Returned if 'return_idxs' is True
     channel_indexes: list
         List of max channel indexes
     '''
@@ -198,7 +198,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                 shape = (len_wf, n_channels, sum(n_pad))
                 arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
 
-                waveforms, indices, max_channel_idxs = _extract_waveforms_one_unit(unit_id, rec_arg, sort_arg,
+                waveforms, indexes, max_channel_idxs = _extract_waveforms_one_unit(unit_id, rec_arg, sort_arg,
                                                                                    channel_ids,
                                                                                    unit_ids, grouping_property,
                                                                                    compute_property_from_recording,
@@ -207,11 +207,11 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                                                                                    dtype, seed, verbose,
                                                                                    memmap_array=arr)
                 waveform_list.append(arr)
-                spike_index_list.append(indices)
+                spike_index_list.append(indexes)
                 channel_index_list.append(max_channel_idxs)
         else:
             for unit_id in unit_ids:
-                waveforms, indices, max_channel_idxs = _extract_waveforms_one_unit(unit_id, rec_arg, sort_arg,
+                waveforms, indexes, max_channel_idxs = _extract_waveforms_one_unit(unit_id, rec_arg, sort_arg,
                                                                                    channel_ids, unit_ids,
                                                                                    grouping_property,
                                                                                    compute_property_from_recording,
@@ -220,7 +220,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                                                                                    dtype, seed, verbose,
                                                                                    memmap_array=None)
                 waveform_list.append(waveforms)
-                spike_index_list.append(indices)
+                spike_index_list.append(indexes)
                 channel_index_list.append(max_channel_idxs)
     else:
         if memmap:
@@ -266,13 +266,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
 
     if save_property_or_features:
         for i, unit_id in enumerate(unit_ids):
-            if len(spike_index_list[i]) < len(sorting.get_unit_spike_train(unit_id)):
-                features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                for i_ind, ind in enumerate(spike_index_list[i]):
-                    features[i_ind] = waveform_list[i]
-            else:
-                features = waveform_list[i]
-            sorting.set_unit_spike_features(unit_id, 'waveforms', features)
+            sorting.set_unit_spike_features(unit_id, 'waveforms', waveform_list[i], indexes=spike_index_list[i])
 
     if return_idxs:
         return waveform_list, spike_index_list, channel_index_list
@@ -552,7 +546,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
     amplitudes: list
         List of int containing extracted amplitudes for each unit
     indexes: list
-        List of spike indices for which amplitudes are computed. Returned if 'return_idxs' is True
+        List of spike indexes for which amplitudes are computed. Returned if 'return_idxs' is True
     '''
 
     if isinstance(unit_ids, (int, np.integer)):
@@ -578,10 +572,10 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
     for i, unit_id in enumerate(unit_ids):
         spike_train = sorting.get_unit_spike_train(unit_id)
         if max_spikes_per_unit < len(spike_train):
-            indices = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit]
+            indexes = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit]
         else:
-            indices = np.arange(len(spike_train))
-        spike_train = spike_train[indices]
+            indexes = np.arange(len(spike_train))
+        spike_train = spike_train[indexes]
 
         snippets = recording.get_snippets(reference_frames=spike_train,
                                           snippet_len=[frames_before, frames_after], channel_ids=channel_ids)
@@ -605,20 +599,10 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
 
         amplitudes = sorting.allocate_array(array=amps, name='amplitudes_' + str(unit_id) + '.raw',
                                             memmap=memmap)
-
-        if save_property_or_features:
-            if len(indices) < len(spike_train):
-                if 'amplitudes' not in sorting.get_unit_spike_feature_names(unit_id):
-                    amp_features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                else:
-                    amp_features = np.array(sorting.get_unit_spike_features(unit_id, 'amplitudes'))
-                for i, ind in enumerate(indices):
-                    amp_features[ind] = amplitudes[i]
-            else:
-                amp_features = amplitudes
-            sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_features)
         amp_list.append(amplitudes)
-        spike_index_list.append(indices)
+        spike_index_list.append(indexes)
+        if save_property_or_features:
+            sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_list[i], indexes=spike_index_list[i])
 
     if return_idxs:
         return amp_list, spike_index_list
@@ -696,7 +680,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
         If 'by_electrode' is False, the array has shape (n_spikes, n_comp)
         If 'by_electrode' is True, the array has shape (n_spikes, n_channels, n_comp)
     indexes: list
-        List of spike indices for which pca scores are computed. Returned if 'return_idxs' is True
+        List of spike indexes for which pca scores are computed. Returned if 'return_idxs' is True
     '''
     if isinstance(unit_ids, (int, np.integer)):
         unit_ids = [unit_ids]
@@ -813,17 +797,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
 
     if save_property_or_features:
         for i, unit_id in enumerate(sorting.get_unit_ids()):
-            if len(spike_index_list[i]) < len(sorting.get_unit_spike_train(unit_id)):
-                assert spike_index_list[i] is not None, 'Indices are not computed for this unit'
-                if 'pca_scores' not in sorting.get_unit_spike_feature_names(unit_id):
-                    features = np.array([None] * len(sorting.get_unit_spike_train(unit_id)))
-                else:
-                    features = np.array(sorting.get_unit_spike_features(unit_id, 'pca_scores'))
-                for idx, ind in enumerate(spike_index_list[i]):
-                    features[ind] = pca_scores_list[i][idx]
-            else:
-                features = pca_scores_list[i]
-            sorting.set_unit_spike_features(unit_id, 'pca_scores', features)
+            sorting.set_unit_spike_features(unit_id, 'pca_scores', pca_scores_list[i], indexes=spike_index_list[i])
 
     if return_idxs:
         return pca_scores_list, spike_index_list, np.array(channel_list)
@@ -1087,14 +1061,14 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, s
     st = sorting.get_unit_spike_train(unit_id=unit)
     num_events = len(st)
     if num_events > max_spikes_per_unit:
-        event_indices = np.random.RandomState(seed=seed).choice(range(num_events), size=max_spikes_per_unit,
+        event_indexes = np.random.RandomState(seed=seed).choice(range(num_events), size=max_spikes_per_unit,
                                                                 replace=False)
     else:
-        event_indices = range(num_events)
+        event_indexes = range(num_events)
 
-    spikes = recording.get_snippets(reference_frames=st[event_indices].astype('int64'),
+    spikes = recording.get_snippets(reference_frames=st[event_indexes].astype('int64'),
                                     snippet_len=snippet_len, channel_ids=channel_ids)
-    return spikes, event_indices
+    return spikes, event_indexes
 
 
 def _get_spike_times_clusters(sorting):
@@ -1409,12 +1383,12 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
     amp_peak = params_dict['peak']
     amp_frames_before = int(params_dict['frames_before'])
     amp_frames_after = int(params_dict['frames_after'])
-    max_spikes_per_unit_amp = params_dict['max_spikes_per_unit']
+    max_spikes_per_unit_amp = np.inf
 
     if compute_pc_features:
         max_spikes_per_unit_wf = np.inf
     else:
-        max_spikes_per_unit_wf = max_spikes_per_unit_amp
+        max_spikes_per_unit_wf = params_dict['max_spikes_per_unit']
 
     if max_channels_per_template is None:
         max_channels_per_template = recording.get_num_channels()
@@ -1444,8 +1418,8 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
                                    max_spikes_for_amplitudes=max_spikes_per_unit_amp,
                                    max_spikes_for_pca=max_spikes_for_pca, n_jobs=n_jobs,
                                    recompute_info=recompute_info, max_channels_per_waveforms=max_channels_per_template,
-                                   save_property_or_features=save_property_or_features, verbose=verbose, memmap=memmap, seed=seed,
-                                   compute_pc_features=compute_pc_features)
+                                   save_property_or_features=save_property_or_features, verbose=verbose, memmap=memmap,
+                                   seed=seed, compute_pc_features=compute_pc_features)
 
     channel_map = np.arange(recording.get_num_channels())
     channel_map_si = np.array(recording.get_channel_ids())
@@ -1635,7 +1609,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
 
                             if verbose:
                                 print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
-                            wf, indices = _get_random_spike_waveforms(recording=rec,
+                            wf, indexes = _get_random_spike_waveforms(recording=rec,
                                                                       sorting=sort,
                                                                       unit=unit_id,
                                                                       max_spikes_per_unit=max_spikes,
@@ -1656,7 +1630,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                             else:
                                 memmap_array[:] = wf
                                 waveforms = memmap_array
-                            return waveforms, list(indices), list(max_channel_idxs)
+                            return waveforms, list(indexes), list(max_channel_idxs)
         else:
             for i, unit_id in enumerate(unit_ids):
                 if unit == unit_id:
@@ -1678,7 +1652,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
 
                     if verbose:
                         print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
-                    wf, indices = _get_random_spike_waveforms(recording=recording,
+                    wf, indexes = _get_random_spike_waveforms(recording=recording,
                                                               sorting=sorting,
                                                               unit=unit_id,
                                                               max_spikes_per_unit=max_spikes,
@@ -1704,7 +1678,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                     else:
                         memmap_array[:] = wf
                         waveforms = memmap_array
-                    return waveforms, list(indices), list(max_channel_idxs),
+                    return waveforms, list(indexes), list(max_channel_idxs),
 
     else:
         for i, unit_id in enumerate(unit_ids):
@@ -1722,7 +1696,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
 
                 if verbose:
                     print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
-                wf, indices = _get_random_spike_waveforms(recording=recording,
+                wf, indexes = _get_random_spike_waveforms(recording=recording,
                                                           sorting=sorting,
                                                           unit=unit_id,
                                                           max_spikes_per_unit=max_spikes,
@@ -1741,4 +1715,4 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                 else:
                     memmap_array[:] = wf
                     waveforms = memmap_array
-                return waveforms, list(indices), list(max_channel_idxs),
+                return waveforms, list(indexes), list(max_channel_idxs),

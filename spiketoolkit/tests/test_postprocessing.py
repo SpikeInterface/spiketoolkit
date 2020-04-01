@@ -4,10 +4,10 @@ from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
-from spiketoolkit.tests.utils import create_dumpable_recording, create_dumpable_sorting, create_dumpable_extractors
 import os
 import shutil
 from pathlib import Path
+from .utils import create_dumpable_extractors_from_existing
 
 
 @pytest.mark.implemented
@@ -25,8 +25,7 @@ def test_waveforms():
                                                                                                   n_channels=4,
                                                                                                   n_wf_samples=
                                                                                                   n_wf_samples)
-            rec = create_dumpable_recording(recording=rec, folder=folder)
-            sort = create_dumpable_sorting(sorting=sort, folder=folder)
+            rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
             # get num samples in ms
             ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
@@ -88,8 +87,7 @@ def test_templates():
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
-    rec = create_dumpable_recording(recording=rec, folder=folder)
-    sort = create_dumpable_sorting(sorting=sort, folder=folder)
+    rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
     # get num samples in ms
     ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
@@ -131,8 +129,7 @@ def test_max_chan():
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
-    rec = create_dumpable_recording(recording=rec, folder=folder)
-    sort = create_dumpable_sorting(sorting=sort, folder=folder)
+    rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
     max_channels = get_unit_max_channels(rec, sort, save_property_or_features=False)
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' not in sort.get_shared_unit_property_names()
@@ -159,8 +156,7 @@ def test_amplitudes():
     rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
                                                                                           n_channels=4,
                                                                                           n_wf_samples=n_wf_samples)
-    rec = create_dumpable_recording(recording=rec, folder=folder)
-    sort = create_dumpable_sorting(sorting=sort, folder=folder)
+    rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
 
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False)
 
@@ -187,12 +183,10 @@ def test_amplitudes():
 
 @pytest.mark.implemented
 def test_export_to_phy():
-    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
     folder = 'test'
     if os.path.isdir(folder):
         shutil.rmtree(folder)
-    rec = create_dumpable_recording(recording=rec, folder=folder)
-    sort = create_dumpable_sorting(sorting=sort, folder=folder)
+    rec, sort = se.example_datasets.create_dumpable_extractors(folder=folder, duration=10, num_channels=8)
 
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
@@ -221,7 +215,7 @@ def test_set_unit_properties_by_max_channel_properties():
     folder = 'test'
     if os.path.isdir(folder):
         shutil.rmtree(folder)
-    rec, sort = create_dumpable_extractors(duration=10, num_channels=8, folder=folder)
+    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=8, folder=folder)
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     set_unit_properties_by_max_channel_properties(rec, sort, property='group')
