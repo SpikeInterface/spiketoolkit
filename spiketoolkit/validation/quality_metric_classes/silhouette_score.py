@@ -3,6 +3,7 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 class SilhouetteScore(QualityMetric):
@@ -17,7 +18,10 @@ class SilhouetteScore(QualityMetric):
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, max_spikes_for_silhouette, seed, save_property_or_features):
+    def compute_metric(self, max_spikes_for_silhouette, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
+        seed = params_dict['seed']
 
         silhouette_scores_epochs = []
         for epoch in self._metric_data._epochs:
@@ -43,9 +47,9 @@ class SilhouetteScore(QualityMetric):
             self.save_property_or_features(self._metric_data._sorting, silhouette_scores_epochs, self._metric_name)
         return silhouette_scores_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, max_spikes_for_silhouette, seed, save_property_or_features):
+    def threshold_metric(self, threshold, threshold_sign, max_spikes_for_silhouette, **kwargs):
         silhouette_scores_epochs = \
-        self.compute_metric(max_spikes_for_silhouette, seed, save_property_or_features=save_property_or_features)[0]
+        self.compute_metric(max_spikes_for_silhouette, **kwargs)[0]
         threshold_curator = ThresholdCurator(
             sorting=self._metric_data._sorting, metrics_epoch=silhouette_scores_epochs
         )

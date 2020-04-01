@@ -3,6 +3,7 @@ import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 class NearestNeighbor(QualityMetric):
@@ -20,7 +21,10 @@ class NearestNeighbor(QualityMetric):
             raise ValueError("MetricData object must have pca scores")
 
     def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
-                       n_neighbors, seed, save_property_or_features):
+                       n_neighbors, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
+        seed = params_dict['seed']
 
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
@@ -56,11 +60,10 @@ class NearestNeighbor(QualityMetric):
         return list(zip(nn_hit_rates_epochs, nn_miss_rates_epochs))
 
     def threshold_metric(self, threshold, threshold_sign, metric_name, num_channels_to_compare, max_spikes_per_cluster,
-                         max_spikes_for_nn,
-                         n_neighbors, seed, save_property_or_features):
+                         max_spikes_for_nn, n_neighbors, **kwargs):
         nn_hit_rates_epochs, nn_miss_rates_epochs = \
         self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
-                            n_neighbors, seed, save_property_or_features=save_property_or_features)[0]
+                            n_neighbors, **kwargs)[0]
         if metric_name == "nn_hit_rate":
             metrics_epoch = nn_hit_rates_epochs
         elif metric_name == "nn_miss_rate":

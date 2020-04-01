@@ -333,7 +333,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None,
             n_jobs: int
                 Number of parallel jobs (default 1)
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             seed: int
@@ -430,7 +430,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
             n_jobs: int
                 Number of parallel jobs (default 1)
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             seed: int
@@ -541,7 +541,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
             frames_after: float
                 Frames after peak to compute amplitude
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             seed: int
@@ -673,7 +673,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             n_jobs: int
                 Number of parallel jobs (default 1)
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             seed: int
@@ -830,7 +830,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             compute_property_from_recording: bool
                 If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
                 property of the recording extractor channel on which the average waveform is the largest
@@ -911,7 +911,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
             dtype: dtype
                 The numpy dtype of the waveforms
             max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit.
+                The maximum number of spikes to extract per unit
             compute_property_from_recording: bool
                 If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
                 property of the recording extractor channel on which the average waveform is the largest

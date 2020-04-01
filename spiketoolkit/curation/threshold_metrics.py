@@ -13,7 +13,7 @@ from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import Near
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
 from spiketoolkit.validation.quality_metric_classes.parameter_dictionaries import update_all_param_dicts_with_kwargs
 
-#TODO add kwargs to threshold metric functions
+
 def threshold_num_spikes(
         sorting,
         threshold,
@@ -55,7 +55,7 @@ def threshold_num_spikes(
                     verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
-    threshold_sorting = ns.threshold_metric(threshold, threshold_sign, params_dict['save_property_or_features'])
+    threshold_sorting = ns.threshold_metric(threshold, threshold_sign, **kwargs)
     return threshold_sorting
 
 
@@ -100,7 +100,7 @@ def threshold_firing_rates(
                     verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
-    threshold_sorting = fr.threshold_metric(threshold, threshold_sign, params_dict['save_property_or_features'])
+    threshold_sorting = fr.threshold_metric(threshold, threshold_sign, **kwargs)
     return threshold_sorting
 
 
@@ -145,7 +145,7 @@ def threshold_presence_ratios(
                     verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
-    threshold_sorting = pr.threshold_metric(threshold, threshold_sign, params_dict['save_property_or_features'])
+    threshold_sorting = pr.threshold_metric(threshold, threshold_sign, **kwargs)
     return threshold_sorting
 
 
@@ -196,8 +196,7 @@ def threshold_isi_violations(
                     verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
-    threshold_sorting = iv.threshold_metric(threshold, threshold_sign, isi_threshold, min_isi,
-                                            params_dict['save_property_or_features'])
+    threshold_sorting = iv.threshold_metric(threshold, threshold_sign, isi_threshold, min_isi, **kwargs)
     return threshold_sorting
 
 
@@ -262,7 +261,7 @@ def threshold_amplitude_cutoffs(
     md.compute_amplitudes(**kwargs)
 
     ac = AmplitudeCutoff(metric_data=md)
-    threshold_sorting = ac.threshold_metric(threshold, threshold_sign, params_dict['save_property_or_features'])
+    threshold_sorting = ac.threshold_metric(threshold, threshold_sign, **kwargs)
     return threshold_sorting
 
 
@@ -322,16 +321,30 @@ def threshold_snrs(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            recompute_info: bool
-                    If True, waveforms are recomputed
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
@@ -350,9 +363,7 @@ def threshold_snrs(
 
     snr = SNR(metric_data=md)
     threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration,
-                                             max_spikes_per_unit_for_snr, template_mode, max_channel_peak,
-                                             params_dict['recompute_info'], params_dict['seed'],
-                                             params_dict['save_property_or_features'])
+                                             max_spikes_per_unit_for_snr, template_mode, max_channel_peak, **kwargs)
     return threshold_sorting
 
 
@@ -386,10 +397,10 @@ def threshold_silhouette_scores(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
-                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both
-                ('both' - default)
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
             frames_before: int
                 Frames before peak to compute amplitude
             frames_after: int
@@ -400,6 +411,24 @@ def threshold_silhouette_scores(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -425,9 +454,8 @@ def threshold_silhouette_scores(
     md.compute_pca_scores(**kwargs)
 
     silhouette_score = SilhouetteScore(metric_data=md)
-    threshold_sorting = silhouette_score.threshold_metric(
-        threshold, threshold_sign, max_spikes_for_silhouette, params_dict['seed'],
-        params_dict['save_property_or_features'])
+    threshold_sorting = silhouette_score.threshold_metric(threshold, threshold_sign, max_spikes_for_silhouette,
+                                                          **kwargs)
     return threshold_sorting
 
 
@@ -464,7 +492,7 @@ def threshold_d_primes(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
@@ -478,6 +506,24 @@ def threshold_d_primes(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -504,8 +550,7 @@ def threshold_d_primes(
 
     d_prime = DPrime(metric_data=md)
     threshold_sorting = d_prime.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
-                                                 max_spikes_per_cluster, params_dict['seed'],
-                                                 params_dict['save_property_or_features'])
+                                                 max_spikes_per_cluster, **kwargs)
     return threshold_sorting
 
 
@@ -542,7 +587,7 @@ def threshold_l_ratios(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
@@ -556,6 +601,24 @@ def threshold_l_ratios(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -582,8 +645,7 @@ def threshold_l_ratios(
 
     l_ratio = LRatio(metric_data=md)
     threshold_sorting = l_ratio.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
-                                                 max_spikes_per_cluster, params_dict['seed'],
-                                                 params_dict['save_property_or_features'])
+                                                 max_spikes_per_cluster, **kwargs)
     return threshold_sorting
 
 
@@ -620,7 +682,7 @@ def threshold_isolation_distances(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
@@ -634,6 +696,24 @@ def threshold_isolation_distances(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -660,8 +740,7 @@ def threshold_isolation_distances(
 
     isolaiton_distance = IsolationDistance(metric_data=md)
     threshold_sorting = isolaiton_distance.threshold_metric(threshold, threshold_sign, num_channels_to_compare,
-                                                            max_spikes_per_cluster, params_dict['seed'],
-                                                            params_dict['save_property_or_features'])
+                                                            max_spikes_per_cluster, **kwargs)
     return threshold_sorting
 
 
@@ -707,7 +786,7 @@ def threshold_nn_metrics(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
@@ -721,6 +800,24 @@ def threshold_nn_metrics(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -747,8 +844,7 @@ def threshold_nn_metrics(
 
     nn = NearestNeighbor(metric_data=md)
     threshold_sorting = nn.threshold_metric(threshold, threshold_sign, metric_name, num_channels_to_compare,
-                                            max_spikes_per_cluster, max_spikes_for_nn, n_neighbors, params_dict['seed'],
-                                            params_dict['save_property_or_features'])
+                                            max_spikes_per_cluster, max_spikes_for_nn, n_neighbors, **kwargs)
     return threshold_sorting
 
 
@@ -788,7 +884,7 @@ def threshold_drift_metrics(
         Keyword arguments among the following:
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
-                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
             peak: str
                 If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
@@ -802,6 +898,24 @@ def threshold_drift_metrics(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
                 If true, it will save features in the sorting extractor
             recompute_info: bool
@@ -828,6 +942,5 @@ def threshold_drift_metrics(
 
     dm = DriftMetric(metric_data=md)
     threshold_sorting = dm.threshold_metric(threshold, threshold_sign, metric_name, drift_metrics_interval_s,
-                                            drift_metrics_min_spikes_per_interval,
-                                            params_dict['save_property_or_features'])
+                                            drift_metrics_min_spikes_per_interval, **kwargs)
     return threshold_sorting

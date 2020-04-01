@@ -3,6 +3,7 @@ import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 class AmplitudeCutoff(QualityMetric):
@@ -16,7 +17,9 @@ class AmplitudeCutoff(QualityMetric):
         if not metric_data.has_amplitudes():
             raise ValueError("MetricData object must have amplitudes")
 
-    def compute_metric(self, save_property_or_features):
+    def compute_metric(self, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
         amplitude_cutoffs_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_amps)
@@ -35,8 +38,8 @@ class AmplitudeCutoff(QualityMetric):
             self.save_property_or_features(self._metric_data._sorting, amplitude_cutoffs_epochs, self._metric_name)
         return amplitude_cutoffs_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, save_property_or_features):
-        amplitude_cutoff_epochs = self.compute_metric(save_property_or_features=save_property_or_features)[0]
+    def threshold_metric(self, threshold, threshold_sign, **kwargs):
+        amplitude_cutoff_epochs = self.compute_metric(**kwargs)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting,
                                              metrics_epoch=amplitude_cutoff_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)

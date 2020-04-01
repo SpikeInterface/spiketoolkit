@@ -20,11 +20,11 @@ class QualityMetric(ABC):
 
     # implemented by quality metric subclasses
     @abstractmethod
-    def compute_metric(self, save_property_or_features):
+    def compute_metric(self, **kwargs):
         pass
 
     @abstractmethod
-    def threshold_metric(self, threshold, threshold_sign, save_property_or_features):
+    def threshold_metric(self, threshold, threshold_sign, **kwargs):
         '''
         Parameters
         ----------

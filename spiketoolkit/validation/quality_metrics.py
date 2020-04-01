@@ -63,7 +63,7 @@ def compute_num_spikes(
                     epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
-    num_spikes_epochs = ns.compute_metric(params_dict['save_property_or_features'])
+    num_spikes_epochs = ns.compute_metric(**kwargs)
     return num_spikes_epochs
 
 
@@ -111,7 +111,7 @@ def compute_firing_rates(
                     epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
-    firing_rate_epochs = fr.compute_metric(params_dict['save_property_or_features'])
+    firing_rate_epochs = fr.compute_metric(**kwargs)
     return firing_rate_epochs
 
 
@@ -159,7 +159,7 @@ def compute_presence_ratios(
                     epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
-    presence_ratio_epochs = pr.compute_metric(params_dict['save_property_or_features'])
+    presence_ratio_epochs = pr.compute_metric(**kwargs)
     return presence_ratio_epochs
 
 
@@ -214,7 +214,7 @@ def compute_isi_violations(
                     epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
-    isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, params_dict['save_property_or_features'])
+    isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, **kwargs)
     return isi_violation_epochs
 
 
@@ -243,10 +243,6 @@ def compute_amplitude_cutoffs(
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
             save_property_or_features: bool
                 If true, it will save amplitudes in the sorting extractor
             recompute_info: bool
@@ -268,7 +264,12 @@ def compute_amplitude_cutoffs(
             seed: int
                 Random seed for reproducibility
             verbose: bool
-                If True, will be verbose in metric computation.
+                If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
+
     Returns
     ----------
     amplitude_cutoffs_epochs: list of lists
@@ -286,7 +287,7 @@ def compute_amplitude_cutoffs(
 
     md.compute_amplitudes(**kwargs)
     ac = AmplitudeCutoff(metric_data=md)
-    amplitude_cutoffs_epochs = ac.compute_metric(params_dict['save_property_or_features'])
+    amplitude_cutoffs_epochs = ac.compute_metric(**kwargs)
     return amplitude_cutoffs_epochs
 
 
@@ -324,28 +325,54 @@ def compute_snrs(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
-                If True, will be verbose in metric computation.
+                If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -364,8 +391,7 @@ def compute_snrs(
 
     snr = SNR(metric_data=md)
     snr_epochs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
-                                    template_mode, max_channel_peak, params_dict['save_property_or_features'],
-                                    params_dict['recompute_info'], params_dict['seed'])
+                                    template_mode, max_channel_peak, **kwargs)
     return snr_epochs
 
 
@@ -391,42 +417,54 @@ def compute_silhouette_scores(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -446,8 +484,7 @@ def compute_silhouette_scores(
     md.compute_pca_scores(**kwargs)
 
     silhouette_score = SilhouetteScore(metric_data=md)
-    silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, params_dict['seed'],
-                                                              params_dict['save_property_or_features'])
+    silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
     return silhouette_score_epochs
 
 
@@ -476,42 +513,54 @@ def compute_d_primes(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -531,8 +580,7 @@ def compute_d_primes(
     md.compute_pca_scores(**kwargs)
 
     d_prime = DPrime(metric_data=md)
-    d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, params_dict['seed'],
-                                            params_dict['save_property_or_features'])
+    d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
     return d_prime_epochs
 
 
@@ -561,42 +609,54 @@ def compute_l_ratios(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs.
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -616,8 +676,7 @@ def compute_l_ratios(
     md.compute_pca_scores(**kwargs)
 
     l_ratio = LRatio(metric_data=md)
-    l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, params_dict['seed'],
-                                            params_dict['save_property_or_features'])
+    l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
     return l_ratio_epochs
 
 
@@ -647,42 +706,54 @@ def compute_isolation_distances(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -703,8 +774,7 @@ def compute_isolation_distances(
 
     isolation_distance = IsolationDistance(metric_data=md)
     isolation_distance_epochs = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                                  params_dict['seed'],
-                                                                  params_dict['save_property_or_features'])
+                                                                  **kwargs)
     return isolation_distance_epochs
 
 
@@ -739,42 +809,54 @@ def compute_nn_metrics(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -795,8 +877,7 @@ def compute_nn_metrics(
 
     nn = NearestNeighbor(metric_data=md)
     nn_metrics_epochs = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                          max_spikes_for_nn, n_neighbors, params_dict['seed'],
-                                          params_dict['save_property_or_features'])
+                                          max_spikes_for_nn, n_neighbors, **kwargs)
     return nn_metrics_epochs
 
 
@@ -825,42 +906,54 @@ def compute_drift_metrics(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -880,8 +973,7 @@ def compute_drift_metrics(
     md.compute_pca_scores(**kwargs)
 
     dm = DriftMetric(metric_data=md)
-    dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval,
-                                          params_dict['save_property_or_features'])
+    dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
     return dm_metrics_epochs
 
 
@@ -952,42 +1044,54 @@ def compute_metrics(
         Number of neighbors to compare
     **kwargs: keyword arguments
         Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
             apply_filter: bool
-                If True, recording is bandpass-filtered.
+                If True, recording is bandpass-filtered
             freq_min: float
                 High-pass frequency for optional filter (default 300 Hz)
             freq_max: float
                 Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
             ms_before: float
                 Time period in ms to cut waveforms before the spike events
             ms_after: float
                 Time period in ms to cut waveforms after the spike events
             dtype: dtype
                 The numpy dtype of the waveforms
-            max_spikes_per_unit: int
-                The maximum number of spikes to extract per unit
-            max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs to compute waveforms
+                Number of parallel jobs (default 1)
             memmap: bool
-                If True all processing is done on memmap arrays (default)
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
-                If true, it will save amplitudes in the sorting extractor
+                If true, it will save features in the sorting extractor
             recompute_info: bool
                     If True, waveforms are recomputed
             max_spikes_per_unit: int
                 The maximum number of spikes to extract per unit
-            save_property_or_features: bool
-                If True, the metric is saved as sorting property
             seed: int
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
+            epoch_tuples: list
+                A list of tuples with a start and end time for each epoch
+            epoch_names: list
+                A list of strings for the names of the given epochs
 
     Returns
     ----------
@@ -1044,46 +1148,44 @@ def compute_metrics(
 
     if "num_spikes" in metric_names:
         ns = NumSpikes(metric_data=md)
-        num_spikes_epochs = ns.compute_metric(params_dict['save_property_or_features'])
+        num_spikes_epochs = ns.compute_metric(**kwargs)
         metrics_epochs.append(num_spikes_epochs)
         metrics_dict['num_spikes'] = num_spikes_epochs
 
     if "firing_rate" in metric_names:
         fr = FiringRate(metric_data=md)
-        firing_rate_epochs = fr.compute_metric(params_dict['save_property_or_features'])
+        firing_rate_epochs = fr.compute_metric(**kwargs)
         metrics_epochs.append(firing_rate_epochs)
         metrics_dict['firing_rate'] = firing_rate_epochs
 
     if "presence_ratio" in metric_names:
         pr = PresenceRatio(metric_data=md)
-        presence_ratio_epochs = pr.compute_metric(params_dict['save_property_or_features'])
+        presence_ratio_epochs = pr.compute_metric(**kwargs)
         metrics_epochs.append(presence_ratio_epochs)
         metrics_dict['presence_ratio'] = presence_ratio_epochs
 
     if "isi_viol" in metric_names:
         iv = ISIViolation(metric_data=md)
-        isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, params_dict['save_property_or_features'])
+        isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, **kwargs)
         metrics_epochs.append(isi_violation_epochs)
         metrics_dict['isi_viol'] = isi_violation_epochs
 
     if "amplitude_cutoff" in metric_names:
         ac = AmplitudeCutoff(metric_data=md)
-        amplitude_cutoffs_epochs = ac.compute_metric(params_dict['save_property_or_features'])
+        amplitude_cutoffs_epochs = ac.compute_metric(**kwargs)
         metrics_epochs.append(amplitude_cutoffs_epochs)
         metrics_dict['amplitude_cutoff'] = amplitude_cutoffs_epochs
 
     if "snr" in metric_names:
         snr = SNR(metric_data=md)
         snr_epochs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
-                                        template_mode, max_channel_peak, params_dict['recompute_info'],
-                                        params_dict['seed'], params_dict['save_property_or_features'])
+                                        template_mode, max_channel_peak, **kwargs)
         metrics_epochs.append(snr_epochs)
         metrics_dict['snr'] = snr_epochs
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names:
         dm = DriftMetric(metric_data=md)
-        dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval,
-                                              params_dict['save_property_or_features'])
+        dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
         max_drifts_epochs = []
         cumulative_drifts_epochs = []
         for dm_metric in dm_metrics_epochs:
@@ -1098,38 +1200,33 @@ def compute_metrics(
 
     if "silhouette_score" in metric_names:
         silhouette_score = SilhouetteScore(metric_data=md)
-        silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, params_dict['seed'],
-                                                                  params_dict['save_property_or_features'])
+        silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
         metrics_epochs.append(silhouette_score_epochs)
         metrics_dict['silhouette_score'] = silhouette_score_epochs
 
     if "isolation_distance" in metric_names:
         isolation_distance = IsolationDistance(metric_data=md)
         isolation_distance_epochs = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                                      params_dict['seed'],
-                                                                      params_dict['save_property_or_features'])
+                                                                      **kwargs)
         metrics_epochs.append(isolation_distance_epochs)
         metrics_dict['isolation_distance'] = isolation_distance_epochs
 
     if "l_ratio" in metric_names:
         l_ratio = LRatio(metric_data=md)
-        l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, params_dict['seed'],
-                                                params_dict['save_property_or_features'])
+        l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
         metrics_epochs.append(l_ratio_epochs)
         metrics_dict['l_ratio'] = l_ratio_epochs
 
     if "d_prime" in metric_names:
         d_prime = DPrime(metric_data=md)
-        d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, params_dict['seed'],
-                                                params_dict['save_property_or_features'])
+        d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
         metrics_epochs.append(d_prime_epochs)
         metrics_dict['d_prime'] = d_prime_epochs
 
     if "nn_hit_rate" in metric_names or "nn_miss_rate" in metric_names:
         nn = NearestNeighbor(metric_data=md)
         nn_metrics_epochs = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                              max_spikes_for_nn, n_neighbors, params_dict['seed'],
-                                              params_dict['save_property_or_features'])
+                                              max_spikes_for_nn, n_neighbors, **kwargs)
         nn_hit_rates_epochs = []
         nn_miss_rates_epochs = []
         for nn_metric in nn_metrics_epochs:

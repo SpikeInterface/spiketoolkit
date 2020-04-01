@@ -3,6 +3,7 @@ import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 class ISIViolation(QualityMetric):
@@ -17,7 +18,9 @@ class ISIViolation(QualityMetric):
     ):
         QualityMetric.__init__(self, metric_data, metric_name="isi_viol")
 
-    def compute_metric(self, isi_threshold, min_isi, save_property_or_features):
+    def compute_metric(self, isi_threshold, min_isi, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
         isi_violation_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
@@ -38,8 +41,8 @@ class ISIViolation(QualityMetric):
             self.save_property_or_features(self._metric_data._sorting, isi_violation_epochs, self._metric_name)
         return isi_violation_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, isi_threshold, min_isi, save_property_or_features):
-        isi_violation_epochs = self.compute_metric(isi_threshold, min_isi, save_property_or_features=save_property_or_features)[0]
+    def threshold_metric(self, threshold, threshold_sign, isi_threshold, min_isi, **kwargs):
+        isi_violation_epochs = self.compute_metric(isi_threshold, min_isi, **kwargs)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=isi_violation_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

@@ -1,10 +1,9 @@
 import numpy as np
-
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 from collections import OrderedDict
-
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 class DriftMetric(QualityMetric):
     installed = True  # check at class level if installed or not
@@ -18,8 +17,9 @@ class DriftMetric(QualityMetric):
         if not metric_data.has_pca_scores():
             raise ValueError("MetricData object must have pca scores")
 
-    def compute_metric(self, drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, save_property_or_features):
-
+    def compute_metric(self, drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
         max_drifts_epochs = []
         cumulative_drifts_epochs = []
         for epoch in self._metric_data._epochs:
@@ -49,10 +49,10 @@ class DriftMetric(QualityMetric):
         return list(zip(max_drifts_epochs, cumulative_drifts_epochs))
 
     def threshold_metric(self, threshold, threshold_sign, metric_name, drift_metrics_interval_s,
-                         drift_metrics_min_spikes_per_interval, save_property_or_features):
+                         drift_metrics_min_spikes_per_interval, **kwargs):
         max_drifts_epochs, cumulative_drifts_epochs = \
         self.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval,
-                            save_property_or_features)[0]
+                            **kwargs)[0]
         if metric_name == "max_drift":
             metrics_epoch = max_drifts_epochs
         elif metric_name == "cumulative_drift":

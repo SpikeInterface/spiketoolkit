@@ -3,6 +3,7 @@ import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
 from collections import OrderedDict
+from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
 
 class PresenceRatio(QualityMetric):
@@ -17,7 +18,10 @@ class PresenceRatio(QualityMetric):
     ):
         QualityMetric.__init__(self, metric_data, metric_name="presence_ratio")
 
-    def compute_metric(self, save_property_or_features):
+    def compute_metric(self, **kwargs):
+        params_dict = update_all_param_dicts_with_kwargs(kwargs)
+        save_property_or_features = params_dict['save_property_or_features']
+
         presence_ratios_epochs = []
         for epoch in self._metric_data._epochs:
             in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
@@ -36,8 +40,8 @@ class PresenceRatio(QualityMetric):
             self.save_property_or_features(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
         return presence_ratios_epochs
 
-    def threshold_metric(self, threshold, threshold_sign, save_property_or_features):
-        presence_ratios_epochs = self.compute_metric(save_property_or_features=save_property_or_features)[0]
+    def threshold_metric(self, threshold, threshold_sign, **kwargs):
+        presence_ratios_epochs = self.compute_metric(**kwargs)[0]
         threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=presence_ratios_epochs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator
