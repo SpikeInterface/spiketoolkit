@@ -230,16 +230,19 @@ def test_curation_params():
 
 
 if __name__ == "__main__":
+    # test_thresh_num_spikes()
+    # test_thresh_presence_ratios()
+    # test_thresh_frs()
+    test_thresh_isi_violations()
+
+    # test_thresh_snrs()
+    # test_thresh_amplitude_cutoffs()
+
+    test_thresh_silhouettes()
+    test_thresh_isolation_distances()
+    test_thresh_l_ratios()
     test_thresh_threshold_drift_metrics()
     test_thresh_nn_metrics()
-    test_thresh_silhouettes()
-    test_thresh_isi_violations()
-    test_thresh_isolation_distances()
-    test_thresh_presence_ratios()
-    test_thresh_snrs()
-    test_thresh_frs()
-    test_thresh_amplitude_cutoffs()
-    test_thresh_silhouettes()
-    test_thresh_l_ratios()
-    test_thresh_snrs()
-    test_thresh_num_spikes()
+
+
+

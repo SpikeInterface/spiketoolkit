@@ -7,7 +7,7 @@ from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, 
 import os
 import shutil
 from pathlib import Path
-from .utils import create_dumpable_extractors_from_existing
+from spiketoolkit.tests.utils import create_dumpable_extractors_from_existing
 
 
 @pytest.mark.implemented
@@ -31,8 +31,7 @@ def test_waveforms():
 
             # no group
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_property_or_features=False,
-                                     n_jobs=n,
-                                     memmap=m)
+                                     n_jobs=n, memmap=m, recompute_info=True)
 
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt)
@@ -40,7 +39,7 @@ def test_waveforms():
 
             # change cut ms
             wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True, n_jobs=n,
-                                     memmap=m)
+                                     memmap=m, recompute_info=True)
 
             for (w, w_gt) in zip(wav, waveforms):
                 _, _, samples = w.shape
@@ -50,7 +49,7 @@ def test_waveforms():
             # by group
             rec.set_channel_groups([0, 0, 1, 1])
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group', n_jobs=n,
-                                     memmap=m)
+                                     memmap=m, recompute_info=True)
 
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
@@ -58,20 +57,20 @@ def test_waveforms():
             # test compute_property_from_recordings
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
                                      compute_property_from_recording=True, n_jobs=n,
-                                     memmap=m)
+                                     memmap=m, recompute_info=True)
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
             # test max_spikes_per_unit
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
                                      save_property_or_features=False, n_jobs=n,
-                                     memmap=m)
+                                     memmap=m, recompute_info=True)
             for w in wav:
                 assert len(w) <= 10
 
             # test channels
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, channel_ids=[0, 1, 2], n_jobs=n,
-                                     memmap=m)
+                                     memmap=m, recompute_info=True)
 
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt[:, :3])
@@ -93,7 +92,7 @@ def test_templates():
 
     # no group
     temp = get_unit_templates(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_property_or_features=False,
-                              save_wf_as_features=False)
+                              save_wf_as_features=False, recompute_info=True)
 
     for (t, t_gt) in zip(temp, templates):
         assert np.allclose(t, t_gt, atol=1)
@@ -102,7 +101,7 @@ def test_templates():
 
     # change cut ms
     temp = get_unit_templates(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True,
-                              recompute_waveforms=True)
+                              recompute_waveforms=True, recompute_info=True)
 
     for (t, t_gt) in zip(temp, templates):
         _, samples = t.shape
@@ -113,7 +112,7 @@ def test_templates():
     # by group
     rec.set_channel_groups([0, 0, 1, 1])
     temp = get_unit_templates(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
-                              recompute_waveforms=True)
+                              recompute_info=True)
 
     for (t, t_gt) in zip(temp, templates):
         assert np.allclose(t, t_gt[:2], atol=1) or np.allclose(t, t_gt[2:], atol=1)
@@ -135,13 +134,13 @@ def test_max_chan():
     assert 'max_channel' not in sort.get_shared_unit_property_names()
 
     max_channels = get_unit_max_channels(rec, sort, save_property_or_features=True, recompute_templates=True,
-                                         peak='neg')
+                                         peak='neg', recompute_info=True)
     assert np.allclose(np.array(max_chans), np.array(max_channels))
     assert 'max_channel' in sort.get_shared_unit_property_names()
 
     # multiple channels
     max_channels = get_unit_max_channels(rec, sort, max_channels=2,
-                                         peak='neg')
+                                         peak='neg', recompute_info=True)
     assert np.allclose(np.array(max_chans), np.array(max_channels)[:, 0])
     assert np.array(max_channels).shape[1] == 2
     shutil.rmtree('test')
@@ -190,9 +189,10 @@ def test_export_to_phy():
 
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
-    export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group')
-    export_to_phy(rec, sort, output_folder='max_channels', max_channels_per_template=4)
-    export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False)
+    export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group', recompute_info=True)
+    export_to_phy(rec, sort, output_folder='max_channels', max_channels_per_template=4, recompute_info=True)
+    export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False,
+                  recompute_info=True)
 
     rec_phy = se.PhyRecordingExtractor('phy')
     rec_phyg = se.PhyRecordingExtractor('phy_group')

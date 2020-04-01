@@ -21,6 +21,7 @@ def threshold_num_spikes(
         sampling_frequency=None,
         save_as_property=True,
         verbose=NumSpikes.params['verbose'],
+        **kwargs
 ):
     """
     Computes and thresholds the num spikes in the sorted dataset with the given sign and value.
