@@ -971,7 +971,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
-        f.write("dat_path =" + "r'" + str(output_folder / 'recording.dat') + "'" + '\n')
+        f.write("dat_path =" + "r'" + 'recording.dat' + "'" + '\n')
         f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
         f.write("dtype = '" + str(dtype) + "'\n")
         f.write('offset = 0\n')
