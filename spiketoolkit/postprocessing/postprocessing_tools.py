@@ -1459,10 +1459,6 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
             templates_ind = pc_feature_ind
         elif channel_list is not None:
             templates_ind = np.array(channel_list)
-        else: # this part doesn't seems to work if template do not cover all channels, remove it?
-            templates_ind = np.zeros((len(templates), max_channels_per_template), dtype='int')
-            for i, temp in enumerate(templates):
-                templates_ind[i] = _select_max_channels_from_templates(temp, recording, max_channels_per_template)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
