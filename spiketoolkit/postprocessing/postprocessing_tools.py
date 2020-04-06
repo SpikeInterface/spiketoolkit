@@ -1495,6 +1495,7 @@ def _select_max_channels_from_waveforms(wf, recording, max_channels):
         max_channel_idxs = np.arange(recording.get_num_channels())
 
     return max_channel_idxs
+  
 
 def _get_max_channels_per_waveforms(recording, grouping_property, channel_ids, max_channels_per_waveforms):
     if grouping_property is None:
