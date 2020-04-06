@@ -1455,13 +1455,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
-        if channel_list is not None:
-            templates_ind = np.array(channel_list)
-        elif pc_feature_ind is not None:
-            templates_ind = pc_feature_ind
-        else:
-            templates_ind = None 
-        
+        templates_ind = np.array(channel_list)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
@@ -1495,7 +1489,29 @@ def _select_max_channels_from_waveforms(wf, recording, max_channels):
         max_channel_idxs = np.arange(recording.get_num_channels())
 
     return max_channel_idxs
-  
+
+
+def _select_max_channels_from_templates(template, recording, max_channels):
+    # select based on adjacency
+    template = template.swapaxes(0, 1)
+    if max_channels < recording.get_num_channels():
+        if 'location' in recording.get_shared_channel_property_names():
+            max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                               template.shape)[0]
+            locs = recording.get_channel_locations()
+            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            distances = [np.linalg.norm(l - loc_max) for l in locs]
+            max_channel_idxs = np.argsort(distances)[:max_channels]
+        else:  # select based on amplitude
+            peak_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                        template.shape)[1]
+            max_channel_idxs = np.argsort(np.abs(
+                template[:, peak_idx]))[::-1][:max_channels]
+    else:
+        max_channel_idxs = np.arange(recording.get_num_channels())
+
+    return max_channel_idxs
+
 
 def _get_max_channels_per_waveforms(recording, grouping_property, channel_ids, max_channels_per_waveforms):
     if grouping_property is None:
