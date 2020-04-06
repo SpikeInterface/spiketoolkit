@@ -1460,7 +1460,8 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         elif pc_feature_ind is not None:
             templates_ind = pc_feature_ind
         else:
-            assert False, "???"
+            templates_ind = None 
+        
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
