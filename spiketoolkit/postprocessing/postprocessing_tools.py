@@ -1455,10 +1455,12 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
-        if pc_feature_ind is not None:
-            templates_ind = pc_feature_ind
-        elif channel_list is not None:
+        if channel_list is not None:
             templates_ind = np.array(channel_list)
+        elif pc_feature_ind is not None:
+            templates_ind = pc_feature_ind
+        else:
+            assert False, "???"
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
