@@ -54,12 +54,14 @@ class MetricData:
         verbose: bool
             If True, progress bar is displayed
         """
-        if sampling_frequency is None and sorting.get_sampling_frequency() is None:
+        if sampling_frequency is None and sorting.get_sampling_frequency() is None and recording is None:
             raise ValueError(
-                "Please pass in a sampling frequency (your SortingExtractor does not have one specified)"
+                "Please pass in a sampling frequency (your SortingExtractor does not have one specified and no RecordingExtractor given)."
             )
-        elif sampling_frequency is None:
+        elif sampling_frequency is None and sorting.get_sampling_frequency() is not None:
             self._sampling_frequency = sorting.get_sampling_frequency()
+        elif sampling_frequency is None and recording is not None:
+            self._sampling_frequency = recording.get_sampling_frequency()
         else:
             self._sampling_frequency = sampling_frequency
 
@@ -88,7 +90,7 @@ class MetricData:
         self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
-        self._total_units = len(sorting.get_unit_ids())
+        self._total_units = len(unit_ids)
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
         # To compute this data, need to call all metric data
         self._amplitudes = None
@@ -115,7 +117,7 @@ class MetricData:
         if recording is not None:
             assert isinstance(
                 recording, RecordingExtractor
-            ), "'sorting' must be  a RecordingExtractor object"
+            ), "'recording' must be  a RecordingExtractor object"
             self.set_recording(
                 recording,
                 apply_filter=apply_filter,
