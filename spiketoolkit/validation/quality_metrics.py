@@ -980,6 +980,7 @@ def compute_drift_metrics(
 def compute_metrics(
         sorting,
         recording=None,
+        sampling_frequency=None,
         metric_names=None,
         unit_ids=None,
         return_dict=False,
@@ -1123,7 +1124,7 @@ def compute_metrics(
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
 
-    md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
+    md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
                     freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
                     epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])

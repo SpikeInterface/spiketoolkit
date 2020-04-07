@@ -54,12 +54,14 @@ class MetricData:
         verbose: bool
             If True, progress bar is displayed
         """
-        if sampling_frequency is None and sorting.get_sampling_frequency() is None:
+        if sampling_frequency is None and sorting.get_sampling_frequency() is None and recording is None:
             raise ValueError(
-                "Please pass in a sampling frequency (your SortingExtractor does not have one specified)"
+                "Please pass in a sampling frequency (your SortingExtractor does not have one specified and no RecordingExtractor given)."
             )
-        elif sampling_frequency is None:
+        elif sampling_frequency is None and sorting.get_sampling_frequency() is not None:
             self._sampling_frequency = sorting.get_sampling_frequency()
+        elif sampling_frequency is None and recording is not None:
+            self._sampling_frequency = recording.get_sampling_frequency()
         else:
             self._sampling_frequency = sampling_frequency
 
@@ -115,7 +117,7 @@ class MetricData:
         if recording is not None:
             assert isinstance(
                 recording, RecordingExtractor
-            ), "'sorting' must be  a RecordingExtractor object"
+            ), "'recording' must be  a RecordingExtractor object"
             self.set_recording(
                 recording,
                 apply_filter=apply_filter,
