@@ -88,7 +88,7 @@ class MetricData:
         self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
-        self._total_units = len(unit_ids)
+        self._total_units = len(sorting.get_unit_ids())
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
         # To compute this data, need to call all metric data
         self._amplitudes = None
