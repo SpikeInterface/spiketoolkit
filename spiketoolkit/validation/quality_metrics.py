@@ -1119,7 +1119,7 @@ def compute_metrics(
             if m not in all_metrics_list:
                 bad_metrics.append(m)
         if len(bad_metrics) > 0:
-            raise ValueError("Wrong metrics name: " + str(bad_metrics))
+            raise ValueError("Improper metric names: " + str(bad_metrics) + ". The following metric names can be calculated: " + str(all_metrics_list))
 
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
