@@ -34,7 +34,7 @@ class NumSpikes(QualityMetric):
             num_spikes_list = []
             for i in self._metric_data._unit_indices:
                 num_spikes_list.append(num_spikes_all[i])
-            num_spikes = np.asarray(num_spikes_list)
+            num_spikes = np.asarray(num_spikes_list).astype('int')
             num_spikes_epochs.append(num_spikes)
         if save_property_or_features:
             self.save_property_or_features(self._metric_data._sorting, num_spikes_epochs, self._metric_name)
