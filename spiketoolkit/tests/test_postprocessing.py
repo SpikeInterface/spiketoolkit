@@ -171,7 +171,7 @@ def test_amplitudes():
 
     # relative
     amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False,
-                              method='relative')
+                              recompute_info=True, method='relative')
 
     amps_rel = [a / np.median(a) for a in amps]
 
