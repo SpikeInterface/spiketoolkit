@@ -1495,7 +1495,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     pc_feature_ind = pc_ind
 
     return spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-           amplitudes, pc_features, pc_feature_ind, templates
+           amplitudes, pc_features, pc_feature_ind, templates, channel_list
 
 
 def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_template, **kwargs):
@@ -1548,7 +1548,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         channel_groups = np.array([0] * recording.get_num_channels())
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-    amplitudes, pc_features, pc_feature_ind, templates \
+    amplitudes, pc_features, pc_feature_ind, templates, channel_list \
         = _get_quality_metric_data(recording, sorting, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
@@ -1603,12 +1603,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
-        if pc_feature_ind is not None:
-            templates_ind = pc_feature_ind
-        else:
-            templates_ind = np.zeros((len(templates), max_channels_per_template), dtype='int')
-            for i, temp in enumerate(templates):
-                templates_ind[i] = _select_max_channels_from_templates(temp, recording, max_channels_per_template)
+        templates_ind = np.array(channel_list)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
