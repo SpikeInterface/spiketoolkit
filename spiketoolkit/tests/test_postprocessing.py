@@ -176,7 +176,7 @@ def test_amplitudes():
     amps_rel = [a / np.median(a) for a in amps]
 
     for (a, a_gt) in zip(amp, amps_rel):
-        assert np.allclose(a, np.abs(a_gt), 0.02)
+        assert np.allclose(a, np.abs(a_gt), 0.05)
     shutil.rmtree('test')
 
 
