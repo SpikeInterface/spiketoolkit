@@ -1636,7 +1636,7 @@ def _select_max_channels_from_waveforms(wf, recording, max_channels):
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                                template.shape)[0]
             locs = recording.get_channel_locations()
-            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            loc_max = locs[max_channel_idx]
             distances = [np.linalg.norm(l - loc_max) for l in locs]
             max_channel_idxs = np.argsort(distances)[:max_channels]
         else:  # select based on amplitude
@@ -1658,7 +1658,7 @@ def _select_max_channels_from_templates(template, recording, max_channels):
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                                template.shape)[0]
             locs = recording.get_channel_locations()
-            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            loc_max = locs[max_channel_idx]
             distances = [np.linalg.norm(l - loc_max) for l in locs]
             max_channel_idxs = np.argsort(distances)[:max_channels]
         else:  # select based on amplitude
