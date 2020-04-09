@@ -8,7 +8,7 @@ def test_detection():
 
     # negative
     sort_d_n = st.sortingcomponents.detect_spikes(rec)
-    sort_dp_n = st.sortingcomponents.detect_spikes(rec, n_jobs=2)
+    sort_dp_n = st.sortingcomponents.detect_spikes(rec, parallel=True)
 
     assert 'channel' in sort_d_n.get_shared_unit_property_names()
     assert 'channel' in sort_dp_n.get_shared_unit_property_names()
@@ -18,7 +18,7 @@ def test_detection():
 
     # positive
     sort_d_p = st.sortingcomponents.detect_spikes(rec, detect_sign=1)
-    sort_dp_p = st.sortingcomponents.detect_spikes(rec, detect_sign=1, n_jobs=2)
+    sort_dp_p = st.sortingcomponents.detect_spikes(rec, detect_sign=1, parallel=True)
 
     assert 'channel' in sort_d_p.get_shared_unit_property_names()
     assert 'channel' in sort_dp_p.get_shared_unit_property_names()
@@ -28,7 +28,7 @@ def test_detection():
 
     # both
     sort_d_b = st.sortingcomponents.detect_spikes(rec, detect_sign=0)
-    sort_dp_b = st.sortingcomponents.detect_spikes(rec, detect_sign=0, n_jobs=2)
+    sort_dp_b = st.sortingcomponents.detect_spikes(rec, detect_sign=0, parallel=True)
 
     assert 'channel' in sort_d_b.get_shared_unit_property_names()
     assert 'channel' in sort_dp_b.get_shared_unit_property_names()
