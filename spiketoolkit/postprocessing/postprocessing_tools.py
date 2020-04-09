@@ -171,12 +171,12 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     indexes = sorting.get_unit_spike_features(unit_id, 'waveforms_idxs')
                 else:
                     indexes = np.arange(len(waveforms))
-                n_channels = _get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
-                                                             max_channels_per_waveforms)
-                max_channel_idxs = _select_max_channels_from_waveforms(waveforms, recording,
-                                                                       n_channels)
+                if 'waveforms_channel_idxs' in sorting.get_shared_unit_property_names():
+                    channel_idxs = sorting.get_unit_property(unit_id, 'waveforms_channel_idxs')
+                else:
+                    channel_idxs = np.arange(recording.get_num_channels())
                 spike_index_list.append(indexes)
-                channel_index_list.append(max_channel_idxs)
+                channel_index_list.append(channel_idxs)
     else:
         if dtype is None:
             dtype = recording.get_dtype()
@@ -285,6 +285,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         if save_property_or_features:
             for i, unit_id in enumerate(unit_ids):
                 sorting.set_unit_spike_features(unit_id, 'waveforms', waveform_list[i], indexes=spike_index_list[i])
+                if len(channel_index_list[i]) < recording.get_num_channels():
+                    sorting.set_unit_property(unit_id, 'waveforms_channel_idxs', channel_index_list[i])
 
     if return_idxs:
         return waveform_list, spike_index_list, channel_index_list
@@ -839,6 +841,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
     save_property_or_features = params_dict['save_property_or_features']
     verbose = params_dict['verbose']
     recompute_info = params_dict['recompute_info']
+    by_electrode = params_dict['by_electrode']
 
     pca_scores_list = []
     if 'pca_scores' in sorting.get_shared_unit_spike_feature_names() and not recompute_info:
@@ -848,9 +851,16 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             pca_scores = sorting.get_unit_spike_features(unit_id, 'pca_scores')
             pca_scores_list.append(pca_scores)
             if return_idxs:
-                print("Cannot return idxs. Use recompute_info=True to recompute scores and return idxs. Returning "
-                      "pca_scores only")
-                return_idxs = False
+                if len(pca_scores) < len(sorting.get_unit_spike_train(unit_id)):
+                    indexes = sorting.get_unit_spike_features(unit_id, 'pca_scores_idxs')
+                else:
+                    indexes = np.arange(len(pca_scores))
+                if 'pca_scores_channel_idxs' in sorting.get_shared_unit_property_names() and by_electrode:
+                    channel_idxs = sorting.get_unit_property(unit_id, 'pca_scores_channel_idxs')
+                else:
+                    channel_idxs = np.arange(recording.get_num_channels())
+                spike_index_list.append(indexes)
+                channel_index_list.append(channel_idxs)
     else:
         if max_spikes_for_pca is None:
             max_spikes_for_pca = np.inf
@@ -879,7 +889,6 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
 
         memmap = params_dict['memmap']
         seed = params_dict['seed']
-        by_electrode = params_dict['by_electrode']
         n_comp = params_dict['n_comp']
         whiten = params_dict['whiten']
 
@@ -935,6 +944,8 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
         if save_property_or_features:
             for i, unit_id in enumerate(sorting.get_unit_ids()):
                 sorting.set_unit_spike_features(unit_id, 'pca_scores', pca_scores_list[i], indexes=spike_index_list[i])
+            if len(channel_index_list[i]) < recording.get_num_channels():
+                sorting.set_unit_property(unit_id, 'pca_scores_channel_idxs', channel_index_list[i])
 
     if return_idxs:
         return pca_scores_list, spike_index_list, np.array(channel_index_list)
@@ -1495,7 +1506,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     pc_feature_ind = pc_ind
 
     return spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-           amplitudes, pc_features, pc_feature_ind, templates, channel_list
+           amplitudes, pc_features, pc_feature_ind, templates, channel_index_list
 
 
 def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_template, **kwargs):
@@ -1548,7 +1559,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         channel_groups = np.array([0] * recording.get_num_channels())
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-    amplitudes, pc_features, pc_feature_ind, templates, channel_list \
+    amplitudes, pc_features, pc_feature_ind, templates, channel_index_list \
         = _get_quality_metric_data(recording, sorting, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
@@ -1603,7 +1614,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
-        templates_ind = np.array(channel_list)
+        templates_ind = np.array(channel_index_list)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
