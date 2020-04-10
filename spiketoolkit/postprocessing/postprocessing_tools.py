@@ -134,8 +134,14 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
+    if isinstance(channel_ids, (int, np.integer)):
+        channel_ids = [channel_ids]
+
+    if channel_ids is None:
+        channel_ids = recording.get_channel_ids()
 
     assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
+    assert np.all([ch in recording.get_channel_ids() for ch in channel_ids]), "Invalid channel_ids"
 
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     grouping_property = params_dict['grouping_property']
@@ -156,9 +162,6 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
     spike_index_list = []
     channel_index_list = []
 
-    if channel_ids is None:
-        channel_ids = recording.get_channel_ids()
-
     if 'waveforms' in sorting.get_shared_unit_spike_feature_names() and not recompute_info:
         for unit_id in unit_ids:
             waveforms = sorting.get_unit_spike_features(unit_id, 'waveforms')
@@ -168,12 +171,12 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     indexes = sorting.get_unit_spike_features(unit_id, 'waveforms_idxs')
                 else:
                     indexes = np.arange(len(waveforms))
-                n_channels = _get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
-                                                             max_channels_per_waveforms)
-                max_channel_idxs = _select_max_channels_from_waveforms(waveforms, recording,
-                                                                       n_channels)
+                if 'waveforms_channel_idxs' in sorting.get_shared_unit_property_names():
+                    channel_idxs = sorting.get_unit_property(unit_id, 'waveforms_channel_idxs')
+                else:
+                    channel_idxs = np.arange(recording.get_num_channels())
                 spike_index_list.append(indexes)
-                channel_index_list.append(max_channel_idxs)
+                channel_index_list.append(channel_idxs)
     else:
         if dtype is None:
             dtype = recording.get_dtype()
@@ -185,18 +188,14 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
             if n_jobs > 1:
                 n_jobs = 0
                 print("RecordingExtractor is not dumpable and can't be processedin parallel")
-                rec_arg = recording
-            else:
-                rec_arg = recording
+            rec_arg = recording
         else:
             rec_arg = recording.make_serialized_dict()
         if not sorting.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
                 print("SortingExtractor is not dumpable and can't be processed in parallel")
-                sort_arg = sorting
-            else:
-                sort_arg = sorting
+            sort_arg = sorting
         else:
             sort_arg = sorting.make_serialized_dict()
 
@@ -245,7 +244,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
             if memmap:
                 memmap_arrays = []
                 n_channels = _get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
-                                                                             max_channels_per_waveforms)
+                                                             max_channels_per_waveforms)
                 # pre-construc memmap arrays
                 for unit_id in unit_ids:
                     fname = 'waveforms_' + str(unit_id) + '.raw'
@@ -286,6 +285,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         if save_property_or_features:
             for i, unit_id in enumerate(unit_ids):
                 sorting.set_unit_spike_features(unit_id, 'waveforms', waveform_list[i], indexes=spike_index_list[i])
+                if len(channel_index_list[i]) < recording.get_num_channels():
+                    sorting.set_unit_property(unit_id, 'waveforms_channel_idxs', channel_index_list[i])
 
     if return_idxs:
         return waveform_list, spike_index_list, channel_index_list
@@ -293,7 +294,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         return waveform_list
 
 
-def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None, 
+def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None,
                        mode='median', _waveforms=None, **kwargs):
     '''
     Computes the spike templates from a recording and sorting extractor. If waveforms are not found as features,
@@ -358,39 +359,44 @@ def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None,
         raise Exception("unit_ids is not a valid in valid")
 
     assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
-    
+
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     recompute_info = params_dict['recompute_info']
     save_property_or_features = params_dict['save_property_or_features']
-    
-    if _waveforms is None:
-        waveforms = []
-        for i, unit_id in enumerate(unit_ids):
-            if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id) and not recompute_info:
-                wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
-            else:
-                wf = get_unit_waveforms(recording, sorting, unit_id, channel_ids, return_idxs=False, **kwargs)[0]
-            waveforms.append(wf)
-    else:
-        waveforms = _waveforms
 
     template_list = []
-    for i, unit_id in enumerate(unit_ids):
-        wf = waveforms[i]
-        if mode == 'mean':
-            template = np.mean(wf, axis=0)
-        elif mode == 'median':
-            template = np.median(wf, axis=0)
+    if 'template' in sorting.get_shared_unit_property_names() and not recompute_info:
+        for unit_id in unit_ids:
+            template = sorting.get_unit_property(unit_id, 'template')
+            template_list.append(template)
+    else:
+        if _waveforms is None:
+            waveforms = []
+            for i, unit_id in enumerate(unit_ids):
+                if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id) and not recompute_info:
+                    wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
+                else:
+                    wf = get_unit_waveforms(recording, sorting, unit_id, channel_ids, return_idxs=False, **kwargs)[0]
+                waveforms.append(wf)
         else:
-            raise Exception("'mode' can be 'mean' or 'median'")
-        if save_property_or_features:
-            sorting.set_unit_property(unit_id, 'template', template)
+            waveforms = _waveforms
 
-        template_list.append(template)
+        for i, unit_id in enumerate(unit_ids):
+            wf = waveforms[i]
+            if mode == 'mean':
+                template = np.mean(wf, axis=0)
+            elif mode == 'median':
+                template = np.median(wf, axis=0)
+            else:
+                raise Exception("'mode' can be 'mean' or 'median'")
+            if save_property_or_features:
+                sorting.set_unit_property(unit_id, 'template', template)
+
+            template_list.append(template)
     return template_list
 
 
-def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,  
+def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                           max_channels=1, peak='both', mode='median', **kwargs):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
@@ -464,48 +470,53 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
     save_property_or_features = params_dict['save_property_or_features']
 
     max_list = []
-    for i, unit_id in enumerate(unit_ids):
-        if 'template' in sorting.get_unit_property_names(unit_id) and not recompute_info:
-            template = sorting.get_unit_property(unit_id, 'template')
-        else:
-            template = get_unit_templates(recording, sorting, unit_id, channel_ids, mode=mode, **kwargs)[0]
-        if channel_ids is None:
-            channel_ids = recording.get_channel_ids()
-        if max_channels == 1:
-            if peak == 'both':
-                max_channel_idxs = np.unravel_index(np.argmax(np.abs(template)),
-                                                    template.shape)[0]
-            elif peak == 'neg':
-                max_channel_idxs = np.unravel_index(np.argmin(template),
-                                                    template.shape)[0]
-            elif peak == 'pos':
-                max_channel_idxs = np.unravel_index(np.argmax(template),
-                                                    template.shape)[0]
+    if 'max_channel' in sorting.get_shared_unit_property_names() and not recompute_info:
+        for unit_id in unit_ids:
+            max_channel = sorting.get_unit_property(unit_id, 'max_channel')
+            max_list.append(max_channel)
+    else:
+        for i, unit_id in enumerate(unit_ids):
+            if 'template' in sorting.get_unit_property_names(unit_id) and not recompute_info:
+                template = sorting.get_unit_property(unit_id, 'template')
             else:
-                raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
-            max_channel = channel_ids[max_channel_idxs]
-        else:
-            # find peak time
-            if peak == 'both':
-                peak_idx = np.unravel_index(np.argmax(np.abs(template)),
-                                            template.shape)[1]
-                max_channel_idxs = np.argsort(np.abs(template[:, peak_idx]))[::-1][:max_channels]
-            elif peak == 'neg':
-                peak_idx = np.unravel_index(np.argmin(template),
-                                            template.shape)[1]
-                max_channel_idxs = np.argsort(template[:, peak_idx])[:max_channels]
-            elif peak == 'pos':
-                peak_idx = np.unravel_index(np.argmax(template),
-                                            template.shape)[1]
-                max_channel_idxs = np.argsort(template[:, peak_idx])[::-1][:max_channels]
+                template = get_unit_templates(recording, sorting, unit_id, channel_ids, mode=mode, **kwargs)[0]
+            if channel_ids is None:
+                channel_ids = recording.get_channel_ids()
+            if max_channels == 1:
+                if peak == 'both':
+                    max_channel_idxs = np.unravel_index(np.argmax(np.abs(template)),
+                                                        template.shape)[0]
+                elif peak == 'neg':
+                    max_channel_idxs = np.unravel_index(np.argmin(template),
+                                                        template.shape)[0]
+                elif peak == 'pos':
+                    max_channel_idxs = np.unravel_index(np.argmax(template),
+                                                        template.shape)[0]
+                else:
+                    raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
+                max_channel = channel_ids[max_channel_idxs]
             else:
-                raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
-            max_channel = list(np.array(channel_ids)[max_channel_idxs])
+                # find peak time
+                if peak == 'both':
+                    peak_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                                template.shape)[1]
+                    max_channel_idxs = np.argsort(np.abs(template[:, peak_idx]))[::-1][:max_channels]
+                elif peak == 'neg':
+                    peak_idx = np.unravel_index(np.argmin(template),
+                                                template.shape)[1]
+                    max_channel_idxs = np.argsort(template[:, peak_idx])[:max_channels]
+                elif peak == 'pos':
+                    peak_idx = np.unravel_index(np.argmax(template),
+                                                template.shape)[1]
+                    max_channel_idxs = np.argsort(template[:, peak_idx])[::-1][:max_channels]
+                else:
+                    raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
+                max_channel = list(np.array(channel_ids)[max_channel_idxs])
 
-        if save_property_or_features:
-            sorting.set_unit_property(unit_id, 'max_channel', max_channel)
+            if save_property_or_features:
+                sorting.set_unit_property(unit_id, 'max_channel', max_channel)
 
-        max_list.append(max_channel)
+            max_list.append(max_channel)
 
     return max_list
 
@@ -534,7 +545,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
             peak: str
-                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or 
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
                 both ('both' - default)
             frames_before: int
                 Frames before peak to compute amplitude
@@ -578,43 +589,55 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
     seed = params_dict['seed']
     max_spikes_per_unit = params_dict['max_spikes_per_unit']
     save_property_or_features = params_dict['save_property_or_features']
+    recompute_info = params_dict['recompute_info']
 
     amp_list = []
     spike_index_list = []
-    for i, unit_id in enumerate(unit_ids):
-        spike_train = sorting.get_unit_spike_train(unit_id)
-        if max_spikes_per_unit < len(spike_train):
-            indexes = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit]
-        else:
-            indexes = np.arange(len(spike_train))
-        spike_train = spike_train[indexes]
+    if 'amplitudes' in sorting.get_shared_unit_spike_feature_names() and not recompute_info:
+        for unit_id in unit_ids:
+            amplitudes = sorting.get_unit_spike_features(unit_id, 'amplitudes')
+            amp_list.append(amplitudes)
+            if return_idxs:
+                if len(amplitudes) < len(sorting.get_unit_spike_train(unit_id)):
+                    indexes = sorting.get_unit_spike_features(unit_id, 'amplitudes_idxs')
+                else:
+                    indexes = np.arange(len(amplitudes))
+                spike_index_list.append(indexes)
+    else:
+        for i, unit_id in enumerate(unit_ids):
+            spike_train = sorting.get_unit_spike_train(unit_id)
+            if max_spikes_per_unit < len(spike_train):
+                indexes = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit]
+            else:
+                indexes = np.arange(len(spike_train))
+            spike_train = spike_train[indexes]
 
-        snippets = recording.get_snippets(reference_frames=spike_train,
-                                          snippet_len=[frames_before, frames_after], channel_ids=channel_ids)
-        if peak == 'both':
-            amps = np.max(np.abs(snippets), axis=-1)
-            if len(amps.shape) > 1:
-                amps = np.max(amps, axis=-1)
-        elif peak == 'neg':
-            amps = np.min(snippets, axis=-1)
-            if len(amps.shape) > 1:
-                amps = np.min(amps, axis=-1)
-        elif peak == 'pos':
-            amps = np.max(snippets, axis=-1)
-            if len(amps.shape) > 1:
-                amps = np.max(amps, axis=-1)
-        else:
-            raise Exception("'peak' can be 'neg', 'pos', or 'both'")
+            snippets = recording.get_snippets(reference_frames=spike_train,
+                                              snippet_len=[frames_before, frames_after], channel_ids=channel_ids)
+            if peak == 'both':
+                amps = np.max(np.abs(snippets), axis=-1)
+                if len(amps.shape) > 1:
+                    amps = np.max(amps, axis=-1)
+            elif peak == 'neg':
+                amps = np.min(snippets, axis=-1)
+                if len(amps.shape) > 1:
+                    amps = np.min(amps, axis=-1)
+            elif peak == 'pos':
+                amps = np.max(snippets, axis=-1)
+                if len(amps.shape) > 1:
+                    amps = np.max(amps, axis=-1)
+            else:
+                raise Exception("'peak' can be 'neg', 'pos', or 'both'")
 
-        if method == 'relative':
-            amps /= np.median(amps)
+            if method == 'relative':
+                amps /= np.median(amps)
 
-        amplitudes = sorting.allocate_array(array=amps, name='amplitudes_' + str(unit_id) + '.raw',
-                                            memmap=memmap)
-        amp_list.append(amplitudes)
-        spike_index_list.append(indexes)
-        if save_property_or_features:
-            sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_list[i], indexes=spike_index_list[i])
+            amplitudes = sorting.allocate_array(array=amps, name='amplitudes_' + str(unit_id) + '.raw',
+                                                memmap=memmap)
+            amp_list.append(amplitudes)
+            spike_index_list.append(indexes)
+            if save_property_or_features:
+                sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_list[i], indexes=spike_index_list[i])
 
     if return_idxs:
         return amp_list, spike_index_list
@@ -622,8 +645,119 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
         return amp_list
 
 
+def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1, n_jobs=1,
+                                     normalize=True, method='simple', start_frame=None, end_frame=None, **kwargs):
+    '''
+    Computes spiking activity for each channel as the number of threshold crossings
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    channel_ids: list
+        List of channels ids to compute activity from
+    detect_threshold: float
+        Detection of threshold in MAD times
+    detect_sign: int
+        Sign of the detection: -1 (negative), 1 (positive), 0 (both)
+    normalize: bool
+        If True, activities are normalized between 0 and 1
+    method: str
+        'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
+        associated to the same spike)
+        'detection': activity is computed as the number of spikes (one index per spike)
+    n_jobs: int
+        Number of jobs for parallel processing
+    **kwargs: Keyword arguments
+        A dictionary with default values can be retrieved with:
+        st.postprocessing.get_common_params():
+            save_property_or_features: bool
+                If True (default), waveforms are saved as features of the sorting extractor object
+            recompute_info: bool
+                If True, waveforms are recomputed (default False)
+            verbose: bool
+                If True output is verbose
+
+    Returns
+    -------
+    activity: np.array
+        Array with activity value for each channel
+    '''
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
+    recompute_info = params_dict['recompute_info']
+    save_property_or_features = params_dict['save_property_or_features']
+    verbose = params_dict['verbose']
+
+    if isinstance(channel_ids, (int, np.integer)):
+        channel_ids = [channel_ids]
+
+    if channel_ids is None:
+        channel_ids = recording.get_channel_ids()
+
+    assert np.all([ch in recording.get_channel_ids() for ch in channel_ids]), "Invalid channel_ids"
+
+    activity = np.zeros(len(channel_ids))
+
+    if 'activity' in recording.get_shared_channel_property_names() and not recompute_info:
+        for i, ch in enumerate(recording.get_channel_ids()):
+            activity[i] = recording.get_channel_property(ch, 'activity')
+    else:
+        if method == 'simple':
+            if not recording.check_if_dumpable():
+                if n_jobs > 1:
+                    n_jobs = 0
+                    print("RecordingExtractor is not dumpable and can't be processedin parallel")
+            else:
+                rec_arg = recording.make_serialized_dict()
+
+            if n_jobs in [0, 1]:
+                for i, ch in enumerate(channel_ids):
+                    if verbose:
+                        print(f'Detecting spikes on channel {ch}')
+                    trace = np.squeeze(recording.get_traces(channel_ids=ch, start_frame=start_frame,
+                                                            end_frame=end_frame))
+
+                    if detect_sign == -1:
+                        thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
+                        idx_spikes = np.where(trace < thresh)
+                    elif detect_sign == 1:
+                        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
+                        idx_spikes = np.where(trace > thresh)
+                    else:
+                        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
+                        idx_spikes = np.where((trace > thresh) | (trace < -thresh))
+                    if len(idx_spikes) > 0:
+                        activity[i] = len(idx_spikes[0])
+                    else:
+                        activity[i] = 0
+            else:
+                output_list = Parallel(n_jobs=n_jobs)(
+                    delayed(_extract_activity_one_channel)(rec_arg, ch, detect_sign, detect_threshold, verbose)
+                    for ch in channel_ids)
+
+                for i, out in enumerate(output_list):
+                    activity[i] = out
+
+        else:
+            sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
+                                                             detect_threshold=detect_threshold,
+                                                             align=False, n_jobs=n_jobs, verbose=verbose)
+            for i, unit in enumerate(sort_detect.get_unit_ids()):
+                n_spikes = len(sort_detect.get_unit_spike_train(unit))
+                activity[i] = n_spikes
+
+        if normalize:
+            activity /= np.max(activity)
+
+        if save_property_or_features:
+            for i, ch in enumerate(recording.get_channel_ids()):
+                recording.set_channel_property(ch, 'activity', activity[i])
+
+    return activity
+
+
 def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None, return_idxs=False, _waveforms=None,
-                            _spike_index_list=None, _channel_list=None, **kwargs):
+                            _spike_index_list=None, _channel_index_list=None, **kwargs):
     '''
     Computes the PCA scores from the unit waveforms. If waveforms are not found as features, they are computed.
 
@@ -643,7 +777,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
         Pre-computed waveforms (optional)
     _spike_index_list: list
         Pre-computed spike indexes for waveforms (optional)
-    _channel_list: list
+    _channel_index_list: list
         Pre-computed channel indexes for waveforms (optional)
     **kwargs: Keyword arguments
         A dictionary with default values can be retrieved with:
@@ -706,92 +840,115 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
     max_spikes_for_pca = params_dict['max_spikes_for_pca']
     save_property_or_features = params_dict['save_property_or_features']
     verbose = params_dict['verbose']
-
-    if max_spikes_for_pca is None:
-        max_spikes_for_pca = np.inf
-
-    nspikes = []
-    if _waveforms is None:
-        if verbose:
-            print("Computing waveforms")
-        waveforms, spike_index_list, channel_list = get_unit_waveforms(recording, sorting, unit_ids, channel_ids,
-                                                                       return_idxs=True, **kwargs)
-    else:
-        assert _spike_index_list is not None and _channel_list is not None, "Provide spike_index_list and " \
-                                                                            "channel_list with waveforms"
-        waveforms = _waveforms
-        spike_index_list = _spike_index_list
-        channel_list = _channel_list
-
-    # compute len of all waveforms (computed for all units)
-    n_waveforms = 0
-    for wf in waveforms:
-        n_spikes = len(wf)
-        n_waveforms += n_spikes
-    wf_shape = waveforms[0].shape
-
-    memmap = params_dict['memmap']
-    seed = params_dict['seed']
+    recompute_info = params_dict['recompute_info']
     by_electrode = params_dict['by_electrode']
-    n_comp = params_dict['n_comp']
-    whiten = params_dict['whiten']
 
-    dtype = recording.get_dtype()
-    # prepare all waveforms
-    if by_electrode:
-        all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
-                                               shape=(n_waveforms * wf_shape[1], wf_shape[2]), memmap=memmap)
-    else:
-        all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
-                                               shape=(n_waveforms, wf_shape[1] * wf_shape[2]), memmap=memmap)
-
-    # concatenate all waveforms
-    if not isinstance(waveforms, list):
-        # single unit
-        waveforms = [waveforms]
-        spike_index_list = [spike_index_list]
-
-    i_start = 0
-    for i_w, wf in enumerate(waveforms):
-        if by_electrode:
-            wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
-            nspikes.append(len(wf) * recording.get_num_channels())
-        else:
-            wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
-            nspikes.append(len(wf))
-        all_waveforms[i_start:i_start + wf_reshaped.shape[0]] = wf_reshaped
-        i_start += wf_reshaped.shape[0]
-
-    pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
-    if len(all_waveforms) < max_spikes_for_pca:
-        max_spikes_for_pca = n_waveforms
-    max_spikes_for_pca = int(max_spikes_for_pca)
-    if verbose:
-        print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_spikes_for_pca))
-    pca.fit(all_waveforms[np.random.RandomState(seed=seed).permutation(len(all_waveforms))[:max_spikes_for_pca]])
-
-    if verbose:
-        print("Projecting waveforms on PC")
     pca_scores_list = []
-    # project waveforms on principal components
-    for unit_id in unit_ids:
-        idx_waveform = sorting.get_unit_ids().index(unit_id)
-        wf = waveforms[idx_waveform]
-        if by_electrode:
-            pct = np.dot(wf, pca.components_.T)
-        else:
-            pct = np.dot(wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2])), pca.components_.T)
-        if whiten:
-            pct /= np.sqrt(pca.explained_variance_)
-        pca_scores = sorting.allocate_array(array=pct, name='pcascores_' + str(unit_id) + '.raw', memmap=memmap)
-        pca_scores_list.append(pca_scores)
+    if 'pca_scores' in sorting.get_shared_unit_spike_feature_names() and not recompute_info:
+        spike_index_list = []
+        channel_index_list = []
+        for unit_id in unit_ids:
+            pca_scores = sorting.get_unit_spike_features(unit_id, 'pca_scores')
+            pca_scores_list.append(pca_scores)
+            if return_idxs:
+                if len(pca_scores) < len(sorting.get_unit_spike_train(unit_id)):
+                    indexes = sorting.get_unit_spike_features(unit_id, 'pca_scores_idxs')
+                else:
+                    indexes = np.arange(len(pca_scores))
+                if 'pca_scores_channel_idxs' in sorting.get_shared_unit_property_names() and by_electrode:
+                    channel_idxs = sorting.get_unit_property(unit_id, 'pca_scores_channel_idxs')
+                else:
+                    channel_idxs = np.arange(recording.get_num_channels())
+                spike_index_list.append(indexes)
+                channel_index_list.append(channel_idxs)
+    else:
+        if max_spikes_for_pca is None:
+            max_spikes_for_pca = np.inf
 
-    if save_property_or_features:
-        for i, unit_id in enumerate(sorting.get_unit_ids()):
-            sorting.set_unit_spike_features(unit_id, 'pca_scores', pca_scores_list[i], indexes=spike_index_list[i])
+        nspikes = []
+        if _waveforms is None:
+            if verbose:
+                print("Computing waveforms")
+            waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting, unit_ids,
+                                                                                 channel_ids,
+                                                                                 return_idxs=True, **kwargs)
+        else:
+            assert _spike_index_list is not None and _channel_index_list is not None, "Provide spike_index_list and " \
+                                                                                      "channel_index_list with " \
+                                                                                      "waveforms"
+            waveforms = _waveforms
+            spike_index_list = _spike_index_list
+            channel_index_list = _channel_index_list
+
+        # compute len of all waveforms (computed for all units)
+        n_waveforms = 0
+        for wf in waveforms:
+            n_spikes = len(wf)
+            n_waveforms += n_spikes
+        wf_shape = waveforms[0].shape
+
+        memmap = params_dict['memmap']
+        seed = params_dict['seed']
+        n_comp = params_dict['n_comp']
+        whiten = params_dict['whiten']
+
+        dtype = recording.get_dtype()
+        # prepare all waveforms
+        if by_electrode:
+            all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
+                                                   shape=(n_waveforms * wf_shape[1], wf_shape[2]), memmap=memmap)
+        else:
+            all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
+                                                   shape=(n_waveforms, wf_shape[1] * wf_shape[2]), memmap=memmap)
+
+        # concatenate all waveforms
+        if not isinstance(waveforms, list):
+            # single unit
+            waveforms = [waveforms]
+            spike_index_list = [spike_index_list]
+
+        i_start = 0
+        for i_w, wf in enumerate(waveforms):
+            if by_electrode:
+                wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
+                nspikes.append(len(wf) * recording.get_num_channels())
+            else:
+                wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
+                nspikes.append(len(wf))
+            all_waveforms[i_start:i_start + wf_reshaped.shape[0]] = wf_reshaped
+            i_start += wf_reshaped.shape[0]
+
+        pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
+        if len(all_waveforms) < max_spikes_for_pca:
+            max_spikes_for_pca = n_waveforms
+        max_spikes_for_pca = int(max_spikes_for_pca)
+        if verbose:
+            print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_spikes_for_pca))
+        pca.fit(all_waveforms[np.random.RandomState(seed=seed).permutation(len(all_waveforms))[:max_spikes_for_pca]])
+
+        if verbose:
+            print("Projecting waveforms on PC")
+        # project waveforms on principal components
+        for unit_id in unit_ids:
+            idx_waveform = sorting.get_unit_ids().index(unit_id)
+            wf = waveforms[idx_waveform]
+            if by_electrode:
+                pct = np.dot(wf, pca.components_.T)
+            else:
+                pct = np.dot(wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2])), pca.components_.T)
+            if whiten:
+                pct /= np.sqrt(pca.explained_variance_)
+            pca_scores = sorting.allocate_array(array=pct, name='pcascores_' + str(unit_id) + '.raw', memmap=memmap)
+            pca_scores_list.append(pca_scores)
+
+        if save_property_or_features:
+            for i, unit_id in enumerate(sorting.get_unit_ids()):
+                sorting.set_unit_spike_features(unit_id, 'pca_scores', pca_scores_list[i], indexes=spike_index_list[i])
+            if len(channel_index_list[i]) < recording.get_num_channels():
+                sorting.set_unit_property(unit_id, 'pca_scores_channel_idxs', channel_index_list[i])
 
     if return_idxs:
-        return pca_scores_list, spike_index_list, np.array(channel_list)
+        return pca_scores_list, spike_index_list, np.array(channel_index_list)
     else:
         return pca_scores_list
 
@@ -875,7 +1032,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
             sorting.set_unit_property(unit_id, property, recording.get_channel_property(max_chan, property))
 
 
-def export_to_phy(recording, sorting, output_folder, compute_pc_features=True, 
+def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
                   max_channels_per_template=16, **kwargs):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
@@ -1022,8 +1179,10 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         print('Run:\n\nphy template-gui ', str(output_folder / 'params.py'))
 
 
-def _compute_templates_similarity(templates, template_ind):
+def _compute_templates_similarity(templates, template_ind=None):
     similarity = np.zeros((len(templates), len(templates)))
+    if template_ind is None:
+        template_ind = np.tile(np.arange(templates[0].shape[0]), (len(templates), 1))
     for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
             shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j]
@@ -1219,19 +1378,19 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         sorting.clear_units_spike_features(feature_name='amplitudes')
 
     if 'waveforms' not in sorting.get_shared_unit_spike_feature_names():
-        waveforms, spike_index_list, channel_list = get_unit_waveforms(recording, sorting,
-                                                                       max_spikes_per_unit=max_spikes_per_unit,
-                                                                       ms_before=ms_before,
-                                                                       ms_after=ms_after, dtype=dtype,
-                                                                       save_property_or_features=save_property_or_features,
-                                                                       verbose=verbose,
-                                                                       n_jobs=n_jobs,
-                                                                       seed=seed,
-                                                                       memmap=memmap, return_idxs=True,
-                                                                       max_channels_per_waveforms=
-                                                                       max_channels_per_waveforms)
+        waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
+                                                                             max_spikes_per_unit=max_spikes_per_unit,
+                                                                             ms_before=ms_before,
+                                                                             ms_after=ms_after, dtype=dtype,
+                                                                             save_property_or_features=save_property_or_features,
+                                                                             verbose=verbose,
+                                                                             n_jobs=n_jobs,
+                                                                             seed=seed,
+                                                                             memmap=memmap, return_idxs=True,
+                                                                             max_channels_per_waveforms=
+                                                                             max_channels_per_waveforms)
     else:
-        waveforms, spike_index_list, channel_list = None, None, None
+        waveforms, spike_index_list, channel_index_list = None, None, None
 
     if compute_pc_features:
         # pca scores
@@ -1245,7 +1404,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                                             memmap=memmap, return_idxs=True,
                                                             max_channels_per_waveforms=max_channels_per_waveforms,
                                                             _waveforms=waveforms, _spike_index_list=spike_index_list,
-                                                            _channel_list=channel_list)
+                                                            _channel_index_list=channel_index_list)
         pc_shape = pc_list[0].shape
     else:
         pc_list, pca_idxs, pc_ind, pc_shape = None, None, None, None
@@ -1347,7 +1506,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     pc_feature_ind = pc_ind
 
     return spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-           amplitudes, pc_features, pc_feature_ind, templates, channel_list
+           amplitudes, pc_features, pc_feature_ind, templates, channel_index_list
 
 
 def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_template, **kwargs):
@@ -1400,7 +1559,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         channel_groups = np.array([0] * recording.get_num_channels())
 
     spike_times, spike_times_amps, spike_times_pca, spike_clusters, spike_clusters_amps, spike_clusters_pca, \
-    amplitudes, pc_features, pc_feature_ind, templates, channel_list \
+    amplitudes, pc_features, pc_feature_ind, templates, channel_index_list \
         = _get_quality_metric_data(recording, sorting, n_comp=n_comp, ms_before=ms_before, ms_after=ms_after,
                                    dtype=dtype, amp_method=amp_method, amp_peak=amp_peak,
                                    amp_frames_before=amp_frames_before,
@@ -1455,7 +1614,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
-        templates_ind = np.array(channel_list)
+        templates_ind = np.array(channel_index_list)
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
@@ -1477,7 +1636,7 @@ def _select_max_channels_from_waveforms(wf, recording, max_channels):
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                                template.shape)[0]
             locs = recording.get_channel_locations()
-            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            loc_max = locs[max_channel_idx]
             distances = [np.linalg.norm(l - loc_max) for l in locs]
             max_channel_idxs = np.argsort(distances)[:max_channels]
         else:  # select based on amplitude
@@ -1499,7 +1658,7 @@ def _select_max_channels_from_templates(template, recording, max_channels):
             max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
                                                template.shape)[0]
             locs = recording.get_channel_locations()
-            loc_max = locs[recording.get_channel_ids().index(max_channel_idx)]
+            loc_max = locs[max_channel_idx]
             distances = [np.linalg.norm(l - loc_max) for l in locs]
             max_channel_idxs = np.argsort(distances)[:max_channels]
         else:  # select based on amplitude
@@ -1532,6 +1691,31 @@ def _get_max_channels_per_waveforms(recording, grouping_property, channel_ids, m
         else:
             n_channels = max_channels_per_waveforms
     return n_channels
+
+
+def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, verbose):
+    if isinstance(rec_arg, dict):
+        recording = se.load_extractor_from_dict(rec_arg)
+    else:
+        recording = rec_arg
+    if verbose:
+        print(f'Detecting spikes on channel {ch}')
+    trace = np.squeeze(recording.get_traces(channel_ids=ch))
+    if detect_sign == -1:
+        thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
+        idx_spikes = np.where(trace < thresh)
+    elif detect_sign == 1:
+        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
+        idx_spikes = np.where(trace > thresh)
+    else:
+        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
+        idx_spikes = np.where((trace > thresh) | (trace < -thresh))
+    if len(idx_spikes) > 0:
+        activity = len(idx_spikes[0])
+    else:
+        activity = 0
+
+    return activity
 
 
 def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, grouping_property,
@@ -1682,6 +1866,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
 
                 if verbose:
                     print('Waveform ' + str(i + 1) + '/' + str(len(unit_ids)))
+
                 wf, indexes = _get_random_spike_waveforms(recording=recording,
                                                           sorting=sorting,
                                                           unit=unit_id,
@@ -1689,6 +1874,7 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                                                           snippet_len=n_pad,
                                                           channel_ids=channel_ids,
                                                           seed=seed)
+
                 wf = wf.astype(dtype)
                 if max_channels_per_waveforms < len(channel_ids):
                     max_channel_idxs = _select_max_channels_from_waveforms(wf, recording, max_channels_per_waveforms)

@@ -1,5 +1,4 @@
 import scipy.signal as ss
-import numpy as np
 from joblib import Parallel, delayed
 import spikeextractors as se
 import itertools
@@ -7,7 +6,7 @@ import numpy as np
 
 
 def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, upsample=1, detect_sign=-1,
-                  min_diff_samples=5, parallel=False, n_jobs=-1):
+                  min_diff_samples=5, align=True, n_jobs=1, verbose=False):
     '''
     Detects spikes per channel.
     Parameters
@@ -46,17 +45,29 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         assert np.all([ch in recording.get_channel_ids() for ch in channel_ids]), "Not all 'channel_ids' are in the" \
                                                                                   "recording."
 
-    if parallel:
+    if not recording.check_if_dumpable():
+        if n_jobs > 1:
+            n_jobs = 0
+            print("RecordingExtractor is not dumpable and can't be processedin parallel")
+            rec_arg = recording
+        else:
+            rec_arg = recording
+    else:
+        rec_arg = recording.make_serialized_dict()
+
+    if n_jobs > 1:
         output = Parallel(n_jobs=n_jobs)(delayed(_detect_and_align_peaks_single_channel)
-                                         (recording, ch, detect_threshold, detect_sign,
-                                          n_pad_samples, upsample, min_diff_samples) for ch in channel_ids)
+                                         (rec_arg, ch, detect_threshold, detect_sign,
+                                          n_pad_samples, upsample, min_diff_samples, align, verbose)
+                                         for ch in channel_ids)
         for o in output:
             spike_times.append(o[0])
             labels.append(o[1])
     else:
         for ch in channel_ids:
             peak_times, label = _detect_and_align_peaks_single_channel(recording, ch, detect_threshold, detect_sign,
-                                                                       n_pad_samples, upsample, min_diff_samples)
+                                                                       n_pad_samples, upsample, min_diff_samples,
+                                                                       align, verbose)
             spike_times.append(peak_times)
             labels.append(label)
 
@@ -72,7 +83,14 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     return sorting
 
 
-def _detect_and_align_peaks_single_channel(recording, channel, n_std, detect_sign, n_pad, upsample, min_diff_samples):
+def _detect_and_align_peaks_single_channel(rec_arg, channel, n_std, detect_sign, n_pad, upsample, min_diff_samples,
+                                           align, verbose):
+    if verbose:
+        print(f'Detecting spikes on channel {channel}')
+    if isinstance(rec_arg, dict):
+        recording = se.load_extractor_from_dict(rec_arg)
+    else:
+        recording = rec_arg
     trace = np.squeeze(recording.get_traces(channel_ids=channel))
     if detect_sign == -1:
         thresh = -n_std * np.median(np.abs(trace) / 0.6745)
@@ -89,37 +107,39 @@ def _detect_and_align_peaks_single_channel(recording, channel, n_std, detect_sig
     for i_t, diff in enumerate(intervals):
         if diff > min_diff_samples or i_t == len(intervals) - 1:
             idx_spike = idx_spikes[i_t]
-            if idx_spike - n_pad > 0 and idx_spike + n_pad < len(trace):
-                spike = trace[idx_spike - n_pad:idx_spike + n_pad]
-                t_spike = np.arange(idx_spike - n_pad, idx_spike + n_pad)
-            elif idx_spike - n_pad < 0:
-                spike = trace[:idx_spike + n_pad]
-                spike = np.pad(spike, (np.abs(idx_spike - n_pad), 0), 'constant')
-                t_spike = np.arange(idx_spike + n_pad)
-                t_spike = np.pad(t_spike, (np.abs(idx_spike - n_pad), 0), 'constant')
-            elif idx_spike + n_pad > len(trace):
-                spike = trace[idx_spike - n_pad:]
-                spike = np.pad(spike, (0, idx_spike + n_pad - len(trace)), 'constant')
-                t_spike = np.arange(idx_spike - n_pad, len(trace))
-                t_spike = np.pad(t_spike, (0, idx_spike + n_pad - len(trace)), 'constant')
 
-            # upsample and find minimum
-            if upsample > 1:
-                spike_up = ss.resample(spike, int(upsample * len(spike)))
-                t_spike_up = np.linspace(t_spike[0], t_spike[-1], num=len(spike_up))
+            if align:
+                if idx_spike - n_pad > 0 and idx_spike + n_pad < len(trace):
+                    spike = trace[idx_spike - n_pad:idx_spike + n_pad]
+                    t_spike = np.arange(idx_spike - n_pad, idx_spike + n_pad)
+                elif idx_spike - n_pad < 0:
+                    spike = trace[:idx_spike + n_pad]
+                    spike = np.pad(spike, (np.abs(idx_spike - n_pad), 0), 'constant')
+                    t_spike = np.arange(idx_spike + n_pad)
+                    t_spike = np.pad(t_spike, (np.abs(idx_spike - n_pad), 0), 'constant')
+                elif idx_spike + n_pad > len(trace):
+                    spike = trace[idx_spike - n_pad:]
+                    spike = np.pad(spike, (0, idx_spike + n_pad - len(trace)), 'constant')
+                    t_spike = np.arange(idx_spike - n_pad, len(trace))
+                    t_spike = np.pad(t_spike, (0, idx_spike + n_pad - len(trace)), 'constant')
+
+                if upsample > 1:
+                    spike_up = ss.resample(spike, int(upsample * len(spike)))
+                    t_spike_up = np.linspace(t_spike[0], t_spike[-1], num=len(spike_up))
+                else:
+                    spike_up = spike
+                    t_spike_up = t_spike
+                if detect_sign == -1:
+                    peak_idx = np.argmin(spike_up)
+                elif detect_sign == 1:
+                    peak_idx = np.argmax(spike_up)
+                else:
+                    peak_idx = np.argmax(np.abs(spike_up))
+
+                min_time_up = t_spike_up[peak_idx]
+                sp_times.append(int(min_time_up))
             else:
-                spike_up = spike
-                t_spike_up = t_spike
-
-            if detect_sign == -1:
-                peak_idx = np.argmin(spike_up)
-            elif detect_sign == 1:
-                peak_idx = np.argmax(spike_up)
-            else:
-                peak_idx = np.argmax(np.abs(spike_up))
-
-            min_time_up = t_spike_up[peak_idx]
-            sp_times.append(int(min_time_up))
+                sp_times.append(idx_spike)
 
     labels = [channel] * len(sp_times)
 
