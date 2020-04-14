@@ -190,7 +190,7 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group', recompute_info=True)
-    export_to_phy(rec, sort, output_folder='max_channels', max_channels_per_template=4, recompute_info=True)
+    export_to_phy(rec, sort, output_folder='phy_max_channels', max_channels_per_template=4, recompute_info=True)
     export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False,
                   recompute_info=True)
 
@@ -208,7 +208,13 @@ def test_export_to_phy():
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
     assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
     assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
+
     shutil.rmtree('test')
+    shutil.rmtree('phy')
+    shutil.rmtree('phy_group')
+    shutil.rmtree('phy_max_channels')
+    shutil.rmtree('phy_no_feat')
+
 
 
 @pytest.mark.implemented
