@@ -8,8 +8,8 @@ def plot_metrics(sorting, unit_id, invert_template=False, savedir=None):
 
     unit_props = sorting.get_unit_property_names(unit_id)
     assert 'template' in unit_props, 'template should be in unit properties'
-    if 'through_to_peak_in_template' in unit_props:
-        ttp = sorting.get_unit_property(unit_id, 'through_to_peak_in_template')
+    if 'trough_to_peak_duration' in unit_props:
+        ttp = sorting.get_unit_property(unit_id, 'trough_to_peak_duration')
     else:
         ttp = None
     if 'peak_index_in_template' in unit_props:
