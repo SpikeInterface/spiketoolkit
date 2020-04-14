@@ -11,7 +11,7 @@ from scipy.stats import linregress
 from scipy.signal import resample
 
 
-def compute_waveform_metrics(waveforms,
+def compute_unit_template_features(waveforms,
                                cluster_id,
                                peak_channel,
                                channel_map,
@@ -67,12 +67,12 @@ def compute_waveform_metrics(waveforms,
 
     timestamps = np.linspace(0, num_samples / sample_rate, new_sample_count)
 
-    duration = compute_waveform_duration(mean_1D_waveform, timestamps)
-    halfwidth = compute_waveform_halfwidth(mean_1D_waveform, timestamps)
-    PT_ratio = compute_waveform_PT_ratio(mean_1D_waveform)
-    repolarization_slope = compute_waveform_repolarization_slope(
+    duration = compute_unit_template_duration(mean_1D_waveform, timestamps)
+    halfwidth = compute_unit_template_halfwidth(mean_1D_waveform, timestamps)
+    PT_ratio = compute_unit_template_PT_ratio(mean_1D_waveform)
+    repolarization_slope = compute_unit_template_repolarization_slope(
         mean_1D_waveform, timestamps)
-    recovery_slope = compute_waveform_recovery_slope(
+    recovery_slope = compute_unit_template_recovery_slope(
         mean_1D_waveform, timestamps)
 
     amplitude, spread, velocity_above, velocity_below = compute_2D_features(
@@ -96,7 +96,7 @@ def compute_waveform_metrics(waveforms,
 # ==========================================================
 
 
-def compute_waveform_duration(waveform, timestamps):
+def compute_unit_template_duration(waveform, timestamps):
     """
     Duration (in seconds) between peak and trough
     Inputs:
@@ -122,7 +122,7 @@ def compute_waveform_duration(waveform, timestamps):
     return duration * 1e3
 
 
-def compute_waveform_halfwidth(waveform, timestamps):
+def compute_unit_template_halfwidths(waveform, timestamps):
     """
     Spike width (in seconds) at half max amplitude
     Inputs:
@@ -160,7 +160,7 @@ def compute_waveform_halfwidth(waveform, timestamps):
     return halfwidth * 1e3
 
 
-def compute_waveform_PT_ratio(waveform):
+def compute_unit_template_pt_ratios(waveform):
     """
     Peak-to-trough ratio of 1D waveform
     Inputs:
@@ -180,7 +180,7 @@ def compute_waveform_PT_ratio(waveform):
     return PT_ratio
 
 
-def compute_waveform_repolarization_slope(waveform, timestamps, window=20):
+def compute_unit_template_repolarization_slopes(waveform, timestamps, window=20):
     """
     Spike repolarization slope (after maximum deflection point)
     Inputs:
@@ -204,7 +204,7 @@ def compute_waveform_repolarization_slope(waveform, timestamps, window=20):
     return repolarization_slope * 1e-6
 
 
-def compute_waveform_recovery_slope(waveform, timestamps, window=20):
+def compute_unit_template_recovery_slopes(waveform, timestamps, window=20):
     """
     Spike recovery slope (after repolarization)
     Inputs:
@@ -236,8 +236,8 @@ def compute_waveform_recovery_slope(waveform, timestamps, window=20):
 # ==========================================================
 
 
-def compute_waveform_spread(recording, sorting, unit_ids=None, channel_ids=None,
-                            mode='median', _waveforms=None, **kwargs):
+def compute_unit_template_spreads(recording, sorting, unit_ids=None, channel_ids=None,
+                                  mode='median', _waveforms=None, **kwargs):
     pass
 
 # def compute_2D_features(waveform, timestamps, peak_channel, spread_threshold=0.12, site_range=16, site_spacing=10e-6):
