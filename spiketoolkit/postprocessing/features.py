@@ -10,83 +10,102 @@ import pandas as pd
 from scipy.stats import linregress
 from scipy.signal import resample
 
+from .postprocessing_tools import get_unit_templates
 
-def compute_unit_template_features(waveforms,
-                               cluster_id,
-                               peak_channel,
-                               channel_map,
-                               sample_rate,
-                               upsampling_factor,
-                               spread_threshold,
-                               site_range,
-                               site_spacing,
-                               epoch_name):
-    """
-    Calculate metrics for an array of waveforms.
-    Metrics come from Jia et al. (2019) High-density extracellular probes reveal 
-    dendritic backpropagation and facilitate neuron classification. J Neurophys
-    https://doi.org/10.1152/jn.00680.2018
-    Inputs:
-    -------
-    waveforms : numpy.ndarray (num_spikes x num_channels x num_samples)
-        Can include NaN values for missing spikes
-    cluster_id : int
-        ID for cluster
-    peak_channel : int
-        Location of waveform peak
-    channel_map : numpy.ndarray
-        Channels used for spike sorting
-    sample_rate : float
-        Sample rate in Hz
-    upsampling_factor : float
-        Relative rate at which to upsample the spike waveform
-    spread_threshold : float
-        Threshold for computing spread of 2D waveform
-    site_range : float
-        Number of sites to use for 2D waveform metrics
-    site_spacing : float
-        Average vertical distance between sites (m)
-    epoch_name : str
-        Name of epoch for which these waveforms originated
-    Outputs:
-    -------
-    metrics : pandas.DataFrame
-        Single-row table containing all metrics
-    """
 
-    snr = compute_snr(waveforms[:, peak_channel, :])
+# def compute_unit_template_features(waveforms,
+#                                cluster_id,
+#                                peak_channel,
+#                                channel_map,
+#                                sample_rate,
+#                                upsampling_factor,
+#                                spread_threshold,
+#                                site_range,
+#                                site_spacing,
+#                                epoch_name):
+#     """
+#     Calculate metrics for an array of waveforms.
+#     Metrics come from Jia et al. (2019) High-density extracellular probes reveal
+#     dendritic backpropagation and facilitate neuron classification. J Neurophys
+#     https://doi.org/10.1152/jn.00680.2018
+#     Inputs:
+#     -------
+#     waveforms : numpy.ndarray (num_spikes x num_channels x num_samples)
+#         Can include NaN values for missing spikes
+#     cluster_id : int
+#         ID for cluster
+#     peak_channel : int
+#         Location of waveform peak
+#     channel_map : numpy.ndarray
+#         Channels used for spike sorting
+#     sample_rate : float
+#         Sample rate in Hz
+#     upsampling_factor : float
+#         Relative rate at which to upsample the spike waveform
+#     spread_threshold : float
+#         Threshold for computing spread of 2D waveform
+#     site_range : float
+#         Number of sites to use for 2D waveform metrics
+#     site_spacing : float
+#         Average vertical distance between sites (m)
+#     epoch_name : str
+#         Name of epoch for which these waveforms originated
+#     Outputs:
+#     -------
+#     metrics : pandas.DataFrame
+#         Single-row table containing all metrics
+#     """
+#
+#     snr = compute_snr(waveforms[:, peak_channel, :])
+#
+#     mean_2D_waveform = np.squeeze(np.nanmean(waveforms[:, channel_map, :], 0))
+#     local_peak = np.argmin(np.abs(channel_map - peak_channel))
+#
+#     num_samples = waveforms.shape[2]
+#     new_sample_count = int(num_samples * upsampling_factor)
+#
+#     mean_1D_waveform = resample(
+#         mean_2D_waveform[local_peak, :], new_sample_count)
+#
+#     timestamps = np.linspace(0, num_samples / sample_rate, new_sample_count)
+#
+#     duration = compute_unit_template_duration(mean_1D_waveform, timestamps)
+#     halfwidth = compute_unit_template_halfwidth(mean_1D_waveform, timestamps)
+#     PT_ratio = compute_unit_template_PT_ratio(mean_1D_waveform)
+#     repolarization_slope = compute_unit_template_repolarization_slope(
+#         mean_1D_waveform, timestamps)
+#     recovery_slope = compute_unit_template_recovery_slope(
+#         mean_1D_waveform, timestamps)
+#
+#     amplitude, spread, velocity_above, velocity_below = compute_2D_features(
+#         mean_2D_waveform, timestamps, local_peak, spread_threshold, site_range, site_spacing)
+#
+#     data = [[cluster_id, epoch_name, peak_channel, snr, duration, halfwidth, PT_ratio, repolarization_slope,
+#              recovery_slope, amplitude, spread, velocity_above, velocity_below]]
+#
+#     metrics = pd.DataFrame(data,
+#                            columns=['cluster_id', 'epoch_name', 'peak_channel', 'snr', 'duration', 'halfwidth',
+#                                     'PT_ratio', 'repolarization_slope', 'recovery_slope', 'amplitude',
+#                                     'spread', 'velocity_above', 'velocity_below'])
+#
+#     return metrics
 
-    mean_2D_waveform = np.squeeze(np.nanmean(waveforms[:, channel_map, :], 0))
-    local_peak = np.argmin(np.abs(channel_map - peak_channel))
+def add_template(sorting, recording, overwrite=False):
+    if 'template' in sorting.get_shared_unit_property_names() and not overwrite:
+        print('template allready in sorting, use "overwrite" to overwrite')
+        return
+    elif 'template' in sorting.get_shared_unit_property_names() and overwrite:
+        print('overwriting existing template')
 
-    num_samples = waveforms.shape[2]
-    new_sample_count = int(num_samples * upsampling_factor)
+    unit_ids = sorting.get_unit_ids()
 
-    mean_1D_waveform = resample(
-        mean_2D_waveform[local_peak, :], new_sample_count)
-
-    timestamps = np.linspace(0, num_samples / sample_rate, new_sample_count)
-
-    duration = compute_unit_template_duration(mean_1D_waveform, timestamps)
-    halfwidth = compute_unit_template_halfwidth(mean_1D_waveform, timestamps)
-    PT_ratio = compute_unit_template_PT_ratio(mean_1D_waveform)
-    repolarization_slope = compute_unit_template_repolarization_slope(
-        mean_1D_waveform, timestamps)
-    recovery_slope = compute_unit_template_recovery_slope(
-        mean_1D_waveform, timestamps)
-
-    amplitude, spread, velocity_above, velocity_below = compute_2D_features(
-        mean_2D_waveform, timestamps, local_peak, spread_threshold, site_range, site_spacing)
-
-    data = [[cluster_id, epoch_name, peak_channel, snr, duration, halfwidth, PT_ratio, repolarization_slope,
-             recovery_slope, amplitude, spread, velocity_above, velocity_below]]
-
-    metrics = pd.DataFrame(data,
-                           columns=['cluster_id', 'epoch_name', 'peak_channel', 'snr', 'duration', 'halfwidth',
-                                    'PT_ratio', 'repolarization_slope', 'recovery_slope', 'amplitude',
-                                    'spread', 'velocity_above', 'velocity_below'])
-
-    return metrics
+    templates = get_unit_templates(
+        recording=recording,
+        sorting=sorting,
+        mode='median'
+    )
+    for i, uid in enumerate(unit_ids):
+        sorting.set_unit_property(uid, 'template', templates[i])
 
 
 # ==========================================================
@@ -96,149 +115,202 @@ def compute_unit_template_features(waveforms,
 # ==========================================================
 
 
-def compute_unit_template_duration(waveform, timestamps):
-    """
-    Duration (in seconds) between peak and trough
-    Inputs:
-    ------
-    waveform : numpy.ndarray (N samples)
-    timestamps : numpy.ndarray (N samples)
-    Outputs:
-    --------
-    duration : waveform duration in milliseconds
-    """
+# def compute_unit_template_duration(waveform, timestamps):
+#     """
+#     Duration (in seconds) between peak and trough
+#     Inputs:
+#     ------
+#     waveform : numpy.ndarray (N samples)
+#     timestamps : numpy.ndarray (N samples)
+#     Outputs:
+#     --------
+#     duration : waveform duration in milliseconds
+#     """
+#
+#     trough_idx = np.argmin(waveform)
+#     peak_idx = np.argmax(waveform)
+#
+#     # to avoid detecting peak before trough
+#     if waveform[peak_idx] > np.abs(waveform[trough_idx]):
+#         duration = timestamps[peak_idx:][np.where(waveform[peak_idx:] == np.min(waveform[peak_idx:]))[0][0]] - \
+#                    timestamps[peak_idx]
+#     else:
+#         duration = timestamps[trough_idx:][np.where(waveform[trough_idx:] == np.max(waveform[trough_idx:]))[0][0]] - \
+#                    timestamps[trough_idx]
+#
+#     return duration * 1e3
 
-    trough_idx = np.argmin(waveform)
-    peak_idx = np.argmax(waveform)
 
-    # to avoid detecting peak before trough
-    if waveform[peak_idx] > np.abs(waveform[trough_idx]):
-        duration = timestamps[peak_idx:][np.where(waveform[peak_idx:] == np.min(waveform[peak_idx:]))[0][0]] - \
-                   timestamps[peak_idx]
+def compute_trough_to_peak_duration(sorting,
+                                    unit_ids=None,
+                                    invert_template=False,
+                                    save_property_or_features=True,
+                                    return_through_and_peak_idx=False):
+
+    if isinstance(unit_ids, (int, np.integer)):
+        unit_ids = [unit_ids]
+    elif unit_ids is None:
+        unit_ids = sorting.get_unit_ids()
+    elif not isinstance(unit_ids, (list, np.ndarray)):
+        raise Exception("unit_ids should be an int or list")
+
+    assert 'template' in sorting.get_shared_unit_property_names(), 'add template to unit properties'
+
+    durations = []
+    peaks = []
+    throughs = []
+
+    for uid in unit_ids:
+        templates = sorting.get_unit_property(uid, 'template')
+        unit_durations = []
+        unit_peaks = []
+        unit_throughs = []
+
+        for i, channel_template in enumerate(templates):
+            if invert_template:
+                channel_template = -channel_template
+
+            trough_idx = np.argmin(channel_template)
+            unit_throughs.append(trough_idx)
+            peak_idx = np.argmax(channel_template)
+            unit_peaks.append(peak_idx)
+
+            dur = (peak_idx - trough_idx) * (1 / sorting.get_sampling_frequency())
+            unit_durations.append(dur)  # exclude negative values?
+
+        durations.append(unit_durations)
+        peaks.append(unit_peaks)
+        throughs.append(unit_throughs)
+
+    if save_property_or_features:
+        for i, uid in enumerate(unit_ids):
+            sorting.set_unit_property(uid, 'trough_to_peak_duration', durations[i])
+            sorting.set_unit_property(uid, 'peak_index_in_template', peaks[i])
+            sorting.set_unit_property(uid, 'through_index_in_template', throughs[i])
+
+    if return_through_and_peak_idx:
+        return durations, throughs, peaks
     else:
-        duration = timestamps[trough_idx:][np.where(waveform[trough_idx:] == np.max(waveform[trough_idx:]))[0][0]] - \
-                   timestamps[trough_idx]
-
-    return duration * 1e3
+        return durations
 
 
-def compute_unit_template_halfwidths(waveform, timestamps):
-    """
-    Spike width (in seconds) at half max amplitude
-    Inputs:
-    ------
-    waveform : numpy.ndarray (N samples)
-    timestamps : numpy.ndarray (N samples)
-    Outputs:
-    --------
-    halfwidth : waveform halfwidth in milliseconds
-    """
-
-    trough_idx = np.argmin(waveform)
-    peak_idx = np.argmax(waveform)
-
-    try:
-        if waveform[peak_idx] > np.abs(waveform[trough_idx]):
-            threshold = waveform[peak_idx] * 0.5
-            thresh_crossing_1 = np.min(
-                np.where(waveform[:peak_idx] > threshold)[0])
-            thresh_crossing_2 = np.min(
-                np.where(waveform[peak_idx:] < threshold)[0]) + peak_idx
-        else:
-            threshold = waveform[trough_idx] * 0.5
-            thresh_crossing_1 = np.min(
-                np.where(waveform[:trough_idx] < threshold)[0])
-            thresh_crossing_2 = np.min(
-                np.where(waveform[trough_idx:] > threshold)[0]) + trough_idx
-
-        halfwidth = (timestamps[thresh_crossing_2] - timestamps[thresh_crossing_1])
-
-    except ValueError:
-
-        halfwidth = np.nan
-
-    return halfwidth * 1e3
-
-
-def compute_unit_template_pt_ratios(waveform):
-    """
-    Peak-to-trough ratio of 1D waveform
-    Inputs:
-    ------
-    waveform : numpy.ndarray (N samples)
-    Outputs:
-    --------
-    PT_ratio : waveform peak-to-trough ratio
-    """
-
-    trough_idx = np.argmin(waveform)
-
-    peak_idx = np.argmax(waveform)
-
-    PT_ratio = np.abs(waveform[peak_idx] / waveform[trough_idx])
-
-    return PT_ratio
-
-
-def compute_unit_template_repolarization_slopes(waveform, timestamps, window=20):
-    """
-    Spike repolarization slope (after maximum deflection point)
-    Inputs:
-    ------
-    waveform : numpy.ndarray (N samples)
-    timestamps : numpy.ndarray (N samples)
-    window : int
-        Window (in samples) for linear regression
-    Outputs:
-    --------
-    repolarization_slope : slope of return to baseline (V / s)
-    """
-
-    max_point = np.argmax(np.abs(waveform))
-
-    waveform = - waveform * (np.sign(waveform[max_point]))  # invert if we're using the peak
-
-    repolarization_slope = linregress(timestamps[max_point:max_point + window], waveform[max_point:max_point + window])[
-        0]
-
-    return repolarization_slope * 1e-6
-
-
-def compute_unit_template_recovery_slopes(waveform, timestamps, window=20):
-    """
-    Spike recovery slope (after repolarization)
-    Inputs:
-    ------
-    waveform : numpy.ndarray (N samples)
-    timestamps : numpy.ndarray (N samples)
-    window : int
-        Window (in samples) for linear regression
-    Outputs:
-    --------
-    recovery_slope : slope of recovery period (V / s)
-    """
-
-    max_point = np.argmax(np.abs(waveform))
-
-    waveform = - waveform * (np.sign(waveform[max_point]))  # invert if we're using the peak
-
-    peak_idx = np.argmax(waveform[max_point:]) + max_point
-
-    recovery_slope = linregress(timestamps[peak_idx:peak_idx + window], waveform[peak_idx:peak_idx + window])[0]
-
-    return recovery_slope * 1e-6
-
-
-# ==========================================================
-
-# EXTRACTING 2D FEATURES
-
-# ==========================================================
-
-
-def compute_unit_template_spreads(recording, sorting, unit_ids=None, channel_ids=None,
-                                  mode='median', _waveforms=None, **kwargs):
-    pass
+# def compute_unit_template_halfwidths(waveform, timestamps):
+#     """
+#     Spike width (in seconds) at half max amplitude
+#     Inputs:
+#     ------
+#     waveform : numpy.ndarray (N samples)
+#     timestamps : numpy.ndarray (N samples)
+#     Outputs:
+#     --------
+#     halfwidth : waveform halfwidth in milliseconds
+#     """
+#
+#     trough_idx = np.argmin(waveform)
+#     peak_idx = np.argmax(waveform)
+#
+#     try:
+#         if waveform[peak_idx] > np.abs(waveform[trough_idx]):
+#             threshold = waveform[peak_idx] * 0.5
+#             thresh_crossing_1 = np.min(
+#                 np.where(waveform[:peak_idx] > threshold)[0])
+#             thresh_crossing_2 = np.min(
+#                 np.where(waveform[peak_idx:] < threshold)[0]) + peak_idx
+#         else:
+#             threshold = waveform[trough_idx] * 0.5
+#             thresh_crossing_1 = np.min(
+#                 np.where(waveform[:trough_idx] < threshold)[0])
+#             thresh_crossing_2 = np.min(
+#                 np.where(waveform[trough_idx:] > threshold)[0]) + trough_idx
+#
+#         halfwidth = (timestamps[thresh_crossing_2] - timestamps[thresh_crossing_1])
+#
+#     except ValueError:
+#
+#         halfwidth = np.nan
+#
+#     return halfwidth * 1e3
+#
+#
+# def compute_unit_template_pt_ratios(waveform):
+#     """
+#     Peak-to-trough ratio of 1D waveform
+#     Inputs:
+#     ------
+#     waveform : numpy.ndarray (N samples)
+#     Outputs:
+#     --------
+#     PT_ratio : waveform peak-to-trough ratio
+#     """
+#
+#     trough_idx = np.argmin(waveform)
+#
+#     peak_idx = np.argmax(waveform)
+#
+#     PT_ratio = np.abs(waveform[peak_idx] / waveform[trough_idx])
+#
+#     return PT_ratio
+#
+#
+# def compute_unit_template_repolarization_slopes(waveform, timestamps, window=20):
+#     """
+#     Spike repolarization slope (after maximum deflection point)
+#     Inputs:
+#     ------
+#     waveform : numpy.ndarray (N samples)
+#     timestamps : numpy.ndarray (N samples)
+#     window : int
+#         Window (in samples) for linear regression
+#     Outputs:
+#     --------
+#     repolarization_slope : slope of return to baseline (V / s)
+#     """
+#
+#     max_point = np.argmax(np.abs(waveform))
+#
+#     waveform = - waveform * (np.sign(waveform[max_point]))  # invert if we're using the peak
+#
+#     repolarization_slope = linregress(timestamps[max_point:max_point + window], waveform[max_point:max_point + window])[
+#         0]
+#
+#     return repolarization_slope * 1e-6
+#
+#
+# def compute_unit_template_recovery_slopes(waveform, timestamps, window=20):
+#     """
+#     Spike recovery slope (after repolarization)
+#     Inputs:
+#     ------
+#     waveform : numpy.ndarray (N samples)
+#     timestamps : numpy.ndarray (N samples)
+#     window : int
+#         Window (in samples) for linear regression
+#     Outputs:
+#     --------
+#     recovery_slope : slope of recovery period (V / s)
+#     """
+#
+#     max_point = np.argmax(np.abs(waveform))
+#
+#     waveform = - waveform * (np.sign(waveform[max_point]))  # invert if we're using the peak
+#
+#     peak_idx = np.argmax(waveform[max_point:]) + max_point
+#
+#     recovery_slope = linregress(timestamps[peak_idx:peak_idx + window], waveform[peak_idx:peak_idx + window])[0]
+#
+#     return recovery_slope * 1e-6
+#
+#
+# # ==========================================================
+#
+# # EXTRACTING 2D FEATURES
+#
+# # ==========================================================
+#
+#
+# def compute_unit_template_spreads(recording, sorting, unit_ids=None, channel_ids=None,
+#                                   mode='median', _waveforms=None, **kwargs):
+#     pass
 
 # def compute_2D_features(waveform, timestamps, peak_channel, spread_threshold=0.12, site_range=16, site_spacing=10e-6):
 #     """
@@ -379,3 +451,4 @@ def compute_unit_template_spreads(recording, sorting, unit_ids=None, channel_ids
 #
 #     return modified_z_score <= thresh
 #
+
