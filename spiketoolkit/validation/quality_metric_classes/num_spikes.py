@@ -21,27 +21,22 @@ class NumSpikes(QualityMetric):
     def compute_metric(self, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
-
-        num_spikes_epochs = []
-        for epoch in self._metric_data._epochs:
-            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
-            _, num_spikes_all = metrics.calculate_firing_rate_and_spikes(
-                self._metric_data._spike_times[in_epoch],
-                self._metric_data._spike_clusters[in_epoch],
-                self._metric_data._total_units,
-                verbose=self._metric_data.verbose,
-            )
-            num_spikes_list = []
-            for i in self._metric_data._unit_indices:
-                num_spikes_list.append(num_spikes_all[i])
-            num_spikes = np.asarray(num_spikes_list).astype('int')
-            num_spikes_epochs.append(num_spikes)
+        _, num_spikes_all = metrics.calculate_firing_rate_and_spikes(
+            self._metric_data._spike_times,
+            self._metric_data._spike_clusters,
+            self._metric_data._total_units,
+            verbose=self._metric_data.verbose,
+        )
+        num_spikes_list = []
+        for i in self._metric_data._unit_indices:
+            num_spikes_list.append(num_spikes_all[i])
+        num_spikes = np.asarray(num_spikes_list).astype('int')
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, num_spikes_epochs, self._metric_name)
-        return num_spikes_epochs
+            self.save_property_or_features(self._metric_data._sorting, num_spikes, self._metric_name)
+        return num_spikes
 
     def threshold_metric(self, threshold, threshold_sign, **kwargs):
-        num_spikes_epochs = self.compute_metric(**kwargs)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=num_spikes_epochs)
+        num_spikes = self.compute_metric(**kwargs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metric=num_spikes)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

@@ -21,26 +21,22 @@ class FiringRate(QualityMetric):
     def compute_metric(self, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
-        firing_rate_epochs = []
-        for epoch in self._metric_data._epochs:
-            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
-            firing_rate_all, _ = metrics.calculate_firing_rate_and_spikes(
-                self._metric_data._spike_times[in_epoch],
-                self._metric_data._spike_clusters[in_epoch],
-                self._metric_data._total_units,
-                verbose=self._metric_data.verbose,
-            )
-            firing_rate_list = []
-            for i in self._metric_data._unit_indices:
-                firing_rate_list.append(firing_rate_all[i])
-            firing_rate = np.asarray(firing_rate_list)
-            firing_rate_epochs.append(firing_rate)
+        firing_rate_all, _ = metrics.calculate_firing_rate_and_spikes(
+            self._metric_data._spike_times,
+            self._metric_data._spike_clusters,
+            self._metric_data._total_units,
+            verbose=self._metric_data.verbose,
+        )
+        firing_rate_list = []
+        for i in self._metric_data._unit_indices:
+            firing_rate_list.append(firing_rate_all[i])
+        firing_rate = np.asarray(firing_rate_list)
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, firing_rate_epochs, self._metric_name)
-        return firing_rate_epochs
+            self.save_property_or_features(self._metric_data._sorting, firing_rate, self._metric_name)
+        return firing_rate
 
     def threshold_metric(self, threshold, threshold_sign, **kwargs):
-        firing_rate_epochs = self.compute_metric(**kwargs)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=firing_rate_epochs)
+        firing_rate = self.compute_metric(**kwargs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metric=firing_rate)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

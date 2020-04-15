@@ -21,27 +21,22 @@ class PresenceRatio(QualityMetric):
     def compute_metric(self, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
-
-        presence_ratios_epochs = []
-        for epoch in self._metric_data._epochs:
-            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
-            presence_ratios_all = metrics.calculate_presence_ratio(
-                self._metric_data._spike_times[in_epoch],
-                self._metric_data._spike_clusters[in_epoch],
-                self._metric_data._total_units,
-                verbose=self._metric_data.verbose,
-            )
-            presence_ratios_list = []
-            for i in self._metric_data._unit_indices:
-                presence_ratios_list.append(presence_ratios_all[i])
-            presence_ratios = np.asarray(presence_ratios_list)
-            presence_ratios_epochs.append(presence_ratios)
+        presence_ratios_all = metrics.calculate_presence_ratio(
+            self._metric_data._spike_times,
+            self._metric_data._spike_clusters,
+            self._metric_data._total_units,
+            verbose=self._metric_data.verbose,
+        )
+        presence_ratios_list = []
+        for i in self._metric_data._unit_indices:
+            presence_ratios_list.append(presence_ratios_all[i])
+        presence_ratios = np.asarray(presence_ratios_list)
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, presence_ratios_epochs, self._metric_name)
-        return presence_ratios_epochs
+            self.save_property_or_features(self._metric_data._sorting, presence_ratios, self._metric_name)
+        return presence_ratios
 
     def threshold_metric(self, threshold, threshold_sign, **kwargs):
-        presence_ratios_epochs = self.compute_metric(**kwargs)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=presence_ratios_epochs)
+        presence_ratios = self.compute_metric(**kwargs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metric=presence_ratios)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

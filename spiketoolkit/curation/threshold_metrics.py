@@ -51,8 +51,7 @@ def threshold_num_spikes(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    freq_min=300.0, freq_max=6000.0, unit_ids=None, epoch_tuples=None, epoch_names=None,
-                    verbose=params_dict['verbose'])
+                    freq_min=300.0, freq_max=6000.0, unit_ids=None, verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
     threshold_sorting = ns.threshold_metric(threshold, threshold_sign, **kwargs)
@@ -96,8 +95,7 @@ def threshold_firing_rates(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    freq_min=300.0, freq_max=6000.0, unit_ids=None, epoch_tuples=None, epoch_names=None,
-                    verbose=params_dict['verbose'])
+                    freq_min=300.0, freq_max=6000.0, unit_ids=None, verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
     threshold_sorting = fr.threshold_metric(threshold, threshold_sign, **kwargs)
@@ -141,8 +139,7 @@ def threshold_presence_ratios(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    freq_min=300.0, freq_max=6000.0, unit_ids=None, epoch_tuples=None, epoch_names=None,
-                    verbose=params_dict['verbose'])
+                    freq_min=300.0, freq_max=6000.0, unit_ids=None, verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
     threshold_sorting = pr.threshold_metric(threshold, threshold_sign, **kwargs)
@@ -192,8 +189,7 @@ def threshold_isi_violations(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    freq_min=300.0, freq_max=6000.0, unit_ids=None, epoch_tuples=None, epoch_names=None,
-                    verbose=params_dict['verbose'])
+                    freq_min=300.0, freq_max=6000.0, unit_ids=None, verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
     threshold_sorting = iv.threshold_metric(threshold, threshold_sign, isi_threshold, min_isi, **kwargs)
@@ -256,8 +252,7 @@ def threshold_amplitude_cutoffs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
     md.compute_amplitudes(**kwargs)
 
     ac = AmplitudeCutoff(metric_data=md)
@@ -358,8 +353,7 @@ def threshold_snrs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     snr = SNR(metric_data=md)
     threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration,
@@ -448,8 +442,7 @@ def threshold_silhouette_scores(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -543,8 +536,7 @@ def threshold_d_primes(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -638,8 +630,7 @@ def threshold_l_ratios(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -733,8 +724,7 @@ def threshold_isolation_distances(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -837,8 +827,7 @@ def threshold_nn_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -935,8 +924,7 @@ def threshold_drift_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=None, epoch_tuples=None,
-                    epoch_names=None, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 

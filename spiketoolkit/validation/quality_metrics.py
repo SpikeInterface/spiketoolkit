@@ -14,6 +14,7 @@ from .quality_metric_classes.drift_metric import DriftMetric
 from .quality_metric_classes.parameter_dictionaries import update_all_param_dicts_with_kwargs
 from collections import OrderedDict
 from copy import deepcopy
+import pandas
 
 
 # All parameter values are stored in the class definitions
@@ -38,10 +39,6 @@ def compute_num_spikes(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
             save_property_or_features: bool
                 If True, the metric is saved as sorting property
             verbose: bool
@@ -49,8 +46,8 @@ def compute_num_spikes(
 
     Returns
     ----------
-    num_spikes_epochs: list of lists
-        The num spikes of the sorted units in the given epochs
+    num_spikes: np.ndarray
+        The number of spikes of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -59,12 +56,11 @@ def compute_num_spikes(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
-    num_spikes_epochs = ns.compute_metric(**kwargs)
-    return num_spikes_epochs
+    num_spikes = ns.compute_metric(**kwargs)
+    return num_spikes
 
 
 def compute_firing_rates(
@@ -86,10 +82,6 @@ def compute_firing_rates(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
             save_property_or_features: bool
                 If True, the metric is saved as sorting property
             verbose: bool
@@ -97,8 +89,8 @@ def compute_firing_rates(
 
     Returns
     ----------
-    firing_rate_epochs: list of lists
-        The firing rates of the sorted units in the given epochs
+    firing_rates: np.ndarray
+        The firing rates of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -107,12 +99,11 @@ def compute_firing_rates(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
-    firing_rate_epochs = fr.compute_metric(**kwargs)
-    return firing_rate_epochs
+    firing_rates = fr.compute_metric(**kwargs)
+    return firing_rates
 
 
 def compute_presence_ratios(
@@ -134,10 +125,6 @@ def compute_presence_ratios(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
             save_property_or_features: bool
                 If True, the metric is saved as sorting property
             verbose: bool
@@ -145,8 +132,8 @@ def compute_presence_ratios(
 
     Returns
     ----------
-    presence_ratio_epochs: list of lists
-        The presence ratios of the sorted units in the given epochs
+    presence_ratios: np.ndarray
+        The presence ratios of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -155,12 +142,11 @@ def compute_presence_ratios(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
-    presence_ratio_epochs = pr.compute_metric(**kwargs)
-    return presence_ratio_epochs
+    presence_ratios = pr.compute_metric(**kwargs)
+    return presence_ratios
 
 
 def compute_isi_violations(
@@ -189,10 +175,6 @@ def compute_isi_violations(
         List of unit ids to compute metric for. If not specified, all units are used
     **kwargs: keyword arguments
         Keyword arguments among the following:
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
             save_property_or_features: bool
                 If True, the metric is saved as sorting property
             verbose: bool
@@ -200,8 +182,8 @@ def compute_isi_violations(
 
     Returns
     ----------
-    isi_violation_epochs: list of lists
-        The isi violations of the sorted units in the given epochs
+    isi_violations: np.ndarray
+        The isi violations of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -210,12 +192,11 @@ def compute_isi_violations(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
-    isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, **kwargs)
-    return isi_violation_epochs
+    isi_violations = iv.compute_metric(isi_threshold, min_isi, **kwargs)
+    return isi_violations
 
 
 def compute_amplitude_cutoffs(
@@ -265,15 +246,11 @@ def compute_amplitude_cutoffs(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    amplitude_cutoffs_epochs: list of lists
-        The amplitude cutoffs of the sorted units in the given epochs
+    amplitude_cutoffs: np.ndarray
+        The amplitude cutoffs of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -282,13 +259,12 @@ def compute_amplitude_cutoffs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_amplitudes(**kwargs)
     ac = AmplitudeCutoff(metric_data=md)
-    amplitude_cutoffs_epochs = ac.compute_metric(**kwargs)
-    return amplitude_cutoffs_epochs
+    amplitude_cutoffs = ac.compute_metric(**kwargs)
+    return amplitude_cutoffs
 
 
 def compute_snrs(
@@ -369,15 +345,11 @@ def compute_snrs(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    snr_epochs: list of lists
-        The snrs of the sorted units in the given epochs
+    snrs: np.ndarray
+        The snrs of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -386,13 +358,12 @@ def compute_snrs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     snr = SNR(metric_data=md)
-    snr_epochs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
+    snrs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
                                     template_mode, max_channel_peak, **kwargs)
-    return snr_epochs
+    return snrs
 
 
 def compute_silhouette_scores(
@@ -461,15 +432,11 @@ def compute_silhouette_scores(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    silhouette_score_epochs: list of lists
-        The sihouette scores of the sorted units in the given epochs
+    silhouette_scores: np.ndarray
+        The sihouette scores of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -478,14 +445,13 @@ def compute_silhouette_scores(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     silhouette_score = SilhouetteScore(metric_data=md)
-    silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
-    return silhouette_score_epochs
+    silhouette_scores = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
+    return silhouette_scores
 
 
 def compute_d_primes(
@@ -557,15 +523,11 @@ def compute_d_primes(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    d_prime_epochs: list of lists
-        The d primes of the sorted units in the given epochs
+    d_primes: np.ndarray
+        The d primes of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -574,14 +536,13 @@ def compute_d_primes(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     d_prime = DPrime(metric_data=md)
-    d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
-    return d_prime_epochs
+    d_primes = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
+    return d_primes
 
 
 def compute_l_ratios(
@@ -653,15 +614,11 @@ def compute_l_ratios(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    l_ratio_epochs: list of lists
-        The l ratios of the sorted units in the given epochs
+    l_ratios: np.ndarray
+        The l ratios of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -670,14 +627,13 @@ def compute_l_ratios(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     l_ratio = LRatio(metric_data=md)
-    l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
-    return l_ratio_epochs
+    l_ratios = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
+    return l_ratios
 
 
 def compute_isolation_distances(
@@ -750,15 +706,11 @@ def compute_isolation_distances(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    isolation_distance_epochs: list of lists
-        The isolation distances of the sorted units in the given epochs
+    isolation_distances: np.ndarray
+        The isolation distances of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -767,15 +719,14 @@ def compute_isolation_distances(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     isolation_distance = IsolationDistance(metric_data=md)
-    isolation_distance_epochs = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                                  **kwargs)
-    return isolation_distance_epochs
+    isolation_distances = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
+                                                            **kwargs)
+    return isolation_distances
 
 
 def compute_nn_metrics(
@@ -853,15 +804,11 @@ def compute_nn_metrics(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    nn_metrics_epochs: list of lists
-        The nearest neighbor metrics of the sorted units in the given epochs
+    nn_metrics: np.ndarray
+        The nearest neighbor metrics of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -870,15 +817,14 @@ def compute_nn_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     nn = NearestNeighbor(metric_data=md)
-    nn_metrics_epochs = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                          max_spikes_for_nn, n_neighbors, **kwargs)
-    return nn_metrics_epochs
+    nn_metrics = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
+                                   max_spikes_for_nn, n_neighbors, **kwargs)
+    return nn_metrics
 
 
 def compute_drift_metrics(
@@ -950,15 +896,10 @@ def compute_drift_metrics(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
-
     Returns
     ----------
-    dm_metrics_epochs: list of lists
-        The drift metrics of the sorted units in the given epochs
+    dm_metrics: np.ndarray
+        The drift metrics of the sorted units.
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
@@ -967,23 +908,22 @@ def compute_drift_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
     dm = DriftMetric(metric_data=md)
-    dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
-    return dm_metrics_epochs
+    dm_metrics = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
+    return dm_metrics
 
 
-def compute_metrics(
+def compute_quality_metrics(
         sorting,
         recording=None,
         sampling_frequency=None,
         metric_names=None,
         unit_ids=None,
-        return_dict=False,
+        as_dataframe=False,
         isi_threshold=ISIViolation.params['isi_threshold'],
         min_isi=ISIViolation.params['min_isi'],
         snr_mode=SNR.params['snr_mode'],
@@ -1013,8 +953,8 @@ def compute_metrics(
         List of metric names to be computed
     unit_ids: list
         List of unit ids to compute metric for. If not specified, all units are used
-    return_dict: bool
-        If True, will return dict of metrics
+    as_dataframe: bool
+        If True, will return dataframe of metrics. If False, will return dictionary.
     isi_threshold: float
         The isi threshold for calculating isi violations
     min_isi: float
@@ -1089,23 +1029,15 @@ def compute_metrics(
                 Random seed for reproducibility
             verbose: bool
                 If True, will be verbose in metric computation
-            epoch_tuples: list
-                A list of tuples with a start and end time for each epoch
-            epoch_names: list
-                A list of strings for the names of the given epochs
 
     Returns
     ----------
-    metrics_epochs : list of lists
-        List of metrics data. The list consists of lists of metric data for each given epoch
-    OR
-    metrics_dict: OrderedDict
-        Dict of metrics data. The dict consists of lists of metric data for each given epoch for each metric
+    metrics: dictionary OR pandas.dataframe
+        Dictionary or pandas.dataframe of metrics.
     
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
-    metrics_epochs = []
     metrics_dict = OrderedDict()
     all_metrics_list = ["num_spikes", "firing_rate", "presence_ratio", "isi_viol", "amplitude_cutoff", "snr",
                         "max_drift", "cumulative_drift", "silhouette_score", "isolation_distance", "l_ratio",
@@ -1126,8 +1058,7 @@ def compute_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, epoch_tuples=params_dict["epoch_tuples"],
-                    epoch_names=params_dict["epoch_names"], verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names or "silhouette_score" in metric_names \
         or "isolation_distance" in metric_names or "l_ratio" in metric_names or "d_prime" in metric_names \
@@ -1149,98 +1080,76 @@ def compute_metrics(
 
     if "num_spikes" in metric_names:
         ns = NumSpikes(metric_data=md)
-        num_spikes_epochs = ns.compute_metric(**kwargs)
-        metrics_epochs.append(num_spikes_epochs)
-        metrics_dict['num_spikes'] = num_spikes_epochs
+        num_spikes = ns.compute_metric(**kwargs)
+        metrics_dict['num_spikes'] = num_spikes
 
     if "firing_rate" in metric_names:
         fr = FiringRate(metric_data=md)
-        firing_rate_epochs = fr.compute_metric(**kwargs)
-        metrics_epochs.append(firing_rate_epochs)
-        metrics_dict['firing_rate'] = firing_rate_epochs
+        firing_rates = fr.compute_metric(**kwargs)
+        metrics_dict['firing_rate'] = firing_rates
 
     if "presence_ratio" in metric_names:
         pr = PresenceRatio(metric_data=md)
-        presence_ratio_epochs = pr.compute_metric(**kwargs)
-        metrics_epochs.append(presence_ratio_epochs)
-        metrics_dict['presence_ratio'] = presence_ratio_epochs
+        presence_ratios = pr.compute_metric(**kwargs)
+        metrics_dict['presence_ratio'] = presence_ratios
 
     if "isi_viol" in metric_names:
         iv = ISIViolation(metric_data=md)
-        isi_violation_epochs = iv.compute_metric(isi_threshold, min_isi, **kwargs)
-        metrics_epochs.append(isi_violation_epochs)
-        metrics_dict['isi_viol'] = isi_violation_epochs
+        isi_violations = iv.compute_metric(isi_threshold, min_isi, **kwargs)
+        metrics_dict['isi_viol'] = isi_violations
 
     if "amplitude_cutoff" in metric_names:
         ac = AmplitudeCutoff(metric_data=md)
-        amplitude_cutoffs_epochs = ac.compute_metric(**kwargs)
-        metrics_epochs.append(amplitude_cutoffs_epochs)
-        metrics_dict['amplitude_cutoff'] = amplitude_cutoffs_epochs
+        amplitude_cutoffs = ac.compute_metric(**kwargs)
+        metrics_dict['amplitude_cutoff'] = amplitude_cutoffs
 
     if "snr" in metric_names:
         snr = SNR(metric_data=md)
-        snr_epochs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
+        snrs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
                                         template_mode, max_channel_peak, **kwargs)
-        metrics_epochs.append(snr_epochs)
-        metrics_dict['snr'] = snr_epochs
+        metrics_dict['snr'] = snrs
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names:
         dm = DriftMetric(metric_data=md)
-        dm_metrics_epochs = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
-        max_drifts_epochs = []
-        cumulative_drifts_epochs = []
-        for dm_metric in dm_metrics_epochs:
-            max_drifts_epochs.append(dm_metric[0])
-            cumulative_drifts_epochs.append(dm_metric[1])
+        max_drifts, cumulative_drifts = dm.compute_metric(drift_metrics_interval_s, drift_metrics_min_spikes_per_interval, **kwargs)
         if "max_drift" in metric_names:
-            metrics_epochs.append(max_drifts_epochs)
-            metrics_dict['max_drift'] = max_drifts_epochs
+            metrics_dict['max_drift'] = max_drifts
         if "cumulative_drift" in metric_names:
-            metrics_epochs.append(cumulative_drifts_epochs)
-            metrics_dict['cumulative_drift'] = cumulative_drifts_epochs
+            metrics_dict['cumulative_drift'] = cumulative_drifts
 
     if "silhouette_score" in metric_names:
         silhouette_score = SilhouetteScore(metric_data=md)
-        silhouette_score_epochs = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
-        metrics_epochs.append(silhouette_score_epochs)
-        metrics_dict['silhouette_score'] = silhouette_score_epochs
+        silhouette_scores = silhouette_score.compute_metric(max_spikes_for_silhouette, **kwargs)
+        metrics_dict['silhouette_score'] = silhouette_scores
 
     if "isolation_distance" in metric_names:
         isolation_distance = IsolationDistance(metric_data=md)
-        isolation_distance_epochs = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                                      **kwargs)
-        metrics_epochs.append(isolation_distance_epochs)
-        metrics_dict['isolation_distance'] = isolation_distance_epochs
+        isolation_distances = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
+                                                                **kwargs)
+        metrics_dict['isolation_distance'] = isolation_distances
 
     if "l_ratio" in metric_names:
         l_ratio = LRatio(metric_data=md)
-        l_ratio_epochs = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
-        metrics_epochs.append(l_ratio_epochs)
-        metrics_dict['l_ratio'] = l_ratio_epochs
+        l_ratios = l_ratio.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
+        metrics_dict['l_ratio'] = l_ratios
 
     if "d_prime" in metric_names:
         d_prime = DPrime(metric_data=md)
-        d_prime_epochs = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
-        metrics_epochs.append(d_prime_epochs)
-        metrics_dict['d_prime'] = d_prime_epochs
+        d_primes = d_prime.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
+        metrics_dict['d_prime'] = d_primes
 
     if "nn_hit_rate" in metric_names or "nn_miss_rate" in metric_names:
         nn = NearestNeighbor(metric_data=md)
-        nn_metrics_epochs = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                              max_spikes_for_nn, n_neighbors, **kwargs)
-        nn_hit_rates_epochs = []
-        nn_miss_rates_epochs = []
-        for nn_metric in nn_metrics_epochs:
-            nn_hit_rates_epochs.append(nn_metric[0])
-            nn_miss_rates_epochs.append(nn_metric[1])
+        nn_hit_rates, nn_miss_rates= nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
+                                                       max_spikes_for_nn, n_neighbors, **kwargs)
         if "nn_hit_rate" in metric_names:
-            metrics_epochs.append(nn_hit_rates_epochs)
-            metrics_dict['nn_hit_rate'] = nn_hit_rates_epochs
+            metrics_dict['nn_hit_rate'] = nn_hit_rates
         if "nn_miss_rate" in metric_names:
-            metrics_epochs.append(nn_miss_rates_epochs)
-            metrics_dict['nn_miss_rate'] = nn_miss_rates_epochs
+            metrics_dict['nn_miss_rate'] = nn_miss_rates
 
-    if return_dict:
-        return metrics_dict
+    if as_dataframe:
+        metrics = pandas.DataFrame.from_dict(metrics_dict)
+        metrics = metrics.rename(index={original_idx:unit_ids[i] for i, original_idx in enumerate(range(len(metrics)))})
     else:
-        return metrics_epochs
+        metrics = metrics_dict
+    return metrics
