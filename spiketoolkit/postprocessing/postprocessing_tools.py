@@ -190,14 +190,14 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                 print("RecordingExtractor is not dumpable and can't be processedin parallel")
             rec_arg = recording
         else:
-            rec_arg = recording.make_serialized_dict(include_properties=['location', 'group'])
+            rec_arg = recording.make_serialized_dict()
         if not sorting.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
                 print("SortingExtractor is not dumpable and can't be processed in parallel")
             sort_arg = sorting
         else:
-            sort_arg = sorting.make_serialized_dict(include_properties=['group'])
+            sort_arg = sorting.make_serialized_dict()
 
         fs = recording.get_sampling_frequency()
         n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
