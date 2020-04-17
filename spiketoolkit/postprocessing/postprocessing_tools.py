@@ -190,14 +190,14 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                 print("RecordingExtractor is not dumpable and can't be processedin parallel")
             rec_arg = recording
         else:
-            rec_arg = recording.make_serialized_dict(include_properties=['location', 'group'])
+            rec_arg = recording.dump_to_dict()
         if not sorting.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
                 print("SortingExtractor is not dumpable and can't be processed in parallel")
             sort_arg = sorting
         else:
-            sort_arg = sorting.make_serialized_dict(include_properties=['group'])
+            sort_arg = sorting.dump_to_dict()
 
         fs = recording.get_sampling_frequency()
         n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
@@ -371,13 +371,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None,
             template_list.append(template)
     else:
         if _waveforms is None:
-            waveforms = []
-            for i, unit_id in enumerate(unit_ids):
-                if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id) and not recompute_info:
-                    wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
-                else:
-                    wf = get_unit_waveforms(recording, sorting, unit_id, channel_ids, return_idxs=False, **kwargs)[0]
-                waveforms.append(wf)
+            waveforms = get_unit_waveforms(recording, sorting, unit_ids, channel_ids, return_idxs=False, **kwargs)
         else:
             waveforms = _waveforms
 
