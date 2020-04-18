@@ -19,7 +19,6 @@ from spiketoolkit.curation import (
     get_curation_params
 )
 
-
 from spiketoolkit.validation import (
     compute_num_spikes,
     compute_firing_rates,
@@ -36,9 +35,9 @@ from spiketoolkit.validation import (
 )
 
 
-
 def test_thresh_num_spikes():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold = 25
 
     sort_ns = threshold_num_spikes(sort, s_threshold, 'less')
@@ -50,7 +49,8 @@ def test_thresh_num_spikes():
 
 
 def test_thresh_isi_violations():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold = 0.01
 
     sort_isi = threshold_isi_violations(sort, s_threshold, 'greater')
@@ -62,7 +62,8 @@ def test_thresh_isi_violations():
 
 
 def test_thresh_presence_ratios():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold = 0.18
 
     sort_pr = threshold_presence_ratios(sort, s_threshold, 'less')
@@ -74,7 +75,8 @@ def test_thresh_presence_ratios():
 
 
 def test_thresh_amplitude_cutoffs():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
 
     amplitude_cutoff_thresh = 0
 
@@ -88,7 +90,8 @@ def test_thresh_amplitude_cutoffs():
 
 
 def test_thresh_frs():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     fr_thresh = 2
 
     sort_fr = threshold_firing_rates(sort, fr_thresh, 'less')
@@ -100,7 +103,8 @@ def test_thresh_frs():
 
 
 def test_thresh_threshold_drift_metrics():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold = 1
 
     sort_max = threshold_drift_metrics(sort, rec, s_threshold, 'greater', metric_name="max_drift",
@@ -118,7 +122,8 @@ def test_thresh_threshold_drift_metrics():
 
 
 def test_thresh_snrs():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
 
     snr_thresh = 4
 
@@ -129,9 +134,11 @@ def test_thresh_snrs():
     check_dumping(sort_snr)
     shutil.rmtree('test')
 
+
 # PCA-based
 def test_thresh_isolation_distances():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold = 200
 
     iso = compute_isolation_distances(sort, rec, apply_filter=False, seed=0)[0]
@@ -148,7 +155,8 @@ def test_thresh_isolation_distances():
 
 
 def test_thresh_silhouettes():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     silhouette_thresh = .5
 
     silhouette = np.asarray(compute_silhouette_scores(sort, rec, apply_filter=False, seed=0)[0])
@@ -165,7 +173,8 @@ def test_thresh_silhouettes():
 
 
 def test_thresh_nn_metrics():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     s_threshold_hit = 0.9
     s_threshold_miss = 0.002
 
@@ -192,7 +201,8 @@ def test_thresh_nn_metrics():
 
 
 def test_thresh_d_primes():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     d_primes_thresh = .5
 
     d_primes = compute_d_primes(sort, rec, apply_filter=False, seed=0)[0]
@@ -209,7 +219,8 @@ def test_thresh_d_primes():
 
 
 def test_thresh_l_ratios():
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=4, K=10, seed=0, folder='test')
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
     l_ratios_thresh = 0
 
     l_ratios = compute_l_ratios(sort, rec, apply_filter=False, seed=0)[0]
@@ -243,6 +254,3 @@ if __name__ == "__main__":
     test_thresh_l_ratios()
     test_thresh_threshold_drift_metrics()
     test_thresh_nn_metrics()
-
-
-
