@@ -21,7 +21,7 @@ pca_params_dict = OrderedDict([('n_comp', 3), ('by_electrode', True), ('max_spik
                                ('whiten', False)])
 
 common_params_dict = OrderedDict([('max_spikes_per_unit', 300), ('recompute_info', False),
-                                  ('save_property_or_features', True), ('memmap', False), ('seed', 0),
+                                  ('save_property_or_features', True), ('memmap', True), ('seed', 0),
                                   ('verbose', False)])
 
 
@@ -187,7 +187,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         if not recording.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
-                print("RecordingExtractor is not dumpable and can't be processedin parallel")
+                print("RecordingExtractor is not dumpable and can't be processed in parallel")
             rec_arg = recording
         else:
             rec_arg = recording.dump_to_dict()
