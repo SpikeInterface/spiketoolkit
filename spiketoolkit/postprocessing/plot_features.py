@@ -292,10 +292,10 @@ def plot_metrics(sorting, recording, unit_id, invert_template=False, savedir=Non
     )
 
     if savedir is None:
-        fig.show()
-        # plotly.offline.plot(fig)
+        # fig.show()
+        plotly.offline.plot(fig)
     else:
-        savename = f'{unit_id}_metrics.png'
+        savename = f'{savedir}/{unit_id}_metrics.png'
         print(f'saving: {savename}')
         fig.write_image(savename)
 
