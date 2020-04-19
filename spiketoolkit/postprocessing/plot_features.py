@@ -280,20 +280,20 @@ def plot_metrics(sorting, recording, unit_id, invert_template=False, savedir=Non
     )
     fig.update_layout(
         title=f'unit: {unit_id}',
-        width=1500,
-        height=600,
+        width=1200,
+        height=500,
         margin=dict(
             t=50,
             l=0,
             r=0,
             b=0,
         ),
-        legend=dict(x=0.7, y=0.5)
+        legend=dict(x=0.7, y=0.4)
     )
 
     if savedir is None:
-        # fig.show()
-        plotly.offline.plot(fig)
+        fig.show()
+        # plotly.offline.plot(fig)
     else:
         savename = f'{unit_id}_metrics.png'
         print(f'saving: {savename}')
