@@ -21,8 +21,8 @@ pca_params_dict = OrderedDict([('n_comp', 3), ('by_electrode', True), ('max_spik
                                ('whiten', False)])
 
 common_params_dict = OrderedDict([('max_spikes_per_unit', 300), ('recompute_info', False),
-                                  ('save_property_or_features', True), ('memmap', False), ('seed', 0),
-                                  ('verbose', False)])
+                                  ('save_property_or_features', True), ('memmap', True), ('seed', 0),
+                                  ('verbose', False), ('joblib_backend', 'loky')])
 
 
 def get_waveforms_params():
@@ -152,6 +152,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
     compute_property_from_recording = params_dict['compute_property_from_recording']
     memmap = params_dict['memmap']
     n_jobs = params_dict['n_jobs']
+    joblib_backend = params_dict['joblib_backend']
     max_channels_per_waveforms = params_dict['max_channels_per_waveforms']
     seed = params_dict['seed']
     verbose = params_dict['verbose']
@@ -187,17 +188,17 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         if not recording.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
-                print("RecordingExtractor is not dumpable and can't be processedin parallel")
+                print("RecordingExtractor is not dumpable and can't be processed in parallel")
             rec_arg = recording
         else:
-            rec_arg = recording.make_serialized_dict()
+            rec_arg = recording.dump_to_dict()
         if not sorting.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
                 print("SortingExtractor is not dumpable and can't be processed in parallel")
             sort_arg = sorting
         else:
-            sort_arg = sorting.make_serialized_dict()
+            sort_arg = sorting.dump_to_dict()
 
         fs = recording.get_sampling_frequency()
         n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
@@ -255,7 +256,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     shape = (len_wf, n_channels, sum(n_pad))
                     arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                     memmap_arrays.append(arr)
-                output_list = Parallel(n_jobs=n_jobs)(
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                     delayed(_extract_waveforms_one_unit)(unit, rec_arg, sort_arg, channel_ids,
                                                          unit_ids, grouping_property,
                                                          compute_property_from_recording,
@@ -268,7 +269,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     spike_index_list.append(out[1])
                     channel_index_list.append(out[2])
             else:
-                output_list = Parallel(n_jobs=n_jobs)(
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                     delayed(_extract_waveforms_one_unit)(unit, rec_arg, sort_arg, channel_ids,
                                                          unit_ids, grouping_property,
                                                          compute_property_from_recording,
@@ -371,13 +372,7 @@ def get_unit_templates(recording, sorting, unit_ids=None, channel_ids=None,
             template_list.append(template)
     else:
         if _waveforms is None:
-            waveforms = []
-            for i, unit_id in enumerate(unit_ids):
-                if 'waveforms' in sorting.get_unit_spike_feature_names(unit_id) and not recompute_info:
-                    wf = sorting.get_unit_spike_features(unit_id, 'waveforms')
-                else:
-                    wf = get_unit_waveforms(recording, sorting, unit_id, channel_ids, return_idxs=False, **kwargs)[0]
-                waveforms.append(wf)
+            waveforms = get_unit_waveforms(recording, sorting, unit_ids, channel_ids, return_idxs=False, **kwargs)
         else:
             waveforms = _waveforms
 
