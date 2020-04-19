@@ -4,6 +4,7 @@ https://github.com/AllenInstitute/ecephys_spike_sorting/blob/master/ecephys_spik
 15/04/2020
 """
 
+
 import numpy as np
 from scipy.stats import linregress
 
@@ -22,15 +23,11 @@ def halfwidth(waveform, fs, max_time_after_trough):
     hw = np.empty(waveform.shape[0])
 
     for i, pkidx in enumerate(peak_idx):
-        treshold = waveform[i, pkidx] * 0.5
-        cross_pre_pk = np.where(waveform[i, :pkidx] > treshold)[0]
-        cross_post_pk = np.where(waveform[i, pkidx:] < treshold)[0]
-
-        if len(cross_pre_pk) == 0 or len(cross_post_pk) == 0:
+        cross_pre_pk, cross_post_pk = _get_halfwidth_crossing(waveform[i, :], pkidx)
+        if cross_pre_pk is None:
             hw[i] = np.nan
-            continue
-
-        hw[i] = (cross_post_pk[0] - cross_pre_pk[0]+pkidx) * (1/fs)
+        else:
+            hw[i] = (cross_post_pk - cross_pre_pk+pkidx) * (1/fs)
 
     return hw
 
@@ -43,6 +40,7 @@ def peak_trough_ratio(waveform, fs, max_time_after_trough):
     return ptratio
 
 
+# TODO: is this usefull? we allready have TTP duration and ratio
 def repolarization_slope(waveform, fs, max_time_after_trough):
     """
 
@@ -89,8 +87,14 @@ def recovery_slope(waveform, fs, max_time_after_trough, window):
     for i in range(waveform.shape[0]):
         max_idx = int(peak_idx[i] + ((window/1000)*fs))
         max_idx = np.min([max_idx, waveform.shape[1]])
-        rslope[i] = linregress(time[peak_idx[i]:max_idx], waveform[i, peak_idx[i]:max_idx])[0]
+        slope = _get_slope(time[peak_idx[i]:max_idx], waveform[i, peak_idx[i]:max_idx])
+        rslope[i] = slope[0]
     return rslope
+
+
+def _get_slope(time, waveform):
+    slope = linregress(time, waveform)
+    return slope
 
 
 def _get_trough_and_peak_idx(waveform, fs, max_time_after_trough):
@@ -110,6 +114,21 @@ def _get_trough_and_peak_idx(waveform, fs, max_time_after_trough):
 
     return trough_idx, peak_idx
 
+
+def _get_halfwidth_crossing(waveform, peak_index):
+    waveform = waveform - np.median(waveform)  # TODO add median?
+    threshold = waveform[peak_index] * 0.5
+    cross_pre_pk = np.where(waveform[:peak_index] > threshold)[0]
+    cross_post_pk = np.where(waveform[peak_index:] < threshold)[0]
+    if len(cross_pre_pk) == 0 or len(cross_post_pk) == 0:
+        return None, None
+    else:
+        return cross_pre_pk[0], cross_post_pk[0] + peak_index
+
+#
+#
+#
+#
 # TODO: add check for waveform?
 # def _check_wave_form():
 

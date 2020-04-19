@@ -5,9 +5,9 @@ This code is based on: https://github.com/AllenInstitute/ecephys_spike_sorting
 import numpy as np
 import pandas as pd
 from .postprocessing_tools import get_unit_templates
-from ..postprocessing import waveform_features_library as waveform_features
-from ..postprocessing.waveform_features_library import all_1D_features
-
+from ..postprocessing import waveform_features_utils as waveform_features
+from ..postprocessing.waveform_features_utils import all_1D_features
+from scipy.signal import resample
 
 def compute_waveform_features(
         sorting,
@@ -16,7 +16,8 @@ def compute_waveform_features(
         unit_ids=None,
         as_dict=False,
         as_dataframe=False,
-        save_property_or_features=False
+        save_property_or_features=False,
+        upsampling_factor=1,
 ):
     # Handle input parameters
     # unit ids needs to be a list
@@ -54,17 +55,22 @@ def compute_waveform_features(
     for unit_index, unit in enumerate(unit_ids):
         all_unit_features = []
         unit_template = all_templates[unit_index]
+        upsampled_template_shape = unit_template.shape[1] * upsampling_factor
+        unit_template = resample(unit_template, upsampled_template_shape, axis=1)
+
+        fs = sorting.get_sampling_frequency() * upsampling_factor
+        max_time_after_trough = 1 * upsampling_factor  #
 
         # TODO: parameter handling
         feature_params = dict(
             waveform=unit_template,
-            fs=sorting.get_sampling_frequency(),
+            fs=fs,
             max_time_after_trough=1,
         )
 
         for feature_name in feature_names:
             if feature_name == 'recovery_slope':
-                feature_params['window'] = 0.7
+                feature_params['window'] = 0.7  # TODO: not hardcode this
             feature_values = getattr(waveform_features, feature_name)(**feature_params)
             all_unit_features.append(feature_values)
 
