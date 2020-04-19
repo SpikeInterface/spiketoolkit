@@ -25,6 +25,7 @@ class FiringRate(QualityMetric):
             self._metric_data._spike_times,
             self._metric_data._spike_clusters,
             self._metric_data._total_units,
+            duration=self._metric_data._duration,
             verbose=self._metric_data.verbose,
         )
         firing_rate_list = []

@@ -22,6 +22,7 @@ import pandas
 
 def compute_num_spikes(
         sorting,
+        duration,
         sampling_frequency=None,
         unit_ids=None,
         **kwargs
@@ -33,6 +34,8 @@ def compute_num_spikes(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated
+    duration: int
+        Length of recording (in frames).
     sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     unit_ids: list
@@ -56,7 +59,8 @@ def compute_num_spikes(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=duration, verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
     num_spikes = ns.compute_metric(**kwargs)
@@ -65,6 +69,7 @@ def compute_num_spikes(
 
 def compute_firing_rates(
         sorting,
+        duration,
         sampling_frequency=None,
         unit_ids=None,
         **kwargs
@@ -75,7 +80,9 @@ def compute_firing_rates(
     Parameters
     ----------
     sorting: SortingExtractor
-        The sorting result to be evaluated
+        The sorting result to be evaluated.
+    duration: int
+        Length of recording (in frames).
     sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     unit_ids: list
@@ -99,7 +106,8 @@ def compute_firing_rates(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=duration, verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
     firing_rates = fr.compute_metric(**kwargs)
@@ -108,6 +116,7 @@ def compute_firing_rates(
 
 def compute_presence_ratios(
         sorting,
+        duration,
         sampling_frequency=None,
         unit_ids=None,
         **kwargs
@@ -119,6 +128,8 @@ def compute_presence_ratios(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated.
+    duration: int
+        Length of recording (in frames).
     sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     unit_ids: list
@@ -142,7 +153,8 @@ def compute_presence_ratios(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=duration, verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
     presence_ratios = pr.compute_metric(**kwargs)
@@ -151,6 +163,7 @@ def compute_presence_ratios(
 
 def compute_isi_violations(
         sorting,
+        duration,
         isi_threshold=ISIViolation.params['isi_threshold'],
         min_isi=ISIViolation.params['min_isi'],
         sampling_frequency=None,
@@ -164,7 +177,9 @@ def compute_isi_violations(
     Parameters
     ----------
     sorting: SortingExtractor
-        The sorting result to be evaluated
+        The sorting result to be evaluated.
+    duration: int
+        Length of recording (in frames).
     isi_threshold: float
         The isi threshold for calculating isi violations
     min_isi: float
@@ -192,7 +207,8 @@ def compute_isi_violations(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=duration, verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
     isi_violations = iv.compute_metric(isi_threshold, min_isi, **kwargs)
@@ -259,7 +275,8 @@ def compute_amplitude_cutoffs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_amplitudes(**kwargs)
     ac = AmplitudeCutoff(metric_data=md)
@@ -358,7 +375,7 @@ def compute_snrs(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    duration=None, freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     snr = SNR(metric_data=md)
     snrs = snr.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
@@ -445,7 +462,7 @@ def compute_silhouette_scores(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    duration=None, freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -536,7 +553,8 @@ def compute_d_primes(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -627,7 +645,8 @@ def compute_l_ratios(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -719,7 +738,8 @@ def compute_isolation_distances(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -817,7 +837,8 @@ def compute_nn_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -908,7 +929,8 @@ def compute_drift_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=None, verbose=params_dict['verbose'])
 
     md.compute_pca_scores(**kwargs)
 
@@ -920,6 +942,7 @@ def compute_drift_metrics(
 def compute_quality_metrics(
         sorting,
         recording=None,
+        duration=None,
         sampling_frequency=None,
         metric_names=None,
         unit_ids=None,
@@ -949,6 +972,10 @@ def compute_quality_metrics(
         The sorting result to be evaluated.
     recording: RecordingExtractor
         The given recording extractor from which to extract amplitudes
+    duration: int
+        Length of recording (in frames).
+    sampling_frequency: float
+        The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     metric_names: list
         List of metric names to be computed
     unit_ids: list
@@ -1058,7 +1085,8 @@ def compute_quality_metrics(
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=recording,
                     apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
-                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, verbose=params_dict['verbose'])
+                    freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
+                    duration=duration, verbose=params_dict['verbose'])
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names or "silhouette_score" in metric_names \
         or "isolation_distance" in metric_names or "l_ratio" in metric_names or "d_prime" in metric_names \

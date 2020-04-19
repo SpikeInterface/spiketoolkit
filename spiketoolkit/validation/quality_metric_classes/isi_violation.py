@@ -27,6 +27,7 @@ class ISIViolation(QualityMetric):
             self._metric_data._total_units,
             isi_threshold=isi_threshold,
             min_isi=min_isi,
+            duration=self._metric_data._duration,
             verbose=self._metric_data.verbose,
         )
         isi_violation_list = []
