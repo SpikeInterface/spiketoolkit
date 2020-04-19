@@ -22,7 +22,7 @@ pca_params_dict = OrderedDict([('n_comp', 3), ('by_electrode', True), ('max_spik
 
 common_params_dict = OrderedDict([('max_spikes_per_unit', 300), ('recompute_info', False),
                                   ('save_property_or_features', True), ('memmap', True), ('seed', 0),
-                                  ('verbose', False)])
+                                  ('verbose', False), ('joblib_backend', 'loky')])
 
 
 def get_waveforms_params():
@@ -152,6 +152,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
     compute_property_from_recording = params_dict['compute_property_from_recording']
     memmap = params_dict['memmap']
     n_jobs = params_dict['n_jobs']
+    joblib_backend = params_dict['joblib_backend']
     max_channels_per_waveforms = params_dict['max_channels_per_waveforms']
     seed = params_dict['seed']
     verbose = params_dict['verbose']
@@ -255,7 +256,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     shape = (len_wf, n_channels, sum(n_pad))
                     arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                     memmap_arrays.append(arr)
-                output_list = Parallel(n_jobs=n_jobs)(
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                     delayed(_extract_waveforms_one_unit)(unit, rec_arg, sort_arg, channel_ids,
                                                          unit_ids, grouping_property,
                                                          compute_property_from_recording,
@@ -268,7 +269,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                     spike_index_list.append(out[1])
                     channel_index_list.append(out[2])
             else:
-                output_list = Parallel(n_jobs=n_jobs)(
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                     delayed(_extract_waveforms_one_unit)(unit, rec_arg, sort_arg, channel_ids,
                                                          unit_ids, grouping_property,
                                                          compute_property_from_recording,
