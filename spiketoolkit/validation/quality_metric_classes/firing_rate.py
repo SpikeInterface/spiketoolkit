@@ -21,7 +21,7 @@ class FiringRate(QualityMetric):
     def compute_metric(self, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
-        firing_rate_all, _ = metrics.calculate_firing_rate_and_spikes(
+        firing_rate_all = metrics.calculate_firing_rates(
             self._metric_data._spike_times,
             self._metric_data._spike_clusters,
             self._metric_data._total_units,

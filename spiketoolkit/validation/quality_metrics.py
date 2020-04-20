@@ -22,7 +22,6 @@ import pandas
 
 def compute_num_spikes(
         sorting,
-        duration,
         sampling_frequency=None,
         unit_ids=None,
         **kwargs
@@ -34,8 +33,6 @@ def compute_num_spikes(
     ----------
     sorting: SortingExtractor
         The sorting result to be evaluated
-    duration: int
-        Length of recording (in frames).
     sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     unit_ids: list
@@ -60,7 +57,7 @@ def compute_num_spikes(
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
                     freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
-                    duration=duration, verbose=params_dict['verbose'])
+                    duration=None, verbose=params_dict['verbose'])
 
     ns = NumSpikes(metric_data=md)
     num_spikes = ns.compute_metric(**kwargs)
@@ -1088,12 +1085,16 @@ def compute_quality_metrics(
                     freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
                     duration=duration, verbose=params_dict['verbose'])
 
+    if "firing_rate" in metric_names or "presence_ratio" in metric_names or "isi_viol" in metric_names:
+        if recording is None and duration is None:
+            raise ValueError("Duration and recording cannot both be None when computing firing_rate, presence_ratio, and isi_viol")
+
     if "max_drift" in metric_names or "cumulative_drift" in metric_names or "silhouette_score" in metric_names \
         or "isolation_distance" in metric_names or "l_ratio" in metric_names or "d_prime" in metric_names \
             or "nn_hit_rate" in metric_names or "nn_miss_rate" in metric_names:
         if recording is None:
             raise ValueError("The recording cannot be None when computing max_drift, cumulative_drift, "
-                             "silhouette_score isolation_distance, l_ratio, d_prime, nn_hit_rate, amplitude_cutoff.")
+                             "silhouette_score isolation_distance, l_ratio, d_prime, nn_hit_rate, or amplitude_cutoff.")
         else:
             md.compute_pca_scores(**kwargs)
 

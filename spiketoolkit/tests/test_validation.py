@@ -10,7 +10,7 @@ def test_functions():
     rec, sort = se.example_datasets.toy_example(duration=10, num_channels=4, seed=0)
 
     firing_rates = compute_firing_rates(sort, rec.get_num_frames(), seed=0)
-    num_spikes = compute_num_spikes(sort, rec.get_num_frames(), seed=0)
+    num_spikes = compute_num_spikes(sort, seed=0)
     isi = compute_isi_violations(sort, rec.get_num_frames(), seed=0)
     presence = compute_presence_ratios(sort, rec.get_num_frames(), seed=0)
     amp_cutoff = compute_amplitude_cutoffs(sort, rec, seed=0)
