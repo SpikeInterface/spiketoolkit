@@ -19,7 +19,7 @@ class MetricData:
         self,
         sorting,
         recording,
-        duration,
+        duration_in_frames,
         sampling_frequency,
         apply_filter,
         freq_min,
@@ -36,8 +36,8 @@ class MetricData:
             The sorting extractor to be evaluated.
         recording: RecordingExtractor
             The recording extractor to be stored. If None, the recording extractor can be added later.
-        duration: int
-            Length of recording (in frames). If None, will look to recording extractor for duration.
+        duration_in_frames: int
+            Length of recording (in frames). If None, will look to recording extractor for num frames.
         sampling_frequency:
             The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
         apply_filter: bool
@@ -108,10 +108,10 @@ class MetricData:
                 freq_min=freq_min,
                 freq_max=freq_max,
             )
-            self._duration = recording.get_num_frames()
+            self._duration_in_frames = recording.get_num_frames()
         else:
             self._recording = None
-            self._duration = duration
+            self._duration_in_frames = duration_in_frames
 
     def set_recording(self, recording, apply_filter, freq_min, freq_max):
         """
