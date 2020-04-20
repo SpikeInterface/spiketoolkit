@@ -191,14 +191,20 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                 print("RecordingExtractor is not dumpable and can't be processed in parallel")
             rec_arg = recording
         else:
-            rec_arg = recording.dump_to_dict()
+            if n_jobs > 1:
+                rec_arg = recording.dump_to_dict()
+            else:
+                rec_arg = recording
         if not sorting.check_if_dumpable():
             if n_jobs > 1:
                 n_jobs = 0
                 print("SortingExtractor is not dumpable and can't be processed in parallel")
             sort_arg = sorting
         else:
-            sort_arg = sorting.dump_to_dict()
+            if n_jobs > 1:
+                sort_arg = sorting.dump_to_dict()
+            else:
+                sort_arg = sorting
 
         fs = recording.get_sampling_frequency()
         n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
@@ -207,7 +213,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
             if memmap:
                 n_channels = _get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
                                                              max_channels_per_waveforms)
-                # pre-construc memmap arrays
+                # pre-construct memmap arrays
                 for unit_id in unit_ids:
                     fname = 'waveforms_' + str(unit_id) + '.raw'
                     len_wf = len(sorting.get_unit_spike_train(unit_id))
