@@ -69,7 +69,7 @@ def test_thresh_presence_ratios():
     sort_pr = threshold_presence_ratios(sort, s_threshold, 'less', rec.get_num_frames())
     new_pr = compute_presence_ratios(sort_pr, rec.get_num_frames(), sort.get_sampling_frequency())
 
-    assert np.all(new_pr < s_threshold)
+    assert np.all(new_pr >= s_threshold)
     check_dumping(sort_pr)
     shutil.rmtree('test')
 
