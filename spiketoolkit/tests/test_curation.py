@@ -69,7 +69,7 @@ def test_thresh_presence_ratios():
     sort_pr = threshold_presence_ratios(sort, s_threshold, 'less', rec.get_num_frames())
     new_pr = compute_presence_ratios(sort_pr, sort.get_sampling_frequency())
 
-    assert np.all(new_pr >= s_threshold)
+    assert np.all(new_pr < s_threshold)
     check_dumping(sort_pr)
     shutil.rmtree('test')
 
@@ -141,8 +141,8 @@ def test_thresh_isolation_distances():
                                                 seed=0)
     s_threshold = 200
 
-    iso = compute_isolation_distances(sort, rec, apply_filter=False, seed=0)
-    sort_iso = threshold_isolation_distances(sort, rec, s_threshold, 'less', rec.get_num_frames(), apply_filter=False, seed=0)
+    iso = compute_isolation_distances(sort, rec,  apply_filter=False, seed=0)
+    sort_iso = threshold_isolation_distances(sort, rec, s_threshold, 'less', apply_filter=False, seed=0)
 
     original_ids = sort.get_unit_ids()
     new_iso = []
@@ -241,13 +241,13 @@ def test_curation_params():
 
 
 if __name__ == "__main__":
-    # test_thresh_num_spikes()
-    # test_thresh_presence_ratios()
-    # test_thresh_frs()
+    test_thresh_num_spikes()
+    test_thresh_presence_ratios()
+    test_thresh_frs()
     test_thresh_isi_violations()
 
-    # test_thresh_snrs()
-    # test_thresh_amplitude_cutoffs()
+    test_thresh_snrs()
+    test_thresh_amplitude_cutoffs()
 
     test_thresh_silhouettes()
     test_thresh_isolation_distances()

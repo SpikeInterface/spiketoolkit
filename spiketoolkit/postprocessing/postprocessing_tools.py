@@ -1101,7 +1101,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
             empty_flag = True
     if empty_flag:
         print('Warning: empty units have been removed when being exported to Phy')
-        sorting = st.curation.threshold_num_spikes(sorting, 1)
+        sorting = st.curation.threshold_num_spikes(sorting, 1, "less")
 
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No non-empty units in the sorting result, can't save to phy.")
