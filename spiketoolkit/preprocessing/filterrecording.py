@@ -31,6 +31,9 @@ class FilterRecording(RecordingExtractor):
             offset = - 2**(exp - 1) - 1
             self._recording = TransformRecording(self._recording, offset=offset, dtype=dtype_signed)
             print(f"dtype converted from {dtype} to {dtype_signed} before filtering")
+            self._dtype = dtype_signed
+        else:
+            self._dtype = dtype
         self.copy_channel_properties(recording)
 
     def get_channel_ids(self):
@@ -41,6 +44,10 @@ class FilterRecording(RecordingExtractor):
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
+
+    # avoid filtering one sample
+    def get_dtype(self):
+        return self._dtype
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
@@ -65,7 +72,7 @@ class FilterRecording(RecordingExtractor):
                 pos += (end0-start0)
         else:
             filtered_chunk = self.filter_chunk(start_frame=start_frame, end_frame=end_frame)[channel_ids, :]
-        return filtered_chunk
+        return filtered_chunk.astype(self._dtype)
 
     @abstractmethod
     def filter_chunk(self, *, start_frame, end_frame):

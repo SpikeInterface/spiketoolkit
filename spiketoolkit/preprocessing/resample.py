@@ -20,6 +20,7 @@ class ResampleRecording(RecordingExtractor):
         self._recording = recording
         self._resample_rate = resample_rate
         RecordingExtractor.__init__(self)
+        self._dtype = recording.get_dtype()
         self.copy_channel_properties(recording)
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'resample_rate': resample_rate}
@@ -29,6 +30,10 @@ class ResampleRecording(RecordingExtractor):
 
     def get_num_frames(self):
         return int(self._recording.get_num_frames() / self._recording.get_sampling_frequency() * self._resample_rate)
+
+    # avoid filtering one sample
+    def get_dtype(self):
+        return self._dtype
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
@@ -47,7 +52,7 @@ class ResampleRecording(RecordingExtractor):
                                                axis=1)
         else:
             traces_resampled = signal.resample(traces, int(end_frame_sampled - start_frame_sampled), axis=1)
-        return traces_resampled
+        return traces_resampled.astype(self._dtype)
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
