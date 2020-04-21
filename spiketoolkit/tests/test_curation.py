@@ -54,7 +54,7 @@ def test_thresh_isi_violations():
     s_threshold = 0.01
 
     sort_isi = threshold_isi_violations(sort, s_threshold, 'greater', rec.get_num_frames())
-    new_isi = compute_isi_violations(sort_isi, sort.get_sampling_frequency())
+    new_isi = compute_isi_violations(sort_isi, rec.get_num_frames(), sort.get_sampling_frequency())
 
     assert np.all(new_isi <= s_threshold)
     check_dumping(sort_isi)
@@ -67,7 +67,7 @@ def test_thresh_presence_ratios():
     s_threshold = 0.18
 
     sort_pr = threshold_presence_ratios(sort, s_threshold, 'less', rec.get_num_frames())
-    new_pr = compute_presence_ratios(sort_pr, sort.get_sampling_frequency())
+    new_pr = compute_presence_ratios(sort_pr, rec.get_num_frames(), sort.get_sampling_frequency())
 
     assert np.all(new_pr < s_threshold)
     check_dumping(sort_pr)
