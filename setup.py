@@ -22,7 +22,7 @@ setup(
         'numpy',
         'spikeextractors',
         'spikesorters',
-        'spikemetrics',
+        'spikemetrics >= 0.1.5',
         'scikit-learn',
         'scipy',
         'pandas',

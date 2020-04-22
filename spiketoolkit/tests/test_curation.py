@@ -41,7 +41,7 @@ def test_thresh_num_spikes():
     s_threshold = 25
 
     sort_ns = threshold_num_spikes(sort, s_threshold, 'less')
-    new_ns = compute_num_spikes(sort_ns, sort.get_sampling_frequency())[0]
+    new_ns = compute_num_spikes(sort_ns, sort.get_sampling_frequency())
 
     assert np.all(new_ns >= s_threshold)
     check_dumping(sort_ns)
@@ -53,8 +53,8 @@ def test_thresh_isi_violations():
                                                 seed=0)
     s_threshold = 0.01
 
-    sort_isi = threshold_isi_violations(sort, s_threshold, 'greater')
-    new_isi = compute_isi_violations(sort_isi, sort.get_sampling_frequency())[0]
+    sort_isi = threshold_isi_violations(sort, s_threshold, 'greater', rec.get_num_frames())
+    new_isi = compute_isi_violations(sort_isi, rec.get_num_frames(), sort.get_sampling_frequency())
 
     assert np.all(new_isi <= s_threshold)
     check_dumping(sort_isi)
@@ -66,8 +66,8 @@ def test_thresh_presence_ratios():
                                                 seed=0)
     s_threshold = 0.18
 
-    sort_pr = threshold_presence_ratios(sort, s_threshold, 'less')
-    new_pr = compute_presence_ratios(sort_pr, sort.get_sampling_frequency())[0]
+    sort_pr = threshold_presence_ratios(sort, s_threshold, 'less', rec.get_num_frames())
+    new_pr = compute_presence_ratios(sort_pr, rec.get_num_frames(), sort.get_sampling_frequency())
 
     assert np.all(new_pr >= s_threshold)
     check_dumping(sort_pr)
@@ -82,7 +82,7 @@ def test_thresh_amplitude_cutoffs():
 
     sort_amplitude_cutoff = threshold_amplitude_cutoffs(sort, rec, amplitude_cutoff_thresh, "less",
                                                         apply_filter=False, seed=0)
-    new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec, apply_filter=False, seed=0)[0]
+    new_amplitude_cutoff = compute_amplitude_cutoffs(sort_amplitude_cutoff, rec, apply_filter=False, seed=0)
 
     assert np.all(new_amplitude_cutoff >= amplitude_cutoff_thresh)
     check_dumping(sort_amplitude_cutoff)
@@ -94,8 +94,8 @@ def test_thresh_frs():
                                                 seed=0)
     fr_thresh = 2
 
-    sort_fr = threshold_firing_rates(sort, fr_thresh, 'less')
-    new_fr = compute_firing_rates(sort_fr)[0]
+    sort_fr = threshold_firing_rates(sort, fr_thresh, 'less', rec.get_num_frames())
+    new_fr = compute_firing_rates(sort_fr, rec.get_num_frames())
 
     assert np.all(new_fr >= fr_thresh)
     check_dumping(sort_fr)
@@ -111,8 +111,8 @@ def test_thresh_threshold_drift_metrics():
                                        apply_filter=False, seed=0)
     sort_cum = threshold_drift_metrics(sort, rec, s_threshold, 'greater', metric_name="cumulative_drift",
                                        apply_filter=False, seed=0)
-    new_max_drift, _ = compute_drift_metrics(sort_max, rec, apply_filter=False, seed=0)[0]
-    _, new_cum_drift = compute_drift_metrics(sort_cum, rec, apply_filter=False, seed=0)[0]
+    new_max_drift, _ = compute_drift_metrics(sort_max, rec, apply_filter=False, seed=0)
+    _, new_cum_drift = compute_drift_metrics(sort_cum, rec, apply_filter=False, seed=0)
 
     assert np.all(new_max_drift <= s_threshold)
     assert np.all(new_cum_drift <= s_threshold)
@@ -128,7 +128,7 @@ def test_thresh_snrs():
     snr_thresh = 4
 
     sort_snr = threshold_snrs(sort, rec, snr_thresh, 'less', apply_filter=False, seed=0)
-    new_snr = compute_snrs(sort_snr, rec, apply_filter=False, seed=0)[0]
+    new_snr = compute_snrs(sort_snr, rec, apply_filter=False, seed=0)
 
     assert np.all(new_snr >= snr_thresh)
     check_dumping(sort_snr)
@@ -141,7 +141,7 @@ def test_thresh_isolation_distances():
                                                 seed=0)
     s_threshold = 200
 
-    iso = compute_isolation_distances(sort, rec, apply_filter=False, seed=0)[0]
+    iso = compute_isolation_distances(sort, rec,  apply_filter=False, seed=0)
     sort_iso = threshold_isolation_distances(sort, rec, s_threshold, 'less', apply_filter=False, seed=0)
 
     original_ids = sort.get_unit_ids()
@@ -159,7 +159,7 @@ def test_thresh_silhouettes():
                                                 seed=0)
     silhouette_thresh = .5
 
-    silhouette = np.asarray(compute_silhouette_scores(sort, rec, apply_filter=False, seed=0)[0])
+    silhouette = compute_silhouette_scores(sort, rec, apply_filter=False, seed=0)
     sort_silhouette = threshold_silhouette_scores(sort, rec, silhouette_thresh, "less", apply_filter=False, seed=0)
 
     original_ids = sort.get_unit_ids()
@@ -178,7 +178,7 @@ def test_thresh_nn_metrics():
     s_threshold_hit = 0.9
     s_threshold_miss = 0.002
 
-    nn_hit, nn_miss = compute_nn_metrics(sort, rec, apply_filter=False, seed=0)[0]
+    nn_hit, nn_miss = compute_nn_metrics(sort, rec, apply_filter=False, seed=0)
     sort_hit = threshold_nn_metrics(sort, rec, s_threshold_hit, 'less', metric_name="nn_hit_rate",
                                     apply_filter=False, seed=0)
     sort_miss = threshold_nn_metrics(sort, rec, s_threshold_miss, 'greater', metric_name="nn_miss_rate",
@@ -205,7 +205,7 @@ def test_thresh_d_primes():
                                                 seed=0)
     d_primes_thresh = .5
 
-    d_primes = compute_d_primes(sort, rec, apply_filter=False, seed=0)[0]
+    d_primes = compute_d_primes(sort, rec, apply_filter=False, seed=0)
     sort_d_primes = threshold_d_primes(sort, rec, d_primes_thresh, "less", apply_filter=False, seed=0)
 
     original_ids = sort.get_unit_ids()
@@ -223,7 +223,7 @@ def test_thresh_l_ratios():
                                                 seed=0)
     l_ratios_thresh = 0
 
-    l_ratios = compute_l_ratios(sort, rec, apply_filter=False, seed=0)[0]
+    l_ratios = compute_l_ratios(sort, rec, apply_filter=False, seed=0)
     sort_l_ratios = threshold_l_ratios(sort, rec, l_ratios_thresh, "less", apply_filter=False, seed=0)
 
     original_ids = sort.get_unit_ids()
@@ -241,13 +241,13 @@ def test_curation_params():
 
 
 if __name__ == "__main__":
-    # test_thresh_num_spikes()
-    # test_thresh_presence_ratios()
-    # test_thresh_frs()
+    test_thresh_num_spikes()
+    test_thresh_presence_ratios()
+    test_thresh_frs()
     test_thresh_isi_violations()
 
-    # test_thresh_snrs()
-    # test_thresh_amplitude_cutoffs()
+    test_thresh_snrs()
+    test_thresh_amplitude_cutoffs()
 
     test_thresh_silhouettes()
     test_thresh_isolation_distances()

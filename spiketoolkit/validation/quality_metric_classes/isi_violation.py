@@ -21,28 +21,25 @@ class ISIViolation(QualityMetric):
     def compute_metric(self, isi_threshold, min_isi, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
-        isi_violation_epochs = []
-        for epoch in self._metric_data._epochs:
-            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times)
-            isi_violation_all = metrics.calculate_isi_violations(
-                self._metric_data._spike_times[in_epoch],
-                self._metric_data._spike_clusters[in_epoch],
-                self._metric_data._total_units,
-                isi_threshold=isi_threshold,
-                min_isi=min_isi,
-                verbose=self._metric_data.verbose,
-            )
-            isi_violation_list = []
-            for i in self._metric_data._unit_indices:
-                isi_violation_list.append(isi_violation_all[i])
-            isi_violation = np.asarray(isi_violation_list)
-            isi_violation_epochs.append(isi_violation)
+        isi_violation_all = metrics.calculate_isi_violations(
+            self._metric_data._spike_times,
+            self._metric_data._spike_clusters,
+            self._metric_data._total_units,
+            isi_threshold=isi_threshold,
+            min_isi=min_isi,
+            duration=self._metric_data._duration_in_frames/self._metric_data._sampling_frequency,
+            verbose=self._metric_data.verbose,
+        )
+        isi_violation_list = []
+        for i in self._metric_data._unit_indices:
+            isi_violation_list.append(isi_violation_all[i])
+        isi_violations = np.asarray(isi_violation_list)
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, isi_violation_epochs, self._metric_name)
-        return isi_violation_epochs
+            self.save_property_or_features(self._metric_data._sorting, isi_violations, self._metric_name)
+        return isi_violations
 
     def threshold_metric(self, threshold, threshold_sign, isi_threshold, min_isi, **kwargs):
-        isi_violation_epochs = self.compute_metric(isi_threshold, min_isi, **kwargs)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=isi_violation_epochs)
+        isi_violations = self.compute_metric(isi_threshold, min_isi, **kwargs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metric=isi_violations)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator

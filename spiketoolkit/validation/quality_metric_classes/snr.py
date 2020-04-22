@@ -25,50 +25,44 @@ class SNR(QualityMetric):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']
-
-        snrs_epochs = []
-        for epoch in self._metric_data._epochs:
-            epoch_recording = self._metric_data._recording.get_epoch(epoch[0])
-            epoch_sorting = self._metric_data._sorting.get_epoch(epoch[0])
-            channel_noise_levels = _compute_channel_noise_levels(
-                recording=epoch_recording,
-                mode=snr_mode,
-                noise_duration=snr_noise_duration,
-                seed=seed,
-            )
-            templates = st.postprocessing.get_unit_templates(
-                epoch_recording,
-                epoch_sorting,
-                unit_ids=self._metric_data._unit_ids,
-                max_spikes_per_unit=max_spikes_per_unit_for_snr,
-                mode=template_mode, **kwargs
-            )
-            max_channels = st.postprocessing.get_unit_max_channels(
-                epoch_recording,
-                epoch_sorting,
-                unit_ids=self._metric_data._unit_ids,
-                max_spikes_per_unit=max_spikes_per_unit_for_snr,
-                peak=max_channel_peak,
-                mode=template_mode, **kwargs
-            )
-            snr_list = []
-            for i, unit_id in enumerate(self._metric_data._unit_ids):
-                if self._metric_data.verbose:
-                    printProgressBar(i + 1, len(self._metric_data._unit_ids))
-                max_channel_idx = epoch_recording.get_channel_ids().index(max_channels[i])
-                snr = _compute_template_SNR(templates[i], channel_noise_levels, max_channel_idx)
-                snr_list.append(snr)
-            snrs = np.asarray(snr_list)
-            snrs_epochs.append(snrs)
+        channel_noise_levels = _compute_channel_noise_levels(
+            recording=self._metric_data._recording,
+            mode=snr_mode,
+            noise_duration=snr_noise_duration,
+            seed=seed,
+        )
+        templates = st.postprocessing.get_unit_templates(
+            self._metric_data._recording,
+            self._metric_data._sorting,
+            unit_ids=self._metric_data._unit_ids,
+            max_spikes_per_unit=max_spikes_per_unit_for_snr,
+            mode=template_mode, **kwargs
+        )
+        max_channels = st.postprocessing.get_unit_max_channels(
+            self._metric_data._recording,
+            self._metric_data._sorting,
+            unit_ids=self._metric_data._unit_ids,
+            max_spikes_per_unit=max_spikes_per_unit_for_snr,
+            peak=max_channel_peak,
+            mode=template_mode, **kwargs
+        )
+        snr_list = []
+        for i, unit_id in enumerate(self._metric_data._unit_ids):
+            if self._metric_data.verbose:
+                printProgressBar(i + 1, len(self._metric_data._unit_ids))
+            max_channel_idx = self._metric_data._recording.get_channel_ids().index(max_channels[i])
+            snr = _compute_template_SNR(templates[i], channel_noise_levels, max_channel_idx)
+            snr_list.append(snr)
+        snrs = np.asarray(snr_list)
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, snrs_epochs, self._metric_name)
-        return snrs_epochs
+            self.save_property_or_features(self._metric_data._sorting, snrs, self._metric_name)
+        return snrs
 
     def threshold_metric(self, threshold, threshold_sign, snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
                          template_mode, max_channel_peak, **kwargs):
-        snrs_epochs = self.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
-                                          template_mode, max_channel_peak, **kwargs)[0]
-        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metrics_epoch=snrs_epochs)
+        snrs = self.compute_metric(snr_mode, snr_noise_duration, max_spikes_per_unit_for_snr,
+                                   template_mode, max_channel_peak, **kwargs)
+        threshold_curator = ThresholdCurator(sorting=self._metric_data._sorting, metric=snrs)
         threshold_curator.threshold_sorting(threshold=threshold, threshold_sign=threshold_sign)
         return threshold_curator
 

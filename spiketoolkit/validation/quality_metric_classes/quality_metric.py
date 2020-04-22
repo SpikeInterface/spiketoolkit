@@ -42,10 +42,6 @@ class QualityMetric(ABC):
         '''
         pass
 
-    def save_property_or_features(self, sorting, metric_epochs, metric_name):
-        if len(self._metric_data.get_epochs()) == 1:
-            metric = metric_epochs[0]
-            for i_u, u in enumerate(self._metric_data._unit_ids):
-                sorting.set_unit_property(u, metric_name, metric[i_u])
-        else:
-            pass
+    def save_property_or_features(self, sorting, metric, metric_name):
+        for i_u, u in enumerate(self._metric_data._unit_ids):
+            sorting.set_unit_property(u, metric_name, metric[i_u])
