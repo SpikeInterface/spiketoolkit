@@ -94,7 +94,9 @@ def compute_unit_template_features(
     if feature_names is None:
         feature_names = features.all_1D_features
 
-    if 'template' not in sorting.get_shared_unit_property_names():
+    if 'template' not in sorting.get_shared_unit_property_names(
+        unit_ids=unit_ids
+    ):
         all_templates = get_unit_templates(
             sorting=sorting,
             recording=recording,
