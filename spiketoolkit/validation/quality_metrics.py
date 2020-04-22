@@ -1125,7 +1125,7 @@ def compute_quality_metrics(
     if "isi_violation" in metric_names:
         iv = ISIViolation(metric_data=md)
         isi_violations = iv.compute_metric(isi_threshold, min_isi, **kwargs)
-        metrics_dict['isi_viol'] = isi_violations
+        metrics_dict['isi_violation'] = isi_violations
 
     if "amplitude_cutoff" in metric_names:
         ac = AmplitudeCutoff(metric_data=md)
