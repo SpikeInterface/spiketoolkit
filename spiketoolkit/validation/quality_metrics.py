@@ -1063,7 +1063,7 @@ def compute_quality_metrics(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     metrics_dict = OrderedDict()
-    all_metrics_list = ["num_spikes", "firing_rate", "presence_ratio", "isi_viol", "amplitude_cutoff", "snr",
+    all_metrics_list = ["num_spikes", "firing_rate", "presence_ratio", "isi_violation", "amplitude_cutoff", "snr",
                         "max_drift", "cumulative_drift", "silhouette_score", "isolation_distance", "l_ratio",
                         "d_prime", "nn_hit_rate", "nn_miss_rate"]
 
@@ -1085,9 +1085,9 @@ def compute_quality_metrics(
                     freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
                     duration_in_frames=duration_in_frames, verbose=params_dict['verbose'])
 
-    if "firing_rate" in metric_names or "presence_ratio" in metric_names or "isi_viol" in metric_names:
+    if "firing_rate" in metric_names or "presence_ratio" in metric_names or "isi_violation" in metric_names:
         if recording is None and duration_in_frames is None:
-            raise ValueError("duration_in_frames and recording cannot both be None when computing firing_rate, presence_ratio, and isi_viol")
+            raise ValueError("duration_in_frames and recording cannot both be None when computing firing_rate, presence_ratio, and isi_violation")
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names or "silhouette_score" in metric_names \
         or "isolation_distance" in metric_names or "l_ratio" in metric_names or "d_prime" in metric_names \
@@ -1122,10 +1122,10 @@ def compute_quality_metrics(
         presence_ratios = pr.compute_metric(**kwargs)
         metrics_dict['presence_ratio'] = presence_ratios
 
-    if "isi_viol" in metric_names:
+    if "isi_violation" in metric_names:
         iv = ISIViolation(metric_data=md)
         isi_violations = iv.compute_metric(isi_threshold, min_isi, **kwargs)
-        metrics_dict['isi_viol'] = isi_violations
+        metrics_dict['isi_violation'] = isi_violations
 
     if "amplitude_cutoff" in metric_names:
         ac = AmplitudeCutoff(metric_data=md)

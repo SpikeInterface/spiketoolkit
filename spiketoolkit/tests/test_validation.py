@@ -25,7 +25,7 @@ def test_functions():
 
     assert np.allclose(metrics['firing_rate'], firing_rates)
     assert np.allclose(metrics['num_spikes'], num_spikes)
-    assert np.allclose(metrics['isi_viol'], isi)
+    assert np.allclose(metrics['isi_violation'], isi)
     assert np.allclose(metrics['amplitude_cutoff'], amp_cutoff)
     assert np.allclose(metrics['presence_ratio'], presence)
     assert np.allclose(metrics['silhouette_score'], silh)
