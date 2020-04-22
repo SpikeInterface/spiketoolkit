@@ -1109,6 +1109,10 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         print('Warning: empty units have been removed when being exported to Phy')
         sorting = st.curation.threshold_num_spikes(sorting, 1, "less")
 
+    if not recording.is_filtered:
+        print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy."
+              "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
+
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No non-empty units in the sorting result, can't save to phy.")
 
@@ -1194,8 +1198,8 @@ def _compute_templates_similarity(templates, template_ind=None):
                 for s, sc in enumerate(shared_channel_idxs):
                     reorder_t_ind_i[s] = np.where(t_ind_i == sc)[0]
                     reorder_t_ind_j[s] = np.where(t_ind_j == sc)[0]
-                t_i_shared = t_i[reorder_t_ind_i]
-                t_j_shared = t_j[reorder_t_ind_j]
+                t_i_shared = t_i[:, reorder_t_ind_i]
+                t_j_shared = t_j[:, reorder_t_ind_j]
                 t_i_lin = t_i_shared.reshape(t_i_shared.shape[0] * t_i_shared.shape[1])
                 t_j_lin = t_j_shared.reshape(t_i_shared.shape[0] * t_i_shared.shape[1])
                 a = np.corrcoef(t_i_lin, t_j_lin)
@@ -1377,21 +1381,19 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
         sorting.clear_units_spike_features(feature_name='amplitudes')
+        sorting.clear_units_spike_features(feature_name='pca_scores')
 
-    if 'waveforms' not in sorting.get_shared_unit_spike_feature_names():
-        waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
-                                                                             max_spikes_per_unit=max_spikes_per_unit,
-                                                                             ms_before=ms_before,
-                                                                             ms_after=ms_after, dtype=dtype,
-                                                                             save_property_or_features=save_property_or_features,
-                                                                             verbose=verbose,
-                                                                             n_jobs=n_jobs,
-                                                                             seed=seed,
-                                                                             memmap=memmap, return_idxs=True,
-                                                                             max_channels_per_waveforms=
-                                                                             max_channels_per_waveforms)
-    else:
-        waveforms, spike_index_list, channel_index_list = None, None, None
+    waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
+                                                                         max_spikes_per_unit=max_spikes_per_unit,
+                                                                         ms_before=ms_before,
+                                                                         ms_after=ms_after, dtype=dtype,
+                                                                         save_property_or_features=save_property_or_features,
+                                                                         verbose=verbose,
+                                                                         n_jobs=n_jobs,
+                                                                         seed=seed,
+                                                                         memmap=memmap, return_idxs=True,
+                                                                         max_channels_per_waveforms=
+                                                                         max_channels_per_waveforms)
 
     if compute_pc_features:
         # pca scores
@@ -1409,6 +1411,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         pc_shape = pc_list[0].shape
     else:
         pc_list, pca_idxs, pc_ind, pc_shape = None, None, None, None
+
 
     # amplitudes
     amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
