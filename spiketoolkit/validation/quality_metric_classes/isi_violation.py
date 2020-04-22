@@ -9,7 +9,7 @@ from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 class ISIViolation(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    params = OrderedDict([('isi_threshold', 0.0015), ('min_isi', 0.000166)])
+    params = OrderedDict([('isi_threshold', 0.0015), ('min_isi', None)])
     curator_name = "ThresholdISIViolation"
 
     def __init__(
@@ -21,6 +21,8 @@ class ISIViolation(QualityMetric):
     def compute_metric(self, isi_threshold, min_isi, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
+        if min_isi is None:
+            min_isi = 1 / (self._metric_data._sampling_frequency) * 0.5
         isi_violation_all = metrics.calculate_isi_violations(
             self._metric_data._spike_times,
             self._metric_data._spike_clusters,
