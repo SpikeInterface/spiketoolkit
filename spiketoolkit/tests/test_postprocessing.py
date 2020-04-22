@@ -185,7 +185,7 @@ def test_export_to_phy():
     folder = 'test'
     if os.path.isdir(folder):
         shutil.rmtree(folder)
-    rec, sort = se.example_datasets.create_dumpable_extractors(folder=folder, duration=10, num_channels=8)
+    rec, sort = se.example_datasets.toy_example(dump_folder=folder, dumpable=True, duration=10, num_channels=8)
 
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
@@ -222,7 +222,7 @@ def test_set_unit_properties_by_max_channel_properties():
     folder = 'test'
     if os.path.isdir(folder):
         shutil.rmtree(folder)
-    rec, sort = se.example_datasets.create_dumpable_extractors(duration=10, num_channels=8, folder=folder)
+    rec, sort = se.example_datasets.toy_example(dump_folder=folder, dumpable=True, duration=10, num_channels=8)
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     set_unit_properties_by_max_channel_properties(rec, sort, property='group')
