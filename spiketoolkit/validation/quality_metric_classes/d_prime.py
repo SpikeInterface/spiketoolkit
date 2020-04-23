@@ -22,37 +22,32 @@ class DPrime(QualityMetric):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         seed = params_dict['seed']
         save_property_or_features = params_dict['save_property_or_features']
-
-        d_primes_epochs = []
-        for epoch in self._metric_data._epochs:
-            in_epoch = self._metric_data.get_in_epoch_bool_mask(epoch, self._metric_data._spike_times_pca)
-            d_primes_all = metrics.calculate_pc_metrics(
-                spike_clusters=self._metric_data._spike_clusters_pca[in_epoch],
-                total_units=self._metric_data._total_units,
-                pc_features=self._metric_data._pc_features[in_epoch, :, :],
-                pc_feature_ind=self._metric_data._pc_feature_ind,
-                num_channels_to_compare=num_channels_to_compare,
-                max_spikes_for_cluster=max_spikes_per_cluster,
-                spikes_for_nn=None,
-                n_neighbors=None,
-                metric_names=["d_prime"],
-                seed=seed,
-                verbose=self._metric_data.verbose,
-            )[2]
-            d_primes_list = []
-            for i in self._metric_data._unit_indices:
-                d_primes_list.append(d_primes_all[i])
-            d_primes = np.asarray(d_primes_list)
-            d_primes_epochs.append(d_primes)
+        d_primes_all = metrics.calculate_pc_metrics(
+            spike_clusters=self._metric_data._spike_clusters_pca,
+            total_units=self._metric_data._total_units,
+            pc_features=self._metric_data._pc_features,
+            pc_feature_ind=self._metric_data._pc_feature_ind,
+            num_channels_to_compare=num_channels_to_compare,
+            max_spikes_for_cluster=max_spikes_per_cluster,
+            spikes_for_nn=None,
+            n_neighbors=None,
+            metric_names=["d_prime"],
+            seed=seed,
+            verbose=self._metric_data.verbose,
+        )[2]
+        d_primes_list = []
+        for i in self._metric_data._unit_indices:
+            d_primes_list.append(d_primes_all[i])
+        d_primes = np.asarray(d_primes_list)
         if save_property_or_features:
-            self.save_property_or_features(self._metric_data._sorting, d_primes_epochs, self._metric_name)
-        return d_primes_epochs
+            self.save_property_or_features(self._metric_data._sorting, d_primes, self._metric_name)
+        return d_primes
 
     def threshold_metric(self, threshold, threshold_sign, num_channels_to_compare, max_spikes_per_cluster, **kwargs):
-        d_primes_epochs = \
-        self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)[0]
+        d_primes = \
+        self.compute_metric(num_channels_to_compare, max_spikes_per_cluster, **kwargs)
         threshold_curator = ThresholdCurator(
-            sorting=self._metric_data._sorting, metrics_epoch=d_primes_epochs
+            sorting=self._metric_data._sorting, metric=d_primes
         )
         threshold_curator.threshold_sorting(
             threshold=threshold, threshold_sign=threshold_sign

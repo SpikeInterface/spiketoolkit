@@ -19,17 +19,16 @@ class MetricData:
         self,
         sorting,
         recording,
+        duration_in_frames,
         sampling_frequency,
         apply_filter,
         freq_min,
         freq_max,
         unit_ids,
-        epoch_tuples,
-        epoch_names,
         verbose,
     ):
         """
-        Computes and stores inital data along with the unit ids and epochs to be used for computing metrics.
+        Computes and stores inital data along with the unit ids to be used for computing metrics.
 
         Parameters
         ----------
@@ -37,6 +36,8 @@ class MetricData:
             The sorting extractor to be evaluated.
         recording: RecordingExtractor
             The recording extractor to be stored. If None, the recording extractor can be added later.
+        duration_in_frames: int
+            Length of recording (in frames). If None, will look to recording extractor for num frames.
         sampling_frequency:
             The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor.
         apply_filter: bool
@@ -47,10 +48,6 @@ class MetricData:
             Low-pass frequency for optional filter (default 6000 Hz).
         unit_ids: list
             List of unit ids to compute metric for. If not specified, all units are used
-        epoch_tuples: list
-            A list of tuples with a start and end time for each epoch (in seconds)
-        epoch_names: list
-            A list of strings for the names of the given epochs.
         verbose: bool
             If True, progress bar is displayed
         """
@@ -87,7 +84,6 @@ class MetricData:
         ), "'sorting' must be  a SortingExtractor object"
         self._sorting = sorting
         self._set_unit_ids(unit_ids)
-        self._set_epochs(epoch_tuples, epoch_names)
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
         self._total_units = len(sorting.get_unit_ids())
@@ -102,18 +98,6 @@ class MetricData:
         self._spike_times_amps = None
         self.verbose = verbose
 
-        for epoch in self._epochs:
-            start_frame = epoch[1]
-            end_frame = epoch[2]
-            if start_frame is not None:
-                start_frame = start_frame * self._sampling_frequency
-            if end_frame is not None:
-                end_frame = end_frame * self._sampling_frequency
-            self._sorting.add_epoch(
-                epoch_name=epoch[0],
-                start_frame=start_frame,
-                end_frame=end_frame,
-            )
         if recording is not None:
             assert isinstance(
                 recording, RecordingExtractor
@@ -124,8 +108,10 @@ class MetricData:
                 freq_min=freq_min,
                 freq_max=freq_max,
             )
+            self._duration_in_frames = recording.get_num_frames()
         else:
             self._recording = None
+            self._duration_in_frames = duration_in_frames
 
     def set_recording(self, recording, apply_filter, freq_min, freq_max):
         """
@@ -152,18 +138,6 @@ class MetricData:
         else:
             recording_filter = recording
         self._recording = recording_filter
-        for epoch in self._epochs:
-            start_frame = epoch[1]
-            end_frame = epoch[2]
-            if start_frame is not None:
-                start_frame = start_frame * self._sampling_frequency
-            if end_frame is not None:
-                end_frame = end_frame * self._sampling_frequency
-            self._recording.add_epoch(
-                epoch_name=epoch[0],
-                start_frame=start_frame,
-                end_frame=end_frame,
-            )
 
     def is_filtered(self):
         return self._recording.is_filtered
@@ -251,49 +225,11 @@ class MetricData:
     def set_pc_feature_ind(self, pc_feature_ind):
         self._pc_feature_ind = pc_feature_ind
 
-    def _set_epochs(self, epoch_tuples, epoch_names):
-        if epoch_tuples is None:
-            if epoch_names is None:
-                epochs = [("complete_session", 0, None)]
-            else:
-                raise ValueError("No epoch tuples specified, but names given.")
-        else:
-            if epoch_names is None:
-                epochs = []
-                for i, epoch_tuple in enumerate(epoch_tuples):
-                    epoch = (str(i), epoch_tuple[0], epoch_tuple[1])
-                    epochs.append(epoch)
-            else:
-                assert len(epoch_names) == len(
-                    epoch_tuples
-                ), "Make sure the name and epoch lists are equal in length,"
-                epochs = []
-                for i, epoch_tuple in enumerate(epoch_tuples):
-                    epoch = (str(epoch_names[i]), epoch_tuple[0], epoch_tuple[1])
-                    epochs.append(epoch)
-        self._epochs = epochs
-
     def _set_unit_ids(self, unit_ids):
         self._unit_ids = unit_ids
 
-    def get_epochs(self):
-        return self._epochs
-
     def get_unit_ids(self):
         return self._unit_ids
-
-    def get_in_epoch_bool_mask(self, epoch, spike_times):
-        start_frame = epoch[1]
-        end_frame = epoch[2]
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = np.inf
-        in_epoch = np.logical_and(
-            spike_times >= start_frame, spike_times < end_frame
-        )
-        return in_epoch
-
 
 def _get_unit_indices(sorting, unit_ids):
     unit_indices = []
