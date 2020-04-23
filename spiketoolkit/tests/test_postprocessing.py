@@ -253,6 +253,14 @@ def test_compute_features():
         assert len(feat_val) == len(sort.get_unit_ids())
         assert np.all(len(f) == 2 for f in feat_val)
 
+    features = compute_unit_template_features(rec, sort, max_channels_per_features=max_chan_per_features,
+                                              upsampling_factor=10)
+    assert isinstance(features, dict)
+
+    for feat, feat_val in features.items():
+        assert len(feat_val) == len(sort.get_unit_ids())
+        assert np.all(len(f) == 2 for f in feat_val)
+
     features_df = compute_unit_template_features(rec, sort, max_channels_per_features=max_chan_per_features,
                                                  as_dataframe=True)
     assert isinstance(features_df, pandas.DataFrame)
