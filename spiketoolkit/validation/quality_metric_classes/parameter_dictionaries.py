@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from spiketoolkit.postprocessing.postprocessing_tools import get_amplitudes_params, get_waveforms_params, \
+from spiketoolkit.postprocessing.utils import get_amplitudes_params, get_waveforms_params, \
     get_common_params, get_pca_params
 import numpy as np
 
