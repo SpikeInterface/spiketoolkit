@@ -16,7 +16,7 @@ class ISIViolation(QualityMetric):
             self,
             metric_data,
     ):
-        QualityMetric.__init__(self, metric_data, metric_name="isi_viol")
+        QualityMetric.__init__(self, metric_data, metric_name="isi_violation")
 
     def compute_metric(self, isi_threshold, min_isi, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
@@ -30,6 +30,7 @@ class ISIViolation(QualityMetric):
             isi_threshold=isi_threshold,
             min_isi=min_isi,
             duration=self._metric_data._duration_in_frames/self._metric_data._sampling_frequency,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         isi_violation_list = []

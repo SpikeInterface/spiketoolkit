@@ -31,6 +31,7 @@ class SilhouetteScore(QualityMetric):
             self._metric_data._pc_feature_ind,
             spikes_for_silhouette,
             seed=seed,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         silhouette_scores_list = []

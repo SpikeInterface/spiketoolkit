@@ -24,6 +24,7 @@ class AmplitudeCutoff(QualityMetric):
             self._metric_data._spike_clusters_amps,
             self._metric_data._amplitudes,
             self._metric_data._total_units,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         amplitude_cutoffs_list = []

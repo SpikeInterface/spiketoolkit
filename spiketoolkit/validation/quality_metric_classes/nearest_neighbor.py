@@ -38,6 +38,7 @@ class NearestNeighbor(QualityMetric):
             n_neighbors=n_neighbors,
             metric_names=["nearest_neighbor"],
             seed=seed,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )[3:5]
         nn_hit_rates_list = []
