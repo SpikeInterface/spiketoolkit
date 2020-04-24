@@ -33,6 +33,7 @@ class IsolationDistance(QualityMetric):
             n_neighbors=None,
             metric_names=["isolation_distance"],
             seed=seed,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )[0]
         isolation_distances_list = []

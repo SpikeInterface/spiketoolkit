@@ -33,6 +33,7 @@ class LRatio(QualityMetric):
             n_neighbors=None,
             metric_names=["l_ratio"],
             seed=seed,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )[1]
         l_ratios_list = []

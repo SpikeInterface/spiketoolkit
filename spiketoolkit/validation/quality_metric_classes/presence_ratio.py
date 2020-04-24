@@ -26,6 +26,7 @@ class PresenceRatio(QualityMetric):
             self._metric_data._spike_clusters,
             self._metric_data._total_units,
             duration=self._metric_data._duration_in_frames/self._metric_data._sampling_frequency,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         presence_ratios_list = []

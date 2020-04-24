@@ -33,6 +33,7 @@ class DPrime(QualityMetric):
             n_neighbors=None,
             metric_names=["d_prime"],
             seed=seed,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )[2]
         d_primes_list = []

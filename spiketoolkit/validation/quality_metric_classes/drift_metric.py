@@ -28,6 +28,7 @@ class DriftMetric(QualityMetric):
             self._metric_data._pc_feature_ind,
             drift_metrics_interval_s,
             drift_metrics_min_spikes_per_interval,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         max_drifts_list = []

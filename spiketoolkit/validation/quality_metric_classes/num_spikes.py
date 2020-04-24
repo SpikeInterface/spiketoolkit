@@ -25,6 +25,7 @@ class NumSpikes(QualityMetric):
             self._metric_data._spike_times,
             self._metric_data._spike_clusters,
             self._metric_data._total_units,
+            spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
         num_spikes_list = []
