@@ -3,7 +3,9 @@ import pytest
 from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
-    get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy
+    get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy, \
+    compute_unit_template_features
+import pandas
 import os
 import shutil
 from pathlib import Path
@@ -190,7 +192,7 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy')
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     export_to_phy(rec, sort, output_folder='phy_group', grouping_property='group', recompute_info=True)
-    export_to_phy(rec, sort, output_folder='max_channels', max_channels_per_template=4, recompute_info=True)
+    export_to_phy(rec, sort, output_folder='phy_max_channels', max_channels_per_template=4, recompute_info=True)
     export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False,
                   recompute_info=True)
 
@@ -208,7 +210,13 @@ def test_export_to_phy():
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
     assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
     assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
+
     shutil.rmtree('test')
+    shutil.rmtree('phy')
+    shutil.rmtree('phy_group')
+    shutil.rmtree('phy_max_channels')
+    shutil.rmtree('phy_no_feat')
+
 
 
 @pytest.mark.implemented
@@ -226,11 +234,43 @@ def test_set_unit_properties_by_max_channel_properties():
     shutil.rmtree('test')
 
 
+@pytest.mark.implemented
+def test_compute_features():
+    rec, sort = se.example_datasets.toy_example(duration=10, num_channels=8)
+
+    features = compute_unit_template_features(rec, sort)
+    assert isinstance(features, dict)
+
+    for feat, feat_val in features.items():
+        assert len(feat_val) == len(sort.get_unit_ids())
+        assert np.all(len(f) == 1 for f in feat_val)
+
+    max_chan_per_features = 2
+    features = compute_unit_template_features(rec, sort, max_channels_per_features=max_chan_per_features)
+    assert isinstance(features, dict)
+
+    for feat, feat_val in features.items():
+        assert len(feat_val) == len(sort.get_unit_ids())
+        assert np.all(len(f) == 2 for f in feat_val)
+
+    features = compute_unit_template_features(rec, sort, max_channels_per_features=max_chan_per_features,
+                                              upsampling_factor=10)
+    assert isinstance(features, dict)
+
+    for feat, feat_val in features.items():
+        assert len(feat_val) == len(sort.get_unit_ids())
+        assert np.all(len(f) == 2 for f in feat_val)
+
+    features_df = compute_unit_template_features(rec, sort, max_channels_per_features=max_chan_per_features,
+                                                 as_dataframe=True)
+    assert isinstance(features_df, pandas.DataFrame)
+    assert np.all([fk in features.keys() for fk in features_df.keys()])
+
+
 @pytest.mark.notimplemented
 def test_compute_pca_scores():
     pass
 
 
 if __name__ == '__main__':
-    test_set_unit_properties_by_max_channel_properties()
-    test_export_to_phy()
+    test_compute_features()

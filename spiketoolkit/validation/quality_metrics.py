@@ -16,8 +16,13 @@ from collections import OrderedDict
 from copy import deepcopy
 import pandas
 
+all_metrics_list = ["num_spikes", "firing_rate", "presence_ratio", "isi_violation", "amplitude_cutoff", "snr",
+                        "max_drift", "cumulative_drift", "silhouette_score", "isolation_distance", "l_ratio",
+                        "d_prime", "nn_hit_rate", "nn_miss_rate"]
 
-# All parameter values are stored in the class definitions
+
+def get_quality_metrics_list():
+    return all_metrics_list
 
 
 def compute_num_spikes(
@@ -1061,11 +1066,7 @@ def compute_quality_metrics(
     
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
-
     metrics_dict = OrderedDict()
-    all_metrics_list = ["num_spikes", "firing_rate", "presence_ratio", "isi_violation", "amplitude_cutoff", "snr",
-                        "max_drift", "cumulative_drift", "silhouette_score", "isolation_distance", "l_ratio",
-                        "d_prime", "nn_hit_rate", "nn_miss_rate"]
 
     if metric_names is None:
         metric_names = all_metrics_list
@@ -1075,7 +1076,8 @@ def compute_quality_metrics(
             if m not in all_metrics_list:
                 bad_metrics.append(m)
         if len(bad_metrics) > 0:
-            raise ValueError("Improper metric names: " + str(bad_metrics) + ". The following metric names can be calculated: " + str(all_metrics_list))
+            raise ValueError(f"Improper feature names: {str(bad_metrics)}. The following features names can be "
+                             f"calculated: {str(all_metrics_list)}")
 
     if unit_ids is None:
         unit_ids = sorting.get_unit_ids()
@@ -1169,8 +1171,8 @@ def compute_quality_metrics(
 
     if "nn_hit_rate" in metric_names or "nn_miss_rate" in metric_names:
         nn = NearestNeighbor(metric_data=md)
-        nn_hit_rates, nn_miss_rates= nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                       max_spikes_for_nn, n_neighbors, **kwargs)
+        nn_hit_rates, nn_miss_rates = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
+                                                        max_spikes_for_nn, n_neighbors, **kwargs)
         if "nn_hit_rate" in metric_names:
             metrics_dict['nn_hit_rate'] = nn_hit_rates
         if "nn_miss_rate" in metric_names:
@@ -1178,7 +1180,8 @@ def compute_quality_metrics(
 
     if as_dataframe:
         metrics = pandas.DataFrame.from_dict(metrics_dict)
-        metrics = metrics.rename(index={original_idx:unit_ids[i] for i, original_idx in enumerate(range(len(metrics)))})
+        metrics = metrics.rename(index={original_idx: unit_ids[i] for
+                                        i, original_idx in enumerate(range(len(metrics)))})
     else:
         metrics = metrics_dict
     return metrics
