@@ -108,8 +108,6 @@ class CurationSortingExtractor(SortingExtractor):
             The unit ids to be merged
         '''
         
-
-        
         if len(unit_ids) <= 1:
             return
 
@@ -132,10 +130,10 @@ class CurationSortingExtractor(SortingExtractor):
             shared_feature_names = list(shared_feature_names)
         
             shared_features = []
-            shared_features_indx = []
+            shared_features_idxs = []
             for i in range(len(shared_feature_names)):
                 shared_features.append([])
-                shared_features_indx.append([])
+                shared_features_idxs.append([])
 
             new_root_id = max(self._all_ids) + 1
             self._all_ids.append(new_root_id)
@@ -146,14 +144,14 @@ class CurationSortingExtractor(SortingExtractor):
                 new_root.add_child(self._roots[root_index])
                 all_spike_trains.append(self._roots[root_index].get_spike_train())
                 for i, feature_name in enumerate(shared_feature_names):
-                    if not feature_name[-5:] == "_idxs": 
+                    if not feature_name.endswith('_idxs'): 
                         features = self.get_unit_spike_features(unit_id, feature_name)
                         shared_features[i].append(features)
                         if feature_name + "_idxs" in shared_feature_names:
                             features_idxs = self.get_unit_spike_features(unit_id, feature_name + "_idxs")
                         else:
                             features_idxs = []
-                        shared_features_indx[i].append(features_idxs)
+                        shared_features_idxs[i].append(features_idxs)
                         
                 del self._features[unit_id]
                 self._roots[root_index].set_spike_train(np.asarray([]))  # clear spiketrain
@@ -166,24 +164,24 @@ class CurationSortingExtractor(SortingExtractor):
             self._roots = [self._roots[i] for i, _ in enumerate(root_ids) if i not in indices_to_be_deleted]
             self._roots.append(new_root)
             for i, feature_name in enumerate(shared_feature_names):
-                if not feature_name[-5:] == "_idxs":
-                    # Calc new indx list, empty if their is no indx for the feature 
-                    shared_features_indx_unsorted = []
-                    for n, feature_indx in enumerate(shared_features_indx[i]):
-                        new_indx = []
-                        for indx in feature_indx:
-                            new_indx.append(np.argwhere(spike_train[sort_indices] == all_spike_trains[n][indx])[0][0])
-                        shared_features_indx_unsorted += new_indx
-                    if not len(shared_features_indx_unsorted) == 0:
-                        arg_sort_indx = np.argsort(shared_features_indx_unsorted)
-                        shared_features_indx_sorted = np.array(shared_features_indx_unsorted)[arg_sort_indx]
-                        shared_features_sorted = np.concatenate(shared_features[i])[arg_sort_indx]
-                    else: # if empty, don't use indx 
-                        shared_features_indx_sorted = None
+                if not feature_name.endswith('_idxs'):
+                    # Calc new idxs list, empty if their is no idxs for the feature 
+                    shared_features_idxs_unsorted = []
+                    for n, feature_idxs in enumerate(shared_features_idxs[i]):
+                        new_idxs = []
+                        for idxs in feature_idxs:
+                            new_idxs.append(np.argwhere(spike_train[sort_indices] == all_spike_trains[n][idxs])[0][0])
+                        shared_features_idxs_unsorted += new_idxs
+                    if not len(shared_features_idxs_unsorted) == 0:
+                        arg_sort_idxs = np.argsort(shared_features_idxs_unsorted)
+                        shared_features_idxs_sorted = np.array(shared_features_idxs_unsorted)[arg_sort_idxs]
+                        shared_features_sorted = np.concatenate(shared_features[i])[arg_sort_idxs]
+                    else: # if empty, don't use idxs 
+                        shared_features_idxs_sorted = None
                         shared_features_sorted = np.concatenate(shared_features[i])[sort_indices]
                     self.set_unit_spike_features(new_root_id, feature_name,
                                                  shared_features_sorted, 
-                                                 indexes=shared_features_indx_sorted)
+                                                 indexes=shared_features_idxs_sorted)
             del spike_train
             del all_spike_trains
             
