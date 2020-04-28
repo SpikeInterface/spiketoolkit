@@ -23,6 +23,7 @@ setup(
         'spikeextractors',
         'spikesorters',
         'spikemetrics >= 0.2.0',
+        'spikefeatures',
         'scikit-learn',
         'scipy',
         'pandas',
