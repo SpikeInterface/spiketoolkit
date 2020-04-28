@@ -74,7 +74,8 @@ class TestCuration(unittest.TestCase):
         CSX = st.validation.quality_metric_classes.utils.curationsortingextractor.CurationSortingExtractor(
             parent_sorting=self.SX
         )
-        CSX.merge_units(unit_ids=[1, 2])
+        merged_unit_id = CSX.merge_units(unit_ids=[1, 2])
+        self.assertEqual(merged_unit_id, 4)
         original_spike_train = np.concatenate((self.SX.get_unit_spike_train(1), self.SX.get_unit_spike_train(2)))
         indices_sort = np.argsort(original_spike_train)
         original_spike_train = original_spike_train[indices_sort]
@@ -85,7 +86,9 @@ class TestCuration(unittest.TestCase):
         self.assertTrue(np.array_equal(np.asarray(CSX.get_unit_spike_feature_names(4)), np.asarray(['f_int'])))
         self.assertEqual(CSX.get_sampling_frequency(), self.SX.get_sampling_frequency())
 
-        CSX.split_unit(unit_id=3, indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        unit_ids_split = CSX.split_unit(unit_id=3, indices=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+        self.assertEqual(unit_ids_split[0], 5)
+        self.assertEqual(unit_ids_split[1], 6)
         original_spike_train = self.SX.get_unit_spike_train(3)
         original_features = self.SX.get_unit_spike_features(3, 'f_int')
         split_spike_train_1 = CSX.get_unit_spike_train(5)
