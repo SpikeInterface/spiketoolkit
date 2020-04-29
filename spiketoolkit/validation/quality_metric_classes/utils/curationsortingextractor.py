@@ -236,9 +236,34 @@ class CurationSortingExtractor(SortingExtractor):
             self._roots.append(new_root_2)
 
             for feature_name in self.get_unit_spike_feature_names(unit_id):
+                if feature_name.endswith('_idxs'):
+                    continue
                 full_features = np.array(self.get_unit_spike_features(unit_id, feature_name))
-                self.set_unit_spike_features(new_root_1_id, feature_name, full_features[indices_1])
-                self.set_unit_spike_features(new_root_2_id, feature_name, full_features[indices_2])
+                if not feature_name + '_idxs' in self.get_unit_spike_feature_names(unit_id):
+                    self.set_unit_spike_features(new_root_1_id, feature_name, full_features[indices_1])
+                    self.set_unit_spike_features(new_root_2_id, feature_name, full_features[indices_2])
+                else:
+                    full_features_idxs = np.array(self.get_unit_spike_features(unit_id, feature_name+'_idxs'))
+                    indices_1_idxs = [n for n, i in enumerate(full_features_idxs) if i in indices]
+                    indices_2_idxs = [n for n, i in enumerate(full_features_idxs) if not i in indices]
+                    
+                    # Calc new idxs after split
+                    indexes_1 = []
+                    indexes_2 = []
+                    for i in full_features_idxs:
+                        if i in indices:
+                            indexe_1 = np.count_nonzero(np.array(indices)<i)
+                            indexes_1.append(indexe_1)
+                        else:
+                            indexe_2 = i - np.count_nonzero(np.array(indices)<i)
+                            indexes_2.append(indexe_2)                            
+                            
+                    self.set_unit_spike_features(new_root_1_id, feature_name, 
+                                                 full_features[indices_1_idxs],
+                                                 indexes=indexes_1)
+                    self.set_unit_spike_features(new_root_2_id, feature_name, 
+                                                 full_features[indices_2_idxs],
+                                                 indexes=indexes_2)
             del self._features[unit_id]
             del self._roots[root_index]
         else:
@@ -290,3 +315,4 @@ class Unit(object):
         for child in self.children:
             ret += child.__str__(level + 1)
         return ret
+
