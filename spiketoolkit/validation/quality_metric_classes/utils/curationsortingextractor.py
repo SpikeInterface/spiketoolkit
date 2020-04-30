@@ -238,8 +238,9 @@ class CurationSortingExtractor(SortingExtractor):
             for feature_name in self.get_unit_spike_feature_names(unit_id):
                 if feature_name.endswith('_idxs'):
                     continue
+                full_features = self.get_unit_spike_features(unit_id, feature_name)
                 if isinstance(full_features, list):
-                    full_features = np.array(full_features)
+                    full_features = np.array(full_features)    
                 if not feature_name + '_idxs' in self.get_unit_spike_feature_names(unit_id):
                     self.set_unit_spike_features(new_root_1_id, feature_name, full_features[indices_1])
                     self.set_unit_spike_features(new_root_2_id, feature_name, full_features[indices_2])
@@ -316,4 +317,3 @@ class Unit(object):
         for child in self.children:
             ret += child.__str__(level + 1)
         return ret
-
