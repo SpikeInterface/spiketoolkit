@@ -106,10 +106,15 @@ class CurationSortingExtractor(SortingExtractor):
         ----------
         unit_ids: list
             The unit ids to be merged
+
+        Returns
+        -------
+        new_root_id: int
+            The unit id of the new merged unit.
         '''
         
         if len(unit_ids) <= 1:
-            return
+            return None
 
         root_ids = []
         for i in range(len(self._roots)):
@@ -184,7 +189,7 @@ class CurationSortingExtractor(SortingExtractor):
                                                  indexes=shared_features_idxs_sorted)
             del spike_train
             del all_spike_trains
-            
+            return new_root_id
         else:
             raise ValueError(str(unit_ids) + " has one or more invalid unit ids")
 
@@ -198,6 +203,11 @@ class CurationSortingExtractor(SortingExtractor):
             The unit id to be split
         indices: list
             The indices of the unit spike train at which the spike train will be split.
+
+        Returns
+        -------
+        new_root_ids: tuple
+            A tuple of new unit ids after the split (integers).
         '''
         root_ids = []
         for i in range(len(self._roots)):
@@ -241,6 +251,7 @@ class CurationSortingExtractor(SortingExtractor):
                 self.set_unit_spike_features(new_root_2_id, feature_name, full_features[indices_2])
             del self._features[unit_id]
             del self._roots[root_index]
+            return (new_root_1_id, new_root_2_id)
         else:
             raise ValueError(str(unit_id) + " non-valid unit id")
 
