@@ -205,7 +205,7 @@ class CurationSortingExtractor(SortingExtractor):
             root_ids.append(root_id)
 
         if unit_id in root_ids:
-            indices_1 = np.sort(np.asarray(list(set(indices))))
+            indices_1 = np.sort(np.asarray(list(set(indices)), dtype=int))
 
             root_index = root_ids.index(unit_id)
             new_child = self._roots[root_index]
@@ -216,7 +216,7 @@ class CurationSortingExtractor(SortingExtractor):
             except IndexError:
                 print(str(indices) + " out of bounds for the spike train of " + str(unit_id))
 
-            indices_2 = np.array(list(set(range(len(original_spike_train))) - set(indices_1)))
+            indices_2 = np.array(list(set(range(len(original_spike_train))) - set(indices_1)), dtype=int)
             spike_train_2 = original_spike_train[indices_2]
             del original_spike_train
 
@@ -239,15 +239,15 @@ class CurationSortingExtractor(SortingExtractor):
                 if feature_name.endswith('_idxs'):
                     continue
                 full_features = self.get_unit_spike_features(unit_id, feature_name)
-                if isinstance(full_features, list):
+                if isinstance(full_features, (list, range)):
                     full_features = np.array(full_features)    
                 if not feature_name + '_idxs' in self.get_unit_spike_feature_names(unit_id):
                     self.set_unit_spike_features(new_root_1_id, feature_name, full_features[indices_1])
                     self.set_unit_spike_features(new_root_2_id, feature_name, full_features[indices_2])
                 else:
                     full_features_idxs = np.array(self.get_unit_spike_features(unit_id, feature_name+'_idxs'))
-                    indices_1_idxs = np.array([n for n, i in enumerate(full_features_idxs) if i in indices])
-                    indices_2_idxs = np.array([n for n, i in enumerate(full_features_idxs) if not i in indices])
+                    indices_1_idxs = np.array([n for n, i in enumerate(full_features_idxs) if i in indices], dtype=int)
+                    indices_2_idxs = np.array([n for n, i in enumerate(full_features_idxs) if not i in indices], dtype=int)
                     
                     # Calc new idxs after split
                     indexes_1 = []
@@ -259,8 +259,8 @@ class CurationSortingExtractor(SortingExtractor):
                         else:
                             indexe_2 = i - np.count_nonzero(np.array(indices)<i)
                             indexes_2.append(indexe_2)   
-                    indexes_1 = np.array(indexes_1)
-                    indexes_2 = np.array(indexes_2)
+                    indexes_1 = np.array(indexes_1, dtype=int)
+                    indexes_2 = np.array(indexes_2, dtype=int)
                     
                             
                     self.set_unit_spike_features(new_root_1_id, feature_name, 
