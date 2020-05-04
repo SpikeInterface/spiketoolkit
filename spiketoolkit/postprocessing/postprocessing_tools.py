@@ -550,7 +550,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
         for i, unit_id in enumerate(unit_ids):
             spike_train = sorting.get_unit_spike_train(unit_id)
             if max_spikes_per_unit < len(spike_train):
-                indexes = np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit]
+                indexes = np.sort(np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit])
             else:
                 indexes = np.arange(len(spike_train))
             spike_train = spike_train[indexes]
