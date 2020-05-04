@@ -1158,8 +1158,8 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, s
     st = sorting.get_unit_spike_train(unit_id=unit)
     num_events = len(st)
     if num_events > max_spikes_per_unit:
-        event_indexes = np.random.RandomState(seed=seed).choice(range(num_events), size=max_spikes_per_unit,
-                                                                replace=False)
+        event_indexes = np.sort(np.random.RandomState(seed=seed).choice(range(num_events), size=max_spikes_per_unit,
+                                                                replace=False))
     else:
         event_indexes = range(num_events)
 
