@@ -100,6 +100,12 @@ class TestCuration(unittest.TestCase):
         self.assertTrue(np.array_equal(original_features[:10], split_features_1))
         self.assertTrue(np.array_equal(original_features[10:], split_features_2))
 
+        CSX_new =  st.validation.quality_metric_classes.utils.curationsortingextractor.CurationSortingExtractor(
+                        parent_sorting=self.SX, previous_curation_steps=CSX.curation_steps
+                    )
+        self.assertEqual(CSX_new.get_unit_ids(), CSX.get_unit_ids())
+        for i, uid in enumerate(CSX.get_unit_ids()):
+            self.assertTrue(np.array_equal(CSX.get_units_spike_train()[i], CSX_new.get_units_spike_train()[i]))
 
 if __name__ == '__main__':
     unittest.main()
