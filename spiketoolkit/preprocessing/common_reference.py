@@ -52,13 +52,14 @@ class CommonReferenceRecording(RecordingExtractor):
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+        channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
         if self._ref == 'median':
             if self._groups is None:
                 if self.verbose:
                     print('Common median reference using all channels')
                 traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
                 traces = traces - np.median(traces, axis=0, keepdims=True)
-                return traces[channel_ids].astype(self._dtype)
+                return traces[channel_idxs].astype(self._dtype)
             else:
                 new_groups = []
                 for g in self._groups:
@@ -75,14 +76,14 @@ class CommonReferenceRecording(RecordingExtractor):
                                                                                     start_frame=start_frame,
                                                                                     end_frame=end_frame),
                                                          axis=0, keepdims=True) for split_group in new_groups]))
-                return traces[channel_ids].astype(self._dtype)
+                return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'average':
             if self.verbose:
                 print('Common average reference using all channels')
             if self._groups is None:
                 traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
                 traces = traces - np.mean(traces, axis=0, keepdims=True)
-                return traces[channel_ids].astype(self._dtype)
+                return traces[channel_idxs].astype(self._dtype)
             else:
                 new_groups = []
                 for g in self._groups:
@@ -99,7 +100,7 @@ class CommonReferenceRecording(RecordingExtractor):
                                                                                   start_frame=start_frame,
                                                                                   end_frame=end_frame),
                                                        axis=0, keepdims=True) for split_group in new_groups]))
-                return traces[channel_ids].astype(self._dtype)
+                return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'single':
             if self._groups is None:
                 if self.verbose:
@@ -124,7 +125,7 @@ class CommonReferenceRecording(RecordingExtractor):
                                              - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
                                                                           end_frame=end_frame)
                                              for (split_group, ref) in zip(new_groups, self._ref_channel)]))
-                return traces.astype(self._dtype)
+                return traces[channel_idxs].astype(self._dtype)
 
 
 def common_reference(recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
