@@ -17,12 +17,12 @@ class ThresholdCurator(CurationSortingExtractor):
         self._metric = metric
         self._threshold = threshold
         self._threshold_sign = threshold_sign
-
-        if threshold is not None and threshold_sign is not None:
-            self.threshold_sorting(threshold, threshold_sign)
-
+        # bypass dumping mechanism of CurationSortingExtractor
+        del self._kwargs
         self._kwargs = {'sorting': sorting.make_serialized_dict(), 'metric': metric,
                         'threshold': threshold, 'threshold_sign': threshold_sign}
+        if threshold is not None and threshold_sign is not None:
+            self.threshold_sorting(threshold, threshold_sign)
 
     def threshold_sorting(self, threshold, threshold_sign):
         '''
@@ -53,5 +53,8 @@ class ThresholdCurator(CurationSortingExtractor):
             else:
                 raise ValueError('Not a correct threshold sign.')
         self.exclude_units(units_to_be_excluded)
+        # bypass dumping mechanism of CurationSortingExtractor
+        if 'curation_steps' in self._kwargs.keys():
+            del self._kwargs['curation_steps']
         self._kwargs['threshold'] = threshold
         self._kwargs['threshold_sign'] = threshold_sign
