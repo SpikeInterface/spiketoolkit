@@ -12,6 +12,7 @@ class WhitenRecording(FilterRecording):
         self._recording = recording
         self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
+        self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'chunk_size': chunk_size,
                         'cache_chunks': cache_chunks, 'seed': seed}

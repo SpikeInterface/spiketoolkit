@@ -22,6 +22,7 @@ class ResampleRecording(RecordingExtractor):
         RecordingExtractor.__init__(self)
         self._dtype = recording.get_dtype()
         self.copy_channel_properties(recording)
+        self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'resample_rate': resample_rate}
 

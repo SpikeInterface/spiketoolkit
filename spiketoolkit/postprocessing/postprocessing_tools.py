@@ -1495,11 +1495,12 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
     if grouping_property in recording.get_shared_channel_property_names():
-        groups, num_chans_in_group = np.unique([recording.get_channel_property(ch, grouping_property)
-                                                for ch in recording.get_channel_ids()], return_counts=True)
+        groups, num_chans_in_group = np.unique(recording.get_channel_groups(), return_counts=True)
         max_num_chans_in_group = np.max(num_chans_in_group)
-        channel_groups = np.array([recording.get_channel_property(ch, grouping_property)
-                                   for ch in recording.get_channel_ids()])
+        channel_groups = recording.get_channel_groups()
+        if max_channels_per_template < recording.get_num_channels():
+            print("Disabling 'max_channels_per_template'. Channels are extracted using 'grouping_property'")
+            max_channels_per_template = recording.get_num_channels()
     else:
         max_num_chans_in_group = recording.get_num_channels()
         channel_groups = np.array([0] * recording.get_num_channels())
@@ -1541,20 +1542,20 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
 
         for u_i, u in enumerate(sorting.get_unit_ids()):
             group = sorting.get_unit_property(u, 'group')
-            unit_chans = []
+            unit_chans_idxs = []
             for ch in recording.get_channel_ids():
                 if recording.get_channel_property(ch, 'group') == group:
-                    unit_chans.append(list(channel_map_si).index(ch))
-            if len(unit_chans) == 0:
+                    unit_chans_idxs.append(list(channel_map_si).index(ch))
+            if len(unit_chans_idxs) == 0:
                 raise Exception("Sorting extractor has different property than recording extractor. "
                                 "They should correspond.")
-            if len(unit_chans) != max_num_chans_in_group:
+            if len(unit_chans_idxs) != max_num_chans_in_group:
                 # append closest channel
-                if list(channel_map).index(int(np.max(unit_chans))) + 1 < np.max(channel_map):
-                    unit_chans.append(list(channel_map).index(int(np.max(unit_chans)) + 1))
+                if list(channel_map).index(int(np.max(unit_chans_idxs))) + 1 < np.max(channel_map):
+                    unit_chans_idxs.append(list(channel_map).index(int(np.max(unit_chans_idxs)) + 1))
                 else:
-                    unit_chans.append(list(channel_map).index(int(np.min(unit_chans)) - 1))
-            unit_chans = np.array(unit_chans)
+                    unit_chans_idxs.append(list(channel_map).index(int(np.min(unit_chans_idxs)) - 1))
+            unit_chans = np.array(unit_chans_idxs)
             templates_ind[u_i] = unit_chans
             templates_red[u_i, :] = templates[u_i, :, unit_chans].T
         templates = templates_red
