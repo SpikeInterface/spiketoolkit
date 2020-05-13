@@ -273,4 +273,4 @@ def test_compute_pca_scores():
 
 
 if __name__ == '__main__':
-    test_compute_features()
+    test_waveforms()

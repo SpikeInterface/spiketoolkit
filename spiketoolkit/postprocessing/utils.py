@@ -115,7 +115,7 @@ def get_max_channels_per_waveforms(recording, grouping_property, channel_ids, ma
             n_channels = max_channels_per_waveforms
     else:
         rec = se.SubRecordingExtractor(recording, channel_ids=channel_ids)
-        rec_groups = np.array(rec.get_channel_groups())
+        rec_groups = np.array([rec.get_channel_property(ch, grouping_property) for ch in rec.get_channel_ids()])
         groups, count = np.unique(rec_groups, return_counts=True)
         if max_channels_per_waveforms is None:
             n_channels = np.max(count)

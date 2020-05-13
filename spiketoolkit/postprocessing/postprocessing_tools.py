@@ -9,7 +9,8 @@ from joblib import Parallel, delayed
 from spikeextractors import RecordingExtractor, SortingExtractor
 import csv
 
-from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, get_max_channels_per_waveforms
+from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, \
+    get_max_channels_per_waveforms
 
 
 def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
@@ -154,7 +155,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
         if n_jobs in [0, 1]:
             if memmap:
                 n_channels = get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
-                                                             max_channels_per_waveforms)
+                                                            max_channels_per_waveforms)
                 # pre-construct memmap arrays
                 for unit_id in unit_ids:
                     fname = 'waveforms_' + str(unit_id) + '.raw'
@@ -173,7 +174,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                                                                                        max_spikes_per_unit, n_pad,
                                                                                        dtype, seed, verbose,
                                                                                        memmap_array=arr)
-                    waveform_list.append(arr)
+                    waveform_list.append(waveforms)
                     spike_index_list.append(indexes)
                     channel_index_list.append(max_channel_idxs)
             else:
@@ -193,8 +194,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
             if memmap:
                 memmap_arrays = []
                 n_channels = get_max_channels_per_waveforms(recording, grouping_property, channel_ids,
-                                                             max_channels_per_waveforms)
-                # pre-construc memmap arrays
+                                                            max_channels_per_waveforms)
+                # pre-construct memmap arrays
                 for unit_id in unit_ids:
                     fname = 'waveforms_' + str(unit_id) + '.raw'
                     len_wf = len(sorting.get_unit_spike_train(unit_id))
@@ -213,7 +214,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                                                          dtype, seed, verbose, mem_array, )
                     for (unit, mem_array) in zip(unit_ids, memmap_arrays))
                 for i, out in enumerate(output_list):
-                    waveform_list.append(memmap_arrays[i])
+                    waveform_list.append(out[0])
                     spike_index_list.append(out[1])
                     channel_index_list.append(out[2])
             else:
@@ -1159,7 +1160,7 @@ def _get_random_spike_waveforms(recording, sorting, unit, max_spikes_per_unit, s
     num_events = len(st)
     if num_events > max_spikes_per_unit:
         event_indexes = np.sort(np.random.RandomState(seed=seed).choice(range(num_events), size=max_spikes_per_unit,
-                                                                replace=False))
+                                                                        replace=False))
     else:
         event_indexes = range(num_events)
 
@@ -1354,7 +1355,6 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     else:
         pc_list, pca_idxs, pc_ind, pc_shape = None, None, None, None
 
-
     # amplitudes
     amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
                                                     save_property_or_features=save_property_or_features, peak=amp_peak,
@@ -1495,11 +1495,12 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
 
     # pc_features.npy - [nSpikes, nFeaturesPerChannel, nPCFeatures] single
     if grouping_property in recording.get_shared_channel_property_names():
-        groups, num_chans_in_group = np.unique([recording.get_channel_property(ch, grouping_property)
-                                                for ch in recording.get_channel_ids()], return_counts=True)
+        groups, num_chans_in_group = np.unique(recording.get_channel_groups(), return_counts=True)
         max_num_chans_in_group = np.max(num_chans_in_group)
-        channel_groups = np.array([recording.get_channel_property(ch, grouping_property)
-                                   for ch in recording.get_channel_ids()])
+        channel_groups = recording.get_channel_groups()
+        if max_channels_per_template < recording.get_num_channels():
+            print("Disabling 'max_channels_per_template'. Channels are extracted using 'grouping_property'")
+            max_channels_per_template = recording.get_num_channels()
     else:
         max_num_chans_in_group = recording.get_num_channels()
         channel_groups = np.array([0] * recording.get_num_channels())
@@ -1541,20 +1542,20 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
 
         for u_i, u in enumerate(sorting.get_unit_ids()):
             group = sorting.get_unit_property(u, 'group')
-            unit_chans = []
+            unit_chans_idxs = []
             for ch in recording.get_channel_ids():
                 if recording.get_channel_property(ch, 'group') == group:
-                    unit_chans.append(list(channel_map_si).index(ch))
-            if len(unit_chans) == 0:
+                    unit_chans_idxs.append(list(channel_map_si).index(ch))
+            if len(unit_chans_idxs) == 0:
                 raise Exception("Sorting extractor has different property than recording extractor. "
                                 "They should correspond.")
-            if len(unit_chans) != max_num_chans_in_group:
+            if len(unit_chans_idxs) != max_num_chans_in_group:
                 # append closest channel
-                if list(channel_map).index(int(np.max(unit_chans))) + 1 < np.max(channel_map):
-                    unit_chans.append(list(channel_map).index(int(np.max(unit_chans)) + 1))
+                if list(channel_map).index(int(np.max(unit_chans_idxs))) + 1 < np.max(channel_map):
+                    unit_chans_idxs.append(list(channel_map).index(int(np.max(unit_chans_idxs)) + 1))
                 else:
-                    unit_chans.append(list(channel_map).index(int(np.min(unit_chans)) - 1))
-            unit_chans = np.array(unit_chans)
+                    unit_chans_idxs.append(list(channel_map).index(int(np.min(unit_chans_idxs)) - 1))
+            unit_chans = np.array(unit_chans_idxs)
             templates_ind[u_i] = unit_chans
             templates_red[u_i, :] = templates[u_i, :, unit_chans].T
         templates = templates_red
@@ -1621,8 +1622,6 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
             compute_sorting_group = True
         else:
             compute_sorting_group = False
-        if verbose:
-            print("Waveforms by property: ", grouping_property)
 
         if not compute_sorting_group:
             rec_list, rec_props = recording.get_sub_extractors_by_property(grouping_property,
@@ -1646,9 +1645,8 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
             for i_list, (rec, sort) in enumerate(zip(rec_list, sort_list)):
                 if sort is not None and rec is not None:
                     for i, unit_id in enumerate(unit_ids):
-                        if unit == unit_id:
-                            if channel_ids is None:
-                                channel_ids = rec.get_channel_ids()
+                        if unit == unit_id and unit in sort.get_unit_ids():
+                            channel_ids = rec.get_channel_ids()
 
                             if max_spikes_per_unit is None:
                                 max_spikes = len(sort.get_unit_spike_train(unit_id))
@@ -1668,10 +1666,9 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                                                                       channel_ids=channel_ids,
                                                                       seed=seed)
                             wf = wf.astype(dtype)
-
                             if max_channels_per_waveforms < len(channel_ids):
                                 max_channel_idxs = select_max_channels_from_waveforms(wf, rec,
-                                                                                       max_channels_per_waveforms)
+                                                                                      max_channels_per_waveforms)
                             else:
                                 max_channel_idxs = np.arange(rec.get_num_channels())
                             wf = wf[:, max_channel_idxs]
@@ -1679,7 +1676,14 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                             if memmap_array is None:
                                 waveforms = wf
                             else:
-                                memmap_array[:] = wf
+                                if np.all(wf.shape == memmap_array.shape):
+                                    memmap_array[:] = wf
+                                else:
+                                    # some channels are missing - re-instantiate object
+                                    memmap_file = memmap_array.filename
+                                    del memmap_array
+                                    memmap_array = np.memmap(memmap_file, mode='w+', shape=wf.shape, dtype=wf.dtype)
+                                    memmap_array[:] = wf
                                 waveforms = memmap_array
                             return waveforms, list(indexes), list(max_channel_idxs)
         else:
@@ -1711,23 +1715,29 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                                                               channel_ids=channel_ids,
                                                               seed=seed)
                     wf = wf.astype(dtype)
-
                     mean_waveforms = np.squeeze(np.mean(wf, axis=0))
                     max_amp_elec = np.unravel_index(mean_waveforms.argmin(), mean_waveforms.shape)[0]
                     group = recording.get_channel_property(recording.get_channel_ids()[max_amp_elec], grouping_property)
-                    elec_group = np.where(rec_groups == group)
-                    wf = np.squeeze(wf[:, elec_group, :])
 
-                    if max_channels_per_waveforms < len(elec_group[0]):
+                    elec_group = np.where(rec_groups == group)[0]
+                    wf = wf[:, elec_group, :]
+                    if max_channels_per_waveforms < len(elec_group):
                         max_channel_idxs = select_max_channels_from_waveforms(wf, rec, max_channels_per_waveforms)
                     else:
-                        max_channel_idxs = np.arange(len(elec_group[0]))
+                        max_channel_idxs = np.arange(len(elec_group))
                     wf = wf[:, max_channel_idxs]
 
                     if memmap_array is None:
                         waveforms = wf
                     else:
-                        memmap_array[:] = wf
+                        if np.all(wf.shape == memmap_array.shape):
+                            memmap_array[:] = wf
+                        else:
+                            # some channels are missing - re-instantiate object
+                            memmap_file = memmap_array.filename
+                            del memmap_array
+                            memmap_array = np.memmap(memmap_file, mode='w+', shape=wf.shape, dtype=wf.dtype)
+                            memmap_array[:] = wf
                         waveforms = memmap_array
                     return waveforms, list(indexes), list(max_channel_idxs),
 
@@ -1755,7 +1765,6 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                                                           snippet_len=n_pad,
                                                           channel_ids=channel_ids,
                                                           seed=seed)
-
                 wf = wf.astype(dtype)
                 if max_channels_per_waveforms < len(channel_ids):
                     max_channel_idxs = select_max_channels_from_waveforms(wf, recording, max_channels_per_waveforms)
@@ -1766,6 +1775,13 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                 if memmap_array is None:
                     waveforms = wf
                 else:
-                    memmap_array[:] = wf
+                    if np.all(wf.shape == memmap_array.shape):
+                        memmap_array[:] = wf
+                    else:
+                        # some channels are missing - re-instantiate object
+                        memmap_file = memmap_array.filename
+                        del memmap_array
+                        memmap_array = np.memmap(memmap_file, mode='w+', shape=wf.shape, dtype=wf.dtype)
+                        memmap_array[:] = wf
                     waveforms = memmap_array
                 return waveforms, list(indexes), list(max_channel_idxs),

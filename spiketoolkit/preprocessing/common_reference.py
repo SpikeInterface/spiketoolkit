@@ -36,6 +36,7 @@ class CommonReferenceRecording(RecordingExtractor):
         self.verbose = verbose
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+        self.is_filtered = self._recording.is_filtered
 
         # update dump dict
         self._kwargs = {'recording': recording.make_serialized_dict(), 'reference': reference, 'groups': groups,
