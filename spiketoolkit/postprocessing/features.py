@@ -11,8 +11,8 @@ from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_
 import numpy as np
 
 
-def get_quality_metrics_list():
-    return features.all_1D_features
+def get_template_features_list():
+    return sf.all_1D_features
 
 
 def compute_unit_template_features(recording, sorting, unit_ids=None, channel_ids=None, feature_names=None,
@@ -131,10 +131,22 @@ def compute_unit_template_features(recording, sorting, unit_ids=None, channel_id
     templates = np.array(get_unit_templates(recording, sorting, unit_ids=unit_ids, channel_ids=channel_ids,
                                             mode='median', **kwargs))
 
+    # deal with templates with different shapes
+    shape_0 = templates[0].shape
+    if np.all([t.shape == shape_0 for t in templates]):
+        same_shape = True
+    else:
+        same_shape = False
+
     # -------------------- PROCESS TEMPLATES -----------------------------
     if upsampling_factor > 1:
         upsampling_factor = int(upsampling_factor)
-        processed_templates = resample_poly(templates, up=upsampling_factor, down=1, axis=2)
+        if same_shape:
+            processed_templates = resample_poly(templates, up=upsampling_factor, down=1, axis=2)
+        else:
+            processed_templates = []
+            for temp in templates:
+                processed_templates.append(resample_poly(temp, up=upsampling_factor, down=1, axis=1))
         resampled_fs = recording.get_sampling_frequency() * upsampling_factor
     else:
         processed_templates = templates

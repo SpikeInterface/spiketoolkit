@@ -12,6 +12,7 @@ from .quality_metrics import (
     compute_d_primes,
     compute_nn_metrics,
     compute_quality_metrics,
+    get_quality_metrics_list
 )
 
 from .quality_metric_classes.utils.validation_tools import get_pca_metric_data, \
