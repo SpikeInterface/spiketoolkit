@@ -1131,9 +1131,10 @@ def _compute_templates_similarity(templates, template_ind=None):
     similarity = np.zeros((len(templates), len(templates)))
     if template_ind is None:
         template_ind = np.tile(np.arange(templates[0].shape[0]), (len(templates), 1))
+    
     for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
-            shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j]
+            shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j and not ch<0] # ch<0 is for channels empty, label -1
             if len(shared_channel_idxs) > 0 and len(shared_channel_idxs):
                 # reorder channels
                 reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
@@ -1547,17 +1548,19 @@ def _get_phy_data(recording, sorting, compute_pc_features, max_channels_per_temp
                 if recording.get_channel_property(ch, 'group') == group:
                     unit_chans_idxs.append(list(channel_map_si).index(ch))
             if len(unit_chans_idxs) == 0:
-                raise Exception("Sorting extractor has different property than recording extractor. "
+                raise Exception("Sorting extractor has different property than recording extractor."
                                 "They should correspond.")
             if len(unit_chans_idxs) != max_num_chans_in_group:
-                # append closest channel
-                if list(channel_map).index(int(np.max(unit_chans_idxs))) + 1 < np.max(channel_map):
-                    unit_chans_idxs.append(list(channel_map).index(int(np.max(unit_chans_idxs)) + 1))
-                else:
-                    unit_chans_idxs.append(list(channel_map).index(int(np.min(unit_chans_idxs)) - 1))
-            unit_chans = np.array(unit_chans_idxs)
-            templates_ind[u_i] = unit_chans
-            templates_red[u_i, :] = templates[u_i, :, unit_chans].T
+                # add empty channel
+                lacking_channels = max_num_chans_in_group-len(unit_chans_idxs)
+                append_chan = [-1]*lacking_channels 
+                unit_chans = np.array(unit_chans_idxs + append_chan)
+                templates_ind[u_i] = unit_chans
+                templates_red[u_i, :, :len(unit_chans_idxs)] = templates[u_i, :, unit_chans_idxs].T
+            else:
+                unit_chans = np.array(unit_chans_idxs)
+                templates_ind[u_i] = unit_chans
+                templates_red[u_i, :] = templates[u_i, :, unit_chans].T
         templates = templates_red
     elif max_channels_per_template < recording.get_num_channels():
         # waveforms, templates, and pc_scores are computed on the same channels
