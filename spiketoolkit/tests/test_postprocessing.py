@@ -207,6 +207,7 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy_no_amp', compute_amplitudes=False)
     export_to_phy(rec, sort, output_folder='phy_no_amp_feat', compute_amplitudes=False,
                   compute_pc_features=False)
+    export_to_phy(rec, sort, output_folder='phy_par', n_jobs=2)
 
     rec_phy = se.PhyRecordingExtractor('phy')
     rec_phyg = se.PhyRecordingExtractor('phy_group')
@@ -241,6 +242,8 @@ def test_export_to_phy():
     shutil.rmtree('phy_no_amp')
     shutil.rmtree('phy_no_amp_feat')
     shutil.rmtree('phy_rm')
+    shutil.rmtree('phy_par')
+
 
 @pytest.mark.implemented
 def test_set_unit_properties_by_max_channel_properties():

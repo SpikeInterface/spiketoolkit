@@ -1556,7 +1556,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
     dtype = params_dict['dtype']
     memmap = params_dict['memmap']
     n_jobs = params_dict['n_jobs']
-    joblib_backend = params_dict['n_jobs']
+    joblib_backend = params_dict['joblib_backend']
     seed = params_dict['seed']
     amp_method = params_dict['method']
     amp_peak = params_dict['peak']
