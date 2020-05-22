@@ -1377,7 +1377,8 @@ def _get_pca_metric_data(recording, sorting, **kwargs):
 def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method, amp_peak,
                              amp_frames_before, amp_frames_after, max_spikes_per_unit, max_spikes_for_amplitudes,
                              max_spikes_for_pca, recompute_info, max_channels_per_waveforms, save_property_or_features,
-                             n_jobs, verbose, seed, memmap, compute_pc_features=True, compute_amplitudes=True):
+                             n_jobs, joblib_backend, verbose, seed, memmap, compute_pc_features=True,
+                             compute_amplitudes=True):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
         sorting.clear_units_spike_features(feature_name='amplitudes')
@@ -1387,9 +1388,11 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                                                          max_spikes_per_unit=max_spikes_per_unit,
                                                                          ms_before=ms_before,
                                                                          ms_after=ms_after, dtype=dtype,
-                                                                         save_property_or_features=save_property_or_features,
+                                                                         save_property_or_features=
+                                                                         save_property_or_features,
                                                                          verbose=verbose,
                                                                          n_jobs=n_jobs,
+                                                                         joblib_backend=joblib_backend,
                                                                          seed=seed,
                                                                          memmap=memmap, return_idxs=True,
                                                                          max_channels_per_waveforms=
@@ -1416,10 +1419,10 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         # amplitudes
         amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
                                                         save_property_or_features=save_property_or_features,
-                                                        peak=amp_peak,
-                                                        max_spikes_per_unit=max_spikes_for_amplitudes,
+                                                        peak=amp_peak, max_spikes_per_unit=max_spikes_for_amplitudes,
                                                         frames_before=amp_frames_before, frames_after=amp_frames_after,
-                                                        seed=seed, memmap=memmap, return_idxs=True)
+                                                        seed=seed, memmap=memmap, n_jobs=n_jobs,
+                                                        joblib_backend=joblib_backend, return_idxs=True)
     else:
         amplitudes_list, amp_idxs = None, None
 
@@ -1553,6 +1556,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
     dtype = params_dict['dtype']
     memmap = params_dict['memmap']
     n_jobs = params_dict['n_jobs']
+    joblib_backend = params_dict['n_jobs']
     seed = params_dict['seed']
     amp_method = params_dict['method']
     amp_peak = params_dict['peak']
@@ -1592,7 +1596,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
                                    amp_frames_before=amp_frames_before,
                                    amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit_wf,
                                    max_spikes_for_amplitudes=max_spikes_per_unit_amp,
-                                   max_spikes_for_pca=max_spikes_for_pca, n_jobs=n_jobs,
+                                   max_spikes_for_pca=max_spikes_for_pca, n_jobs=n_jobs, joblib_backend=joblib_backend,
                                    recompute_info=recompute_info, max_channels_per_waveforms=max_channels_per_template,
                                    save_property_or_features=save_property_or_features, verbose=verbose, memmap=memmap,
                                    seed=seed, compute_pc_features=compute_pc_features,
