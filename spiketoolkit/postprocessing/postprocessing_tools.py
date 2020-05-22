@@ -534,6 +534,10 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
     max_spikes_per_unit = params_dict['max_spikes_per_unit']
     save_property_or_features = params_dict['save_property_or_features']
     recompute_info = params_dict['recompute_info']
+    n_jobs = params_dict['n_jobs']
+    joblib_backend = params_dict['joblib_backend']
+
+    dtype = recording.get_dtype()
 
     amp_list = []
     spike_index_list = []
@@ -548,40 +552,88 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
                     indexes = np.arange(len(amplitudes))
                 spike_index_list.append(indexes)
     else:
+        if n_jobs is None:
+            n_jobs = 0
+
+        if not recording.check_if_dumpable():
+            if n_jobs > 1:
+                n_jobs = 0
+                print("RecordingExtractor is not dumpable and can't be processed in parallel")
+            rec_arg = recording
+        else:
+            if n_jobs > 1:
+                rec_arg = recording.dump_to_dict()
+            else:
+                rec_arg = recording
+        if not sorting.check_if_dumpable():
+            if n_jobs > 1:
+                n_jobs = 0
+                print("SortingExtractor is not dumpable and can't be processed in parallel")
+            sort_arg = sorting
+        else:
+            if n_jobs > 1:
+                sort_arg = sorting.dump_to_dict()
+            else:
+                sort_arg = sorting
+
+        if n_jobs in [0, 1]:
+            if memmap:
+                # pre-construct memmap arrays
+                for unit_id in unit_ids:
+                    fname = 'amplitudes_' + str(unit_id) + '.raw'
+                    len_amp = len(sorting.get_unit_spike_train(unit_id))
+                    if max_spikes_per_unit is not None:
+                        if len_amp > max_spikes_per_unit:
+                            len_amp = max_spikes_per_unit
+                    shape = len_amp
+                    arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
+
+                    amplitudes, indexes = _extract_amplitudes_one_unit(unit_id, rec_arg, sort_arg, channel_ids,
+                                                                       max_spikes_per_unit, frames_before, frames_after,
+                                                                       peak, method, seed, memmap_array=arr)
+                    amp_list.append(amplitudes)
+                    spike_index_list.append(indexes)
+            else:
+                for unit_id in unit_ids:
+                    amplitudes, indexes = _extract_amplitudes_one_unit(unit_id, rec_arg, sort_arg, channel_ids,
+                                                                       max_spikes_per_unit, frames_before, frames_after,
+                                                                       peak, method, seed, memmap_array=None)
+                    amp_list.append(amplitudes)
+                    spike_index_list.append(indexes)
+        else:
+            if memmap:
+                memmap_arrays = []
+                # pre-construct memmap arrays
+                for unit_id in unit_ids:
+                    fname = 'amplitudes_' + str(unit_id) + '.raw'
+                    len_amp = len(sorting.get_unit_spike_train(unit_id))
+                    if max_spikes_per_unit is not None:
+                        if len_amp > max_spikes_per_unit:
+                            len_amp = max_spikes_per_unit
+                    shape = len_amp
+                    arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
+                    memmap_arrays.append(arr)
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
+                    delayed(_extract_amplitudes_one_unit)(unit_id, rec_arg, sort_arg, channel_ids,
+                                                          max_spikes_per_unit, frames_before, frames_after,
+                                                          peak, method, seed, mem_array,)
+                    for (unit_id, mem_array) in zip(unit_ids, memmap_arrays))
+                for i, out in enumerate(output_list):
+                    amp_list.append(out[0])
+                    spike_index_list.append(out[1])
+            else:
+                output_list = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
+                    delayed(_extract_amplitudes_one_unit)(unit_id, rec_arg, sort_arg, channel_ids,
+                                                          max_spikes_per_unit, frames_before, frames_after,
+                                                          peak, method, seed, None, )
+                    for unit_id in unit_ids)
+                for i, out in enumerate(output_list):
+                    amp_list.append(out[0])
+                    spike_index_list.append(out[1])
+
+    if save_property_or_features:
         for i, unit_id in enumerate(unit_ids):
-            spike_train = sorting.get_unit_spike_train(unit_id)
-            if max_spikes_per_unit < len(spike_train):
-                indexes = np.sort(np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit])
-            else:
-                indexes = np.arange(len(spike_train))
-            spike_train = spike_train[indexes]
-
-            snippets = recording.get_snippets(reference_frames=spike_train,
-                                              snippet_len=[frames_before, frames_after], channel_ids=channel_ids)
-            if peak == 'both':
-                amps = np.max(np.abs(snippets), axis=-1)
-                if len(amps.shape) > 1:
-                    amps = np.max(amps, axis=-1)
-            elif peak == 'neg':
-                amps = np.min(snippets, axis=-1)
-                if len(amps.shape) > 1:
-                    amps = np.min(amps, axis=-1)
-            elif peak == 'pos':
-                amps = np.max(snippets, axis=-1)
-                if len(amps.shape) > 1:
-                    amps = np.max(amps, axis=-1)
-            else:
-                raise Exception("'peak' can be 'neg', 'pos', or 'both'")
-
-            if method == 'relative':
-                amps /= np.median(amps)
-
-            amplitudes = sorting.allocate_array(array=amps, name='amplitudes_' + str(unit_id) + '.raw',
-                                                memmap=memmap)
-            amp_list.append(amplitudes)
-            spike_index_list.append(indexes)
-            if save_property_or_features:
-                sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_list[i], indexes=spike_index_list[i])
+            sorting.set_unit_spike_features(unit_id, 'amplitudes', amp_list[i], indexes=spike_index_list[i])
 
     if return_idxs:
         return amp_list, spike_index_list
@@ -1134,10 +1186,11 @@ def _compute_templates_similarity(templates, template_ind=None):
     similarity = np.zeros((len(templates), len(templates)))
     if template_ind is None:
         template_ind = np.tile(np.arange(templates[0].shape[0]), (len(templates), 1))
-    
+
     for i, (t_i, t_ind_i) in enumerate(zip(templates, template_ind)):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
-            shared_channel_idxs = [ch for ch in t_ind_i if ch in t_ind_j and not ch<0] # ch<0 is for channels empty, label -1
+            shared_channel_idxs = [ch for ch in t_ind_i if
+                                   ch in t_ind_j and not ch < 0]  # ch<0 is for channels empty, label -1
             if len(shared_channel_idxs) > 0 and len(shared_channel_idxs):
                 # reorder channels
                 reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
@@ -1362,7 +1415,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     if compute_amplitudes:
         # amplitudes
         amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
-                                                        save_property_or_features=save_property_or_features, peak=amp_peak,
+                                                        save_property_or_features=save_property_or_features,
+                                                        peak=amp_peak,
                                                         max_spikes_per_unit=max_spikes_for_amplitudes,
                                                         frames_before=amp_frames_before, frames_after=amp_frames_after,
                                                         seed=seed, memmap=memmap, return_idxs=True)
@@ -1378,7 +1432,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     n_spikes = 0
     for i, unit_id in enumerate(sorting.get_unit_ids()):
         n_spikes += len(sorting.get_unit_spike_train(unit_id))
-        
+
     n_pca_amps = 0  # n_pca and n_amps are the same (max_spikes_per_unit)
     if compute_pc_features:
         for i, pc in enumerate(pc_list):
@@ -1391,16 +1445,17 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                          memmap=memmap)
     spike_clusters = sorting.allocate_array(shape=(n_spikes, 1), dtype=np.uint32, name='spike_clusters.raw',
                                             memmap=memmap)
-    
+
     if compute_amplitudes:
         spike_times_amps = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.uint32, name='spike_times_amps.raw',
                                                   memmap=memmap)
-        spike_clusters_amps = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.uint32, name='spike_clusters_amps.raw',
+        spike_clusters_amps = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.uint32,
+                                                     name='spike_clusters_amps.raw',
                                                      memmap=memmap)
-        amplitudes = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.float32, name='amplitudes.raw', memmap=memmap)
+        amplitudes = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.float32, name='amplitudes.raw',
+                                            memmap=memmap)
     else:
         spike_times_amps, spike_clusters_amps, amplitudes = None, None, None
-    
 
     if compute_pc_features:
         spike_times_pca = sorting.allocate_array(shape=(n_pca_amps, 1), dtype=np.uint32, name='spike_times_pca.raw',
@@ -1421,7 +1476,6 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
     for i_u, id in enumerate(sorting.get_unit_ids()):
         st = sorting.get_unit_spike_train(id)
         cl = [i_u] * len(st)
-        
 
         # take care of amps and pca computed on subset of spikes
         if compute_pc_features:
@@ -1444,21 +1498,20 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         # assign
         spike_times[i_start_st:i_start_st + len(st)] = st[:, np.newaxis]
         spike_clusters[i_start_st:i_start_st + len(st)] = np.array(cl)[:, np.newaxis]
-        
+
         if compute_amplitudes:
             spike_times_amps[i_start_amp:i_start_amp + len(st_amp)] = st_amp[:, np.newaxis]
             spike_clusters_amps[i_start_amp:i_start_amp + len(st_amp)] = np.array(cl_amp)[:, np.newaxis]
             amplitudes[i_start_amp:i_start_amp + len(st_amp)] = amp[:, np.newaxis]
             i_start_amp += len(st_amp)
-            
+
         if compute_pc_features:
             spike_times_pca[i_start_pc:i_start_pc + len(st_pca)] = st_pca[:, np.newaxis]
             spike_clusters_pca[i_start_pc:i_start_pc + len(st_pca)] = np.array(cl_pca)[:, np.newaxis]
             pc_features[i_start_pc:i_start_pc + len(st_pca)] = pc.swapaxes(1, 2)
             i_start_pc += len(st_pca)
-            
+
         i_start_st += len(st)
-        
 
     sorting_idxs = np.argsort(spike_times[:, 0])
     spike_times[:] = spike_times[sorting_idxs]
@@ -1481,7 +1534,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
            amplitudes, pc_features, pc_feature_ind, templates, channel_index_list
 
 
-def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes, 
+def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
                   max_channels_per_template, **kwargs):
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
         raise AttributeError()
@@ -1579,8 +1632,8 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
                                 "They should correspond.")
             if len(unit_chans_idxs) != max_num_chans_in_group:
                 # add empty channel
-                lacking_channels = max_num_chans_in_group-len(unit_chans_idxs)
-                append_chan = [-1]*lacking_channels 
+                lacking_channels = max_num_chans_in_group - len(unit_chans_idxs)
+                append_chan = [-1] * lacking_channels
                 unit_chans = np.array(unit_chans_idxs + append_chan)
                 templates_ind[u_i] = unit_chans
                 templates_red[u_i, :, :len(unit_chans_idxs)] = templates[u_i, :, unit_chans_idxs].T
@@ -1815,3 +1868,50 @@ def _extract_waveforms_one_unit(unit, rec_arg, sort_arg, channel_ids, unit_ids, 
                         memmap_array[:] = wf
                     waveforms = memmap_array
                 return waveforms, list(indexes), list(max_channel_idxs),
+
+
+def _extract_amplitudes_one_unit(unit, rec_arg, sort_arg, channel_ids, max_spikes_per_unit, frames_before, frames_after,
+                                 peak, method, seed, memmap_array=None):
+    if isinstance(rec_arg, dict):
+        recording = se.load_extractor_from_dict(rec_arg)
+    else:
+        recording = rec_arg
+    if isinstance(sort_arg, dict):
+        sorting = se.load_extractor_from_dict(sort_arg)
+    else:
+        sorting = sort_arg
+
+    spike_train = sorting.get_unit_spike_train(unit)
+    if max_spikes_per_unit < len(spike_train):
+        indexes = np.sort(np.random.RandomState(seed=seed).permutation(len(spike_train))[:max_spikes_per_unit])
+    else:
+        indexes = np.arange(len(spike_train))
+    spike_train = spike_train[indexes]
+
+    snippets = recording.get_snippets(reference_frames=spike_train,
+                                      snippet_len=[frames_before, frames_after], channel_ids=channel_ids)
+    if peak == 'both':
+        amps = np.max(np.abs(snippets), axis=-1)
+        if len(amps.shape) > 1:
+            amps = np.max(amps, axis=-1)
+    elif peak == 'neg':
+        amps = np.min(snippets, axis=-1)
+        if len(amps.shape) > 1:
+            amps = np.min(amps, axis=-1)
+    elif peak == 'pos':
+        amps = np.max(snippets, axis=-1)
+        if len(amps.shape) > 1:
+            amps = np.max(amps, axis=-1)
+    else:
+        raise Exception("'peak' can be 'neg', 'pos', or 'both'")
+
+    if method == 'relative':
+        amps /= np.median(amps)
+
+    if memmap_array is None:
+        amplitudes = amps
+    else:
+        memmap_array[:] = amps
+        amplitudes = memmap_array
+
+    return amplitudes, list(indexes),

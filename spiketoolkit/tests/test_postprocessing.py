@@ -5,6 +5,7 @@ import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy, \
     compute_unit_template_features
+from spiketoolkit.preprocessing import remove_bad_channels
 import pandas
 import os
 import shutil
@@ -150,36 +151,44 @@ def test_max_chan():
 
 @pytest.mark.implemented
 def test_amplitudes():
-    n_wf_samples = 100
-    folder = 'test'
-    if os.path.isdir(folder):
-        shutil.rmtree(folder)
-    rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
-                                                                                          n_channels=4,
-                                                                                          n_wf_samples=n_wf_samples)
-    rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
+    n_jobs = [0, 2]
+    memmap = [True, False]
+    for n in n_jobs:
+        for m in memmap:
+            print('N jobs', n, 'memmap', m)
+            n_wf_samples = 100
+            folder = 'test'
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
+            rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
+                                                                                                  n_channels=4,
+                                                                                                  n_wf_samples=
+                                                                                                  n_wf_samples)
+            rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
 
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False)
+            amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False,
+                                      n_jobs=n, memmap=m)
 
-    for (a, a_gt) in zip(amp, amps):
-        assert np.allclose(a, np.abs(a_gt))
-    assert 'amplitudes' not in sort.get_shared_unit_spike_feature_names()
+            for (a, a_gt) in zip(amp, amps):
+                assert np.allclose(a, np.abs(a_gt))
+            assert 'amplitudes' not in sort.get_shared_unit_spike_feature_names()
 
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=True, peak='neg')
+            amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=True,
+                                      peak='neg', n_jobs=n, memmap=m)
 
-    for (a, a_gt) in zip(amp, amps):
-        assert np.allclose(a, a_gt)
-    assert 'amplitudes' in sort.get_shared_unit_spike_feature_names()
+            for (a, a_gt) in zip(amp, amps):
+                assert np.allclose(a, a_gt)
+            assert 'amplitudes' in sort.get_shared_unit_spike_feature_names()
 
-    # relative
-    amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False,
-                              recompute_info=True, method='relative')
+            # relative
+            amp = get_unit_amplitudes(rec, sort, frames_before=50, frames_after=50, save_property_or_features=False,
+                                      recompute_info=True, method='relative', n_jobs=n, memmap=m)
 
-    amps_rel = [a / np.median(a) for a in amps]
+            amps_rel = [a / np.median(a) for a in amps]
 
-    for (a, a_gt) in zip(amp, amps_rel):
-        assert np.allclose(a, np.abs(a_gt), 0.02)
-    shutil.rmtree('test')
+            for (a, a_gt) in zip(amp, amps_rel):
+                assert np.allclose(a, np.abs(a_gt), 0.02)
+            shutil.rmtree('test')
 
 
 @pytest.mark.implemented
@@ -195,6 +204,9 @@ def test_export_to_phy():
     export_to_phy(rec, sort, output_folder='phy_max_channels', max_channels_per_template=4, recompute_info=True)
     export_to_phy(rec, sort, output_folder='phy_no_feat', grouping_property='group', compute_pc_features=False,
                   recompute_info=True)
+    export_to_phy(rec, sort, output_folder='phy_no_amp', compute_amplitudes=False)
+    export_to_phy(rec, sort, output_folder='phy_no_amp_feat', compute_amplitudes=False,
+                  compute_pc_features=False)
 
     rec_phy = se.PhyRecordingExtractor('phy')
     rec_phyg = se.PhyRecordingExtractor('phy_group')
@@ -202,6 +214,10 @@ def test_export_to_phy():
     assert np.allclose(rec.get_traces(), rec_phyg.get_traces())
     assert not (Path('phy_no_feat') / 'pc_features.npy').is_file()
     assert not (Path('phy_no_feat') / 'pc_feature_ind.npy').is_file()
+    assert not (Path('phy_no_amp') / 'amplitudes.npy').is_file()
+    assert not (Path('phy_no_amp_feat') / 'amplitudes.npy').is_file()
+    assert not (Path('phy_no_amp_feat') / 'pc_features.npy').is_file()
+    assert not (Path('phy_no_amp_feat') / 'pc_feature_ind.npy').is_file()
 
     sort_phy = se.PhySortingExtractor('phy', load_waveforms=True)
     sort_phyg = se.PhySortingExtractor('phy_group', load_waveforms=True)
@@ -211,13 +227,20 @@ def test_export_to_phy():
     assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
     assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
 
+    rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
+    recrm = remove_bad_channels(rec, [1, 2, 5])
+    export_to_phy(recrm, sort, output_folder='phy_rm', grouping_property='group', recompute_info=True, verbose=True)
+    templates_ind = np.load('phy_rm/template_ind.npy')
+    assert len(np.where(templates_ind == -1)[0]) > 0  # removed channels are -1
+
     shutil.rmtree('test')
     shutil.rmtree('phy')
     shutil.rmtree('phy_group')
     shutil.rmtree('phy_max_channels')
     shutil.rmtree('phy_no_feat')
-
-
+    shutil.rmtree('phy_no_amp')
+    shutil.rmtree('phy_no_amp_feat')
+    shutil.rmtree('phy_rm')
 
 @pytest.mark.implemented
 def test_set_unit_properties_by_max_channel_properties():
