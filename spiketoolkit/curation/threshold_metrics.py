@@ -51,7 +51,8 @@ def threshold_num_spikes(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    duration_in_frames=None, freq_min=300.0, freq_max=6000.0, unit_ids=None, verbose=params_dict['verbose'])
+                    duration_in_frames=None, freq_min=300.0, freq_max=6000.0, unit_ids=None,
+                    verbose=params_dict['verbose'], raise_if_empty=False)
 
     ns = NumSpikes(metric_data=md)
     threshold_sorting = ns.threshold_metric(threshold, threshold_sign, **kwargs)

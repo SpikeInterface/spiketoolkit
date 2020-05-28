@@ -26,6 +26,7 @@ class MetricData:
         freq_max,
         unit_ids,
         verbose,
+        raise_if_empty=True
     ):
         """
         Computes and stores inital data along with the unit ids to be used for computing metrics.
@@ -50,6 +51,8 @@ class MetricData:
             List of unit ids to compute metric for. If not specified, all units are used
         verbose: bool
             If True, progress bar is displayed
+        raise_if_empty: bool
+            If True, an Exception is thrown if some spike trains are empty
         """
         if sampling_frequency is None and sorting.get_sampling_frequency() is None and recording is None:
             raise ValueError(
@@ -63,9 +66,11 @@ class MetricData:
             self._sampling_frequency = sampling_frequency
 
         # checks to see if any units have no spikes (will break metric calculation)
-        for unit_id in sorting.get_unit_ids():
-            if len(sorting.get_unit_spike_train(unit_id)) == 0:
-                raise ValueError("Spike trains must have none zero length. Please remove all zero length spike trains")
+        if raise_if_empty:
+            for unit_id in sorting.get_unit_ids():
+                if len(sorting.get_unit_spike_train(unit_id)) == 0:
+                    raise ValueError("Spike trains must have none zero length. "
+                                     "Please remove all zero length spike trains")
 
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
