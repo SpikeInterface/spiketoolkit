@@ -3,11 +3,6 @@ from spiketoolkit.postprocessing.utils import get_amplitudes_params, get_wavefor
     get_common_params, get_pca_params
 import numpy as np
 
-recording_params_dict = OrderedDict([('apply_filter', True), ('freq_min', 300.0), ('freq_max', 6000.0)])
-
-def get_recording_params():
-    return recording_params_dict.copy()
-
 def get_validation_params():
     '''
     Returns all available keyword argument params
