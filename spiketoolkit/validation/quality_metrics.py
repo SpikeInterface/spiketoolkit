@@ -62,7 +62,7 @@ def compute_num_spikes(
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None,
                     apply_filter=False, freq_min=params_dict["freq_min"],
                     freq_max=params_dict["freq_max"], unit_ids=unit_ids, 
-                    duration_in_frames=None, verbose=params_dict['verbose'])
+                    duration_in_frames=None, verbose=params_dict['verbose'], raise_if_empty=False)
 
     ns = NumSpikes(metric_data=md)
     num_spikes = ns.compute_metric(**kwargs)
