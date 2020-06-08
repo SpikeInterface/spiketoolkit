@@ -10,7 +10,7 @@ class LRatio(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('num_channels_to_compare', 13), ('max_spikes_per_cluster', 500)])
-    curator_name = "ThresholdLRatio"
+    curator_name = "ThresholdLRatios"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="l_ratio")

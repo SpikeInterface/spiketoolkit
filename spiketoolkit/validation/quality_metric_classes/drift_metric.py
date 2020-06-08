@@ -9,7 +9,7 @@ class DriftMetric(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('drift_metrics_interval_s', 51), ('drift_metrics_min_spikes_per_interval', 10)])
-    curator_name = "ThresholdDriftMetric"
+    curator_name = "ThresholdDriftMetrics"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="drift_metric")

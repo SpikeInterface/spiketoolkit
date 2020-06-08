@@ -10,7 +10,7 @@ class SilhouetteScore(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('max_spikes_for_silhouette', 10000)])
-    curator_name = "ThresholdSilhouetteScore"
+    curator_name = "ThresholdSilhouetteScores"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="silhouette_score")

@@ -1,4 +1,4 @@
-from .quality_metric import QualityMetric
+ from .quality_metric import QualityMetric
 import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
@@ -10,7 +10,7 @@ class FiringRate(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict()
-    curator_name = "ThresholdFiringRate"
+    curator_name = "ThresholdFiringRates"
 
     def __init__(
             self,

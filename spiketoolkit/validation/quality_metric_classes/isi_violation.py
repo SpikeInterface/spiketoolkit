@@ -10,7 +10,7 @@ class ISIViolation(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('isi_threshold', 0.0015), ('min_isi', None)])
-    curator_name = "ThresholdISIViolation"
+    curator_name = "ThresholdISIViolations"
 
     def __init__(
             self,

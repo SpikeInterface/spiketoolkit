@@ -9,7 +9,7 @@ from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 class AmplitudeCutoff(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
-    curator_name = "ThresholdAmplitudeCutoff"
+    curator_name = "ThresholdAmplitudeCutoffs"
     params = OrderedDict([])
 
     def __init__(self, metric_data):

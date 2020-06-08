@@ -10,7 +10,7 @@ class PresenceRatio(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict()
-    curator_name = "ThresholdPresenceRatio"
+    curator_name = "ThresholdPresenceRatios"
 
     def __init__(
             self,
