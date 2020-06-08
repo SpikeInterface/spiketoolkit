@@ -12,7 +12,7 @@ class SNR(QualityMetric):
     installation_mesg = ""  # err
     params = OrderedDict([('snr_mode', "mad"), ('snr_noise_duration', 10.0), ('max_spikes_per_unit_for_snr', 1000),
                           ('template_mode', "median"), ('max_channel_peak', "both")])
-    curator_name = "ThresholdSNR"
+    curator_name = "ThresholdSNRs"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="snr")

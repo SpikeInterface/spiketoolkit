@@ -10,7 +10,7 @@ class IsolationDistance(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
     params = OrderedDict([('num_channels_to_compare', 13), ('max_spikes_per_cluster', 500)])
-    curator_name = "ThresholdIsolationDistance"
+    curator_name = "ThresholdIsolationDistances"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="isolation_distance")

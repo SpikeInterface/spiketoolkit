@@ -12,7 +12,7 @@ class NearestNeighbor(QualityMetric):
     params = OrderedDict(
         [('num_channels_to_compare', 13), ('max_spikes_per_cluster', 500), ('max_spikes_for_nn', 10000),
          ('n_neighbors', 4)])
-    curator_name = "ThresholdNearestNeighbor"
+    curator_name = "ThresholdNearestNeighbors"
 
     def __init__(self, metric_data):
         QualityMetric.__init__(self, metric_data, metric_name="nearest_neighbor")

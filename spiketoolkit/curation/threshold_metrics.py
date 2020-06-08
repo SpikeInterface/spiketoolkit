@@ -35,7 +35,7 @@ def threshold_num_spikes(
         If 'less_or_equal', will threshold any metric less than or equal to the given threshold
         If 'greater', will threshold any metric greater than the given threshold
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold
-    sampling_frequency:
+    sampling_frequency: float
         The sampling frequency of the result. If None, will check to see if sampling frequency is in sorting extractor
     **kwargs: keyword arguments
         Keyword arguments among the following:
@@ -715,7 +715,7 @@ def threshold_isolation_distances(
             max_channels_per_waveforms: int or None
                 Maximum channels per waveforms to return. If None, all channels are returned
             n_jobs: int
-                Number of parallel jobs (default 1)
+                Number of parallel jobs (default None)
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
             save_property_or_features: bool
