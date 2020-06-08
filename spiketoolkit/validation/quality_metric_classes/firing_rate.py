@@ -1,4 +1,4 @@
- from .quality_metric import QualityMetric
+from .quality_metric import QualityMetric
 import numpy as np
 import spikemetrics.metrics as metrics
 from .utils.thresholdcurator import ThresholdCurator
