@@ -877,7 +877,7 @@ def threshold_drift_metrics(
         If 'greater', will threshold any metric greater than the given threshold.
         If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
     metric_name: str
-        The name of the nearest neighbor metric to be thresholded (either "max_drift" or "cumulative_drift").
+        The name of the drift metric to be thresholded (either "max_drift" or "cumulative_drift").
     drift_metrics_interval_s: float
         Time period for evaluating drift.
     drift_metrics_min_spikes_per_interval: int
