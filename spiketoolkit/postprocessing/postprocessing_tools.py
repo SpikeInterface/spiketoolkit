@@ -46,7 +46,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
                 If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
                 property of the recording extractor channel on which the average waveform is the largest
             max_channels_per_waveforms: int or None
-                Maximum channels per waveforms to return. If None, all channels are returned
+                Maximum channels per waveforms to return. If None, all channels are returned.
             n_jobs: int
                 Number of parallel jobs (default 1)
             max_spikes_per_unit: int
@@ -505,6 +505,10 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
                 If True (default), waveforms are saved as features of the sorting extractor object
             recompute_info: bool
                 If True, waveforms are recomputed (default False)
+            n_jobs: int
+                Number of jobs for parallelization. Default is None (no parallelization).
+            joblib_backend: str
+                The backend for joblib. Default is 'loky'.
             verbose: bool
                 If True output is verbose
 
@@ -1072,6 +1076,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
                 property of the recording extractor channel on which the average waveform is the largest
             n_jobs: int
                 Number of parallel jobs (default 1)
+            joblib_backend: str
+                The backend for joblib. Default is 'loky'.
             method: str
                 If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
                 If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes.
