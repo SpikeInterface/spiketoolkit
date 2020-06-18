@@ -1659,7 +1659,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
     # Reorder template with amplitude for phy
-    templates, templates_ind = _template_descending_order(recording, sorting, templates, templates_ind)
+    templates, templates_ind = _template_descending_order(recording, templates, templates_ind)
 
     # similar_templates.npy - [nTemplates, nTemplates] single
     similar_templates = _compute_templates_similarity(templates, templates_ind)
