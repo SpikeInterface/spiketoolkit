@@ -1671,7 +1671,7 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
            spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, positions
 
 
-def _template_descending_order(recording, sorting, templates, templates_ind):
+def _template_descending_order(recording, templates, templates_ind):
     # Reorder template with amplitude for phy
     for n, template in enumerate(templates):
         max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
