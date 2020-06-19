@@ -1658,15 +1658,36 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
     else:
         templates_ind = np.tile(np.arange(recording.get_num_channels()), (len(sorting.get_unit_ids()), 1))
 
+    # Reorder template with amplitude for phy
+    templates, templates_ind = _template_descending_order(recording, templates, templates_ind)
+
     # similar_templates.npy - [nTemplates, nTemplates] single
     similar_templates = _compute_templates_similarity(templates, templates_ind)
 
     # spike_templates.npy - [nSpikes, ] uint32
     spike_templates = spike_clusters
-
+    
     return spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, \
            spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, positions
 
+
+def _template_descending_order(recording, templates, templates_ind):
+    # Reorder template with amplitude for phy
+    for n, template in enumerate(templates):
+        max_channel_idx = np.unravel_index(np.argmax(np.abs(template)),
+                                           template.shape)[1]
+        locs = [i for _ind, i in enumerate(recording.get_channel_locations()) if _ind in templates_ind[n]]
+        loc_max = locs[max_channel_idx]
+        distances = [np.linalg.norm(l - loc_max) for l in locs]
+        max_channel_idxs = np.argsort(distances)
+        
+        # If dead channel and grouping_property, template_ind end with -1 (30 line before), fill max_channel_idxs with -1 
+        if len(max_channel_idxs) < len(templates_ind[n]):
+            max_channel_idxs = list(max_channel_idxs) + [-1] * (len(templates_ind[n])-len(max_channel_idxs))
+        
+        templates[n] = templates[n, :, max_channel_idxs].T
+        templates_ind[n] = templates_ind[n, max_channel_idxs]
+    return templates, templates_ind
 
 def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, verbose):
     if isinstance(rec_arg, dict):
