@@ -5,6 +5,7 @@ from .quality_metric import QualityMetric
 from collections import OrderedDict
 from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
+
 class DriftMetric(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -28,6 +29,7 @@ class DriftMetric(QualityMetric):
             self._metric_data._pc_feature_ind,
             drift_metrics_interval_s,
             drift_metrics_min_spikes_per_interval,
+            channel_locations=self._metric_data._recording.get_channel_locations(),
             spike_cluster_subset=self._metric_data._unit_indices,
             verbose=self._metric_data.verbose,
         )
