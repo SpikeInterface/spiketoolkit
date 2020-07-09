@@ -55,9 +55,8 @@ class MetricData:
             If True, an Exception is thrown if some spike trains are empty
         """
         if sampling_frequency is None and sorting.get_sampling_frequency() is None and recording is None:
-            raise ValueError(
-                "Please pass in a sampling frequency (your SortingExtractor does not have one specified and no RecordingExtractor given)."
-            )
+            raise ValueError("Please pass in a sampling frequency (your SortingExtractor does not have one specified "
+                             "and no RecordingExtractor given).")
         elif sampling_frequency is None and sorting.get_sampling_frequency() is not None:
             self._sampling_frequency = sorting.get_sampling_frequency()
         elif sampling_frequency is None and recording is not None:
@@ -75,20 +74,23 @@ class MetricData:
         if unit_ids is None:
             unit_ids = sorting.get_unit_ids()
         else:
-            unit_ids = set(unit_ids)
-            unit_ids = list(unit_ids.intersection(sorting.get_unit_ids()))
+            unit_ids_keep = []
+            for unit in unit_ids:
+                if unit in sorting.get_unit_ids():
+                    unit_ids_keep.append(unit)
+                else:
+                    print(f'Unit {unit} is invalid')
+            unit_ids = unit_ids_keep
 
         if len(unit_ids) == 0:
             raise ValueError("No units found.")
 
-        spike_times, spike_clusters = get_spike_times_metrics_data(
-            sorting, self._sampling_frequency
-        )
+        spike_times, spike_clusters = get_spike_times_metrics_data(sorting, self._sampling_frequency)
         assert isinstance(
             sorting, SortingExtractor
         ), "'sorting' must be  a SortingExtractor object"
         self._sorting = sorting
-        self._set_unit_ids(unit_ids)
+        self._unit_ids = unit_ids
         self._spike_times = spike_times
         self._spike_clusters = spike_clusters
         self._total_units = len(sorting.get_unit_ids())
@@ -229,9 +231,6 @@ class MetricData:
 
     def set_pc_feature_ind(self, pc_feature_ind):
         self._pc_feature_ind = pc_feature_ind
-
-    def _set_unit_ids(self, unit_ids):
-        self._unit_ids = unit_ids
 
     def get_unit_ids(self):
         return self._unit_ids
