@@ -28,7 +28,7 @@ class FilterRecording(RecordingExtractor):
             dtype_signed = dtype[1:]
             exp_idx = dtype.find('int') + 3
             exp = int(dtype[exp_idx:])
-            offset = - 2**(exp - 1) - 1
+            offset = - 2**(exp - 1)
             self._recording = TransformRecording(self._recording, offset=offset, dtype=dtype_signed)
             print(f"dtype converted from {dtype} to {dtype_signed} before filtering")
             self._dtype = dtype_signed
