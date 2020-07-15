@@ -1113,7 +1113,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         sorting = st.curation.threshold_num_spikes(sorting, 1, "less")
 
     if not recording.is_filtered:
-        print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy."
+        print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy.\n"
               "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
 
     if len(sorting.get_unit_ids()) == 0:
@@ -1132,16 +1132,24 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     if dtype is None:
         dtype = recording.get_dtype()
 
-    recording.write_to_binary_dat_format(output_folder / 'recording.dat', dtype=dtype)
+    if isinstance(recording, se.CacheRecordingExtractor):
+        rec_path = str(Path(recording.filename).absolute())
+        dtype = recording.get_dtype()
+    elif isinstance(recording, se.BinDatRecordingExtractor):
+        rec_path = recording._kwargs['file_path']
+        dtype = recording.get_dtype()
+    else:
+        rec_path = 'recording.dat'  # Use relative path in this case
+        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
-        f.write("dat_path =" + "r'" + 'recording.dat' + "'" + '\n')
-        f.write('n_channels_dat = ' + str(recording.get_num_channels()) + '\n')
-        f.write("dtype = '" + str(dtype) + "'\n")
-        f.write('offset = 0\n')
-        f.write('sample_rate = ' + str(recording.get_sampling_frequency()) + '\n')
-        f.write('hp_filtered = False')
+        f.write(f"dat_path = r'{str(rec_path)}'\n")
+        f.write(f"n_channels_dat = {recording.get_num_channels()}\n")
+        f.write(f"dtype = '{str(dtype)}'\n")
+        f.write(f"offset = 0\n")
+        f.write(f"sample_rate = {recording.get_sampling_frequency()}\n")
+        f.write(f"hp_filtered = {recording.is_filtered}")
 
     spike_times, spike_clusters, amplitudes, channel_map, pc_features, pc_feature_ind, \
     spike_templates, templates, templates_ind, similar_templates, channel_map_si, channel_groups, \
