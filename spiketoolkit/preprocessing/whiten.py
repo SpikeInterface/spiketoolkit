@@ -47,7 +47,7 @@ class WhitenRecording(FilterRecording):
         return W
 
     def filter_chunk(self, *, start_frame, end_frame, channel_ids):
-        chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame, channel_ids=channel_ids    )
+        chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame, channel_ids=channel_ids)
         chunk = chunk - np.mean(chunk, axis=1, keepdims=True)
         chunk2 = self._whitening_matrix @ chunk
         return chunk2

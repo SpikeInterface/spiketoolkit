@@ -133,7 +133,6 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, filte
         order=order,
         chunk_size=chunk_size,
         cache_chunks=cache_chunks
-
     )
     if cache_to_file:
         return se.CacheRecordingExtractor(bpf_recording, chunk_size=chunk_size)
