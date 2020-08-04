@@ -71,6 +71,7 @@ def test_bandpass_filter_with_cache():
     check_dumping(rec_filtered)
     check_dumping(rec_filtered2)
     check_dumping(rec_filtered3)
+    check_dumping(rec_filtered4)
 
     shutil.rmtree('test')
 
