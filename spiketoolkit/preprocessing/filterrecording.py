@@ -67,8 +67,7 @@ class FilterRecording(RecordingExtractor):
                     end0 = end_frame - ich * self._chunk_size
                 else:
                     end0 = self._chunk_size
-                chan_idx = [self.get_channel_ids().index(chan) for chan in channel_ids]
-                filtered_chunk[:, pos:pos+end0-start0] = filtered_chunk0[chan_idx, start0:end0]
+                filtered_chunk[:, pos:pos+end0-start0] = filtered_chunk0[:, start0:end0]
                 pos += (end0-start0)
         else:
             filtered_chunk = self.filter_chunk(start_frame=start_frame, end_frame=end_frame, channel_ids=channel_ids)
@@ -100,15 +99,27 @@ class FilterRecording(RecordingExtractor):
             chunk0 = self._filtered_cache_chunks.get(code)
         else:
             chunk0 = None
+
         if chunk0 is not None:
-            return chunk0
+            if chunk0.shape[0] == len(channel_ids):
+                return chunk0
+            else:
+                channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
+                return chunk0[channel_idxs]
 
         start0 = ind * self._chunk_size
         end0 = (ind + 1) * self._chunk_size
-        chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids)
+
         if self._cache_chunks:
+            # filter all channels if cache_chunks is used
+            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=self.get_channel_ids())
             self._filtered_cache_chunks.add(code, chunk1)
-        
+            channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
+            chunk1 = chunk1[channel_idxs]
+        else:
+            # otherwise, only filter requested channels
+            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids)
+
         return chunk1
             
 
