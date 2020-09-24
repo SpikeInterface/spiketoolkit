@@ -1,23 +1,11 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
-
+from spikeextractors.extraction_tools import check_get_traces_args
 
 class NormalizeByQuantileRecording(RecordingExtractor):
 
     preprocessor_name = 'NormalizeByQuantile'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'scale', 'type': 'float',
-            'title': "Scale for the output distribution"},
-        {'name': 'median', 'type': 'float',
-            'title': "Median for the output distribution"},
-        {'name': 'q1', 'type': 'float',
-            'title': "Lower quantile used for measuring the scale"},
-        {'name': 'q2', 'type': 'float',
-            'title': "Upper quantile used for measuring the scale"},
-        {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
-         'title': "Random seed for reproducibility."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, scale=1.0, median=0.0, q1=0.01, q2=0.99, seed=0):
@@ -33,6 +21,10 @@ class NormalizeByQuantileRecording(RecordingExtractor):
         self._offset = median - pre_median * self._scalar
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+        self.is_filtered = self._recording.is_filtered
+
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'scale': scale, 'median': median,
+                        'q1': q1, 'q2': q2, 'seed': seed}
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
@@ -53,13 +45,8 @@ class NormalizeByQuantileRecording(RecordingExtractor):
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
 
+    @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames()
-        if channel_ids is None:
-            channel_ids = self.get_channel_ids()
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame)

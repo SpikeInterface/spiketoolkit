@@ -1,16 +1,11 @@
 from spikeextractors import RecordingExtractor
+from spikeextractors.extraction_tools import check_get_traces_args
 import numpy as np
 
 
-class ClipTracesRecording(RecordingExtractor):
-    preprocessor_name = 'ClipTraces'
+class ClipRecording(RecordingExtractor):
+    preprocessor_name = 'Clip'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'a_min', 'type': 'float',
-         'title': "Minimum value. If `None`, clipping is not performed on lower interval edge."},
-        {'name': 'a_max', 'type': 'float',
-         'title': "Maximum value. If `None`, clipping is not performed on upper interval edge."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, a_min=None, a_max=None):
@@ -21,6 +16,10 @@ class ClipTracesRecording(RecordingExtractor):
         self._a_max = a_max
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+        self.is_filtered = self._recording.is_filtered
+
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'a_min': a_min, 'a_max': a_max}
+
 
     def get_sampling_frequency(self):
         return self._recording.get_sampling_frequency()
@@ -31,13 +30,8 @@ class ClipTracesRecording(RecordingExtractor):
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
 
+    @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames()
-        if channel_ids is None:
-            channel_ids = self.get_channel_ids()
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame)
@@ -48,7 +42,7 @@ class ClipTracesRecording(RecordingExtractor):
         return traces
 
 
-def clip_traces(recording, a_min=None, a_max=None):
+def clip(recording, a_min=None, a_max=None):
     '''
     Limit the values of the data between a_min and a_max. Values exceeding the
     range will be set to the minimum or maximum, respectively.
@@ -69,6 +63,6 @@ def clip_traces(recording, a_min=None, a_max=None):
     rescaled_traces: ClipTracesRecording
         The clipped traces recording extractor object
     '''
-    return ClipTracesRecording(
+    return ClipRecording(
         recording=recording, a_min=a_min, a_max=a_max
     )

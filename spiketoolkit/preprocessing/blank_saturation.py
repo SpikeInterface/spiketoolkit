@@ -1,16 +1,11 @@
 from spikeextractors import RecordingExtractor
+from spikeextractors.extraction_tools import check_get_traces_args
 import numpy as np
 
 
 class BlankSaturationRecording(RecordingExtractor):
     preprocessor_name = 'BlankSaturation'
     installed = True  # check at class level if installed or not
-    preprocessor_gui_params = [
-        {'name': 'threshold', 'type': 'float',
-         'title': "Scale for the output distribution"},
-        {'name': 'seed', 'type': 'int', 'value': 0, 'default': 0, 
-         'title': "Random seed for reproducibility."},
-    ]
     installation_mesg = ""  # err
 
     def __init__(self, recording, threshold=None, seed=0):
@@ -37,6 +32,9 @@ class BlankSaturationRecording(RecordingExtractor):
                 self._lower = True
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._recording)
+        self.is_filtered = self._recording.is_filtered
+
+        self._kwargs = {'recording': recording.make_serialized_dict(), 'threshold': threshold, 'seed': seed}
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
@@ -57,13 +55,8 @@ class BlankSaturationRecording(RecordingExtractor):
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
 
+    @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        if start_frame is None:
-            start_frame = 0
-        if end_frame is None:
-            end_frame = self.get_num_frames()
-        if channel_ids is None:
-            channel_ids = self.get_channel_ids()
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame)

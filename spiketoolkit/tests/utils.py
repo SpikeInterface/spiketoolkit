@@ -1,7 +1,7 @@
 import numpy as np
 import scipy.signal as ss
 import spikeextractors as se
-
+from pathlib import Path
 
 def check_signal_power_signal1_below_signal2(signals1, signals2, freq_range, fs):
     '''
@@ -130,3 +130,16 @@ def create_signal_with_known_waveforms(n_channels=4, n_waveforms=2, n_wf_samples
 def create_fake_waveforms_with_known_pc():
     # HINT: start from Guassians in PC space and stereotyped waveforms and build dataset.
     pass
+
+
+def create_dumpable_extractors_from_existing(folder, RX, SX):
+    folder = Path(folder)
+
+    if 'location' not in RX.get_shared_channel_property_names():
+        RX.set_channel_locations(np.random.randn(RX.get_num_channels(), 2))
+    se.MdaRecordingExtractor.write_recording(RX, folder)
+    RX_mda = se.MdaRecordingExtractor(folder)
+    se.NpzSortingExtractor.write_sorting(SX, folder / 'sorting.npz')
+    SX_npz = se.NpzSortingExtractor(folder / 'sorting.npz')
+
+    return RX_mda, SX_npz

@@ -10,7 +10,7 @@ pkg_name = "spiketoolkit"
 setup(
     name=pkg_name,
     version=version,
-    author="Cole Hurwitz, Jeremy Magland, Alessio Paolo Buccino, Matthias Hennig, Samuel Garcia",
+    author="Alessio Buccino, Cole Hurwitz, Samuel Garcia, Jeremy Magland, Matthias Hennig",
     author_email="alessiop.buccino@gmail.com",
     description="Python toolkit for analysis, visualization, and comparison of spike sorting output",
     long_description=long_description,
@@ -21,7 +21,8 @@ setup(
     install_requires=[
         'numpy',
         'spikeextractors',
-        'spikemetrics',
+        'spikemetrics>=0.2.2',
+        'spikefeatures',
         'scikit-learn',
         'scipy',
         'pandas',
