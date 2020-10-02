@@ -1033,7 +1033,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 
 def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
-                  compute_amplitudes=True, max_channels_per_template=16, **kwargs):
+                  compute_amplitudes=True, max_channels_per_template=16, copy_binary=True,
+                  **kwargs):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
@@ -1051,6 +1052,9 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         If True (default), waveforms amplitudes are compute
     max_channels_per_template: int or None
         Maximum channels per unit to return. If None, all channels are returned
+    copy_binary: bool
+        Copy or not binary file in phy/ directory. If False and recording object
+        is Cache or BinDat extractors link the original raw file. Default is True.
     **kwargs: Keyword arguments
         A dictionary with default values can be retrieved with:
         st.postprocessing.get_waveforms_params():
@@ -1132,15 +1136,14 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     if dtype is None:
         dtype = recording.get_dtype()
 
-    if isinstance(recording, se.CacheRecordingExtractor):
+    if copy_binary:
+        rec_path = 'recording.dat'  # Use relative path in this case
+        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)      
+    elif isinstance(recording, se.CacheRecordingExtractor) or isinstance(recording, se.BinDatRecordingExtractor): # Don't save recording.dat, use path to the raw file instead
         rec_path = str(Path(recording.filename).absolute())
         dtype = recording.get_dtype()
-    elif isinstance(recording, se.BinDatRecordingExtractor):
-        rec_path = recording._kwargs['file_path']
-        dtype = recording.get_dtype()
-    else:
-        rec_path = 'recording.dat'  # Use relative path in this case
-        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)
+    else: # Don't save recording.dat
+        rec_path = 'None' 
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
