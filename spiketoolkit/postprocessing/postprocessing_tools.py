@@ -1053,8 +1053,10 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     max_channels_per_template: int or None
         Maximum channels per unit to return. If None, all channels are returned
     copy_binary: bool
-        Copy or not binary file in phy/ directory. If False and recording object
-        is Cache or BinDat extractors link the original raw file. Default is True.
+        If True, the recording is copied and saved in the phy 'output_folder'. If False and the 
+        'recording' is a CacheRecordingExtractor or a BinDatRecordingExtractor, then a relative
+        link to the file recording location is used. Otherwise, the recording is not copied and the
+        recording path is set to 'None'. (default True)
     **kwargs: Keyword arguments
         A dictionary with default values can be retrieved with:
         st.postprocessing.get_waveforms_params():
