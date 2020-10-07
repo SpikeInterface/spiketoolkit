@@ -1144,7 +1144,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     elif isinstance(recording, (se.CacheRecordingExtractor, se.BinDatRecordingExtractor)): # don't save recording.dat, use path to the raw file instead
         rec_path = str(Path(recording.filename).absolute())
         dtype = recording.get_dtype()
-    else: # Don't save recording.dat
+    else: # don't save recording.dat
         rec_path = 'None' 
 
     # write params.py
