@@ -666,6 +666,10 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
         associated to the same spike)
         'detection': activity is computed as the number of spikes (one index per spike)
+    start_frame: int
+        Start frame to compute activity
+    end_frame: int
+        End frame to compute activity
     n_jobs: int
         Number of jobs for parallel processing
     **kwargs: Keyword arguments
@@ -732,7 +736,8 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
                         activity[i] = 0
             else:
                 output_list = Parallel(n_jobs=n_jobs)(
-                    delayed(_extract_activity_one_channel)(rec_arg, ch, detect_sign, detect_threshold, verbose)
+                    delayed(_extract_activity_one_channel)(rec_arg, ch, detect_sign, detect_threshold, start_frame,
+                                                           end_frame, verbose)
                     for ch in channel_ids)
 
                 for i, out in enumerate(output_list):
@@ -741,10 +746,20 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         else:
             sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
                                                              detect_threshold=detect_threshold,
-                                                             align=False, n_jobs=n_jobs, verbose=verbose)
+                                                             align=False, n_jobs=n_jobs, start_frame=start_frame,
+                                                             end_frame=end_frame, verbose=verbose)
             for i, unit in enumerate(sort_detect.get_unit_ids()):
                 n_spikes = len(sort_detect.get_unit_spike_train(unit))
                 activity[i] = n_spikes
+
+        # compute spike rates
+        if start_frame is None:
+            start_frame = 0
+        if end_frame is None:
+            end_frame = recording.get_num_frames()
+        duration = (end_frame - start_frame) / recording.get_sampling_frequency()
+
+        activity /= duration
 
         if normalize:
             activity /= np.max(activity)
@@ -1724,14 +1739,14 @@ def _template_descending_order(recording, templates, templates_ind):
     return templates, templates_ind
 
 
-def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, verbose):
+def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, start_frame, end_frame, verbose):
     if isinstance(rec_arg, dict):
         recording = se.load_extractor_from_dict(rec_arg)
     else:
         recording = rec_arg
     if verbose:
         print(f'Detecting spikes on channel {ch}')
-    trace = np.squeeze(recording.get_traces(channel_ids=ch))
+    trace = np.squeeze(recording.get_traces(channel_ids=ch, start_frame=start_frame, end_frame=end_frame))
     if detect_sign == -1:
         thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
         idx_spikes = np.where(trace < thresh)
