@@ -646,9 +646,9 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
 
 
 def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1, n_jobs=1,
-                                     normalize=True, method='simple', start_frame=None, end_frame=None, **kwargs):
+                                     method='simple', start_frame=None, end_frame=None, **kwargs):
     '''
-    Computes spiking activity for each channel as the number of threshold crossings
+    Computes spiking rate for each channel.
 
     Parameters
     ----------
@@ -660,8 +660,6 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         Detection of threshold in MAD times
     detect_sign: int
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
-    normalize: bool
-        If True, activities are normalized between 0 and 1
     method: str
         'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
         associated to the same spike)
@@ -760,10 +758,7 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         duration = (end_frame - start_frame) / recording.get_sampling_frequency()
 
         activity /= duration
-
-        if normalize:
-            activity /= np.max(activity)
-
+        
         if save_property_or_features:
             for i, ch in enumerate(recording.get_channel_ids()):
                 recording.set_channel_property(ch, 'activity', activity[i])
