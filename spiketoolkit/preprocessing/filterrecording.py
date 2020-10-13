@@ -7,7 +7,7 @@ from spikeextractors.extraction_tools import check_get_traces_args
 
 
 class FilterRecording(RecordingExtractor):
-    def __init__(self, recording, chunk_size=10000, cache_chunks=False):
+    def __init__(self, recording, chunk_size=10000, cache_chunks=False, dtype=None):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         self._recording = recording
@@ -19,7 +19,8 @@ class FilterRecording(RecordingExtractor):
             self._filtered_cache_chunks = None
         self._traces = None
         se.RecordingExtractor.__init__(self)
-        dtype = str(self._recording.get_dtype())
+        if dtype is None:
+            dtype = str(self._recording.get_dtype())
         if 'uint' in dtype:
             if 'numpy' in dtype:
                 dtype = str(dtype).replace("<class '", "").replace("'>", "")
