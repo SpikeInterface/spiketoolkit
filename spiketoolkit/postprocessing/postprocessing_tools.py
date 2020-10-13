@@ -646,9 +646,9 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
 
 
 def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1, n_jobs=1,
-                                     normalize=True, method='simple', start_frame=None, end_frame=None, **kwargs):
+                                     method='simple', start_frame=None, end_frame=None, **kwargs):
     '''
-    Computes spiking activity for each channel as the number of threshold crossings
+    Computes spiking rate for each channel.
 
     Parameters
     ----------
@@ -660,12 +660,14 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         Detection of threshold in MAD times
     detect_sign: int
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
-    normalize: bool
-        If True, activities are normalized between 0 and 1
     method: str
         'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
         associated to the same spike)
         'detection': activity is computed as the number of spikes (one index per spike)
+    start_frame: int
+        Start frame to compute activity
+    end_frame: int
+        End frame to compute activity
     n_jobs: int
         Number of jobs for parallel processing
     **kwargs: Keyword arguments
@@ -732,7 +734,8 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
                         activity[i] = 0
             else:
                 output_list = Parallel(n_jobs=n_jobs)(
-                    delayed(_extract_activity_one_channel)(rec_arg, ch, detect_sign, detect_threshold, verbose)
+                    delayed(_extract_activity_one_channel)(rec_arg, ch, detect_sign, detect_threshold, start_frame,
+                                                           end_frame, verbose)
                     for ch in channel_ids)
 
                 for i, out in enumerate(output_list):
@@ -741,14 +744,21 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         else:
             sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
                                                              detect_threshold=detect_threshold,
-                                                             align=False, n_jobs=n_jobs, verbose=verbose)
+                                                             align=False, n_jobs=n_jobs, start_frame=start_frame,
+                                                             end_frame=end_frame, verbose=verbose)
             for i, unit in enumerate(sort_detect.get_unit_ids()):
                 n_spikes = len(sort_detect.get_unit_spike_train(unit))
                 activity[i] = n_spikes
 
-        if normalize:
-            activity /= np.max(activity)
+        # compute spike rates
+        if start_frame is None:
+            start_frame = 0
+        if end_frame is None:
+            end_frame = recording.get_num_frames()
+        duration = (end_frame - start_frame) / recording.get_sampling_frequency()
 
+        activity /= duration
+        
         if save_property_or_features:
             for i, ch in enumerate(recording.get_channel_ids()):
                 recording.set_channel_property(ch, 'activity', activity[i])
@@ -1033,7 +1043,8 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
 
 
 def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
-                  compute_amplitudes=True, max_channels_per_template=16, **kwargs):
+                  compute_amplitudes=True, max_channels_per_template=16, copy_binary=True,
+                  **kwargs):
     '''
     Exports paired recording and sorting extractors to phy template-gui format.
 
@@ -1051,6 +1062,11 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         If True (default), waveforms amplitudes are compute
     max_channels_per_template: int or None
         Maximum channels per unit to return. If None, all channels are returned
+    copy_binary: bool
+        If True, the recording is copied and saved in the phy 'output_folder'. If False and the 
+        'recording' is a CacheRecordingExtractor or a BinDatRecordingExtractor, then a relative
+        link to the file recording location is used. Otherwise, the recording is not copied and the
+        recording path is set to 'None'. (default True)
     **kwargs: Keyword arguments
         A dictionary with default values can be retrieved with:
         st.postprocessing.get_waveforms_params():
@@ -1132,15 +1148,14 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     if dtype is None:
         dtype = recording.get_dtype()
 
-    if isinstance(recording, se.CacheRecordingExtractor):
+    if copy_binary:
+        rec_path = 'recording.dat'  # Use relative path in this case
+        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)      
+    elif isinstance(recording, (se.CacheRecordingExtractor, se.BinDatRecordingExtractor)): # don't save recording.dat, use path to the raw file instead
         rec_path = str(Path(recording.filename).absolute())
         dtype = recording.get_dtype()
-    elif isinstance(recording, se.BinDatRecordingExtractor):
-        rec_path = recording._kwargs['file_path']
-        dtype = recording.get_dtype()
-    else:
-        rec_path = 'recording.dat'  # Use relative path in this case
-        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)
+    else: # don't save recording.dat
+        rec_path = 'None' 
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
@@ -1719,14 +1734,14 @@ def _template_descending_order(recording, templates, templates_ind):
     return templates, templates_ind
 
 
-def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, verbose):
+def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, start_frame, end_frame, verbose):
     if isinstance(rec_arg, dict):
         recording = se.load_extractor_from_dict(rec_arg)
     else:
         recording = rec_arg
     if verbose:
         print(f'Detecting spikes on channel {ch}')
-    trace = np.squeeze(recording.get_traces(channel_ids=ch))
+    trace = np.squeeze(recording.get_traces(channel_ids=ch, start_frame=start_frame, end_frame=end_frame))
     if detect_sign == -1:
         thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
         idx_spikes = np.where(trace < thresh)

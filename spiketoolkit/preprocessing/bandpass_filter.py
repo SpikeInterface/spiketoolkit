@@ -13,7 +13,7 @@ class BandpassFilterRecording(FilterRecording):
     installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
     def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, filter_type='fft', order=3,
-                 chunk_size=30000, cache_chunks=False):
+                 chunk_size=30000, cache_chunks=False, dtype=None):
         self._freq_min = freq_min
         self._freq_max = freq_max
         self._freq_wid = freq_wid
@@ -29,7 +29,8 @@ class BandpassFilterRecording(FilterRecording):
 
             if not np.all(np.abs(np.roots(self._a)) < 1):
                 raise ValueError('Filter is not stable')
-        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
+        FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks,
+                                 dtype=dtype)
         self.copy_channel_properties(recording)
 
         self.is_filtered = True
