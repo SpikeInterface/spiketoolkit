@@ -11,6 +11,7 @@ class CurationSortingExtractor(SortingExtractor):
         self._parent_sorting = parent_sorting
         self._original_unit_ids = list(np.copy(parent_sorting.get_unit_ids()))
         self._all_ids = list(np.copy(parent_sorting.get_unit_ids()))
+        self._sampling_frequency = parent_sorting.get_sampling_frequency()
 
         # Create and store roots with original unit ids and cached spiketrains
         self._roots = []
@@ -76,9 +77,6 @@ class CurationSortingExtractor(SortingExtractor):
             return spike_train
         else:
             raise ValueError(str(unit_id) + " is an invalid unit id")
-
-    def get_sampling_frequency(self):
-        return self._parent_sorting.get_sampling_frequency()
 
     def print_curation_tree(self, unit_id):
         '''This function prints the current curation tree for the unit_id (roots are current unit ids).

@@ -21,7 +21,6 @@ setup(
     install_requires=[
         'numpy',
         'spikeextractors',
-        'spikesorters',
         'spikemetrics>=0.2.2',
         'spikefeatures',
         'scikit-learn',

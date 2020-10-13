@@ -6,7 +6,7 @@ import numpy as np
 
 
 def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, upsample=1, detect_sign=-1,
-                  min_diff_samples=5, align=True, n_jobs=1, verbose=False):
+                  min_diff_samples=5, align=True, start_frame=None, end_frame=None, n_jobs=1, verbose=False):
     '''
     Detects spikes per channel.
     Parameters
@@ -25,10 +25,15 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
     min_diff_samples: int
         Minimum interval to skip consecutive spikes (default=5)
-    parallel: bool
-        If True, each channel is run in parallel
+    align: bool
+        If True, spike times are aligned on the peak
+    start_frame: int
+        Start frame for detection
+    end_frame: int
+        End frame end frame for detection
     n_jobs: int
         Number of jobs when parallel
+
     Returns
     -------
     sorting_detected: SortingExtractor
@@ -58,7 +63,8 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     if n_jobs > 1:
         output = Parallel(n_jobs=n_jobs)(delayed(_detect_and_align_peaks_single_channel)
                                          (rec_arg, ch, detect_threshold, detect_sign,
-                                          n_pad_samples, upsample, min_diff_samples, align, verbose)
+                                          n_pad_samples, upsample, min_diff_samples, align, start_frame, end_frame,
+                                          verbose)
                                          for ch in channel_ids)
         for o in output:
             spike_times.append(o[0])
@@ -67,7 +73,7 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         for ch in channel_ids:
             peak_times, label = _detect_and_align_peaks_single_channel(recording, ch, detect_threshold, detect_sign,
                                                                        n_pad_samples, upsample, min_diff_samples,
-                                                                       align, verbose)
+                                                                       align, start_frame, end_frame, verbose)
             spike_times.append(peak_times)
             labels.append(label)
 
@@ -84,14 +90,14 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
 
 
 def _detect_and_align_peaks_single_channel(rec_arg, channel, n_std, detect_sign, n_pad, upsample, min_diff_samples,
-                                           align, verbose):
+                                           align, start_frame, end_frame, verbose):
     if verbose:
         print(f'Detecting spikes on channel {channel}')
     if isinstance(rec_arg, dict):
         recording = se.load_extractor_from_dict(rec_arg)
     else:
         recording = rec_arg
-    trace = np.squeeze(recording.get_traces(channel_ids=channel))
+    trace = np.squeeze(recording.get_traces(channel_ids=channel, start_frame=start_frame, end_frame=end_frame))
     if detect_sign == -1:
         thresh = -n_std * np.median(np.abs(trace) / 0.6745)
         idx_spikes = np.where(trace < thresh)[0]
