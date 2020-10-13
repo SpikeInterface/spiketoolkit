@@ -3,105 +3,10 @@ import numpy as np
 from tqdm import tqdm
 
 from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, \
-    get_max_channels_per_waveforms
+    get_max_channels_per_waveforms, extract_snippet_from_traces, divide_recording_into_time_chunks, \
+    get_unit_waveforms_for_chunk
 
 
-def _extract_snippet_from_traces(
-        traces,
-        start_frame,
-        end_frame,
-        channel_indices
-):
-    if (0 <= start_frame) and (end_frame <= traces.shape[1]):
-        x = traces[:, start_frame:end_frame]
-    else:
-        # handle edge cases
-        x = np.zeros((traces.shape[0], end_frame - start_frame), dtype=traces.dtype)
-        i1 = int(max(0, start_frame))
-        i2 = int(min(traces.shape[1], end_frame))
-        x[:, (i1 - start_frame):(i2 - start_frame)] = traces[:, i1:i2]
-    if channel_indices is not None:
-        x = x[channel_indices, :]
-    return x
-
-
-def _get_unit_waveforms_for_chunk(
-        recording,
-        sorting,
-        frame_offset,
-        unit_ids,
-        snippet_len,
-        channel_ids_by_unit,
-        waveform_indexes,
-        spikes_so_far
-):
-    # chunks are chosen small enough so that all traces can be loaded into memory
-    traces = recording.get_traces()
-
-    unit_waveforms = []
-    for i_unit, unit_id in enumerate(unit_ids):
-        times0 = sorting.get_unit_spike_train(unit_id=unit_id)
-        wf_idxs = waveform_indexes[i_unit]
-
-        if channel_ids_by_unit is not None:
-            channel_ids = channel_ids_by_unit[unit_id]
-            all_channel_ids = recording.get_channel_ids()
-            channel_indices = [
-                all_channel_ids.index(ch_id)
-                for ch_id in channel_ids
-            ]
-            len_channel_indices = len(channel_indices)
-        else:
-            channel_indices = None
-            len_channel_indices = traces.shape[0]
-        # num_channels x len_of_one_snippet
-        if wf_idxs is None:  # take all spikes
-            snippets = [
-                _extract_snippet_from_traces(
-                    traces,
-                    start_frame=frame_offset + int(t) - snippet_len[0],
-                    end_frame=frame_offset + int(t) + snippet_len[1],
-                    channel_indices=channel_indices
-                )
-                for t in times0
-            ]
-        else:
-            snippets = [
-                _extract_snippet_from_traces(
-                    traces,
-                    start_frame=frame_offset + int(t) - snippet_len[0],
-                    end_frame=frame_offset + int(t) + snippet_len[1],
-                    channel_indices=channel_indices
-                )
-                for i, t in enumerate(times0) if i + spikes_so_far[i_unit] in wf_idxs
-            ]
-        if len(snippets) > 0:
-            unit_waveforms.append(
-                # len(times0) x num_channels_in_nbhd[unit_id] x len_of_one_snippet
-                np.stack(snippets)
-            )
-        else:
-            unit_waveforms.append(
-                np.zeros((0, len_channel_indices, snippet_len[0] + snippet_len[1]), dtype=traces.dtype)
-            )
-    return unit_waveforms
-
-
-def _divide_recording_into_time_chunks(num_frames, chunk_size, padding_size):
-    chunks = []
-    ii = 0
-    while ii < num_frames:
-        ii2 = int(min(ii + chunk_size, num_frames))
-        chunks.append(dict(
-            istart=ii,
-            iend=ii2,
-            istart_with_padding=int(max(0, ii - padding_size)),
-            iend_with_padding=int(min(num_frames, ii2 + padding_size))
-        ))
-        ii = ii2
-    return chunks
-
-# TODO implement grouping
 def get_unit_waveforms2(
         recording,
         sorting,
@@ -182,7 +87,7 @@ def get_unit_waveforms2(
 
         # chunk_size = num_bytes_per_chunk / num_bytes_per_frame
         padding_size = 100 + n_pad[0] + n_pad[1]  # a bit excess padding
-        chunks = _divide_recording_into_time_chunks(
+        chunks = divide_recording_into_time_chunks(
             num_frames=num_frames,
             chunk_size=chunk_size,
             padding_size=padding_size
@@ -240,7 +145,7 @@ def get_unit_waveforms2(
             )
 
             # num_events_in_chunk x num_channels_in_nbhd[unit_id] x len_of_one_snippet
-            unit_waveforms = _get_unit_waveforms_for_chunk(
+            unit_waveforms = get_unit_waveforms_for_chunk(
                 recording=recording_chunk,
                 sorting=sorting_chunk,
                 frame_offset=chunk['istart'] - chunk['istart_with_padding'],
@@ -283,6 +188,8 @@ def get_unit_waveforms2(
                 np.concatenate(all_unit_waveforms[i_unit], axis=0)
                 for i_unit in range(len(unit_ids))
             ]
+
+        # return correct max channels
 
         if save_property_or_features:
             for i, unit_id in enumerate(unit_ids):
