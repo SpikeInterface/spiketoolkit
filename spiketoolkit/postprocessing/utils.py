@@ -130,7 +130,7 @@ def extract_snippet_from_traces(
         traces,
         start_frame,
         end_frame,
-        channel_indices
+        channel_indices=None
 ):
     if (0 <= start_frame) and (end_frame <= traces.shape[1]):
         x = traces[:, start_frame:end_frame]
@@ -148,61 +148,41 @@ def extract_snippet_from_traces(
 def get_unit_waveforms_for_chunk(
         recording,
         sorting,
-        frame_offset,
+        chunk,
         unit_ids,
         snippet_len,
-        channel_ids_by_unit,
-        waveform_indexes,
-        spikes_so_far
+        spike_times_to_include,
 ):
     # chunks are chosen small enough so that all traces can be loaded into memory
     traces = recording.get_traces()
+    frame_offset = chunk['istart'] - chunk['istart_with_padding']
 
     unit_waveforms = []
     for i_unit, unit_id in enumerate(unit_ids):
-        times0 = sorting.get_unit_spike_train(unit_id=unit_id)
-        wf_idxs = waveform_indexes[i_unit]
+        # find indexes in chunk
+        times = sorting.get_unit_spike_train(unit_id=unit_id)
+        times_in_chunk = []
+        if spike_times_to_include[i_unit] is not None:
+            spike_times = spike_times_to_include[i_unit]
+            spike_time_idxs = np.where((spike_times >= chunk['istart'])
+                                       & (spike_times < chunk['iend']))[0]  # exclude padding
 
-        if channel_ids_by_unit is not None:
-            channel_ids = channel_ids_by_unit[unit_id]
-            all_channel_ids = recording.get_channel_ids()
-            channel_indices = [
-                all_channel_ids.index(ch_id)
-                for ch_id in channel_ids
-            ]
-            len_channel_indices = len(channel_indices)
+            if len(spike_time_idxs) > 0:
+                spike_times = spike_times[spike_time_idxs]
+                times_in_chunk = np.array([t for t in times if t + chunk['istart'] in spike_times])
         else:
-            channel_indices = None
-            len_channel_indices = traces.shape[0]
-        # num_channels x len_of_one_snippet
-        if wf_idxs is None:  # take all spikes
-            snippets = [
-                extract_snippet_from_traces(
-                    traces,
-                    start_frame=frame_offset + int(t) - snippet_len[0],
-                    end_frame=frame_offset + int(t) + snippet_len[1],
-                    channel_indices=channel_indices
-                )
-                for t in times0
-            ]
+            times_in_chunk = times
+
+        if len(times_in_chunk) > 0:
+            snippets = [extract_snippet_from_traces(traces,
+                                                    start_frame=frame_offset + int(t) - snippet_len[0],
+                                                    end_frame=frame_offset + int(t) + snippet_len[1])
+                        for t in times_in_chunk]
+            unit_waveforms.append(np.stack(snippets))
         else:
-            snippets = [
-                extract_snippet_from_traces(
-                    traces,
-                    start_frame=frame_offset + int(t) - snippet_len[0],
-                    end_frame=frame_offset + int(t) + snippet_len[1],
-                    channel_indices=channel_indices
-                )
-                for i, t in enumerate(times0) if i + spikes_so_far[i_unit] in wf_idxs
-            ]
-        if len(snippets) > 0:
-            unit_waveforms.append(
-                np.stack(snippets)
-            )
-        else:
-            unit_waveforms.append(
-                np.zeros((0, len_channel_indices, snippet_len[0] + snippet_len[1]), dtype=traces.dtype)
-            )
+            unit_waveforms.append(np.zeros((0, recording.get_num_channels(),
+                                            snippet_len[0] + snippet_len[1]), dtype=traces.dtype))
+
     return unit_waveforms
 
 

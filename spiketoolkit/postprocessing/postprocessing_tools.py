@@ -8,13 +8,340 @@ import shutil
 from joblib import Parallel, delayed
 from spikeextractors import RecordingExtractor, SortingExtractor
 import csv
+from tqdm import tqdm
+import os
 
 from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, \
-    get_max_channels_per_waveforms, select_max_channels_from_templates
+    divide_recording_into_time_chunks, get_unit_waveforms_for_chunk, get_max_channels_per_waveforms, \
+    select_max_channels_from_templates
 
 
-def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None,
-                       return_idxs=False, **kwargs):
+def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, return_idxs=False, chunk_size=None,
+                       chunk_mb=500, **kwargs):
+    """
+    Computes the spike waveforms from a recording and sorting extractor.
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor
+    sorting: SortingExtractor
+        The sorting extractor
+    unit_ids: list
+        List of unit ids to extract waveforms
+    channel_ids: list
+        List of channels ids to compute waveforms from
+    return_idxs: bool
+        If True, spike indexes and channel indexes are returned
+    chunk_size: int
+        Size of chunks in number of samples. If None, it is automatically calculated
+    chunk_mb: int
+        Size of chunks in Mb (default 500 Mb)
+    **kwargs: Keyword arguments
+        A dictionary with default values can be retrieved with:
+        st.postprocessing.get_waveforms_params():
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned.
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit.
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
+            seed: int
+                Random seed for extracting random waveforms
+            save_property_or_features: bool
+                If True (default), waveforms are saved as features of the sorting extractor object
+            recompute_info: bool
+                If True, waveforms are recomputed (default False)
+            verbose: bool
+                If True output is verbose
+
+    Returns
+    -------
+    waveforms: list
+        List of np.array (n_spikes, n_channels, n_timepoints) containing extracted waveforms for each unit
+    spike_indexes: list
+        List of spike indexes for which waveforms are computed. Returned if 'return_idxs' is True
+    channel_indexes: list
+        List of max channel indexes
+    """
+    if isinstance(unit_ids, (int, np.integer)):
+        unit_ids = [unit_ids]
+    elif unit_ids is None:
+        unit_ids = sorting.get_unit_ids()
+    elif not isinstance(unit_ids, (list, np.ndarray)):
+        raise Exception("unit_ids is is invalid")
+    if isinstance(channel_ids, (int, np.integer)):
+        channel_ids = [channel_ids]
+
+    if channel_ids is None:
+        channel_ids = recording.get_channel_ids()
+
+    assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
+    assert np.all([ch in recording.get_channel_ids() for ch in channel_ids]), "Invalid channel_ids"
+
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
+    grouping_property = params_dict['grouping_property']
+    ms_before = params_dict['ms_before']
+    ms_after = params_dict['ms_after']
+    dtype = params_dict['dtype']
+    max_spikes_per_unit = params_dict['max_spikes_per_unit']
+    compute_property_from_recording = params_dict['compute_property_from_recording']
+    memmap = params_dict['memmap']
+    n_jobs = params_dict['n_jobs']
+    joblib_backend = params_dict['joblib_backend']
+    max_channels_per_waveforms = params_dict['max_channels_per_waveforms']
+    seed = params_dict['seed']
+    verbose = params_dict['verbose']
+    save_property_or_features = params_dict['save_property_or_features']
+    recompute_info = params_dict['recompute_info']
+
+    waveform_list = []
+    spike_index_list = []
+    channel_index_list = []
+
+    if max_channels_per_waveforms is None:
+        max_channels_per_waveforms = len(channel_ids)
+
+    if 'waveforms' in sorting.get_shared_unit_spike_feature_names() and not recompute_info:
+        for unit_id in unit_ids:
+            waveforms = sorting.get_unit_spike_features(unit_id, 'waveforms')
+            waveform_list.append(waveforms)
+            if return_idxs:
+                if len(waveforms) < len(sorting.get_unit_spike_train(unit_id)):
+                    indexes = sorting.get_unit_spike_features(unit_id, 'waveforms_idxs')
+                else:
+                    indexes = np.arange(len(waveforms))
+                if 'waveforms_channel_idxs' in sorting.get_shared_unit_property_names():
+                    channel_idxs = sorting.get_unit_property(unit_id, 'waveforms_channel_idxs')
+                else:
+                    channel_idxs = np.arange(recording.get_num_channels())
+                spike_index_list.append(indexes)
+                channel_index_list.append(channel_idxs)
+    else:
+        if dtype is None:
+            dtype = recording.get_dtype()
+
+        if seed is not None:
+            np.random.seed(seed)
+
+        # num_channels = recording.get_num_channels()
+        num_frames = recording.get_num_frames()
+        fs = recording.get_sampling_frequency()
+        n_pad = [int(ms_before * fs / 1000), int(ms_after * fs / 1000)]
+
+        # set chunk size
+        if chunk_size is not None:
+            chunk_size = int(chunk_size)
+        elif chunk_mb is not None:
+            n_bytes = np.dtype(recording.get_dtype()).itemsize
+            max_size = int(chunk_mb * 1e6)  # set Mb per chunk
+            chunk_size = max_size // (recording.get_num_channels() * n_bytes)
+
+        # chunk_size = num_bytes_per_chunk / num_bytes_per_frame
+        padding_size = 100 + n_pad[0] + n_pad[1]  # a bit excess padding
+        chunks = divide_recording_into_time_chunks(
+            num_frames=num_frames,
+            chunk_size=chunk_size,
+            padding_size=padding_size
+        )
+        n_chunk = len(chunks)
+
+        # pre-map memmap files
+        n_channels = len(channel_ids)
+        if len(channel_ids) < recording.get_num_channels():
+            recording = se.SubRecordingExtractor(recording, channel_ids=channel_ids)
+
+        if memmap:
+            all_unit_waveforms = []
+            for unit_id in unit_ids:
+                fname = 'waveforms_' + str(unit_id) + '.raw'
+                len_wf = len(sorting.get_unit_spike_train(unit_id))
+                if max_spikes_per_unit is not None:
+                    if len_wf > max_spikes_per_unit:
+                        len_wf = max_spikes_per_unit
+                shape = (len_wf, n_channels, sum(n_pad))
+                if (sorting.get_tmp_folder() / fname).is_file():  # remove existing files
+                    os.remove(str(sorting.get_tmp_folder() / fname))
+                arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
+                all_unit_waveforms.append(arr)
+        else:
+            all_unit_waveforms = [[] for ii in range(len(unit_ids))]
+
+        if verbose:
+            chunk_iter = tqdm(range(n_chunk), ascii=True, desc="Extracting waveforms in chunks")
+        else:
+            chunk_iter = range(n_chunk)
+
+        # Pre-select spikes to include
+        spike_times_to_include = []
+        if max_spikes_per_unit is not None:
+            for i, unit in enumerate(unit_ids):
+                spiketrain = sorting.get_unit_spike_train(unit)
+                num_spikes = len(spiketrain)
+                if num_spikes > max_spikes_per_unit:
+                    spike_idxs = np.sort(np.random.permutation(num_spikes)[:max_spikes_per_unit])
+                    spike_index_list.append(spike_idxs)
+                    spike_times_to_include.append(spiketrain[spike_idxs])
+                else:
+                    spike_index_list.append(np.arange(num_spikes))
+                    spike_times_to_include.append(None)
+        else:
+            for u in unit_ids:
+                spike_index_list.append(None)
+                spike_times_to_include.append(None)
+
+        wf_chunk_idxs = np.zeros(len(unit_ids), dtype='int')
+        cumulative_spikes = np.zeros(len(unit_ids), dtype='int')
+
+        for ii in chunk_iter:
+            chunk = chunks[ii]
+            # chunk: {istart, iend, istart_with_padding, iend_with_padding} # include padding
+            recording_chunk = se.SubRecordingExtractor(
+                parent_recording=recording,
+                start_frame=chunk['istart_with_padding'],
+                end_frame=chunk['iend_with_padding']
+            )
+            # note that the efficiency of this operation may need improvement
+            # (really depends on sorting extractor implementation)
+            sorting_chunk = se.SubSortingExtractor(
+                parent_sorting=sorting,
+                start_frame=chunk['istart'],
+                end_frame=chunk['iend'],
+            )
+
+            # num_events_in_chunk x num_channels_in_nbhd[unit_id] x len_of_one_snippet
+            unit_waveforms = get_unit_waveforms_for_chunk(
+                recording=recording_chunk,
+                sorting=sorting_chunk,
+                chunk=chunk,
+                unit_ids=unit_ids,
+                snippet_len=n_pad,
+                spike_times_to_include=spike_times_to_include
+            )
+
+            for i_unit, unit in enumerate(unit_ids):
+                cumulative_spikes[i_unit] += len(sorting_chunk.get_unit_spike_train(unit))
+                wf = unit_waveforms[i_unit]
+                wf = wf.astype(dtype)
+
+                if len(wf) > 0:
+                    if memmap:
+                        all_unit_waveforms[i_unit][wf_chunk_idxs[i_unit]:wf_chunk_idxs[i_unit] + len(wf)] = wf
+                        wf_chunk_idxs[i_unit] += len(wf)
+                    else:
+                        all_unit_waveforms[i_unit].append(wf)
+
+        if memmap:
+            waveform_list = all_unit_waveforms
+        else:
+            # concatenate the results over the chunks
+            waveform_list = [np.concatenate(all_unit_waveforms[i_unit], axis=0) for i_unit in range(len(unit_ids))]
+
+        # return correct max channels
+        # TODO fix when memmap
+        if grouping_property is not None:
+            if grouping_property not in recording.get_shared_channel_property_names():
+                raise ValueError("'grouping_property' should be a property of recording extractors")
+            if compute_property_from_recording:
+                compute_sorting_group = True
+            elif grouping_property not in sorting.get_shared_unit_property_names():
+                warnings.warn('Grouping property not in sorting extractor. Computing it from the recording extractor')
+                compute_sorting_group = True
+            else:
+                compute_sorting_group = False
+
+            waveforms_reduced_channels = []
+            channel_groups = np.array([recording.get_channel_property(ch, grouping_property)
+                                       for ch in recording.get_channel_ids()])
+            unit_groups = []
+            if compute_sorting_group:
+                # extract unit groups
+                for wf in waveform_list:
+                    mean_waveforms = np.squeeze(np.mean(wf, axis=0))
+                    max_amp_elec = np.unravel_index(mean_waveforms.argmin(), mean_waveforms.shape)[0]
+                    unit_group = recording.get_channel_property(recording.get_channel_ids()[max_amp_elec],
+                                                                grouping_property)
+                    unit_groups.append(unit_group)
+            else:
+                for u in sorting.get_unit_ids():
+                    unit_group = sorting.get_unit_property(u, grouping_property)
+                    unit_groups.append(unit_group)
+
+            for (wf, unit_group) in zip(waveform_list, unit_groups):
+                channel_unit_group = np.where(channel_groups == unit_group)[0]
+
+                if len(channel_unit_group) < max_channels_per_waveforms:
+                    max_channel_idxs = channel_unit_group
+                else:
+                    subrec = se.SubRecordingExtractor(recording, channel_ids=list(channel_unit_group))
+                    max_channel_idxs = select_max_channels_from_waveforms(wf, subrec, max_channels_per_waveforms)
+
+                channel_index_list.append(max_channel_idxs)
+                waveform = wf[:, max_channel_idxs]
+                # some channels are missing - re-instantiate object
+                if memmap:
+                    memmap_file = wf.filename
+                    del wf
+                    os.remove(memmap_file)
+                    memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
+                                             dtype=waveform.dtype)
+                    memmap_array[:] = waveform
+                    del(waveform)
+                    waveforms_reduced_channels.append(memmap_array)
+                else:
+                    waveforms_reduced_channels.append(waveform)
+            waveform_list = waveforms_reduced_channels
+        else:
+            if max_channels_per_waveforms < len(recording.get_channel_ids()):
+                waveforms_reduced_channels = []
+                for wf in waveform_list:
+                    max_channel_idxs = select_max_channels_from_waveforms(wf, recording, max_channels_per_waveforms)
+                    channel_index_list.append(max_channel_idxs)
+                    waveform = wf[:, max_channel_idxs]
+                    # some channels are missing - re-instantiate object
+                    if memmap:
+                        memmap_file = wf.filename
+                        del wf
+                        os.remove(memmap_file)
+                        memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
+                                                 dtype=waveform.dtype)
+                        memmap_array[:] = waveform
+                        waveforms_reduced_channels.append(memmap_array)
+                    else:
+                        waveforms_reduced_channels.append(waveform)
+                waveform_list = waveforms_reduced_channels
+            else:
+                for wf in waveform_list:
+                    channel_index_list.append(channel_ids)
+
+        if save_property_or_features:
+            for i, unit_id in enumerate(unit_ids):
+                sorting.set_unit_spike_features(unit_id, 'waveforms', waveform_list[i], indexes=spike_index_list[i])
+                if len(channel_index_list[i]) < recording.get_num_channels():
+                    sorting.set_unit_property(unit_id, 'waveforms_channel_idxs', channel_index_list[i])
+
+    if return_idxs:
+        return waveform_list, spike_index_list, channel_index_list
+    else:
+        return waveform_list
+
+
+def get_unit_waveforms_old(recording, sorting, unit_ids=None, channel_ids=None,
+                           return_idxs=False, **kwargs):
     '''
     Computes the spike waveforms from a recording and sorting extractor.
 
