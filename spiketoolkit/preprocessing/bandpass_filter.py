@@ -91,7 +91,7 @@ def _create_filter_kernel(N, sampling_frequency, freq_min, freq_max, freq_wid=10
 
 
 def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, filter_type='fft', order=3,
-                    chunk_size=30000, cache_to_file=False, cache_chunks=False):
+                    chunk_size=30000, cache_to_file=False, cache_chunks=False, dtype=None):
     '''
     Performs a lazy filter on the recording extractor traces.
 
@@ -116,6 +116,8 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, filte
         If True, filtered traces are computed and cached all at once on disk in temp file 
     cache_chunks: bool (default False).
         If True then each chunk is cached in memory (in a dict)
+    dtype: dtype
+        The dtype of the traces
 
     Returns
     -------
@@ -133,7 +135,8 @@ def bandpass_filter(recording, freq_min=300, freq_max=6000, freq_wid=1000, filte
         filter_type=filter_type,
         order=order,
         chunk_size=chunk_size,
-        cache_chunks=cache_chunks
+        cache_chunks=cache_chunks,
+        dtype=dtype
     )
     if cache_to_file:
         return se.CacheRecordingExtractor(bpf_recording, chunk_size=chunk_size)
