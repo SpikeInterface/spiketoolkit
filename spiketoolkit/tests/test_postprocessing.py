@@ -40,6 +40,14 @@ def test_waveforms():
                 assert np.allclose(w, w_gt)
             assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
 
+            # small chunks
+            wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, save_property_or_features=False,
+                                     n_jobs=n, memmap=m, chunk_mb=5, recompute_info=True)
+
+            for (w, w_gt) in zip(wav, waveforms):
+                assert np.allclose(w, w_gt)
+            assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
+
             # change cut ms
             wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True, n_jobs=n,
                                      memmap=m, recompute_info=True)
@@ -299,4 +307,4 @@ def test_compute_pca_scores():
 
 
 if __name__ == '__main__':
-    test_waveforms()
+    test_export_to_phy()

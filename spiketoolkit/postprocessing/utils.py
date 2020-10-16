@@ -130,7 +130,6 @@ def extract_snippet_from_traces(
         traces,
         start_frame,
         end_frame,
-        channel_indices=None
 ):
     if (0 <= start_frame) and (end_frame <= traces.shape[1]):
         x = traces[:, start_frame:end_frame]
@@ -140,18 +139,15 @@ def extract_snippet_from_traces(
         i1 = int(max(0, start_frame))
         i2 = int(min(traces.shape[1], end_frame))
         x[:, (i1 - start_frame):(i2 - start_frame)] = traces[:, i1:i2]
-    if channel_indices is not None:
-        x = x[channel_indices, :]
     return x
 
 
 def get_unit_waveforms_for_chunk(
         recording,
-        sorting,
         chunk,
         unit_ids,
         snippet_len,
-        spike_times_to_include,
+        times_in_chunk,
 ):
     # chunks are chosen small enough so that all traces can be loaded into memory
     traces = recording.get_traces()
@@ -160,24 +156,15 @@ def get_unit_waveforms_for_chunk(
     unit_waveforms = []
     for i_unit, unit_id in enumerate(unit_ids):
         # find indexes in chunk
-        times = sorting.get_unit_spike_train(unit_id=unit_id)
-        times_in_chunk = []
-        if spike_times_to_include[i_unit] is not None:
-            spike_times = spike_times_to_include[i_unit]
-            spike_time_idxs = np.where((spike_times >= chunk['istart'])
-                                       & (spike_times < chunk['iend']))[0]  # exclude padding
-
-            if len(spike_time_idxs) > 0:
-                spike_times = spike_times[spike_time_idxs]
-                times_in_chunk = np.array([t for t in times if t + chunk['istart'] in spike_times])
-        else:
-            times_in_chunk = times
-
-        if len(times_in_chunk) > 0:
-            snippets = [extract_snippet_from_traces(traces,
-                                                    start_frame=frame_offset + int(t) - snippet_len[0],
-                                                    end_frame=frame_offset + int(t) + snippet_len[1])
-                        for t in times_in_chunk]
+        if len(times_in_chunk[i_unit]) > 0:
+            # Adjust time with padding
+            try:
+                snippets = [extract_snippet_from_traces(traces,
+                                                        start_frame=frame_offset + int(t) - snippet_len[0],
+                                                        end_frame=frame_offset + int(t) + snippet_len[1])
+                            for t in times_in_chunk[i_unit] - chunk['istart']]
+            except:
+                raise Exception
             unit_waveforms.append(np.stack(snippets))
         else:
             unit_waveforms.append(np.zeros((0, recording.get_num_channels(),
