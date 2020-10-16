@@ -22,6 +22,9 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                        chunk_mb=500, **kwargs):
     """
     Computes the spike waveforms from a recording and sorting extractor.
+    The recording is split in chunks (the size in Mb is set with the chunk_mb argument) and all waveforms are extracted
+    for each chunk and then re-assembled. If multiple jobs are used (n_jobs > 1), more and smaller chunks are created
+    and processed in parallel.
 
     Parameters
     ----------
