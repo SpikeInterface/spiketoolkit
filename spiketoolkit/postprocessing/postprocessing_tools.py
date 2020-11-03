@@ -691,7 +691,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
         # pre-construct memmap arrays
         if memmap:
             for unit_id in unit_ids:
-                fname = 'waveforms_' + str(unit_id) + '.raw'
+                fname = 'amplitudes_' + str(unit_id) + '.raw'
                 len_amp = len(sorting.get_unit_spike_train(unit_id))
                 if max_spikes_per_unit is not None:
                     if len_amp > max_spikes_per_unit:
