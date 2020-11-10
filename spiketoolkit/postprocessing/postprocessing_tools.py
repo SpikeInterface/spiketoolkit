@@ -274,11 +274,12 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                         all_unit_waveforms[ii].append(wf)
         else:
             # waveforms are saved directly to the memmap file if
-            unit_waveforms = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
+            unit_waveforms, = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                 delayed(_extract_waveforms_one_chunk)(ii, rec_arg, chunks, unit_ids, n_pad,
                                                       times_in_all_chunks, start_spike_idxs,
                                                       all_unit_waveforms, memmap, dtype, verbose,)
                 for ii in chunk_iter)
+
 
         if memmap:
             waveform_list = all_unit_waveforms
