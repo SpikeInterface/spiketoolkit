@@ -280,6 +280,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                                                       all_unit_waveforms, memmap, dtype, verbose,)
                 for ii in chunk_iter)
 
+
         if memmap:
             waveform_list = all_unit_waveforms
         else:
@@ -1250,8 +1251,11 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     if copy_binary:
         rec_path = 'recording.dat'  # Use relative path in this case
         recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)      
-    elif isinstance(recording, (se.CacheRecordingExtractor, se.BinDatRecordingExtractor)): # don't save recording.dat, use path to the raw file instead
+    elif isinstance(recording, se.CacheRecordingExtractor):
         rec_path = str(Path(recording.filename).absolute())
+        dtype = recording.get_dtype()
+    elif isinstance(recording, se.BinDatRecordingExtractor):
+        rec_path = str(Path(recording._datfile).absolute())
         dtype = recording.get_dtype()
     else: # don't save recording.dat
         rec_path = 'None' 
