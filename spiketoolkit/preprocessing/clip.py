@@ -15,7 +15,8 @@ class ClipRecording(RecordingExtractor):
         self._a_min = a_min
         self._a_max = a_max
         RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=self._recording)
+        self.copy_channel_properties(recording=recording)
+        self.copy_epochs(recording)
         self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'a_min': a_min, 'a_max': a_max}

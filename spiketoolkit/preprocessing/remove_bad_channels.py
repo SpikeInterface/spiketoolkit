@@ -19,6 +19,7 @@ class RemoveBadChannelsRecording(RecordingExtractor):
         self._initialize_subrecording_extractor()
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording=self._subrecording)
+        self.copy_epochs(recording)
         self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'bad_channel_ids': bad_channel_ids,

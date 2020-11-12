@@ -36,6 +36,7 @@ class FilterRecording(RecordingExtractor):
         else:
             self._dtype = dtype
         self.copy_channel_properties(recording)
+        self.copy_epochs(recording)
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()

@@ -46,7 +46,6 @@ class CenterRecording(TransformRecording):
             dtype = dtype[1:]
         TransformRecording.__init__(self, self._recording, scalar=self._scalar, offset=self._offset, dtype=dtype)
         self.is_filtered = self._recording.is_filtered
-        self.copy_channel_properties(recording=self._recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'mode': mode, 'seconds': seconds,
                         'n_snippets': n_snippets}
 
