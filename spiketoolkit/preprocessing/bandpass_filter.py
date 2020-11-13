@@ -31,7 +31,6 @@ class BandpassFilterRecording(FilterRecording):
                 raise ValueError('Filter is not stable')
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks,
                                  dtype=dtype)
-        self.copy_channel_properties(recording)
 
         self.is_filtered = True
         self._kwargs = {'recording': recording.make_serialized_dict(), 'freq_min': freq_min, 'freq_max': freq_max,

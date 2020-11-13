@@ -13,6 +13,7 @@ class RectifyRecording(RecordingExtractor):
         self._recording = recording
         RecordingExtractor.__init__(self)
         self.copy_channel_properties(recording)
+        self.copy_epochs(recording)
         self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict()}

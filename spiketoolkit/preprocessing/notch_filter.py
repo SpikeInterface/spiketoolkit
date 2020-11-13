@@ -19,7 +19,6 @@ class NotchFilterRecording(FilterRecording):
         if not np.all(np.abs(np.roots(self._a)) < 1):
             raise ValueError('Filter is not stable')
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
-        self.copy_channel_properties(recording)
         self.is_filtered = self._recording.is_filtered
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'freq': freq,

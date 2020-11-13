@@ -35,7 +35,8 @@ class CommonReferenceRecording(RecordingExtractor):
             self._dtype = dtype
         self.verbose = verbose
         RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=self._recording)
+        self.copy_channel_properties(recording=recording)
+        self.copy_epochs(recording)
         self.is_filtered = self._recording.is_filtered
 
         # update dump dict
