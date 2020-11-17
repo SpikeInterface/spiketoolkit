@@ -259,36 +259,45 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                 #assert np.all(times_in_chunk >= chunk['istart']) and np.all(times_in_chunk < chunk['iend'])
             times_in_all_chunks.append(times_in_chunk_units)
 
-        # wf_chunk_idxs = np.zeros(len(unit_ids), dtype='int')
-
         if n_jobs == 1:
             for ii in chunk_iter:
-                # chunk: {istart, iend, istart_with_padding, iend_with_padding} # include padding
                 unit_waveforms = _extract_waveforms_one_chunk(ii, recording, chunks, unit_ids, n_pad,
                                                               times_in_all_chunks, start_spike_idxs,
                                                               all_unit_waveforms, memmap, dtype, False)
+
                 if not memmap:
                     for i_unit, unit in enumerate(unit_ids):
                         wf = unit_waveforms[i_unit]
                         wf = wf.astype(dtype)
-                        all_unit_waveforms[ii].append(wf)
+                        all_unit_waveforms[i_unit].append(wf)
+
         else:
             # waveforms are saved directly to the memmap file if
-            unit_waveforms, = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
+            unit_waveforms = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                 delayed(_extract_waveforms_one_chunk)(ii, rec_arg, chunks, unit_ids, n_pad,
                                                       times_in_all_chunks, start_spike_idxs,
                                                       all_unit_waveforms, memmap, dtype, verbose,)
                 for ii in chunk_iter)
 
+            if not memmap:
+                for ii, unit_waveform in enumerate(unit_waveforms):
+                    for i_unit, unit in enumerate(unit_ids):
+                        wf = unit_waveform[i_unit]
+                        wf = wf.astype(dtype)
+                        all_unit_waveforms[i_unit].append(wf)
 
         if memmap:
             waveform_list = all_unit_waveforms
         else:
             # concatenate the results over the chunks
             if len(chunks) > 1:
-                waveform_list = [np.concatenate(unit_waveforms[i_unit], axis=0) for i_unit in range(len(unit_ids))]
+                waveform_list = []
+                for i_unit in range(len(unit_ids)):
+                    waveform_concat = np.concatenate([all_unit_waveforms[i_unit][ch] for ch in range(len(chunks))],
+                                                     axis=0)
+                    waveform_list.append(waveform_concat)
             else:
-                waveform_list = unit_waveforms
+                waveform_list = [wf[0] for wf in all_unit_waveforms]
 
         # return correct max channels
         if grouping_property is not None:
