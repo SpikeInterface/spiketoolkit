@@ -41,8 +41,15 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         'channel' property to specify which channel they correspond to
     '''
     spike_times = []
+    spike_amplitudes = []
     labels = []
     n_pad_samples = int(n_pad_ms * recording.get_sampling_frequency() / 1000)
+
+    # compute spike rates
+    if start_frame is None:
+        start_frame = 0
+    if end_frame is None:
+        end_frame = recording.get_num_frames()
 
     if channel_ids is None:
         channel_ids = recording.get_channel_ids()
@@ -68,13 +75,16 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
                                          for ch in channel_ids)
         for o in output:
             spike_times.append(o[0])
-            labels.append(o[1])
+            spike_amplitudes.append(o[1])
+            labels.append(o[2])
     else:
         for ch in channel_ids:
-            peak_times, label = _detect_and_align_peaks_single_channel(recording, ch, detect_threshold, detect_sign,
-                                                                       n_pad_samples, upsample, min_diff_samples,
-                                                                       align, start_frame, end_frame, verbose)
+            peak_times, peak_val, label = _detect_and_align_peaks_single_channel(recording, ch, detect_threshold,
+                                                                                 detect_sign, n_pad_samples, upsample,
+                                                                                 min_diff_samples, align, start_frame,
+                                                                                 end_frame, verbose)
             spike_times.append(peak_times)
+            spike_amplitudes.append(peak_val)
             labels.append(label)
 
     # create sorting extractor
@@ -83,8 +93,12 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     times_flat = np.array(list(itertools.chain(*spike_times)))
     sorting.set_times_labels(times=times_flat, labels=labels_flat)
 
-    for u in sorting.get_unit_ids():
+    duration = (end_frame - start_frame) / recording.get_sampling_frequency()
+
+    for i_u, u in enumerate(sorting.get_unit_ids()):
         sorting.set_unit_property(u, 'channel', u)
+        sorting.set_unit_property(u, 'spike_amplitude', np.median(spike_amplitudes[i_u]))
+        sorting.set_unit_property(u, 'spike_rate', len(sorting.get_unit_spike_train(u)) / duration)
 
     return sorting
 
@@ -109,6 +123,7 @@ def _detect_and_align_peaks_single_channel(rec_arg, channel, n_std, detect_sign,
         idx_spikes = np.where((trace > thresh) | (trace < -thresh))[0]
     intervals = np.diff(idx_spikes)
     sp_times = []
+    sp_amplitudes = []
 
     for i_t, diff in enumerate(intervals):
         if diff > min_diff_samples or i_t == len(intervals) - 1:
@@ -137,16 +152,21 @@ def _detect_and_align_peaks_single_channel(rec_arg, channel, n_std, detect_sign,
                     t_spike_up = t_spike
                 if detect_sign == -1:
                     peak_idx = np.argmin(spike_up)
+                    peak_val = np.min(spike_up)
                 elif detect_sign == 1:
                     peak_idx = np.argmax(spike_up)
+                    peak_val = np.max(spike_up)
                 else:
                     peak_idx = np.argmax(np.abs(spike_up))
+                    peak_val = np.max(np.abs(spike_up))
 
                 min_time_up = t_spike_up[peak_idx]
                 sp_times.append(int(min_time_up))
+                sp_amplitudes.append(peak_val)
             else:
                 sp_times.append(idx_spike)
+                sp_amplitudes.append(trace[idx_spike])
 
     labels = [channel] * len(sp_times)
 
-    return sp_times, labels
+    return sp_times, sp_amplitudes, labels
