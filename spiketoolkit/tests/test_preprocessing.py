@@ -11,7 +11,7 @@ from spikeextractors.tests.utils import check_dumping
 
 @pytest.mark.implemented
 def test_bandpass_filter():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     rec_fft = bandpass_filter(rec, freq_min=5000, freq_max=10000, filter_type='fft')
 
@@ -52,7 +52,7 @@ def test_bandpass_filter():
 
 @pytest.mark.implemented
 def test_bandpass_filter_with_cache():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     rec_filtered = bandpass_filter(rec, freq_min=5000, freq_max=10000, cache_to_file=True, chunk_size=10000)
 
@@ -78,7 +78,7 @@ def test_bandpass_filter_with_cache():
 
 @pytest.mark.implemented
 def test_blank_saturation():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
     threshold = 2
     rec_bs = blank_saturation(rec, threshold=threshold)
 
@@ -92,7 +92,7 @@ def test_blank_saturation():
 
 @pytest.mark.implemented
 def test_center():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     rec_c = center(rec, mode='mean')
     assert np.allclose(np.mean(rec_c.get_traces(), axis=1), 0, atol=0.001)
@@ -107,7 +107,7 @@ def test_center():
 
 @pytest.mark.implemented
 def test_clip():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
     threshold = 5
     rec_clip = clip(rec, a_min=-threshold, a_max=threshold)
 
@@ -123,7 +123,7 @@ def test_clip():
 
 @pytest.mark.implemented
 def test_common_reference():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     # no groups
     rec_cmr = common_reference(rec, reference='median')
@@ -170,7 +170,7 @@ def test_norm_by_quantile():
 
 @pytest.mark.implemented
 def test_notch_filter():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     rec_n = notch_filter(rec, 3000, q=10)
 
@@ -183,7 +183,7 @@ def test_notch_filter():
 
 @pytest.mark.implemented
 def test_rectify():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     rec_rect = rectify(rec)
 
@@ -195,8 +195,8 @@ def test_rectify():
 
 @pytest.mark.implemented
 def test_remove_artifacts():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
-    triggers = [30000, 90000]
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
+    triggers = [15000, 30000]
     ms = 10
     ms_frames = int(ms * rec.get_sampling_frequency() / 1000)
 
@@ -217,7 +217,7 @@ def test_remove_artifacts():
 
 @pytest.mark.implemented
 def test_remove_bad_channels():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
     rec_rm = remove_bad_channels(rec, bad_channel_ids=[0])
     assert 0 not in rec_rm.get_channel_ids()
 
@@ -250,7 +250,7 @@ def test_remove_bad_channels():
 
 @pytest.mark.implemented
 def test_resample():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     resample_rate_low = 0.1 * rec.get_sampling_frequency()
     resample_rate_high = 2 * rec.get_sampling_frequency()
@@ -268,7 +268,7 @@ def test_resample():
 
 @pytest.mark.implemented
 def test_transform():
-    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, seed=0)
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
 
     scalar = 3
     offset = 50
@@ -305,17 +305,31 @@ def test_whiten():
 
 
 if __name__ == '__main__':
+    print("bandpass")
     test_bandpass_filter()
+    print("bandpass cache")
     test_bandpass_filter_with_cache()
+    print("blank saturation")
     test_blank_saturation()
+    print("clip")
     test_clip()
+    print("center")
     test_center()
+    print("cmr")
     test_common_reference()
+    print("norm by quantile")
     test_norm_by_quantile()
+    print("notch")
     test_notch_filter()
+    print("rectify")
     test_rectify()
+    print("remove artifacts")
     test_remove_artifacts()
+    print("bad channels")
     test_remove_bad_channels()
+    print("resample")
     test_resample()
+    print("transform")
     test_transform()
+    print("whiten")
     test_whiten()

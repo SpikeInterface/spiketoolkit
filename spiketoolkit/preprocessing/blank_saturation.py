@@ -1,17 +1,16 @@
 from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 import numpy as np
 
 
-class BlankSaturationRecording(RecordingExtractor):
+class BlankSaturationRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'BlankSaturation'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
     def __init__(self, recording, threshold=None, seed=0):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
         random_data = self._get_random_data_for_scaling(seed=seed).ravel()
         q = np.quantile(random_data, [0.001, 0.5, 1 - 0.001])
         if 2 * q[1] - q[0] - q[2] < 2 * np.min([q[1] - q[0], q[2] - q[1]]):
@@ -30,11 +29,6 @@ class BlankSaturationRecording(RecordingExtractor):
                 self._lower = False
             else:
                 self._lower = True
-        RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=self._recording)
-        self.copy_epochs(recording)
-        self.is_filtered = self._recording.is_filtered
-
         self._kwargs = {'recording': recording.make_serialized_dict(), 'threshold': threshold, 'seed': seed}
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
@@ -46,15 +40,6 @@ class BlankSaturationRecording(RecordingExtractor):
                                                end_frame=ff + chunk_size)
             chunk_list.append(chunk)
         return np.concatenate(chunk_list, axis=1)
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
