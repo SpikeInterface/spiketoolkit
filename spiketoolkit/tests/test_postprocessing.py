@@ -4,7 +4,7 @@ from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy, \
-    compute_unit_template_features, compute_channel_spiking_activity, compute_unit_coms
+    compute_unit_template_features, compute_channel_spiking_activity, compute_unit_centers_of_mass
 from spiketoolkit.preprocessing import remove_bad_channels
 import pandas
 import os
@@ -255,7 +255,7 @@ def test_compute_pca_scores():
 
 
 @pytest.mark.notimplemented
-def test_compute_com():
+def test_compute_centers_of_mass():
     num_channels = 32
     folder = 'test'
     n_jobs = [0, 2]
@@ -277,13 +277,13 @@ def test_compute_com():
             rec, sort = se.example_datasets.toy_example(num_channels=num_channels, dumpable=True, dump_folder=folder)
             rec.set_channel_locations(locations)
 
-            coms = compute_unit_coms(rec, sort, num_channels=None, memmap=m, n_jobs=n,
-                                     save_property_or_features=False)
+            coms = compute_unit_centers_of_mass(rec, sort, num_channels=None, memmap=m, n_jobs=n,
+                                                save_property_or_features=False)
             for com in coms:
                 assert np.linalg.norm(com) <= radius
             assert 'com' not in sort.get_shared_unit_property_names()
 
-            coms = compute_unit_coms(rec, sort, num_channels=5, memmap=m, n_jobs=n)
+            coms = compute_unit_centers_of_mass(rec, sort, num_channels=5, memmap=m, n_jobs=n)
             for com in coms:
                 assert np.linalg.norm(com) <= radius
             assert 'com' in sort.get_shared_unit_property_names()

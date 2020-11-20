@@ -254,11 +254,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     times_in_chunk = times[spike_time_idxs]
                 n_spikes[i] += len(times_in_chunk)
                 times_in_chunk_units.append(times_in_chunk)
-
-                #assert np.all(times_in_chunk >= chunk['istart']) and np.all(times_in_chunk < chunk['iend'])
             times_in_all_chunks.append(times_in_chunk_units)
-
-        # wf_chunk_idxs = np.zeros(len(unit_ids), dtype='int')
 
         if n_jobs == 1:
             for ii in chunk_iter:
@@ -878,7 +874,7 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
     return spike_rates, spike_amplitudes
 
 
-def compute_unit_coms(recording, sorting, unit_ids=None, num_channels=10, **kwargs):
+def compute_unit_centers_of_mass(recording, sorting, unit_ids=None, num_channels=10, **kwargs):
     '''
     Computes the center of mass (COM) of a unit based on the template amplitudes.
 
@@ -924,7 +920,7 @@ def compute_unit_coms(recording, sorting, unit_ids=None, num_channels=10, **kwar
 
     Returns
     -------
-    coms: list
+    centers_of_mass: list
         List of int containing extracted COMs for each unit
     '''
 
