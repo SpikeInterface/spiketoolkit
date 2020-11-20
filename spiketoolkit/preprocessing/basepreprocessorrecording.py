@@ -32,5 +32,5 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        pass
+        raise NotImplementedError
 
