@@ -1,16 +1,12 @@
 from .filterrecording import FilterRecording
 import numpy as np
+import scipy.signal as ss
 from scipy import special
 import spikeextractors as se
-import scipy.signal as ss
-
 
 
 class BandpassFilterRecording(FilterRecording):
-
     preprocessor_name = 'BandpassFilter'
-    installed = True  # check at class level if installed or not
-    installation_mesg = "To use the BandpassFilterRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
     def __init__(self, recording, freq_min=300, freq_max=6000, freq_wid=1000, filter_type='fft', order=3,
                  chunk_size=30000, cache_chunks=False, dtype=None):
@@ -31,7 +27,6 @@ class BandpassFilterRecording(FilterRecording):
                 raise ValueError('Filter is not stable')
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks,
                                  dtype=dtype)
-
         self.is_filtered = True
         self._kwargs = {'recording': recording.make_serialized_dict(), 'freq_min': freq_min, 'freq_max': freq_max,
                         'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,

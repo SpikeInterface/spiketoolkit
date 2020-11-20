@@ -1,20 +1,17 @@
 from spikeextractors import RecordingExtractor
 import numpy as np
-from copy import deepcopy
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
 
 
-class CommonReferenceRecording(RecordingExtractor):
+class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
         if reference != 'median' and reference != 'average' and reference != 'single':
             raise ValueError("'reference' must be either 'median' or 'average'")
-        self._recording = recording
         self._ref = reference
         self._groups = groups
         if self._ref == 'single':
@@ -34,23 +31,9 @@ class CommonReferenceRecording(RecordingExtractor):
         else:
             self._dtype = dtype
         self.verbose = verbose
-        RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=recording)
-        self.copy_epochs(recording)
-        self.is_filtered = self._recording.is_filtered
-
-        # update dump dict
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'reference': reference, 'groups': groups,
                         'ref_channels': ref_channels, 'dtype': dtype, 'verbose': verbose}
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):

@@ -1,9 +1,9 @@
 from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
-import numpy as np
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 
 
-class ClipRecording(RecordingExtractor):
+class ClipRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'Clip'
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -11,25 +11,10 @@ class ClipRecording(RecordingExtractor):
     def __init__(self, recording, a_min=None, a_max=None):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
         self._a_min = a_min
         self._a_max = a_max
-        RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=recording)
-        self.copy_epochs(recording)
-        self.is_filtered = self._recording.is_filtered
-
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'a_min': a_min, 'a_max': a_max}
-
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):

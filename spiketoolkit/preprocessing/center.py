@@ -4,15 +4,11 @@ import numpy as np
 
 
 class CenterRecording(TransformRecording):
-
     preprocessor_name = 'Center'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
     def __init__(self, recording, mode, seconds, n_snippets):
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
         self._scalar = 1
         self._mode = mode
         self._seconds = seconds
@@ -25,11 +21,11 @@ class CenterRecording(TransformRecording):
         snip_len = seconds / n_snippets * recording.get_sampling_frequency()
 
         if seconds * recording.get_sampling_frequency() >= recording.get_num_frames():
-            traces = self._recording.get_traces()
+            traces = recording.get_traces()
         else:
             # skip initial and final part
             snip_start = np.linspace(snip_len // 2, recording.get_num_frames()-int(1.5*snip_len), n_snippets)
-            traces_snippets = self._recording.get_snippets(reference_frames=snip_start, snippet_len=snip_len)
+            traces_snippets = recording.get_snippets(reference_frames=snip_start, snippet_len=snip_len)
             traces_snippets = traces_snippets.swapaxes(0, 1)
             traces = traces_snippets.reshape((traces_snippets.shape[0],
                                               traces_snippets.shape[1] * traces_snippets.shape[2]))
@@ -37,15 +33,14 @@ class CenterRecording(TransformRecording):
             self._offset = -np.mean(traces, axis=1)
         else:
             self._offset = -np.median(traces, axis=1)
-        dtype = str(self._recording.get_dtype())
+        dtype = str(recording.get_dtype())
         if 'uint' in dtype:
             if 'numpy' in dtype:
                 dtype = str(dtype).replace("<class '", "").replace("'>", "")
                 # drop 'numpy'
                 dtype = dtype.split('.')[1]
             dtype = dtype[1:]
-        TransformRecording.__init__(self, self._recording, scalar=self._scalar, offset=self._offset, dtype=dtype)
-        self.is_filtered = self._recording.is_filtered
+        TransformRecording.__init__(self, recording, scalar=self._scalar, offset=self._offset, dtype=dtype)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'mode': mode, 'seconds': seconds,
                         'n_snippets': n_snippets}
 
