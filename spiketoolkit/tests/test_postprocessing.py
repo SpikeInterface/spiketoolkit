@@ -394,4 +394,4 @@ def test_compute_features():
 
 
 if __name__ == '__main__':
-    test_compute_com()
+    test_spiking_activity()
