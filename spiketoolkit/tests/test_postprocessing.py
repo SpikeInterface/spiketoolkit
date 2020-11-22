@@ -4,7 +4,7 @@ from spiketoolkit.tests.utils import create_signal_with_known_waveforms
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy, \
-    compute_unit_template_features
+    compute_unit_template_features, compute_channel_spiking_activity, compute_unit_centers_of_mass
 from spiketoolkit.preprocessing import remove_bad_channels
 import pandas
 import os
@@ -200,6 +200,98 @@ def test_amplitudes():
 
 
 @pytest.mark.implemented
+def test_spiking_activity():
+    n_jobs = [0, 2]
+    num_channels = 32
+    folder = 'test'
+    for n in n_jobs:
+        print('N jobs', n)
+        if os.path.isdir(folder):
+            shutil.rmtree(folder)
+        rec, sort = se.example_datasets.toy_example(num_channels=num_channels, dumpable=True, dump_folder=folder)
+
+        rates_simple, amps_simple = compute_channel_spiking_activity(rec, method='simple', n_jobs=n,
+                                                                     save_property_or_features=False)
+        assert len(rates_simple) == num_channels and len(amps_simple) == num_channels
+        assert 'spike_rate' not in rec.get_shared_channel_property_names()
+        assert 'spike_amplitude' not in rec.get_shared_channel_property_names()
+
+        rates_detection, amps_detection = compute_channel_spiking_activity(rec, method='detection', n_jobs=n)
+
+        assert len(rates_detection) == num_channels and len(amps_detection) == num_channels
+        assert 'spike_rate' in rec.get_shared_channel_property_names()
+        assert 'spike_amplitude' in rec.get_shared_channel_property_names()
+
+        shutil.rmtree(folder)
+
+
+@pytest.mark.notimplemented
+def test_compute_pca_scores():
+    num_channels = 32
+    folder = 'test'
+    n_jobs = [0, 2]
+    memmap = [True, False]
+    for n in n_jobs:
+        for m in memmap:
+            print('N jobs', n, 'memmap', m)
+
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
+            rec, sort = se.example_datasets.toy_example(num_channels=num_channels, dumpable=True, dump_folder=folder)
+
+            pca_scores = compute_unit_pca_scores(rec, sort, n_comp=5, memmap=m, n_jobs=n,
+                                                 save_property_or_features=False)
+            for pc in pca_scores:
+                assert pc.shape[-1] == 5
+            assert 'pca_scores' not in sort.get_shared_unit_spike_feature_names()
+
+            pca_scores = compute_unit_pca_scores(rec, sort, channel_ids=[0, 1, 2, 3, 4],
+                                                 max_channels_per_waveforms=3, n_comp=3, memmap=m, n_jobs=n)
+            for pc in pca_scores:
+                assert pc.shape[-1] == 3
+            assert 'pca_scores' in sort.get_shared_unit_spike_feature_names()
+            assert 'pca_scores_channel_idxs' in sort.get_shared_unit_property_names()
+            shutil.rmtree(folder)
+
+
+@pytest.mark.notimplemented
+def test_compute_centers_of_mass():
+    num_channels = 32
+    folder = 'test'
+    n_jobs = [0, 2]
+    locations = np.zeros((num_channels, 2))
+    radius = 100
+    # create circular locations
+    for i in np.arange(num_channels):
+        angle = 2*np.pi / num_channels * i
+        locations[i, 0] = np.cos(angle) * radius
+        locations[i, 1] = np.sin(angle) * radius
+
+    memmap = [True, False]
+    for n in n_jobs:
+        for m in memmap:
+            print('N jobs', n, 'memmap', m)
+
+            if os.path.isdir(folder):
+                shutil.rmtree(folder)
+            rec, sort = se.example_datasets.toy_example(num_channels=num_channels, dumpable=True, dump_folder=folder)
+            rec.set_channel_locations(locations)
+
+            coms = compute_unit_centers_of_mass(rec, sort, num_channels=None, memmap=m, n_jobs=n,
+                                                save_property_or_features=False)
+            for com in coms:
+                assert np.linalg.norm(com) <= radius
+            assert 'com' not in sort.get_shared_unit_property_names()
+
+            coms = compute_unit_centers_of_mass(rec, sort, num_channels=5, memmap=m, n_jobs=n)
+            for com in coms:
+                assert np.linalg.norm(com) <= radius
+            assert 'com' in sort.get_shared_unit_property_names()
+
+            shutil.rmtree(folder)
+
+
+@pytest.mark.implemented
 def test_export_to_phy():
     folder = 'test'
     if os.path.isdir(folder):
@@ -301,10 +393,5 @@ def test_compute_features():
     assert np.all([fk in features.keys() for fk in features_df.keys()])
 
 
-@pytest.mark.notimplemented
-def test_compute_pca_scores():
-    pass
-
-
 if __name__ == '__main__':
-    test_export_to_phy()
+    test_spiking_activity()

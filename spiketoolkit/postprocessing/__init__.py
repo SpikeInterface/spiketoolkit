@@ -1,6 +1,6 @@
 from .postprocessing_tools import get_unit_waveforms, get_unit_templates, get_unit_max_channels, get_unit_amplitudes,\
     compute_unit_pca_scores, export_to_phy, set_unit_properties_by_max_channel_properties,\
-    compute_channel_spiking_activity
+    compute_channel_spiking_activity, compute_unit_centers_of_mass
 
 from .features import compute_unit_template_features, get_template_features_list
 
