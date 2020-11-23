@@ -752,7 +752,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
 
 
 def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1,
-                                     method='simple', start_frame=None, end_frame=None, chunk_size=None,
+                                     method='detection', start_frame=None, end_frame=None, chunk_size=None,
                                      chunk_mb=500, **kwargs):
     '''
     Computes spiking rate for each channel.
@@ -768,9 +768,9 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
     detect_sign: int
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
     method: str
+        'detection' (default): activity is computed as the number of spikes (one index per spike)
         'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
         associated to the same spike)
-        'detection': activity is computed as the number of spikes (one index per spike)
     start_frame: int
         Start frame to compute activity
     end_frame: int
