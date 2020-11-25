@@ -27,7 +27,7 @@ class NoiseOverlap(QualityMetric):
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']
 
-        waveforms = st.postprocessing.get_unit_templates(
+        waveforms = st.postprocessing.get_unit_waveforms(
             self._metric_data._recording,
             self._metric_data._sorting,
             unit_ids=self._metric_data._unit_ids,
@@ -39,7 +39,7 @@ class NoiseOverlap(QualityMetric):
             np.random.seed(seed)
 
         noise_overlaps = []
-        for i_u, unit in self._metric_data._unit_ids:
+        for i_u, unit in enumerate(self._metric_data._unit_ids):
             if self._metric_data.verbose:
                 printProgressBar(i_u + 1, len(self._metric_data._unit_ids))
             wfs = waveforms[i_u]
@@ -50,7 +50,7 @@ class NoiseOverlap(QualityMetric):
                 wfs = wfs[selecte_idxs]
 
             # get clip_size from waveforms shape
-            clip_size = wfs.shape[-1] // 2
+            clip_size = wfs.shape[-1]
 
             num_clips = len(wfs)
             min_time = np.min(times)

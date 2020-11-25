@@ -387,7 +387,7 @@ def compute_snrs(
     return snrs
 
 
-def compute_noise_overlap(
+def compute_noise_overlaps(
         sorting,
         recording,
         num_features=NoiseOverlap.params['num_features'],
@@ -398,6 +398,11 @@ def compute_noise_overlap(
 ):
     """
     Computes and returns the noise overlaps in the sorted dataset.
+    Noise overlap estimates the fraction of ‘‘noise events’’ in a cluster, i.e., above-threshold events not associated
+    with true firings of this or any of the other clustered units. A large noise overlap implies a high false-positive
+    rate.
+
+    Implementation from ml_ms4alg. For more information see https://doi.org/10.1016/j.neuron.2017.08.030
 
     Parameters
     ----------
@@ -1053,6 +1058,9 @@ def compute_quality_metrics(
         max_spikes_per_unit_for_snr=SNR.params['max_spikes_per_unit_for_snr'],
         template_mode=SNR.params['template_mode'],
         max_channel_peak=SNR.params['max_channel_peak'],
+        max_spikes_per_unit_for_noise_overlap=NoiseOverlap.params['max_spikes_per_unit_for_noise_overlap'],
+        noise_overlap_num_features=NoiseOverlap.params['num_features'],
+        noise_overlap_num_knn=NoiseOverlap.params['num_knn'],
         drift_metrics_interval_s=DriftMetric.params['drift_metrics_interval_s'],
         drift_metrics_min_spikes_per_interval=DriftMetric.params['drift_metrics_min_spikes_per_interval'],
         max_spikes_for_silhouette=SilhouetteScore.params['max_spikes_for_silhouette'],
@@ -1090,11 +1098,17 @@ def compute_quality_metrics(
     snr_noise_duration: float
         Number of seconds to compute noise level from (default 10.0)
     max_spikes_per_unit_for_snr: int
-        Maximum number of spikes to compute templates from (default 1000)
+        Maximum number of spikes to compute templates for SNR from (default 1000)
     template_mode: str
         Use 'mean' or 'median' to compute templates
     max_channel_peak: str
         If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or both ('both' - default)
+    max_spikes_per_unit_for_noise_overlap: int
+        Maximum number of spikes to compute templates for noise overlap from (default 1000)
+    noise_overlap_num_features: int
+        Number of features to use for PCA for noise overlap
+    noise_overlap_num_knn: int
+        Number of nearest neighbors for noise overlap
     drift_metrics_interval_s: float
         Time period for evaluating drift.
     drift_metrics_min_spikes_per_interval: int
@@ -1187,7 +1201,8 @@ def compute_quality_metrics(
     if "firing_rate" in metric_names or "presence_ratio" in metric_names or "isi_violation" in metric_names:
         if recording is None and duration_in_frames is None:
             raise ValueError(
-                "duration_in_frames and recording cannot both be None when computing firing_rate, presence_ratio, and isi_violation")
+                "duration_in_frames and recording cannot both be None when computing firing_rate, "
+                "presence_ratio, and isi_violation")
 
     if "max_drift" in metric_names or "cumulative_drift" in metric_names or "silhouette_score" in metric_names \
             or "isolation_distance" in metric_names or "l_ratio" in metric_names or "d_prime" in metric_names \
@@ -1257,6 +1272,14 @@ def compute_quality_metrics(
         isolation_distances = isolation_distance.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
                                                                 **kwargs)
         metrics_dict['isolation_distance'] = isolation_distances
+
+    if "noise_overlap" in metric_names:
+        noise_overlap = NoiseOverlap(metric_data=md)
+        noise_overlaps = noise_overlap.compute_metric(max_spikes_per_unit_for_noise_overlap,
+                                                      noise_overlap_num_features,
+                                                      noise_overlap_num_knn,
+                                                      **kwargs)
+        metrics_dict['noise_overlap'] = noise_overlaps
 
     if "l_ratio" in metric_names:
         l_ratio = LRatio(metric_data=md)

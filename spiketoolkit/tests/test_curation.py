@@ -14,6 +14,7 @@ from spiketoolkit.curation import (
     threshold_l_ratios,
     threshold_amplitude_cutoffs,
     threshold_isolation_distances,
+    threshold_noise_overlaps,
     threshold_nn_metrics,
     threshold_drift_metrics,
     get_curation_params
@@ -29,6 +30,7 @@ from spiketoolkit.validation import (
     compute_drift_metrics,
     compute_silhouette_scores,
     compute_isolation_distances,
+    compute_noise_overlaps,
     compute_l_ratios,
     compute_d_primes,
     compute_nn_metrics,
@@ -132,6 +134,25 @@ def test_thresh_snrs():
 
     assert np.all(new_snr >= snr_thresh)
     check_dumping(sort_snr)
+    shutil.rmtree('test')
+
+
+def test_thresh_noise_overlaps():
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=10, num_channels=4, K=10,
+                                                seed=0)
+
+    noise_thresh = 0.3
+
+    noise_overlaps = compute_noise_overlaps(sort, rec, apply_filter=False, seed=0)
+    sort_noise = threshold_noise_overlaps(sort, rec, noise_thresh, 'less', apply_filter=False, seed=0)
+
+    original_ids = sort.get_unit_ids()
+    new_noise = []
+    for unit in sort_noise.get_unit_ids():
+        new_noise.append(noise_overlaps[original_ids.index(unit)])
+    new_noise = np.array(new_noise)
+    assert np.all(new_noise >= noise_thresh)
+    check_dumping(sort_noise)
     shutil.rmtree('test')
 
 
@@ -241,16 +262,16 @@ def test_curation_params():
 
 
 if __name__ == "__main__":
-    test_thresh_num_spikes()
-    test_thresh_presence_ratios()
-    test_thresh_frs()
-    test_thresh_isi_violations()
-
-    test_thresh_snrs()
-    test_thresh_amplitude_cutoffs()
-
-    test_thresh_silhouettes()
-    test_thresh_isolation_distances()
-    test_thresh_l_ratios()
-    test_thresh_threshold_drift_metrics()
-    test_thresh_nn_metrics()
+    # test_thresh_num_spikes()
+    # test_thresh_presence_ratios()
+    # test_thresh_frs()
+    # test_thresh_isi_violations()
+    #
+    # test_thresh_snrs()
+    # test_thresh_amplitude_cutoffs()
+    test_thresh_noise_overlaps()
+    # test_thresh_silhouettes()
+    # test_thresh_isolation_distances()
+    # test_thresh_l_ratios()
+    # test_thresh_threshold_drift_metrics()
+    # test_thresh_nn_metrics()

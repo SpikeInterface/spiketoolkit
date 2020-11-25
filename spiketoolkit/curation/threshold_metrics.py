@@ -8,6 +8,7 @@ from spiketoolkit.validation.quality_metric_classes.firing_rate import FiringRat
 from spiketoolkit.validation.quality_metric_classes.presence_ratio import PresenceRatio
 from spiketoolkit.validation.quality_metric_classes.isi_violation import ISIViolation
 from spiketoolkit.validation.quality_metric_classes.snr import SNR
+from spiketoolkit.validation.quality_metric_classes.noise_overlap import NoiseOverlap
 from spiketoolkit.validation.quality_metric_classes.isolation_distance import IsolationDistance
 from spiketoolkit.validation.quality_metric_classes.nearest_neighbor import NearestNeighbor
 from spiketoolkit.validation.quality_metric_classes.drift_metric import DriftMetric
@@ -371,6 +372,101 @@ def threshold_snrs(
     snr = SNR(metric_data=md)
     threshold_sorting = snr.threshold_metric(threshold, threshold_sign, snr_mode, snr_noise_duration,
                                              max_spikes_per_unit_for_snr, template_mode, max_channel_peak, **kwargs)
+    return threshold_sorting
+
+
+def threshold_noise_overlaps(
+        sorting,
+        recording,
+        threshold,
+        threshold_sign,
+        num_features=NoiseOverlap.params['num_features'],
+        num_knn=NoiseOverlap.params['num_knn'],
+        max_spikes_per_unit_for_noise_overlap=NoiseOverlap.params['max_spikes_per_unit_for_noise_overlap'],
+        **kwargs
+):
+    """
+    Computes and thresholds the snrs in the sorted dataset with the given sign and value.
+
+    Parameters
+    ----------
+    sorting: SortingExtractor
+        The sorting result to be evaluated.
+    recording: RecordingExtractor
+        The given recording extractor
+    threshold: int or float
+        The threshold for the given metric.
+    threshold_sign: str
+        If 'less', will threshold any metric less than the given threshold.
+        If 'less_or_equal', will threshold any metric less than or equal to the given threshold.
+        If 'greater', will threshold any metric greater than the given threshold.
+        If 'greater_or_equal', will threshold any metric greater than or equal to the given threshold.
+    num_features: int
+        Number of features to use for PCA
+    num_knn: int
+        Number of nearest neighbors
+    max_spikes_per_unit_for_noise_overlap: int
+        Number of waveforms to use for noise overlaps estimation
+    **kwargs: keyword arguments
+        Keyword arguments among the following:
+            method: str
+                If 'absolute' (default), amplitudes are absolute amplitudes in uV are returned.
+                If 'relative', amplitudes are returned as ratios between waveform amplitudes and template amplitudes
+            peak: str
+                If maximum channel has to be found among negative peaks ('neg'), positive ('pos') or
+                both ('both' - default)
+            frames_before: int
+                Frames before peak to compute amplitude
+            frames_after: int
+                Frames after peak to compute amplitude
+            apply_filter: bool
+                If True, recording is bandpass-filtered
+            freq_min: float
+                High-pass frequency for optional filter (default 300 Hz)
+            freq_max: float
+                Low-pass frequency for optional filter (default 6000 Hz)
+            grouping_property: str
+                Property to group channels. E.g. if the recording extractor has the 'group' property and
+                'grouping_property' is 'group', then waveforms are computed group-wise.
+            ms_before: float
+                Time period in ms to cut waveforms before the spike events
+            ms_after: float
+                Time period in ms to cut waveforms after the spike events
+            dtype: dtype
+                The numpy dtype of the waveforms
+            compute_property_from_recording: bool
+                If True and 'grouping_property' is given, the property of each unit is assigned as the corresponding
+                property of the recording extractor channel on which the average waveform is the largest
+            max_channels_per_waveforms: int or None
+                Maximum channels per waveforms to return. If None, all channels are returned
+            n_jobs: int
+                Number of parallel jobs (default 1)
+            memmap: bool
+                If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
+            save_property_or_features: bool
+                If true, it will save features in the sorting extractor
+            recompute_info: bool
+                    If True, waveforms are recomputed
+            max_spikes_per_unit: int
+                The maximum number of spikes to extract per unit
+            seed: int
+                Random seed for reproducibility
+            verbose: bool
+                If True, will be verbose in metric computation
+
+    Returns
+    ----------
+    threshold sorting extractor
+    """
+    params_dict = update_all_param_dicts_with_kwargs(kwargs)
+
+    md = MetricData(sorting=sorting, sampling_frequency=recording.get_sampling_frequency(), recording=recording,
+                    apply_filter=params_dict["apply_filter"], freq_min=params_dict["freq_min"],
+                    duration_in_frames=None, freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
+
+    noise_overlap = NoiseOverlap(metric_data=md)
+    threshold_sorting = noise_overlap.threshold_metric(threshold, threshold_sign, max_spikes_per_unit_for_noise_overlap,
+                                                       num_features, num_knn, **kwargs)
     return threshold_sorting
 
 
