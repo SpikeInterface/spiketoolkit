@@ -209,16 +209,9 @@ def test_spiking_activity():
         if os.path.isdir(folder):
             shutil.rmtree(folder)
         rec, sort = se.example_datasets.toy_example(num_channels=num_channels, dumpable=True, dump_folder=folder)
+        rates, amps = compute_channel_spiking_activity(rec, n_jobs=n)
 
-        rates_simple, amps_simple = compute_channel_spiking_activity(rec, method='simple', n_jobs=n,
-                                                                     save_property_or_features=False)
-        assert len(rates_simple) == num_channels and len(amps_simple) == num_channels
-        assert 'spike_rate' not in rec.get_shared_channel_property_names()
-        assert 'spike_amplitude' not in rec.get_shared_channel_property_names()
-
-        rates_detection, amps_detection = compute_channel_spiking_activity(rec, method='detection', n_jobs=n)
-
-        assert len(rates_detection) == num_channels and len(amps_detection) == num_channels
+        assert len(rates) == num_channels and len(amps) == num_channels
         assert 'spike_rate' in rec.get_shared_channel_property_names()
         assert 'spike_amplitude' in rec.get_shared_channel_property_names()
 
