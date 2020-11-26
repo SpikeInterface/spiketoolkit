@@ -176,6 +176,8 @@ def compute_unit_template_features(recording, sorting, unit_ids=None, channel_id
     # ---------------------- DEAL WITH OUTPUT -------------------------
     if save_property_or_features:
         for feat_name, feat_val in features_dict.items():
+            if max_channels_per_features == 1:
+                feat_val = feat_val[0]
             sorting.set_units_property(unit_ids=unit_ids,
                                        property_name=feat_name,
                                        values=feat_val)
