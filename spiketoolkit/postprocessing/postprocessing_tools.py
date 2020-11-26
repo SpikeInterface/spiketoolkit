@@ -11,7 +11,6 @@ import csv
 from tqdm import tqdm
 from copy import copy
 import time
-import os
 
 from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, \
     divide_recording_into_time_chunks, get_unit_waveforms_for_chunk, get_max_channels_per_waveforms, \
@@ -201,8 +200,6 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     if len_wf > max_spikes_per_unit:
                         len_wf = max_spikes_per_unit
                 shape = (len_wf, n_channels, sum(n_pad))
-                if (sorting.get_tmp_folder() / fname).is_file():  # remove existing files
-                    os.remove(str(sorting.get_tmp_folder() / fname))
                 arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                 all_unit_waveforms.append(arr)
         else:
@@ -340,7 +337,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                 if memmap:
                     memmap_file = wf.filename
                     del wf
-                    os.remove(memmap_file)
+                    Path(memmap_file).unlink()
                     memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
                                              dtype=waveform.dtype)
                     memmap_array[:] = waveform
@@ -360,7 +357,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     if memmap:
                         memmap_file = wf.filename
                         del wf
-                        os.remove(memmap_file)
+                        Path(memmap_file).unlink()
                         memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
                                                  dtype=waveform.dtype)
                         memmap_array[:] = waveform
@@ -704,8 +701,6 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
                     if len_amp > max_spikes_per_unit:
                         len_amp = max_spikes_per_unit
                 shape = len_amp
-                if (sorting.get_tmp_folder() / fname).is_file():  # remove existing files
-                    os.remove(str(sorting.get_tmp_folder() / fname))
                 arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                 amp_list.append(arr)
         else:
