@@ -1,13 +1,11 @@
 from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 import numpy as np
 
 
-class TransformRecording(RecordingExtractor):
-
+class TransformRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'Transform'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
     def __init__(self, recording, scalar=1., offset=0., dtype=None):
         if not isinstance(recording, RecordingExtractor):
@@ -18,22 +16,10 @@ class TransformRecording(RecordingExtractor):
             self._dtype = recording.get_dtype()
         else:
             self._dtype = dtype
-        RecordingExtractor.__init__(self)
-        self._recording = recording
-        self.copy_channel_properties(recording=self._recording)
-        self.is_filtered = self._recording.is_filtered
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'scalar': scalar, 'offset': offset,
                         'dtype': dtype}
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
@@ -68,10 +54,10 @@ def transform(recording, scalar=1, offset=0):
     ----------
     recording: RecordingExtractor
         The recording extractor to be transformed
-    scalar: float
-        Scalar for the traces of the recording extractor
-    offset: float
-        Offset for the traces of the recording extractor
+    scalar: float or array
+        Scalar for the traces of the recording extractor or array with scalars for each channel
+    offset: float or array
+        Offset for the traces of the recording extractor or array with offsets for each channel
     Returns
     -------
     transform_traces: TransformTracesRecording

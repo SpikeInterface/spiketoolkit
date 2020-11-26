@@ -5,10 +5,7 @@ import scipy.signal as ss
 
 
 class NotchFilterRecording(FilterRecording):
-
     preprocessor_name = 'NotchFilter'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # error message when not installed
 
     def __init__(self, recording, freq=3000, q=30, chunk_size=30000, cache_chunks=False):
         self._freq = freq
@@ -19,9 +16,6 @@ class NotchFilterRecording(FilterRecording):
         if not np.all(np.abs(np.roots(self._a)) < 1):
             raise ValueError('Filter is not stable')
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
-        self.copy_channel_properties(recording)
-        self.is_filtered = self._recording.is_filtered
-
         self._kwargs = {'recording': recording.make_serialized_dict(), 'freq': freq,
                         'q': q, 'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
 
@@ -66,7 +60,7 @@ def notch_filter(recording, freq=3000, q=30, chunk_size=30000, cache_to_file=Fal
     if cache_to_file:
         assert not cache_chunks, 'if cache_to_file cache_chunks should be False'
     
-    notch_recording =  NotchFilterRecording(
+    notch_recording = NotchFilterRecording(
         recording=recording,
         freq=freq,
         q=q,

@@ -1,35 +1,19 @@
 from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 import numpy as np
 
-class RemoveArtifactsRecording(RecordingExtractor):
 
+class RemoveArtifactsRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'RemoveArtifacts'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
-    def __init__(self, recording, triggers, ms_before=0.5, ms_after=3):
-        if not isinstance(recording, RecordingExtractor):
-            raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
+    def __init__(self, recording, triggers, ms_before=0.5, ms_after=3.0):
         self._triggers = np.array(triggers)
         self._ms_before = ms_before
         self._ms_after = ms_after
-        RecordingExtractor.__init__(self)
-        self.copy_channel_properties(recording=self._recording)
-        self.is_filtered = self._recording.is_filtered
-
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'triggers': triggers,
                         'ms_before': ms_before, 'ms_after': ms_after}
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):

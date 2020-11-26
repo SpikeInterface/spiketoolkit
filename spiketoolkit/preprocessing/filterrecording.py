@@ -1,16 +1,12 @@
-from abc import ABC, abstractmethod
-import spikeextractors as se
+from abc import abstractmethod
 import numpy as np
-from spikeextractors import RecordingExtractor
 from .transform import TransformRecording
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
 
 
-class FilterRecording(RecordingExtractor):
+class FilterRecording(BasePreprocessorRecordingExtractor):
     def __init__(self, recording, chunk_size=10000, cache_chunks=False, dtype=None):
-        if not isinstance(recording, RecordingExtractor):
-            raise ValueError("'recording' must be a RecordingExtractor")
-        self._recording = recording
         self._chunk_size = chunk_size
         self._cache_chunks = cache_chunks
         if cache_chunks:
@@ -18,9 +14,8 @@ class FilterRecording(RecordingExtractor):
         else:
             self._filtered_cache_chunks = None
         self._traces = None
-        se.RecordingExtractor.__init__(self)
         if dtype is None:
-            dtype = str(self._recording.get_dtype())
+            dtype = str(recording.get_dtype())
         if 'uint' in dtype:
             if 'numpy' in dtype:
                 dtype = str(dtype).replace("<class '", "").replace("'>", "")
@@ -30,21 +25,13 @@ class FilterRecording(RecordingExtractor):
             exp_idx = dtype.find('int') + 3
             exp = int(dtype[exp_idx:])
             offset = - 2**(exp - 1)
-            self._recording = TransformRecording(self._recording, offset=offset, dtype=dtype_signed)
+            recording_base = TransformRecording(recording, offset=offset, dtype=dtype_signed)
             print(f"dtype converted from {dtype} to {dtype_signed} before filtering")
             self._dtype = dtype_signed
         else:
             self._dtype = dtype
-        self.copy_channel_properties(recording)
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
-
-    def get_num_frames(self):
-        return self._recording.get_num_frames()
-
-    def get_sampling_frequency(self):
-        return self._recording.get_sampling_frequency()
+            recording_base = recording
+        BasePreprocessorRecordingExtractor.__init__(self, recording_base)
 
     # avoid filtering one sample
     def get_dtype(self):

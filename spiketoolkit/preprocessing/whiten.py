@@ -3,17 +3,11 @@ import numpy as np
 
 
 class WhitenRecording(FilterRecording):
-
     preprocessor_name = 'Whiten'
-    installed = True  # check at class level if installed or not
-    installation_mesg = ""  # err
 
     def __init__(self, recording, chunk_size=30000, cache_chunks=False, seed=0):
-        self._recording = recording
-        self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
-        self.is_filtered = self._recording.is_filtered
-
+        self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'chunk_size': chunk_size,
                         'cache_chunks': cache_chunks, 'seed': seed}
 

@@ -1,5 +1,6 @@
 from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
+from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 import numpy as np
 
 try:
@@ -10,20 +11,16 @@ except ImportError:
     HAVE_RR = False
 
 
-class ResampleRecording(RecordingExtractor):
+class ResampleRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'Resample'
     installed = HAVE_RR  # check at class level if installed or not
     installation_mesg = "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"  # err
 
     def __init__(self, recording, resample_rate):
         assert HAVE_RR, "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"
-        self._recording = recording
         self._resample_rate = resample_rate
-        RecordingExtractor.__init__(self)
+        BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._dtype = recording.get_dtype()
-        self.copy_channel_properties(recording)
-        self.is_filtered = self._recording.is_filtered
-
         self._kwargs = {'recording': recording.make_serialized_dict(), 'resample_rate': resample_rate}
 
     def get_sampling_frequency(self):
@@ -54,9 +51,6 @@ class ResampleRecording(RecordingExtractor):
         else:
             traces_resampled = signal.resample(traces, int(end_frame_sampled - start_frame_sampled), axis=1)
         return traces_resampled.astype(self._dtype)
-
-    def get_channel_ids(self):
-        return self._recording.get_channel_ids()
 
 
 def resample(recording, resample_rate):
