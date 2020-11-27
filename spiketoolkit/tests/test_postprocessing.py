@@ -17,18 +17,20 @@ from spiketoolkit.tests.utils import create_dumpable_extractors_from_existing
 def test_waveforms():
     n_wf_samples = 100
     n_jobs = [0, 2]
-    memmap = [True, False]
+    memmap = [False, True]
     for n in n_jobs:
         for m in memmap:
             print('N jobs', n, 'memmap', m)
             folder = 'test'
             if os.path.isdir(folder):
                 shutil.rmtree(folder)
-            rec, sort, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
-                                                                                                  n_channels=4,
-                                                                                                  n_wf_samples=
-                                                                                                  n_wf_samples)
-            rec, sort = create_dumpable_extractors_from_existing(folder, rec, sort)
+            rec_w, sort_w, waveforms, templates, max_chans, amps = create_signal_with_known_waveforms(n_waveforms=2,
+                                                                                                      n_channels=4,
+                                                                                                      n_wf_samples=
+                                                                                                      n_wf_samples)
+            rec, sort = create_dumpable_extractors_from_existing(folder, rec_w, sort_w)
+            tmp_folder = sort.get_tmp_folder()
+
             # get num samples in ms
             ms_cut = n_wf_samples // 2 / rec.get_sampling_frequency() * 1000
 
@@ -51,6 +53,7 @@ def test_waveforms():
             # change cut ms
             wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True, n_jobs=n,
                                      memmap=m, recompute_info=True)
+            print([p.name for p in tmp_folder.iterdir()])
 
             for (w, w_gt) in zip(wav, waveforms):
                 _, _, samples = w.shape
@@ -66,6 +69,8 @@ def test_waveforms():
                 assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
             # test compute_property_from_recordings
+            rec, sort = create_dumpable_extractors_from_existing(folder, rec_w, sort_w)
+            rec.set_channel_groups([0, 0, 1, 1])
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, grouping_property='group',
                                      compute_property_from_recording=True, n_jobs=n,
                                      memmap=m, recompute_info=True)
@@ -73,6 +78,7 @@ def test_waveforms():
                 assert np.allclose(w, w_gt[:, :2]) or np.allclose(w, w_gt[:, 2:])
 
             # test max_spikes_per_unit
+            rec, sort = create_dumpable_extractors_from_existing(folder, rec_w, sort_w)
             wav = get_unit_waveforms(rec, sort, ms_before=ms_cut, ms_after=ms_cut, max_spikes_per_unit=10,
                                      save_property_or_features=False, n_jobs=n,
                                      memmap=m, recompute_info=True)

@@ -336,6 +336,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                 # some channels are missing - re-instantiate object
                 if memmap:
                     memmap_file = wf.filename
+                    if not wf._mmap.closed:
+                        wf._mmap.close()
                     del wf
                     Path(memmap_file).unlink()
                     memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
@@ -356,6 +358,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     # some channels are missing - re-instantiate object
                     if memmap:
                         memmap_file = wf.filename
+                        if not wf._mmap.closed:
+                            wf._mmap.close()
                         del wf
                         Path(memmap_file).unlink()
                         memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
