@@ -336,15 +336,18 @@ def test_export_to_phy():
     templates_ind = np.load('phy_rm/template_ind.npy')
     assert len(np.where(templates_ind == -1)[0]) > 0  # removed channels are -1
 
-    shutil.rmtree('test')
-    shutil.rmtree('phy')
-    shutil.rmtree('phy_group')
-    shutil.rmtree('phy_max_channels')
-    shutil.rmtree('phy_no_feat')
-    shutil.rmtree('phy_no_amp')
-    shutil.rmtree('phy_no_amp_feat')
-    shutil.rmtree('phy_rm')
-    shutil.rmtree('phy_par')
+    try:
+        shutil.rmtree('test')
+        shutil.rmtree('phy')
+        shutil.rmtree('phy_group')
+        shutil.rmtree('phy_max_channels')
+        shutil.rmtree('phy_no_feat')
+        shutil.rmtree('phy_no_amp')
+        shutil.rmtree('phy_no_amp_feat')
+        shutil.rmtree('phy_rm')
+        shutil.rmtree('phy_par')
+    except:
+        print("Could not delete some test folders")
 
 
 @pytest.mark.implemented
