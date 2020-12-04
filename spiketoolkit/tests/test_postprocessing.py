@@ -11,15 +11,20 @@ import os
 import shutil
 from pathlib import Path
 from spiketoolkit.tests.utils import create_dumpable_extractors_from_existing
+import sys
+
+if sys.platform == "win32":
+    memmaps = [False]
+else:
+    memmaps = [False, True]
 
 
 @pytest.mark.implemented
 def test_waveforms():
     n_wf_samples = 100
     n_jobs = [0, 2]
-    memmap = [True, False]
     for n in n_jobs:
-        for m in memmap:
+        for m in memmaps:
             print('N jobs', n, 'memmap', m)
             folder = 'test'
             if os.path.isdir(folder):
@@ -160,9 +165,8 @@ def test_max_chan():
 @pytest.mark.implemented
 def test_amplitudes():
     n_jobs = [0, 2]
-    memmap = [True, False]
     for n in n_jobs:
-        for m in memmap:
+        for m in memmaps:
             print('N jobs', n, 'memmap', m)
             n_wf_samples = 100
             folder = 'test'
@@ -223,9 +227,8 @@ def test_compute_pca_scores():
     num_channels = 32
     folder = 'test'
     n_jobs = [0, 2]
-    memmap = [True, False]
     for n in n_jobs:
-        for m in memmap:
+        for m in memmaps:
             print('N jobs', n, 'memmap', m)
 
             if os.path.isdir(folder):
@@ -260,9 +263,8 @@ def test_compute_centers_of_mass():
         locations[i, 0] = np.cos(angle) * radius
         locations[i, 1] = np.sin(angle) * radius
 
-    memmap = [True, False]
     for n in n_jobs:
-        for m in memmap:
+        for m in memmaps:
             print('N jobs', n, 'memmap', m)
 
             if os.path.isdir(folder):
@@ -327,15 +329,18 @@ def test_export_to_phy():
     templates_ind = np.load('phy_rm/template_ind.npy')
     assert len(np.where(templates_ind == -1)[0]) > 0  # removed channels are -1
 
-    shutil.rmtree('test')
-    shutil.rmtree('phy')
-    shutil.rmtree('phy_group')
-    shutil.rmtree('phy_max_channels')
-    shutil.rmtree('phy_no_feat')
-    shutil.rmtree('phy_no_amp')
-    shutil.rmtree('phy_no_amp_feat')
-    shutil.rmtree('phy_rm')
-    shutil.rmtree('phy_par')
+    try:
+        shutil.rmtree('test')
+        shutil.rmtree('phy')
+        shutil.rmtree('phy_group')
+        shutil.rmtree('phy_max_channels')
+        shutil.rmtree('phy_no_feat')
+        shutil.rmtree('phy_no_amp')
+        shutil.rmtree('phy_no_amp_feat')
+        shutil.rmtree('phy_rm')
+        shutil.rmtree('phy_par')
+    except:
+        print("Could not delete some test folders")
 
 
 @pytest.mark.implemented

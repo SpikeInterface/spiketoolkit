@@ -176,9 +176,12 @@ def compute_unit_template_features(recording, sorting, unit_ids=None, channel_id
     # ---------------------- DEAL WITH OUTPUT -------------------------
     if save_property_or_features:
         for feat_name, feat_val in features_dict.items():
-            sorting.set_units_property(unit_ids=unit_ids,
-                                       property_name=feat_name,
-                                       values=feat_val)
+            for i_u, unit in enumerate(sorting.get_unit_ids()):
+                if len(feat_val[i_u]) == 1:
+                    feat_val[i_u] = feat_val[i_u][0]
+                sorting.set_unit_property(unit,
+                                          property_name=feat_name,
+                                          value=feat_val[i_u])
     if as_dataframe:
         features = pandas.DataFrame.from_dict(features_dict)
         features = features.rename(index={original_idx: unit_ids[i] for

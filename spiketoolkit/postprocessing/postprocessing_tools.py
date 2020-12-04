@@ -11,7 +11,6 @@ import csv
 from tqdm import tqdm
 from copy import copy
 import time
-import os
 
 from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_waveforms, \
     divide_recording_into_time_chunks, get_unit_waveforms_for_chunk, get_max_channels_per_waveforms, \
@@ -201,8 +200,6 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     if len_wf > max_spikes_per_unit:
                         len_wf = max_spikes_per_unit
                 shape = (len_wf, n_channels, sum(n_pad))
-                if (sorting.get_tmp_folder() / fname).is_file():  # remove existing files
-                    os.remove(str(sorting.get_tmp_folder() / fname))
                 arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                 all_unit_waveforms.append(arr)
         else:
@@ -339,8 +336,10 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                 # some channels are missing - re-instantiate object
                 if memmap:
                     memmap_file = wf.filename
+                    if not wf._mmap.closed:
+                        wf._mmap.close()
                     del wf
-                    os.remove(memmap_file)
+                    Path(memmap_file).unlink()
                     memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
                                              dtype=waveform.dtype)
                     memmap_array[:] = waveform
@@ -359,8 +358,10 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     # some channels are missing - re-instantiate object
                     if memmap:
                         memmap_file = wf.filename
+                        if not wf._mmap.closed:
+                            wf._mmap.close()
                         del wf
-                        os.remove(memmap_file)
+                        Path(memmap_file).unlink()
                         memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
                                                  dtype=waveform.dtype)
                         memmap_array[:] = waveform
@@ -704,8 +705,6 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
                     if len_amp > max_spikes_per_unit:
                         len_amp = max_spikes_per_unit
                 shape = len_amp
-                if (sorting.get_tmp_folder() / fname).is_file():  # remove existing files
-                    os.remove(str(sorting.get_tmp_folder() / fname))
                 arr = sorting.allocate_array(shape=shape, dtype=dtype, name=fname, memmap=memmap)
                 amp_list.append(arr)
         else:
@@ -1262,7 +1261,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     max_channels_per_template: int or None
         Maximum channels per unit to return. If None, all channels are returned
     copy_binary: bool
-        If True, the recording is copied and saved in the phy 'output_folder'. If False and the 
+        If True, the recording is copied and saved in the phy 'output_folder'. If False and the
         'recording' is a CacheRecordingExtractor or a BinDatRecordingExtractor, then a relative
         link to the file recording location is used. Otherwise, the recording is not copied and the
         recording path is set to 'None'. (default True)
@@ -1349,7 +1348,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
 
     if copy_binary:
         rec_path = 'recording.dat'  # Use relative path in this case
-        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)      
+        recording.write_to_binary_dat_format(output_folder / rec_path, dtype=dtype)
     elif isinstance(recording, se.CacheRecordingExtractor):
         rec_path = str(Path(recording.filename).absolute())
         dtype = recording.get_dtype()
@@ -1357,7 +1356,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         rec_path = str(Path(recording._datfile).absolute())
         dtype = recording.get_dtype()
     else: # don't save recording.dat
-        rec_path = 'None' 
+        rec_path = 'None'
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
@@ -1426,7 +1425,7 @@ def _compute_templates_similarity(templates, template_ind=None):
         for j, (t_j, t_ind_j) in enumerate(zip(templates, template_ind)):
             shared_channel_idxs = [ch for ch in t_ind_i if
                                    ch in t_ind_j and not ch < 0]  # ch<0 is for channels empty, label -1
-            if len(shared_channel_idxs) > 0 and len(shared_channel_idxs):
+            if len(shared_channel_idxs) > 0:
                 # reorder channels
                 reorder_t_ind_i = np.zeros(len(shared_channel_idxs), dtype='int')
                 reorder_t_ind_j = np.zeros(len(shared_channel_idxs), dtype='int')
@@ -1620,6 +1619,19 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         sorting.clear_units_spike_features(feature_name='pca_scores')
 
     if compute_pc_features or compute_amplitudes:
+        # check if recomputation is needed
+        if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
+            unit_ids = sorting.get_unit_ids()
+            spike_times = sorting.get_units_spike_train(unit_ids)
+            waveforms = [sorting.get_unit_spike_features(u, 'waveforms') for u in unit_ids]
+
+            if np.any([len(wf) < len(times) for (wf, times) in zip(waveforms, spike_times)]):
+                recompute_info = True
+            else:
+                recompute_info = False
+
+        print("Recomputing info")
+
         waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
                                                                              max_spikes_per_unit=max_spikes_per_unit,
                                                                              ms_before=ms_before,
@@ -1632,12 +1644,16 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                                                              seed=seed,
                                                                              memmap=memmap, return_idxs=True,
                                                                              max_channels_per_waveforms=
-                                                                             max_channels_per_waveforms)
+                                                                             max_channels_per_waveforms,
+                                                                             recompute_info=recompute_info)
     else:
         waveforms, spike_index_list, channel_index_list = None, None, None
 
     if compute_pc_features:
         # pca scores
+        if recompute_info:
+            sorting.clear_units_spike_features(feature_name='pca_scores')
+
         pc_list, pca_idxs, pc_ind = compute_unit_pca_scores(recording, sorting, n_comp=n_comp, by_electrode=True,
                                                             max_spikes_per_unit=max_spikes_per_unit,
                                                             ms_before=ms_before,
@@ -1655,6 +1671,9 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
 
     if compute_amplitudes:
         # amplitudes
+        if recompute_info:
+            sorting.clear_units_spike_features(feature_name='amplitudes')
+
         amplitudes_list, amp_idxs = get_unit_amplitudes(recording, sorting, method=amp_method,
                                                         save_property_or_features=save_property_or_features,
                                                         peak=amp_peak, max_spikes_per_unit=max_spikes_for_amplitudes,
