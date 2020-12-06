@@ -854,9 +854,9 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
             spike_amplitudes[i] = recording.get_channel_property(ch, 'spike_amplitude')
     else:
         sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
-                                                         detect_threshold=detect_threshold,
-                                                         align=False, n_jobs=n_jobs, start_frame=start_frame,
-                                                         end_frame=end_frame, verbose=verbose)
+                                                         detect_threshold=detect_threshold, detect_sign=detect_sign,
+                                                         n_jobs=n_jobs, start_frame=start_frame, end_frame=end_frame,
+                                                         verbose=verbose)
 
         for i, unit in enumerate(sort_detect.get_unit_ids()):
             spike_rates[i] = sort_detect.get_unit_property(unit, 'spike_rate')
