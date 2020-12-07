@@ -181,47 +181,17 @@ def _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, detect_thres
     traces = recording.get_traces(start_frame=chunk['istart'],
                                   end_frame=chunk['iend'])
 
-    sigs = []
-    for i in range(2 * n_shifts + 1):
-        if -2 * n_shifts + i != 0:
-            sig = traces[:, i:-2 * n_shifts + i]
-        else:
-            sig = traces[:, i:]
-        sigs.append(sig)
-
-    mid_point = n_shifts
-    peak_mask = np.ones_like(sigs[0], dtype=bool)
-
     if detect_sign == -1:
-        thresholds = -detect_threshold * np.median(np.abs(traces) / 0.6745, 1)[:, None]
-        for i in range(2 * n_shifts):
-            if i < mid_point:
-                peak_mask = peak_mask & (sigs[i + 1] <= sigs[i])
-            elif i == mid_point:
-                peak_mask = peak_mask & (sigs[i] <= thresholds)
-                peak_mask = peak_mask & (sigs[i] < sigs[i + 1])
-            else:
-                peak_mask = peak_mask & (sigs[i] < sigs[i + 1])
-    elif detect_sign == 1:
-        thresholds = detect_threshold * np.median(np.abs(traces) / 0.6745, 1)[:, None]
-        for i in range(2 * n_shifts):
-            if i < mid_point:
-                peak_mask = peak_mask & (sigs[i + 1] >= sigs[i])
-            elif i == mid_point:
-                peak_mask = peak_mask & (sigs[i] >= thresholds)
-                peak_mask = peak_mask & (sigs[i] > sigs[i + 1])
-            else:
-                peak_mask = peak_mask & (sigs[i] > sigs[i + 1])
-    else:
-        thresholds = detect_threshold * np.median(np.abs(traces) / 0.6745, 1)[:, None]
-        for i in range(2 * n_shifts):
-            if i < mid_point:
-                peak_mask = peak_mask & (np.abs(sigs[i + 1]) >= sigs[i])
-            elif i == mid_point:
-                peak_mask = peak_mask & (np.abs(sigs[i + 1]) >= thresholds)
-                peak_mask = peak_mask & (np.abs(sigs[i]) > np.abs(sigs[i + 1]))
-            else:
-                peak_mask = peak_mask & (np.abs(sigs[i]) > np.abs(sigs[i + 1]))
+        traces = -traces
+    elif detect_sign == 0:
+        traces = np.abs(traces)
+
+    thresholds = detect_threshold * np.median(np.abs(traces) / 0.6745, 1)[:, None]
+    sig_center = traces[:, n_shifts:-n_shifts]
+    peak_mask = sig_center > thresholds
+    for i in range(n_shifts):
+        peak_mask &= sig_center > traces[:, i:i + sig_center.shape[1]]
+        peak_mask &= sig_center >= traces[:, n_shifts + i + 1:n_shifts + i + 1 + sig_center.shape[1]]
 
     # find peaks
     peak_chan_ind, peak_sample_ind = np.nonzero(peak_mask)
