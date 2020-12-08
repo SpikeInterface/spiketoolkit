@@ -750,9 +750,8 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
         return amp_list
 
 
-def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1,
-                                     method='detection', start_frame=None, end_frame=None, chunk_size=None,
-                                     chunk_mb=500, **kwargs):
+def compute_channel_spiking_activity(recording, channel_ids=None, detect_threshold=5, detect_sign=-1, start_frame=None,
+                                     end_frame=None, chunk_size=None, chunk_mb=500, **kwargs):
     '''
     Computes spiking rate for each channel.
 
@@ -766,10 +765,6 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
         Detection of threshold in MAD times
     detect_sign: int
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
-    method: str
-        'detection' (default): activity is computed as the number of spikes (one index per spike)
-        'simple': activity is computed as the number of threshold crossing indexes (more than one indexes can be
-        associated to the same spike)
     start_frame: int
         Start frame to compute activity
     end_frame: int
@@ -803,8 +798,6 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
     n_jobs = params_dict['n_jobs']
     joblib_backend = params_dict['joblib_backend']
     verbose = params_dict['verbose']
-
-    assert method in ['simple', 'detection'], "'method' can be either 'simple' or 'detection'"
 
     if isinstance(channel_ids, (int, np.integer)):
         channel_ids = [channel_ids]
@@ -854,64 +847,20 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
     )
     n_chunk = len(chunks)
 
-    if verbose:
-        print(f"Number of chunks: {len(chunks)} - Number of jobs: {n_jobs}")
-
-    if verbose and n_jobs == 1:
-        chunk_iter = tqdm(range(n_chunk), ascii=True, desc="Computing channel activity in chunks")
-    else:
-        chunk_iter = range(n_chunk)
-
     if 'spike_rate' in recording.get_shared_channel_property_names() and \
             'spike_amplitude' in recording.get_shared_channel_property_names() and not recompute_info:
         for i, ch in enumerate(recording.get_channel_ids()):
             spike_rates[i] = recording.get_channel_property(ch, 'spike_rate')
             spike_amplitudes[i] = recording.get_channel_property(ch, 'spike_amplitude')
     else:
-        if method == 'simple':
-            if not recording_sub.check_if_dumpable():
-                if n_jobs > 1:
-                    n_jobs = 1
-                    print("RecordingExtractor is not dumpable and can't be processed in parallel")
-            else:
-                if n_jobs > 1:
-                    rec_arg = recording_sub.dump_to_dict()
-                else:
-                    rec_arg = recording_sub
-            num_spikes = []
-            amps = []
-            if n_jobs == 1:
-                for ii in chunk_iter:
-                    # chunk: {istart, iend, istart_with_padding, iend_with_padding} # include padding
-                    nspikes_ii, amps_ii = _extract_activity_one_chunk(ii, rec_arg, chunks, channel_ids,
-                                                                      detect_threshold, detect_sign, False)
+        sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
+                                                         detect_threshold=detect_threshold, detect_sign=detect_sign,
+                                                         n_jobs=n_jobs, start_frame=start_frame, end_frame=end_frame,
+                                                         verbose=verbose)
 
-                    num_spikes.append(nspikes_ii)
-                    amps.append(amps_ii)
-            else:
-                output = Parallel(n_jobs=n_jobs, backend=joblib_backend)(delayed(_extract_activity_one_chunk)
-                                                                         (ii, rec_arg, chunks, channel_ids,
-                                                                          detect_threshold, detect_sign, verbose, )
-                                                                         for ii in chunk_iter)
-
-                for (nspikes_ii, amps_ii) in output:
-                    num_spikes.append(nspikes_ii)
-                    amps.append(amps_ii)
-
-            num_spikes = np.sum(np.array(num_spikes), 0)
-            amps = np.array(amps)
-            spike_rates = num_spikes / duration
-            spike_amplitudes = np.mean(amps, 0)
-
-        else:
-            sort_detect = st.sortingcomponents.detect_spikes(recording, channel_ids=channel_ids,
-                                                             detect_threshold=detect_threshold,
-                                                             align=False, n_jobs=n_jobs, start_frame=start_frame,
-                                                             end_frame=end_frame, verbose=verbose)
-
-            for i, unit in enumerate(sort_detect.get_unit_ids()):
-                spike_rates[i] = sort_detect.get_unit_property(unit, 'spike_rate')
-                spike_amplitudes[i] = sort_detect.get_unit_property(unit, 'spike_amplitude')
+        for i, unit in enumerate(sort_detect.get_unit_ids()):
+            spike_rates[i] = sort_detect.get_unit_property(unit, 'spike_rate')
+            spike_amplitudes[i] = sort_detect.get_unit_property(unit, 'spike_amplitude')
 
         if save_property_or_features:
             for i, ch in enumerate(recording.get_channel_ids()):
@@ -2006,33 +1955,6 @@ def _template_descending_order(recording, templates, templates_ind):
     return templates, templates_ind
 
 
-def _extract_activity_one_channel(rec_arg, ch, detect_sign, detect_threshold, start_frame, end_frame, verbose):
-    if isinstance(rec_arg, dict):
-        recording = se.load_extractor_from_dict(rec_arg)
-    else:
-        recording = rec_arg
-    if verbose:
-        print(f'Detecting spikes on channel {ch}')
-    trace = np.squeeze(recording.get_traces(channel_ids=ch, start_frame=start_frame, end_frame=end_frame))
-    if detect_sign == -1:
-        thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
-        idx_spikes = np.where(trace < thresh)
-    elif detect_sign == 1:
-        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-        idx_spikes = np.where(trace > thresh)
-    else:
-        thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-        idx_spikes = np.where((trace > thresh) | (trace < -thresh))
-    if len(idx_spikes) > 0:
-        spike_n = len(idx_spikes[0])
-        spike_amplitude = np.median(trace[idx_spikes])
-    else:
-        spike_n = 0
-        spike_amplitude = 0
-
-    return spike_n, spike_amplitude
-
-
 def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_chunk, cumulative_n_spikes,
                                  waveforms_file, memmap, dtype, verbose):
     chunk = chunks[i]
@@ -2075,48 +1997,3 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
         return None
     else:
         return unit_waveforms
-
-# TODO use num spikes instead of rates
-def _extract_activity_one_chunk(ii, rec_arg, chunks, channel_ids, detect_threshold, detect_sign, verbose):
-    chunk = chunks[ii]
-
-    if verbose:
-        print(f"Chunk {ii + 1}: computing activity")
-    if isinstance(rec_arg, dict):
-        recording = se.load_extractor_from_dict(rec_arg)
-    else:
-        recording = rec_arg
-    t_start = time.perf_counter()
-
-    traces = recording.get_traces(start_frame=chunk['istart'],
-                                  end_frame=chunk['iend'])
-
-    duration = (chunk['iend'] - chunk['istart']) / recording.get_sampling_frequency()
-
-    num_spikes = np.zeros(len(channel_ids))
-    spike_amplitudes = np.zeros(len(channel_ids))
-
-    for i, ch in enumerate(channel_ids):
-        trace = np.squeeze(traces[i])
-
-        if detect_sign == -1:
-            thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where(trace < thresh)[0]
-        elif detect_sign == 1:
-            thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where(trace > thresh)[0]
-        else:
-            thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where((trace > thresh) | (trace < -thresh))[0]
-        if len(idx_spikes) > 0:
-            num_spikes[i] = len(idx_spikes)
-            spike_amplitudes[i] = np.median(trace[idx_spikes])
-        else:
-            num_spikes[i] = 0
-            spike_amplitudes[i] = 0
-
-    t_stop = time.perf_counter()
-    if verbose:
-        print(f"Chunk {ii + 1}: activity computed in {t_stop - t_start}s")
-
-    return num_spikes, spike_amplitudes

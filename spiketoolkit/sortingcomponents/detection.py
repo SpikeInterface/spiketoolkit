@@ -1,4 +1,3 @@
-import scipy.signal as ss
 from joblib import Parallel, delayed
 import spikeextractors as se
 from ..postprocessing.postprocessing_tools import divide_recording_into_time_chunks
@@ -7,11 +6,15 @@ from tqdm import tqdm
 import numpy as np
 
 
-def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, upsample=1, detect_sign=-1,
-                  min_diff_samples=5, align=True, start_frame=None, end_frame=None, n_jobs=1,
+def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-1,
+                  n_shifts=2, n_snippets_for_threshold=10, snippet_size_sec=1,
+                  start_frame=None, end_frame=None, n_jobs=1,
                   chunk_size=None, chunk_mb=500, verbose=False):
     '''
-    Detects spikes per channel.
+    Detects spikes per channel. Spikes are detected as threshold crossings and the threshold is in terms of the median
+    average deviation (MAD). The MAD is computed by taking 'n_snippets_for_threshold' snippets of the recordings
+    of 'snippet_size_sec' seconds uniformly distributed between 'start_frame' and 'end_frame'.
+
     Parameters
     ----------
     recording: RecordingExtractor
@@ -19,17 +22,17 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     channel_ids: list or None
         List of channels to perform detection. If None all channels are used
     detect_threshold: float
-        Threshold in MAD to detect peaks
-    n_pad_ms: float
-        Time in ms to find absolute peak around detected peak
-    upsample: int
-        The detected waveforms are upsampled 'upsample' times (default=1)
+        Threshold in median absolute deviations (MAD) to detect peaks
+    n_shifts: int
+        Number of shifts to find peak. E.g. if n_shift is 2, a peak is detected (if detect_sign is 'negative') if
+        a sample is below the threshold, the two samples before are higher than the sample, and the two samples after
+        the sample are higher than the sample.
+    n_snippets_for_threshold: int
+        Number of snippets to use to compute channel-wise thresholds
+    snippet_size_sec: float
+        Length of each snippet in seconds
     detect_sign: int
         Sign of the detection: -1 (negative), 1 (positive), 0 (both)
-    min_diff_samples: int
-        Minimum interval to skip consecutive spikes (default=5)
-    align: bool
-        If True, spike times are aligned on the peak
     start_frame: int
         Start frame for detection
     end_frame: int
@@ -50,8 +53,6 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         'channel' property to specify which channel they correspond to. The sorting extractor also has the `spike_rate`
         and `spike_amplitude` properties.
     '''
-    n_pad_samples = int(n_pad_ms * recording.get_sampling_frequency() / 1000)
-
     if start_frame is None:
         start_frame = 0
     if end_frame is None:
@@ -62,7 +63,6 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     else:
         assert np.all([ch in recording.get_channel_ids() for ch in channel_ids]), "Not all 'channel_ids' are in the" \
                                                                                   "recording."
-
     if n_jobs is None:
         n_jobs = 1
     if n_jobs == 0:
@@ -116,11 +116,17 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     all_channel_times = [[] for ii in range(len(channel_ids))]
     all_channel_amps = [[] for ii in range(len(channel_ids))]
 
+    snippet_len = int(snippet_size_sec * recording.get_sampling_frequency())
+    reference_frames = np.linspace(snippet_len+1, recording.get_num_frames() - snippet_len,
+                                   n_snippets_for_threshold)
+    snippets = recording.get_snippets(reference_frames=reference_frames, snippet_len=snippet_len)
+    traces_mad = np.concatenate(snippets, 1)
+    thresholds = detect_threshold * np.median(np.abs(traces_mad) / 0.6745, 1)[:, None]
+
     if n_jobs > 1:
         output = Parallel(n_jobs=n_jobs)(delayed(_detect_and_align_peaks_chunk)
-                                         (ii, rec_arg, chunks, channel_ids, detect_threshold,
-                                                              detect_sign, n_pad_samples, upsample, min_diff_samples,
-                                                              align, verbose)
+                                         (ii, rec_arg, chunks, channel_ids, thresholds, detect_sign,
+                                          n_shifts, verbose)
                                          for ii in chunk_iter)
         for ii, (times_ii, amps_ii) in enumerate(output):
             for i, ch in enumerate(channel_ids):
@@ -130,9 +136,8 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
                 all_channel_times[i].append(times)
     else:
         for ii in chunk_iter:
-            times_ii, amps_ii = _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, detect_threshold,
-                                                              detect_sign, n_pad_samples, upsample, min_diff_samples,
-                                                              align, False)
+            times_ii, amps_ii = _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, thresholds,
+                                                              detect_sign, n_shifts, False)
 
             for i, ch in enumerate(channel_ids):
                 times = times_ii[i]
@@ -145,10 +150,10 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
         amp_list = []
         for i_ch in range(len(channel_ids)):
             times_concat = np.concatenate([all_channel_times[i_ch][ch] for ch in range(len(chunks))],
-                                           axis=0)
+                                          axis=0)
             times_list.append(times_concat)
             amps_concat = np.concatenate([all_channel_amps[i_ch][ch] for ch in range(len(chunks))],
-                                          axis=0)
+                                         axis=0)
             amp_list.append(amps_concat)
     else:
         times_list = [times[0] for times in all_channel_times]
@@ -177,8 +182,8 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, n_pad_ms=2, u
     return sorting
 
 
-def _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, detect_threshold, detect_sign, n_pad, upsample,
-                                  min_diff_samples, align, verbose):
+def _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, thresholds, detect_sign, n_shifts,
+                                  verbose):
     chunk = chunks[ii]
 
     if verbose:
@@ -191,62 +196,28 @@ def _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, detect_thres
     traces = recording.get_traces(start_frame=chunk['istart'],
                                   end_frame=chunk['iend'])
 
-    sp_times = [[] for ii in range(len(channel_ids))]
-    sp_amplitudes = [[] for ii in range(len(channel_ids))]
+    if detect_sign == -1:
+        traces = -traces
+    elif detect_sign == 0:
+        traces = np.abs(traces)
 
-    for i, ch in enumerate(channel_ids):
-        trace = traces[i]
-        if detect_sign == -1:
-            thresh = -detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where(trace < thresh)[0]
-        elif detect_sign == 1:
-            thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where(trace > thresh)[0]
-        else:
-            thresh = detect_threshold * np.median(np.abs(trace) / 0.6745)
-            idx_spikes = np.where((trace > thresh) | (trace < -thresh))[0]
-        intervals = np.diff(idx_spikes)
+    sig_center = traces[:, n_shifts:-n_shifts]
+    peak_mask = sig_center > thresholds
+    for i in range(n_shifts):
+        peak_mask &= sig_center > traces[:, i:i + sig_center.shape[1]]
+        peak_mask &= sig_center >= traces[:, n_shifts + i + 1:n_shifts + i + 1 + sig_center.shape[1]]
 
-        for i_t, diff in enumerate(intervals):
-            if diff > min_diff_samples or i_t == len(intervals) - 1:
-                idx_spike = idx_spikes[i_t]
+    # find peaks
+    peak_chan_ind, peak_sample_ind = np.nonzero(peak_mask)
+    # correct for time shift
+    peak_sample_ind += n_shifts
 
-                if align:
-                    if idx_spike - n_pad > 0 and idx_spike + n_pad < len(trace):
-                        spike = trace[idx_spike - n_pad:idx_spike + n_pad]
-                        t_spike = np.arange(idx_spike - n_pad, idx_spike + n_pad)
-                    elif idx_spike - n_pad < 0:
-                        spike = trace[:idx_spike + n_pad]
-                        spike = np.pad(spike, (np.abs(idx_spike - n_pad), 0), 'constant')
-                        t_spike = np.arange(idx_spike + n_pad)
-                        t_spike = np.pad(t_spike, (np.abs(idx_spike - n_pad), 0), 'constant')
-                    elif idx_spike + n_pad > len(trace):
-                        spike = trace[idx_spike - n_pad:]
-                        spike = np.pad(spike, (0, idx_spike + n_pad - len(trace)), 'constant')
-                        t_spike = np.arange(idx_spike - n_pad, len(trace))
-                        t_spike = np.pad(t_spike, (0, idx_spike + n_pad - len(trace)), 'constant')
+    sp_times = []
+    sp_amplitudes = []
 
-                    if upsample > 1:
-                        spike_up = ss.resample(spike, int(upsample * len(spike)))
-                        t_spike_up = np.linspace(t_spike[0], t_spike[-1], num=len(spike_up))
-                    else:
-                        spike_up = spike
-                        t_spike_up = t_spike
-                    if detect_sign == -1:
-                        peak_idx = np.argmin(spike_up)
-                        peak_val = np.min(spike_up)
-                    elif detect_sign == 1:
-                        peak_idx = np.argmax(spike_up)
-                        peak_val = np.max(spike_up)
-                    else:
-                        peak_idx = np.argmax(np.abs(spike_up))
-                        peak_val = np.max(np.abs(spike_up))
-
-                    min_time_up = t_spike_up[peak_idx]
-                    sp_times[i].append(int(min_time_up))
-                    sp_amplitudes[i].append(peak_val)
-                else:
-                    sp_times[i].append(idx_spike)
-                    sp_amplitudes[i].append(trace[idx_spike])
+    for ch in range(len(channel_ids)):
+        peak_times = peak_sample_ind[np.where(peak_chan_ind == ch)]
+        sp_times.append(peak_sample_ind[np.where(peak_chan_ind == ch)])
+        sp_amplitudes.append(traces[ch, peak_times])
 
     return sp_times, sp_amplitudes
