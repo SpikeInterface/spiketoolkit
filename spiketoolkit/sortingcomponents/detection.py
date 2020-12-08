@@ -22,7 +22,8 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-
         Threshold in median absolute deviations (MAD) to detect peaks
     n_shifts: int
         Number of shifts to find peak. E.g. if n_shift is 2, a peak is detected (if detect_sign is 'negative') if
-        two samples before the peaks are decreasing and two sampels after the peak are increasing.
+        a sample is below the threshold, the two samples before are higher than the sample, and the two samples after
+        the sample are higher than the sample.
     n_snippets_for_threshold: int
         Number of snippets to use to compute channel-wise thresholds
     snippet_size_sec: float
