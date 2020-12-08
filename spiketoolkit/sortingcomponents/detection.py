@@ -11,7 +11,10 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-
                   start_frame=None, end_frame=None, n_jobs=1,
                   chunk_size=None, chunk_mb=500, verbose=False):
     '''
-    Detects spikes per channel.
+    Detects spikes per channel. Spikes are detected as threshold crossings and the threshold is in terms of the median
+    average deviation (MAD). The MAD is computed by taking 'n_snippets_for_threshold' snippets of the recordings
+    of 'snippet_size_sec' seconds uniformly distributed between 'start_frame' and 'end_frame'.
+
     Parameters
     ----------
     recording: RecordingExtractor
