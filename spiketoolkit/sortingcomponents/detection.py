@@ -8,7 +8,7 @@ import numpy as np
 
 def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-1,
                   n_shifts=2, n_snippets_for_threshold=10, snippet_size_sec=1,
-                  start_frame=None, end_frame=None, n_jobs=1,
+                  start_frame=None, end_frame=None, n_jobs=1, joblib_backend='loky',
                   chunk_size=None, chunk_mb=500, verbose=False):
     '''
     Detects spikes per channel. Spikes are detected as threshold crossings and the threshold is in terms of the median
@@ -38,13 +38,15 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-
     end_frame: int
         End frame end frame for detection
     n_jobs: int
-        Number of jobs when parallel
+        Number of jobs for parallelization. Default is None (no parallelization)
+    joblib_backend: str
+        The backend for joblib. Default is 'loky'
     chunk_size: int
         Size of chunks in number of samples. If None, it is automatically calculated
     chunk_mb: int
         Size of chunks in Mb (default 500 Mb)
     verbose: bool
-                If True output is verbose
+        If True output is verbose
 
     Returns
     -------
@@ -124,10 +126,11 @@ def detect_spikes(recording, channel_ids=None, detect_threshold=5, detect_sign=-
     thresholds = detect_threshold * np.median(np.abs(traces_mad) / 0.6745, 1)[:, None]
 
     if n_jobs > 1:
-        output = Parallel(n_jobs=n_jobs)(delayed(_detect_and_align_peaks_chunk)
-                                         (ii, rec_arg, chunks, channel_ids, thresholds, detect_sign,
-                                          n_shifts, verbose)
-                                         for ii in chunk_iter)
+        output = Parallel(n_jobs=n_jobs, backend=joblib_backend)(delayed(_detect_and_align_peaks_chunk)
+                                                                 (ii, rec_arg, chunks, channel_ids, thresholds,
+                                                                  detect_sign,
+                                                                  n_shifts, verbose)
+                                                                 for ii in chunk_iter)
         for ii, (times_ii, amps_ii) in enumerate(output):
             for i, ch in enumerate(channel_ids):
                 times = times_ii[i]
