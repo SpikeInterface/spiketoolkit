@@ -2,8 +2,8 @@ import spikeextractors as se
 import numpy as np
 from spiketoolkit.validation import compute_isolation_distances, compute_isi_violations, compute_snrs, \
     compute_amplitude_cutoffs, compute_d_primes, compute_drift_metrics, compute_firing_rates, compute_l_ratios, \
-    compute_quality_metrics, compute_nn_metrics, compute_num_spikes, compute_presence_ratios, compute_silhouette_scores, \
-    get_validation_params
+    compute_quality_metrics, compute_nn_metrics, compute_num_spikes, compute_presence_ratios, \
+    compute_silhouette_scores, compute_noise_overlaps, get_validation_params
 
 
 def test_functions():
@@ -19,6 +19,7 @@ def test_functions():
     iso = compute_isolation_distances(sort, rec, seed=0)
     l_ratio = compute_l_ratios(sort, rec, seed=0)
     dprime = compute_d_primes(sort, rec, seed=0)
+    noise_overlaps = compute_noise_overlaps(sort, rec, seed=0)
     nn_hit, nn_miss = compute_nn_metrics(sort, rec, seed=0)
     snr = compute_snrs(sort, rec, seed=0)
     metrics = compute_quality_metrics(sort, rec, return_dict=True, seed=0)
@@ -35,6 +36,7 @@ def test_functions():
     assert np.allclose(metrics['snr'], snr)
     assert np.allclose(metrics['max_drift'], max_drift)
     assert np.allclose(metrics['cumulative_drift'], cum_drift)
+    assert np.allclose(metrics['noise_overlap'], noise_overlaps)
     assert np.allclose(metrics['nn_hit_rate'], nn_hit)
     assert np.allclose(metrics['nn_miss_rate'], nn_miss)
 

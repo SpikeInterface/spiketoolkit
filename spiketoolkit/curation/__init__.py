@@ -10,6 +10,7 @@ from .threshold_metrics import threshold_isolation_distances
 from .threshold_metrics import threshold_nn_metrics
 from .threshold_metrics import threshold_drift_metrics
 from .threshold_metrics import threshold_amplitude_cutoffs
+from .threshold_metrics import threshold_noise_overlaps
 from ..validation import get_validation_params as get_curation_params
 from ..validation.quality_metric_classes.utils.curationsortingextractor import CurationSortingExtractor
 

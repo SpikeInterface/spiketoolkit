@@ -11,6 +11,7 @@ from .quality_metrics import (
     compute_l_ratios,
     compute_d_primes,
     compute_nn_metrics,
+    compute_noise_overlaps,
     compute_quality_metrics,
     get_quality_metrics_list
 )
