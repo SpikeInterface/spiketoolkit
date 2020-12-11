@@ -99,7 +99,7 @@ class NoiseOverlap(QualityMetric):
             num_match = 0
             total = 0
             for j in range(num_clips * 2):
-                for k in range(1, num_knn + 1):
+                for k in range(1, min(num_knn + 1,num_spikes[i_u])):
                     ind = indices[j][k]
                     if group_id[j] == group_id[ind]:
                         num_match = num_match + 1
