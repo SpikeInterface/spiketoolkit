@@ -3,6 +3,7 @@ from copy import copy
 from .utils.thresholdcurator import ThresholdCurator
 from .quality_metric import QualityMetric
 import spiketoolkit as st
+import spikemetrics.metrics as metrics
 from spikemetrics.utils import printProgressBar
 from collections import OrderedDict
 from sklearn.neighbors import NearestNeighbors
@@ -34,6 +35,9 @@ class NoiseOverlap(QualityMetric):
             max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
             **kwargs
         )
+
+        # number of spikes for each unit
+        num_spikes = st.validation.quality_metrics.compute_num_spikes(self._metric_data._sorting)
 
         if seed is not None:
             np.random.seed(seed)
@@ -86,7 +90,7 @@ class NoiseOverlap(QualityMetric):
             all_features = _compute_pca_features(all_clips.reshape((num_clips * 2,
                                                                     num_channels_wfs * num_samples_wfs)), num_features)
 
-            distances, indices = NearestNeighbors(n_neighbors=num_knn + 1, algorithm='auto').fit(
+            distances, indices = NearestNeighbors(n_neighbors=min(num_knn+1,num_spikes[i_u]), algorithm='auto').fit(
                 all_features.T).kneighbors()
 
             group_id = np.zeros((num_clips * 2))
