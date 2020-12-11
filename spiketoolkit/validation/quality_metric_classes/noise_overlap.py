@@ -36,9 +36,6 @@ class NoiseOverlap(QualityMetric):
             **kwargs
         )
 
-        # number of spikes for each unit
-        num_spikes = st.validation.quality_metrics.compute_num_spikes(self._metric_data._sorting)
-
         if seed is not None:
             np.random.seed(seed)
 
@@ -89,8 +86,8 @@ class NoiseOverlap(QualityMetric):
             num_samples_wfs = all_clips.shape[2]
             all_features = _compute_pca_features(all_clips.reshape((num_clips * 2,
                                                                     num_channels_wfs * num_samples_wfs)), num_features)
-
-            distances, indices = NearestNeighbors(n_neighbors=min(num_knn+1,num_spikes[i_u]), algorithm='auto').fit(
+            num_all_clips=len(all_clips)
+            distances, indices = NearestNeighbors(n_neighbors=min(num_knn+1,num_all_clips), algorithm='auto').fit(
                 all_features.T).kneighbors()
 
             group_id = np.zeros((num_clips * 2))
@@ -99,7 +96,7 @@ class NoiseOverlap(QualityMetric):
             num_match = 0
             total = 0
             for j in range(num_clips * 2):
-                for k in range(1, min(num_knn + 1,num_spikes[i_u])):
+                for k in range(1, min(num_knn + 1,num_total_samples)):
                     ind = indices[j][k]
                     if group_id[j] == group_id[ind]:
                         num_match = num_match + 1
