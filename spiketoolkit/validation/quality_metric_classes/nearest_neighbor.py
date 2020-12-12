@@ -5,7 +5,7 @@ from .quality_metric import QualityMetric
 from collections import OrderedDict
 from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
-
+#
 class NearestNeighbor(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err
@@ -36,6 +36,7 @@ class NearestNeighbor(QualityMetric):
             max_spikes_for_cluster=max_spikes_per_cluster,
             spikes_for_nn=spikes_for_nn,
             n_neighbors=n_neighbors,
+            channel_locations=None,
             metric_names=["nearest_neighbor"],
             seed=seed,
             spike_cluster_subset=self._metric_data._unit_indices,
