@@ -44,9 +44,11 @@ class NoiseOverlap(QualityMetric):
             if self._metric_data.verbose:
                 printProgressBar(i_u + 1, len(self._metric_data._unit_ids))
             wfs = waveforms[i_u]
+            print('wfs.shape:' + str(wfs.shape))
             times = self._metric_data._sorting.get_unit_spike_train(unit_id=unit)
-
+            print('times.shape:' + str(times.shape))
             if len(wfs) > max_spikes_per_unit_for_noise_overlap:
+                print('max_spikes_per_unit_for_noise_overlap: '+ str(max_spikes_per_unit_for_noise_overlap))
                 selecte_idxs = np.random.choice(times, size=max_spikes_per_unit_for_noise_overlap)
                 wfs = wfs[selecte_idxs]
 
