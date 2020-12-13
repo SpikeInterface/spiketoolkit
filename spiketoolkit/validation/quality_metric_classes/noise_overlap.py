@@ -47,10 +47,10 @@ class NoiseOverlap(QualityMetric):
             times = self._metric_data._sorting.get_unit_spike_train(unit_id=unit)
             if len(wfs) > max_spikes_per_unit_for_noise_overlap:
                 # selecte_idxs = np.random.choice(times, size=max_spikes_per_unit_for_noise_overlap)
-                # print('wfs.shape: '+ str(wfs.shape))
-                # print('times.shape: '+ str(times.shape))
-                # print('max_spikes_per_unit_for_noise_overlap: '+ str(max_spikes_per_unit_for_noise_overlap))
-                selecte_idxs = np.random.choice(len(times), size=max_spikes_per_unit_for_noise_overlap, replace=False)
+                print('wfs.shape: '+ str(wfs.shape))
+                print('times.shape: '+ str(times.shape))
+                print('max_spikes_per_unit_for_noise_overlap: '+ str(max_spikes_per_unit_for_noise_overlap))
+                selecte_idxs = np.random.choice(len(wfs), size=max_spikes_per_unit_for_noise_overlap, replace=False)
                 wfs = wfs[selecte_idxs]
 
             # get clip_size from waveforms shape
