@@ -317,7 +317,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                                                                 grouping_property)
                     unit_groups.append(unit_group)
             else:
-                for u in sorting.get_unit_ids():
+                for u in unit_ids:
                     unit_group = sorting.get_unit_property(u, grouping_property)
                     unit_groups.append(unit_group)
 
@@ -1104,7 +1104,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             print("Projecting waveforms on PC")
         # project waveforms on principal components
         for unit_id in unit_ids:
-            idx_waveform = sorting.get_unit_ids().index(unit_id)
+            idx_waveform = unit_ids.index(unit_id)
             wf = waveforms[idx_waveform]
             if by_electrode:
                 pct = np.dot(wf, pca.components_.T)
@@ -1116,7 +1116,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             pca_scores_list.append(pca_scores)
 
         if save_property_or_features:
-            for i, unit_id in enumerate(sorting.get_unit_ids()):
+            for i, unit_id in enumerate(unit_ids):
                 sorting.set_unit_spike_features(unit_id, 'pca_scores', pca_scores_list[i], indexes=spike_index_list[i])
                 if len(channel_index_list[i]) < recording.get_num_channels():
                     sorting.set_unit_property(unit_id, 'pca_scores_channel_idxs', channel_index_list[i])
@@ -1184,6 +1184,7 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
         unit_ids = sorting.get_unit_ids()
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
+    assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
 
     if 'max_channel' in sorting.get_shared_unit_property_names():
         if verbose:
@@ -1195,8 +1196,6 @@ def set_unit_properties_by_max_channel_properties(recording, sorting, property, 
         max_chan_property = False
 
     for i, unit_id in enumerate(unit_ids):
-        if unit_id not in sorting.get_unit_ids():
-            raise Exception("unit_ids is not in valid")
         if property not in sorting.get_unit_property_names(unit_id):
             if max_chan_property:
                 max_chan = sorting.get_unit_property(unit_id, 'max_channel')
