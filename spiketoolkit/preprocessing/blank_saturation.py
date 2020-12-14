@@ -46,6 +46,8 @@ class BlankSaturationRecording(BasePreprocessorRecordingExtractor):
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame)
+        if isinstance(traces, np.memmap):
+            traces = traces.copy()
         if self._lower:
             traces[traces <= self._threshold] = self._median
         else:
