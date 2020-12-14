@@ -31,8 +31,8 @@ class NoiseOverlap(QualityMetric):
         waveforms = st.postprocessing.get_unit_waveforms(
             self._metric_data._recording,
             self._metric_data._sorting,
-            unit_ids=self._metric_data._unit_ids,
-            max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
+            self._metric_data._unit_ids,
+            # max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
             **kwargs
         )
 
