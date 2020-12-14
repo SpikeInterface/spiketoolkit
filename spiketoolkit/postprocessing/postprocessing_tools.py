@@ -103,6 +103,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
     ms_after = params_dict['ms_after']
     dtype = params_dict['dtype']
     max_spikes_per_unit = params_dict['max_spikes_per_unit']
+    print('max_spikes_per_unit inside wf script: ' + str(max_spikes_per_unit))
     compute_property_from_recording = params_dict['compute_property_from_recording']
     memmap = params_dict['memmap']
     n_jobs = params_dict['n_jobs']
@@ -708,7 +709,7 @@ def get_unit_amplitudes(recording, sorting, unit_ids=None, channel_ids=None, ret
         else:
             amp_list = [[] for ii in range(len(unit_ids))]
 
-        waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting, unit_ids, channel_ids, 
+        waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting, unit_ids, channel_ids,
                                                                              return_idxs=True, **kwargs)
         templates = [np.median(wf, 0) for wf in waveforms]
         max_channels = [np.unravel_index(np.argmax(np.abs(t)), t.shape)[0] for t in templates]
