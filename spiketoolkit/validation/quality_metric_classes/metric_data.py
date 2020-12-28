@@ -95,6 +95,7 @@ class MetricData:
         self._spike_clusters = spike_clusters
         self._total_units = len(sorting.get_unit_ids())
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
+        self._channel_locations = recording.get_channel_locations()
         # To compute this data, need to call all metric data
         self._amplitudes = None
         self._pc_features = None
