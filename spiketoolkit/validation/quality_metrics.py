@@ -1294,7 +1294,7 @@ def compute_quality_metrics(
     if "nn_hit_rate" in metric_names or "nn_miss_rate" in metric_names:
         nn = NearestNeighbor(metric_data=md)
         nn_hit_rates, nn_miss_rates = nn.compute_metric(num_channels_to_compare, max_spikes_per_cluster,
-                                                        max_spikes_for_nn, n_neighbors, recording.get_channel_locations(), **kwargs)
+                                                        max_spikes_for_nn, n_neighbors, **kwargs)
         if "nn_hit_rate" in metric_names:
             metrics_dict['nn_hit_rate'] = nn_hit_rates
         if "nn_miss_rate" in metric_names:

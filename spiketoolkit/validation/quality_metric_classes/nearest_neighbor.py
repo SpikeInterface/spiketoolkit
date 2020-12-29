@@ -21,7 +21,7 @@ class NearestNeighbor(QualityMetric):
             raise ValueError("MetricData object must have pca scores")
 
     def compute_metric(self, num_channels_to_compare, max_spikes_per_cluster, max_spikes_for_nn,
-                       n_neighbors, channel_locations, **kwargs):
+                       n_neighbors, **kwargs):
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']

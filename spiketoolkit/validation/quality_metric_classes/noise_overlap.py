@@ -24,43 +24,58 @@ class NoiseOverlap(QualityMetric):
             raise ValueError("MetricData object must have a recording")
 
     def compute_metric(self, max_spikes_per_unit_for_noise_overlap, num_features, num_knn, **kwargs):
+
+        # update keyword arg in case it's already specified to something
+        kwargs['max_spikes_per_unit'] = max_spikes_per_unit_for_noise_overlap
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']
 
+        # first, get waveform snippets of every unit (at most n spikes)
+        # waveforms = List (units,) of np.array (n_spikes, n_channels, n_timepoints)
         waveforms = st.postprocessing.get_unit_waveforms(
             self._metric_data._recording,
             self._metric_data._sorting,
-            self._metric_data._unit_ids,
-            # max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
+            unit_ids=self._metric_data._unit_ids,
             **kwargs
         )
 
+        # set random seed
         if seed is not None:
             np.random.seed(seed)
 
+        # get noise snippets
+        min_time = min([self._metric_data._sorting.get_unit_spike_train(unit_id=unit)[0]
+                    for unit in self._metric_data._sorting.get_unit_ids()])
+        max_time = max([self._metric_data._sorting.get_unit_spike_train(unit_id=unit)[-1]
+                    for unit in self._metric_data._sorting.get_unit_ids()])
+        times_control = np.random.choice(np.arange(min_time, max_time), size=max_spikes_per_unit_for_noise_overlap)
+        clip_size = waveforms[0].shape[-1]
+        # np.array, (n_spikes, n_channels, n_timepoints)
+        clips_control_max = np.stack(self._metric_data._recording.get_snippets(snippet_len=clip_size,
+                                                                               reference_frames=times_control))
+
         noise_overlaps = []
         for i_u, unit in enumerate(self._metric_data._unit_ids):
+            # show progress bar
             if self._metric_data.verbose:
                 printProgressBar(i_u + 1, len(self._metric_data._unit_ids))
-            wfs = waveforms[i_u]
-            times = self._metric_data._sorting.get_unit_spike_train(unit_id=unit)
-            if len(wfs) > max_spikes_per_unit_for_noise_overlap:
-                # selecte_idxs = np.random.choice(times, size=max_spikes_per_unit_for_noise_overlap)
-                selecte_idxs = np.random.choice(len(wfs), size=max_spikes_per_unit_for_noise_overlap, replace=False)
-                wfs = wfs[selecte_idxs]
 
-            # get clip_size from waveforms shape
-            clip_size = wfs.shape[-1]
+            # get waveform clips for target unit
+            # clips: np.array, (n_spikes, n_channels, n_timepoints)
+            clips = waveforms[i_u]
+            num_clips = len(clips)
 
-            num_clips = len(wfs)
-            min_time = np.min(times)
-            max_time = np.max(times)
-            times_control = np.random.choice(np.arange(min_time, max_time), size=num_clips)
-            clips = copy(wfs)
-            clips_control = np.stack(self._metric_data._recording.get_snippets(snippet_len=clip_size,
-                                                                               reference_frames=times_control))
-            template = np.median(wfs, axis=0)
+            # make noise snippets size equal to number of spikes
+            if num_clips < max_spikes_per_unit_for_noise_overlap:
+                selected_idxs = np.random.choice(np.arange(max_spikes_per_unit_for_noise_overlap),
+                                                size=num_clips, replace=False)
+                clips_control = clips_control_max[selected_idxs]
+            else:
+                clips_control = clips_control_max
+
+            # compute weight for correcting noise snippets
+            template = np.median(clips, axis=0)
             max_ind = np.unravel_index(np.argmax(np.abs(template)), template.shape)
             chmax = max_ind[0]
             tmax = max_ind[1]
@@ -77,6 +92,7 @@ class NoiseOverlap(QualityMetric):
             noise_template = np.sum(weighted_clips_control, axis=0)
             noise_template = noise_template / np.sum(np.abs(noise_template)) * np.sum(np.abs(template))
 
+            # subtract it out
             for j in range(num_clips):
                 clips[j, :, :] = _subtract_clip_component(clips[j, :, :], noise_template)
                 clips_control[j, :, :] = _subtract_clip_component(clips_control[j, :, :], noise_template)
