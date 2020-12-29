@@ -29,6 +29,7 @@ class DPrime(QualityMetric):
             pc_feature_ind=self._metric_data._pc_feature_ind,
             num_channels_to_compare=num_channels_to_compare,
             max_spikes_for_cluster=max_spikes_per_cluster,
+            channel_locations=self._metric_data._channel_locations,
             spikes_for_nn=None,
             n_neighbors=None,
             metric_names=["d_prime"],
