@@ -65,14 +65,17 @@ class NoiseOverlap(QualityMetric):
             # clips: np.array, (n_spikes, n_channels, n_timepoints)
             clips = waveforms[i_u]
             num_clips = len(clips)
+            clips_control = clips_control_max
 
             # make noise snippets size equal to number of spikes
             if num_clips < max_spikes_per_unit_for_noise_overlap:
                 selected_idxs = np.random.choice(np.arange(max_spikes_per_unit_for_noise_overlap),
                                                 size=num_clips, replace=False)
-                clips_control = clips_control_max[selected_idxs]
+                clips_control = clips_control[selected_idxs]
             else:
-                clips_control = clips_control_max
+                selected_idxs = np.random.choice(np.arange(num_clips),
+                                                size=max_spikes_per_unit_for_noise_overlap, replace=False)
+                clips = clips[selected_idxs]
 
             # compute weight for correcting noise snippets
             template = np.median(clips, axis=0)
