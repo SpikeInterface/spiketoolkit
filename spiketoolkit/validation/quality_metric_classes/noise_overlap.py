@@ -61,8 +61,8 @@ class NoiseOverlap(QualityMetric):
             if self._metric_data.verbose:
                 printProgressBar(i_u + 1, len(self._metric_data._unit_ids))
 
-            # get waveform clips for target unit
-            # clips: np.array, (n_spikes, n_channels, n_timepoints)
+            # get spike and noise snippets
+            # np.array, (n_spikes, n_channels, n_timepoints)
             clips = waveforms[i_u]
             clips_control = clips_control_max
 
