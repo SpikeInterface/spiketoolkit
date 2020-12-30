@@ -64,6 +64,11 @@ class MetricData:
         else:
             self._sampling_frequency = sampling_frequency
 
+        if recording is None:
+            channel_locations = np.array([0,0])
+        else:
+            channel_locations = recording.get_channel_locations()
+
         # checks to see if any units have no spikes (will break metric calculation)
         if raise_if_empty:
             for unit_id in sorting.get_unit_ids():
@@ -95,6 +100,7 @@ class MetricData:
         self._spike_clusters = spike_clusters
         self._total_units = len(sorting.get_unit_ids())
         self._unit_indices = _get_unit_indices(self._sorting, unit_ids)
+        self._channel_locations = channel_locations
         # To compute this data, need to call all metric data
         self._amplitudes = None
         self._pc_features = None

@@ -36,6 +36,7 @@ class NearestNeighbor(QualityMetric):
             max_spikes_for_cluster=max_spikes_per_cluster,
             spikes_for_nn=spikes_for_nn,
             n_neighbors=n_neighbors,
+            channel_locations=self._metric_data._channel_locations,
             metric_names=["nearest_neighbor"],
             seed=seed,
             spike_cluster_subset=self._metric_data._unit_indices,
