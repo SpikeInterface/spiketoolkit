@@ -36,7 +36,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                         'ref_channels': ref_channels, 'dtype': dtype, 'verbose': verbose}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
         if self._ref == 'median':
             if self._groups is None:
@@ -56,10 +56,12 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 if self.verbose:
                     print('Common median in groups: ', new_groups)
                 traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame)
+                                                                        start_frame=start_frame, end_frame=end_frame,
+                                                                        return_scaled=return_scaled)
                                              - np.median(self._recording.get_traces(channel_ids=split_group,
                                                                                     start_frame=start_frame,
-                                                                                    end_frame=end_frame),
+                                                                                    end_frame=end_frame,
+                                                                                    return_scaled=return_scaled),
                                                          axis=0, keepdims=True) for split_group in new_groups]))
                 return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'average':
@@ -80,10 +82,12 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 if self.verbose:
                     print('Common average in groups: ', new_groups)
                 traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame)
+                                                                        start_frame=start_frame, end_frame=end_frame,
+                                                                        return_scaled=return_scaled)
                                              - np.mean(self._recording.get_traces(channel_ids=split_group,
                                                                                   start_frame=start_frame,
-                                                                                  end_frame=end_frame),
+                                                                                  end_frame=end_frame,
+                                                                                  return_scaled=return_scaled),
                                                        axis=0, keepdims=True) for split_group in new_groups]))
                 return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'single':
@@ -91,9 +95,9 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 if self.verbose:
                     print('Reference to channel', self._ref_channel)
                 traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                    end_frame=end_frame) \
+                                                    end_frame=end_frame, return_scaled=return_scaled) \
                          - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
-                                                      end_frame=end_frame)
+                                                      end_frame=end_frame, return_scaled=return_scaled)
                 return traces.astype(self._dtype)
             else:
                 new_groups = []
@@ -106,9 +110,11 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 if self.verbose:
                     print('Reference', new_groups, 'to channels', self._ref_channel)
                 traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame)
+                                                                        start_frame=start_frame, end_frame=end_frame,
+                                                                        return_scaled=return_scaled)
                                              - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
-                                                                          end_frame=end_frame)
+                                                                          end_frame=end_frame,
+                                                                          return_scaled=return_scaled)
                                              for (split_group, ref) in zip(new_groups, self._ref_channel)]))
                 return traces[channel_idxs].astype(self._dtype)
 

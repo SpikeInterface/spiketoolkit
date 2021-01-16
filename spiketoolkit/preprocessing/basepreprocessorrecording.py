@@ -31,6 +31,6 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
         return self._recording.frame_to_time(frame)
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         raise NotImplementedError
 
