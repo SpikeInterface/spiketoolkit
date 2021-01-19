@@ -29,9 +29,11 @@ class NoiseOverlap(QualityMetric):
     def compute_metric(self, num_channels_to_compare, max_spikes_per_unit_for_noise_overlap,
                         num_features, num_knn, **kwargs):
 
+        # Make sure max_spikes_per_unit_for_noise_overlap is not None
+        assert max_spikes_per_unit_for_noise_overlap is not None, "'max_spikes_per_unit_for_noise_overlap' must be an integer."
+
         # update keyword arg in case it's already specified to something
         kwargs['max_spikes_per_unit'] = max_spikes_per_unit_for_noise_overlap
-        kwargs['recompute_info'] = True
         params_dict = update_all_param_dicts_with_kwargs(kwargs)
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']
@@ -44,6 +46,28 @@ class NoiseOverlap(QualityMetric):
             unit_ids=self._metric_data._unit_ids,
             **kwargs
         )
+
+        n_waveforms_per_unit = [len(wf) for wf in waveforms]
+        n_spikes_per_unit = [len(self._metric_data._sorting.get_unit_spike_train(u)) for u in self._metric_data._unit_ids]
+
+        if np.all(n_waveforms_per_unit < max_spikes_per_unit_for_noise_overlap) and \
+            np.any(n_spikes_per_unit > max_spikes_per_unit_for_noise_overlap):
+            # in this case it means that waveforms have been computed on
+            # less spikes than max_spikes_per_unit_for_noise_overlap --> recompute
+            kwargs['recompute_info'] = True
+            waveforms = st.postprocessing.get_unit_waveforms(
+                    self._metric_data._recording,
+                    self._metric_data._sorting,
+                    unit_ids=self._metric_data._unit_ids,
+                    max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
+                    **kwargs
+                )
+        elif np.all(n_waveforms_per_unit > max_spikes_per_unit_for_noise_overlap):
+            # waveforms computed on more spikes than needed --> sample
+            for i_w, wfs in enumerate(waveforms):
+                if len(wfs) > max_spikes_per_unit_for_noise_overlap:
+                    selecte_idxs = np.random.permutation(len(wfs))[:max_spikes_per_unit_for_noise_overlap]
+                    waveforms[i] = wfs[selecte_idxs]
 
         # set random seed
         if seed is not None:
@@ -61,6 +85,9 @@ class NoiseOverlap(QualityMetric):
                     for unit in self._metric_data._sorting.get_unit_ids()])
         max_time = max([self._metric_data._sorting.get_unit_spike_train(unit_id=unit)[-1]
                     for unit in self._metric_data._sorting.get_unit_ids()])
+        max_spikes = np.max([len(self._metric_data._sorting.get_unit_spike_train(u)) for u in self._metric_data._unit_ids])
+        if max_spikes < max_spikes_per_unit_for_noise_overlap:
+            max_spikes_per_unit_for_noise_overlap = max_spikes
         times_control = np.random.choice(np.arange(min_time, max_time),
                     size=max_spikes_per_unit_for_noise_overlap, replace=False)
         clip_size = waveforms[0].shape[-1]
