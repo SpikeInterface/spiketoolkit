@@ -68,7 +68,7 @@ class NoiseOverlap(QualityMetric):
             for i_w, wfs in enumerate(waveforms):
                 if len(wfs) > max_spikes_per_unit_for_noise_overlap:
                     selecte_idxs = rng.permutation(len(wfs))[:max_spikes_per_unit_for_noise_overlap]
-                    waveforms[i] = wfs[selecte_idxs]
+                    waveforms[i_w] = wfs[selecte_idxs]
 
         # get channel idx and locations
         channel_idx = np.arange(self._metric_data._recording.get_num_channels())
