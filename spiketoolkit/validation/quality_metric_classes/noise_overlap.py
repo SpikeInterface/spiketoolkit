@@ -38,40 +38,37 @@ class NoiseOverlap(QualityMetric):
         save_property_or_features = params_dict['save_property_or_features']
         seed = params_dict['seed']
 
+        # set random seed
+        if seed is not None:
+            rng = np.random.default_rng(seed)
+
         # first, get waveform snippets of every unit (at most n spikes)
         # waveforms = List (units,) of np.array (n_spikes, n_channels, n_timepoints)
         waveforms = st.postprocessing.get_unit_waveforms(
             self._metric_data._recording,
             self._metric_data._sorting,
             unit_ids=self._metric_data._unit_ids,
-            **kwargs
-        )
+            **kwargs)
 
-        n_waveforms_per_unit = [len(wf) for wf in waveforms]
-        n_spikes_per_unit = [len(self._metric_data._sorting.get_unit_spike_train(u)) for u in self._metric_data._unit_ids]
+        n_waveforms_per_unit = np.array([len(wf) for wf in waveforms])
+        n_spikes_per_unit = np.array([len(self._metric_data._sorting.get_unit_spike_train(u)) for u in self._metric_data._unit_ids])
 
-        if np.all(n_waveforms_per_unit < max_spikes_per_unit_for_noise_overlap) and \
-            np.any(n_spikes_per_unit > max_spikes_per_unit_for_noise_overlap):
+        if np.all(n_waveforms_per_unit < max_spikes_per_unit_for_noise_overlap):
             # in this case it means that waveforms have been computed on
             # less spikes than max_spikes_per_unit_for_noise_overlap --> recompute
             kwargs['recompute_info'] = True
             waveforms = st.postprocessing.get_unit_waveforms(
                     self._metric_data._recording,
                     self._metric_data._sorting,
-                    unit_ids=self._metric_data._unit_ids,
-                    max_spikes_per_unit=max_spikes_per_unit_for_noise_overlap,
-                    **kwargs
-                )
-        elif np.all(n_waveforms_per_unit > max_spikes_per_unit_for_noise_overlap):
+                    unit_ids = self._metric_data._unit_ids,
+                    # max_spikes_per_unit = max_spikes_per_unit_for_noise_overlap,
+                    **kwargs)
+        elif np.all(n_waveforms_per_unit >= max_spikes_per_unit_for_noise_overlap):
             # waveforms computed on more spikes than needed --> sample
             for i_w, wfs in enumerate(waveforms):
                 if len(wfs) > max_spikes_per_unit_for_noise_overlap:
-                    selecte_idxs = np.random.permutation(len(wfs))[:max_spikes_per_unit_for_noise_overlap]
+                    selecte_idxs = rng.permutation(len(wfs))[:max_spikes_per_unit_for_noise_overlap]
                     waveforms[i] = wfs[selecte_idxs]
-
-        # set random seed
-        if seed is not None:
-            np.random.seed(seed)
 
         # get channel idx and locations
         channel_idx = np.arange(self._metric_data._recording.get_num_channels())
@@ -88,7 +85,7 @@ class NoiseOverlap(QualityMetric):
         max_spikes = np.max([len(self._metric_data._sorting.get_unit_spike_train(u)) for u in self._metric_data._unit_ids])
         if max_spikes < max_spikes_per_unit_for_noise_overlap:
             max_spikes_per_unit_for_noise_overlap = max_spikes
-        times_control = np.random.choice(np.arange(min_time, max_time),
+        times_control = rng.choice(np.arange(min_time, max_time),
                     size=max_spikes_per_unit_for_noise_overlap, replace=False)
         clip_size = waveforms[0].shape[-1]
         # np.array, (n_spikes, n_channels, n_timepoints)
@@ -108,11 +105,11 @@ class NoiseOverlap(QualityMetric):
 
             # make noise snippets size equal to number of spikes
             if len(clips) < max_spikes_per_unit_for_noise_overlap:
-                selected_idxs = np.random.choice(np.arange(max_spikes_per_unit_for_noise_overlap),
+                selected_idxs = rng.choice(np.arange(max_spikes_per_unit_for_noise_overlap),
                                                 size=len(clips), replace=False)
                 clips_control = clips_control[selected_idxs]
             else:
-                selected_idxs = np.random.choice(np.arange(len(clips)),
+                selected_idxs = rng.choice(np.arange(len(clips)),
                                                 size=max_spikes_per_unit_for_noise_overlap,
                                                 replace=False)
                 clips = clips[selected_idxs]
