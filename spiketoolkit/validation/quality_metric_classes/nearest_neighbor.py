@@ -5,7 +5,7 @@ from .quality_metric import QualityMetric
 from collections import OrderedDict
 from .parameter_dictionaries import update_all_param_dicts_with_kwargs
 
-
+#
 class NearestNeighbor(QualityMetric):
     installed = True  # check at class level if installed or not
     installation_mesg = ""  # err

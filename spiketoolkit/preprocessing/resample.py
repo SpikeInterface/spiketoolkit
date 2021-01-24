@@ -44,12 +44,8 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
         traces = self._recording.get_traces(start_frame=start_frame_not_sampled,
                                             end_frame=end_frame_not_sampled,
                                             channel_ids=channel_ids)
-        if np.mod(self._recording.get_sampling_frequency(), self._resample_rate) == 0:
-            traces_resampled = signal.decimate(traces,
-                                               q=int(self._recording.get_sampling_frequency() / self._resample_rate),
-                                               axis=1)
-        else:
-            traces_resampled = signal.resample(traces, int(end_frame_sampled - start_frame_sampled), axis=1)
+        traces_resampled = signal.resample(traces, int(end_frame_sampled - start_frame_sampled), axis=1)
+        
         return traces_resampled.astype(self._dtype)
 
 
