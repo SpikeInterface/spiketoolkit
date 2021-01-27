@@ -121,7 +121,7 @@ def _compute_channel_noise_levels(recording, mode, noise_duration, seed):
     if mode == "std":
         noise_levels = np.std(X, 1)
     elif mode == "mad":
-        noise_levels = np.median(np.abs(X - np.mean(X, 1, keepdims=True)) / 0.6745, 1)
+        noise_levels = np.median(np.abs(X - np.median(X, 1, keepdims=True)) / 0.6745, 1)
     else:
         raise Exception("'mode' can be 'std' or 'mad'")
     return noise_levels
