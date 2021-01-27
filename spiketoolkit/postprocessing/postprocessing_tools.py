@@ -1010,7 +1010,8 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
     elif not isinstance(unit_ids, (list, np.ndarray)):
         raise Exception("unit_ids is not a valid in valid")
     assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
-
+    unit_ids = list(unit_ids)
+    
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     max_spikes_for_pca = params_dict['max_spikes_for_pca']
     save_property_or_features = params_dict['save_property_or_features']
