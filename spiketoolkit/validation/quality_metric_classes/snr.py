@@ -98,7 +98,7 @@ def _compute_channel_noise_levels(recording, mode, noise_duration, seed):
     recording: RecordingExtractor
         The recording ectractor object
     mode: str
-        'std' or 'mad' (default
+        'std' or 'mad' (default 'mad')
     noise_duration: float
         Number of seconds to compute SNR from
 
@@ -118,13 +118,10 @@ def _compute_channel_noise_levels(recording, mode, noise_duration, seed):
         end_frame = start_frame + n_frames
 
     X = recording.get_traces(start_frame=start_frame, end_frame=end_frame)
-    noise_levels = []
-    for ch in range(M):
-        if mode == "std":
-            noise_level = np.std(X[ch, :])
-        elif mode == "mad":
-            noise_level = np.median(np.abs(X[ch, :]) / 0.6745)
-        else:
-            raise Exception("'mode' can be 'std' or 'mad'")
-        noise_levels.append(noise_level)
+    if mode == "std":
+        noise_levels = np.std(X, 1)
+    elif mode == "mad":
+        noise_levels = np.median(np.abs(X - np.mean(X, 1, keepdims=True)) / 0.6745, 1)
+    else:
+        raise Exception("'mode' can be 'std' or 'mad'")
     return noise_levels
