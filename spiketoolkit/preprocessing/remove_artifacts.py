@@ -23,6 +23,7 @@ class RemoveArtifactsRecording(BasePreprocessorRecordingExtractor):
         pad = [int(self._ms_before * self.get_sampling_frequency() / 1000),
                int(self._ms_after * self.get_sampling_frequency() / 1000)]
 
+        traces = traces.copy()
         for trig in triggers:
             if trig - pad[0] > 0 and trig + pad[1] < end_frame - start_frame:
                 traces[:, trig - pad[0]:trig + pad[1]] = 0
