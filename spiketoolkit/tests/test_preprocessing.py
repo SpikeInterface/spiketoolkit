@@ -3,7 +3,7 @@ import spikeextractors as se
 import pytest
 import shutil
 from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
-from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
+from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, mask, \
     normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform, \
     whiten
 from spikeextractors.tests.utils import check_dumping
@@ -162,6 +162,23 @@ def test_common_reference():
     check_dumping(rec_cmr_int16)
     shutil.rmtree('test')
 
+@pytest.mark.implemented
+def test_mask():
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
+    bool_mask = np.ones(rec.get_num_frames()).astype(bool)
+
+    bool_mask[100:200] = False
+    bool_mask[300:400] = False
+    rec_mask = mask(rec, bool_mask=bool_mask)
+
+    traces = rec_mask.get_traces()
+    assert np.allclose(traces[:, 100:200], 0) and np.allclose(traces[:, 300:400], 0)
+
+    traces_zeros = rec_mask.get_traces(start_frame=300, end_frame=400)
+    assert np.allclose(traces_zeros, 0)
+
+    shutil.rmtree('test')
+
 
 @pytest.mark.notimplemented
 def test_norm_by_quantile():
@@ -305,31 +322,33 @@ def test_whiten():
 
 
 if __name__ == '__main__':
-    print("bandpass")
-    test_bandpass_filter()
-    print("bandpass cache")
-    test_bandpass_filter_with_cache()
-    print("blank saturation")
-    test_blank_saturation()
-    print("clip")
-    test_clip()
-    print("center")
-    test_center()
-    print("cmr")
-    test_common_reference()
-    print("norm by quantile")
-    test_norm_by_quantile()
-    print("notch")
-    test_notch_filter()
-    print("rectify")
-    test_rectify()
-    print("remove artifacts")
-    test_remove_artifacts()
-    print("bad channels")
-    test_remove_bad_channels()
-    print("resample")
-    test_resample()
-    print("transform")
-    test_transform()
-    print("whiten")
-    test_whiten()
+    # print("bandpass")
+    # test_bandpass_filter()
+    # print("bandpass cache")
+    # test_bandpass_filter_with_cache()
+    # print("blank saturation")
+    # test_blank_saturation()
+    # print("clip")
+    # test_clip()
+    # print("center")
+    # test_center()
+    # print("cmr")
+    # test_common_reference()
+    print("mask")
+    test_mask()
+    # print("norm by quantile")
+    # test_norm_by_quantile()
+    # print("notch")
+    # test_notch_filter()
+    # print("rectify")
+    # test_rectify()
+    # print("remove artifacts")
+    # test_remove_artifacts()
+    # print("bad channels")
+    # test_remove_bad_channels()
+    # print("resample")
+    # test_resample()
+    # print("transform")
+    # test_transform()
+    # print("whiten")
+    # test_whiten()
