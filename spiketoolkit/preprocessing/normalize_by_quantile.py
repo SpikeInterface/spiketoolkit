@@ -23,7 +23,7 @@ class NormalizeByQuantileRecording(BasePreprocessorRecordingExtractor):
         N = self._recording.get_num_frames()
         random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)
         chunk_list = []
-        for ff in random_ints:
+        for ff in np.sort(random_ints):
             chunk = self._recording.get_traces(start_frame=ff,
                                                end_frame=ff + chunk_size)
             chunk_list.append(chunk)
