@@ -1324,6 +1324,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     else: # don't save recording.dat
         rec_path = 'None'
 
+    dtype = np.dtype(dtype).name
+
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
         f.write(f"dat_path = r'{str(rec_path)}'\n")
