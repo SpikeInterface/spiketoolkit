@@ -325,13 +325,11 @@ def test_export_to_phy():
     assert not (Path('phy_no_amp_feat') / 'pc_features.npy').is_file()
     assert not (Path('phy_no_amp_feat') / 'pc_feature_ind.npy').is_file()
 
-    sort_phy = se.PhySortingExtractor('phy', load_waveforms=True)
-    sort_phyg = se.PhySortingExtractor('phy_group', load_waveforms=True)
+    sort_phy = se.PhySortingExtractor('phy')
+    sort_phyg = se.PhySortingExtractor('phy_group')
 
     assert np.allclose(sort_phy.get_unit_spike_train(0), sort.get_unit_spike_train(sort.get_unit_ids()[0]))
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
-    assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
-    assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     recrm = remove_bad_channels(rec, [1, 2, 5])
