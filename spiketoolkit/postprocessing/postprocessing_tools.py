@@ -1601,14 +1601,15 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         if 'amplitudes' in sorting.get_shared_unit_spike_feature_names():
             unit_ids = sorting.get_unit_ids()
             spike_times = sorting.get_units_spike_train(unit_ids)
-            waveforms = [sorting.get_unit_spike_features(u, 'amplitudes') for u in unit_ids]
+            amplitudes = [sorting.get_unit_spike_features(u, 'amplitudes') for u in unit_ids]
 
-            if np.any([len(wf) < len(times) for (wf, times) in zip(waveforms, spike_times)]):
+            if np.any([len(amp) < len(times) for (amp, times) in zip(amplitudes, spike_times)]):
                 recompute_info = True
             else:
                 recompute_info = False
 
-        print("Recomputing info")
+        if recompute_info:
+            print("Recomputing info")
 
         waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
                                                                              max_spikes_per_unit=max_spikes_per_unit,
