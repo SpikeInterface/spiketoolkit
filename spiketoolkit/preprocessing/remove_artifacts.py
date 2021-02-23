@@ -133,7 +133,11 @@ class RemoveArtifactsRecording(BasePreprocessorRecordingExtractor):
 
 def remove_artifacts(recording, triggers, ms_before=0.5, ms_after=3, mode = 'zeros', fit_sample_spacing = 1):
     '''
-    Removes stimulation artifacts from recording extractor traces. Artifact periods are zeroed-out.
+    Removes stimulation artifacts from recording extractor traces. By default, 
+    artifact periods are zeroed-out (mode = 'zeros'). This is only recommended 
+    for traces that are centered around zero (e.g. through a prior highpass
+    filter); if this is not the case, linear and cubic interpolation modes are
+    also available, controlled by the 'mode' input argument.
 
     Parameters
     ----------
@@ -145,6 +149,33 @@ def remove_artifacts(recording, triggers, ms_before=0.5, ms_after=3, mode = 'zer
         Time interval in ms to remove before the trigger events
     ms_after: float
         Time interval in ms to remove after the trigger events
+    mode: string
+        Determines what artifacts are replaced by. Can be one of the following:
+            
+        'zeros' (default): Artifacts are replaced by zeros. 
+        
+        'linear': Replacement are obtained through Linear interpolation between 
+        the trace before and after the artifact. 
+        If the trace starts or ends with an artifact period, the gap is filled 
+        with the closest available value before or after the artifact.
+        
+        'cubic': Cubic spline interpolation between the trace before and after
+        the artifact, referenced to evenly spaced fit points before and after
+        the artifact. This is an option thatcan be helpful if there are 
+        significant LFP effects around the time of the artifact, but visual 
+        inspection of fit behaviour with your chosen settings is recommended.
+        The spacing of fit points is controlled by 'fit_sample_spacing', with 
+        greater spacing between points leading to a fit that is less sensitive 
+        to high frequency fluctuations but at the cost of a less smooth 
+        continuation of the trace.
+        If the trace starts or ends with an artifact , the gap is filled with 
+        the closest available value before or after the artifact.            
+    fit_sample_spacing: float
+        Determines the spacing (in ms) of reference points for the cubic spline
+        fit if mode = 'cubic'. Default = 1ms. Note: The actual fit samples are 
+        the median of the 5 data points around the time of each sample point to
+        avoid excessive influence from hyper-local fluctuations.
+        
 
     Returns
     -------
