@@ -241,12 +241,22 @@ def test_compute_pca_scores():
                 assert pc.shape[-1] == 5
             assert 'pca_scores' not in sort.get_shared_unit_spike_feature_names()
 
+
+            pca_scores = compute_unit_pca_scores(rec, sort, unit_ids=np.asarray([1,2]), channel_ids=[0, 1, 2, 3, 4],
+                                                 max_channels_per_waveforms=3, n_comp=3, memmap=m, n_jobs=n)
+            assert len(pca_scores) == 2
+            for pc in pca_scores:
+                assert pc.shape[-1] == 3
+            assert 'pca_scores' not in sort.get_shared_unit_spike_feature_names()
+            assert 'pca_scores_channel_idxs' not in sort.get_shared_unit_property_names()
+
             pca_scores = compute_unit_pca_scores(rec, sort, channel_ids=[0, 1, 2, 3, 4],
                                                  max_channels_per_waveforms=3, n_comp=3, memmap=m, n_jobs=n)
             for pc in pca_scores:
                 assert pc.shape[-1] == 3
             assert 'pca_scores' in sort.get_shared_unit_spike_feature_names()
             assert 'pca_scores_channel_idxs' in sort.get_shared_unit_property_names()
+
             shutil.rmtree(folder)
 
 
@@ -315,13 +325,11 @@ def test_export_to_phy():
     assert not (Path('phy_no_amp_feat') / 'pc_features.npy').is_file()
     assert not (Path('phy_no_amp_feat') / 'pc_feature_ind.npy').is_file()
 
-    sort_phy = se.PhySortingExtractor('phy', load_waveforms=True)
-    sort_phyg = se.PhySortingExtractor('phy_group', load_waveforms=True)
+    sort_phy = se.PhySortingExtractor('phy')
+    sort_phyg = se.PhySortingExtractor('phy_group')
 
     assert np.allclose(sort_phy.get_unit_spike_train(0), sort.get_unit_spike_train(sort.get_unit_ids()[0]))
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
-    assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
-    assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     recrm = remove_bad_channels(rec, [1, 2, 5])

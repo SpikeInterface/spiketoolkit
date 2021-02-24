@@ -100,7 +100,7 @@ def threshold_firing_rates(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None, 
+                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None,
                     verbose=params_dict['verbose'])
 
     fr = FiringRate(metric_data=md)
@@ -148,7 +148,7 @@ def threshold_presence_ratios(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None, 
+                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None,
                     verbose=params_dict['verbose'])
 
     pr = PresenceRatio(metric_data=md)
@@ -202,7 +202,7 @@ def threshold_isi_violations(
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
 
     md = MetricData(sorting=sorting, sampling_frequency=sampling_frequency, recording=None, apply_filter=False,
-                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None, 
+                    duration_in_frames=duration_in_frames, freq_min=300.0, freq_max=6000.0, unit_ids=None,
                     verbose=params_dict['verbose'])
 
     iv = ISIViolation(metric_data=md)
@@ -380,6 +380,7 @@ def threshold_noise_overlaps(
         recording,
         threshold,
         threshold_sign,
+        num_channels_to_compare=NoiseOverlap.params['num_channels_to_compare'],
         num_features=NoiseOverlap.params['num_features'],
         num_knn=NoiseOverlap.params['num_knn'],
         max_spikes_per_unit_for_noise_overlap=NoiseOverlap.params['max_spikes_per_unit_for_noise_overlap'],
@@ -465,7 +466,9 @@ def threshold_noise_overlaps(
                     duration_in_frames=None, freq_max=params_dict["freq_max"], unit_ids=None, verbose=params_dict['verbose'])
 
     noise_overlap = NoiseOverlap(metric_data=md)
-    threshold_sorting = noise_overlap.threshold_metric(threshold, threshold_sign, max_spikes_per_unit_for_noise_overlap,
+    threshold_sorting = noise_overlap.threshold_metric(threshold, threshold_sign,
+                                                       num_channels_to_compare,
+                                                       max_spikes_per_unit_for_noise_overlap,
                                                        num_features, num_knn, **kwargs)
     return threshold_sorting
 

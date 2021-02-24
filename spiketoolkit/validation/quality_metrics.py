@@ -390,6 +390,7 @@ def compute_snrs(
 def compute_noise_overlaps(
         sorting,
         recording,
+        num_channels_to_compare=NoiseOverlap.params['num_channels_to_compare'],
         num_features=NoiseOverlap.params['num_features'],
         num_knn=NoiseOverlap.params['num_knn'],
         max_spikes_per_unit_for_noise_overlap=NoiseOverlap.params['max_spikes_per_unit_for_noise_overlap'],
@@ -481,8 +482,9 @@ def compute_noise_overlaps(
                     verbose=params_dict['verbose'])
 
     noise_overlap = NoiseOverlap(metric_data=md)
-    noise_overlaps = noise_overlap.compute_metric(max_spikes_per_unit_for_noise_overlap, num_features, num_knn,
-                                                  **kwargs)
+    noise_overlaps = noise_overlap.compute_metric(num_channels_to_compare,
+                                                  max_spikes_per_unit_for_noise_overlap,
+                                                  num_features, num_knn, **kwargs)
     return noise_overlaps
 
 
@@ -1072,7 +1074,7 @@ def compute_quality_metrics(
 ):
     """
     Computes and returns all specified metrics for the sorted dataset.
-    
+
     Parameters
     ----------
     sorting: SortingExtractor
@@ -1174,7 +1176,7 @@ def compute_quality_metrics(
     ----------
     metrics: dictionary OR pandas.dataframe
         Dictionary or pandas.dataframe of metrics.
-    
+
     """
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     metrics_dict = OrderedDict()
@@ -1275,7 +1277,8 @@ def compute_quality_metrics(
 
     if "noise_overlap" in metric_names:
         noise_overlap = NoiseOverlap(metric_data=md)
-        noise_overlaps = noise_overlap.compute_metric(max_spikes_per_unit_for_noise_overlap,
+        noise_overlaps = noise_overlap.compute_metric(num_channels_to_compare,
+                                                      max_spikes_per_unit_for_noise_overlap,
                                                       noise_overlap_num_features,
                                                       noise_overlap_num_knn,
                                                       **kwargs)
