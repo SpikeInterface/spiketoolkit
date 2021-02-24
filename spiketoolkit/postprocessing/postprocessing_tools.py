@@ -1587,6 +1587,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         sorting.clear_units_spike_features(feature_name='pca_scores')
 
     if compute_pc_features or compute_amplitudes:
+        max_spikes_per_unit = None
+
         # check if recomputation is needed
         if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
             unit_ids = sorting.get_unit_ids()
@@ -1598,7 +1600,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
             else:
                 recompute_info = False
 
-        print("Recomputing info")
+        if recompute_info:
+            print("Recomputing waveforms")
 
         waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
                                                                              max_spikes_per_unit=max_spikes_per_unit,
@@ -1618,6 +1621,17 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         waveforms, spike_index_list, channel_index_list = None, None, None
 
     if compute_pc_features:
+        # check if recomputation is needed
+        if 'pca_scores' in sorting.get_shared_unit_spike_feature_names():
+            unit_ids = sorting.get_unit_ids()
+            spike_times = sorting.get_units_spike_train(unit_ids)
+            pca_scores = [sorting.get_unit_spike_features(u, 'pca_scores') for u in unit_ids]
+
+            if np.any([len(pc) < len(times) for (pc, times) in zip(pca_scores, spike_times)]):
+                recompute_info = True
+            else:
+                recompute_info = False
+
         # pca scores
         if recompute_info:
             sorting.clear_units_spike_features(feature_name='pca_scores')
@@ -1638,6 +1652,19 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         pc_list, pca_idxs, pc_ind, pc_shape = None, None, None, None
 
     if compute_amplitudes:
+        max_spikes_for_amplitudes = None
+
+        # check if recomputation is needed
+        if 'amplitudes' in sorting.get_shared_unit_spike_feature_names():
+            unit_ids = sorting.get_unit_ids()
+            spike_times = sorting.get_units_spike_train(unit_ids)
+            amplitudes = [sorting.get_unit_spike_features(u, 'amplitudes') for u in unit_ids]
+
+            if np.any([len(amp) < len(times) for (amp, times) in zip(amplitudes, spike_times)]):
+                recompute_info = True
+            else:
+                recompute_info = False
+
         # amplitudes
         if recompute_info:
             sorting.clear_units_spike_features(feature_name='amplitudes')
