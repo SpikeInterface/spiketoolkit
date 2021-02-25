@@ -264,7 +264,7 @@ class CurationSortingExtractor(SortingExtractor):
             except IndexError:
                 print(str(indices) + " out of bounds for the spike train of " + str(unit_id))
 
-            indices_2 = np.array(list(set(range(len(original_spike_train))) - set(indices_1)), dtype=int)
+            indices_2 = np.sort(np.array(list(set(range(len(original_spike_train))) - set(indices_1)), dtype=int))
             spike_train_2 = original_spike_train[indices_2]
             del original_spike_train
 
