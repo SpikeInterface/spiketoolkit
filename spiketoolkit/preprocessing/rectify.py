@@ -12,8 +12,9 @@ class RectifyRecording(BasePreprocessorRecordingExtractor):
         self._kwargs = {'recording': recording.make_serialized_dict()}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        return np.abs(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame))
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        return np.abs(self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame,
+                                                 return_scaled=return_scaled))
 
 
 def rectify(recording):

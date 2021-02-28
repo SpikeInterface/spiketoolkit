@@ -6,7 +6,7 @@ from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
 from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
     normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, transform, \
     whiten
-from spikeextractors.tests.utils import check_dumping
+from spikeextractors.testing import check_dumping
 
 
 @pytest.mark.implemented

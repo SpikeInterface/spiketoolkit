@@ -16,8 +16,9 @@ class RemoveArtifactsRecording(BasePreprocessorRecordingExtractor):
                         'ms_before': ms_before, 'ms_after': ms_after}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame,
+                                            return_scaled=return_scaled)
         triggers = self._triggers[(self._triggers > start_frame) & (self._triggers < end_frame)] - start_frame
 
         pad = [int(self._ms_before * self.get_sampling_frequency() / 1000),

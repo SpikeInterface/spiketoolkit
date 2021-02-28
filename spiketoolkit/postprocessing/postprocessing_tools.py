@@ -1278,6 +1278,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
                 Random seed for extracting random waveforms
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
+            filter_flag: bool
+                If False, will not display the warning on non-filtered recording. Default is True.
 
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
@@ -1292,7 +1294,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         print('Warning: empty units have been removed when being exported to Phy')
         sorting = st.curation.threshold_num_spikes(sorting, 1, "less")
 
-    if not recording.is_filtered:
+    filter_flag = True if not "filter_flag" in kwargs else kwargs['filter_flag']
+    if not recording.is_filtered and filter_flag:
         print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy.\n"
               "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
 
@@ -1323,6 +1326,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         dtype = recording.get_dtype()
     else: # don't save recording.dat
         rec_path = 'None'
+
+    dtype = np.dtype(dtype).name
 
     # write params.py
     with (output_folder / 'params.py').open('w') as f:
@@ -1585,6 +1590,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         sorting.clear_units_spike_features(feature_name='pca_scores')
 
     if compute_pc_features or compute_amplitudes:
+        max_spikes_per_unit = None
+
         # check if recomputation is needed
         if 'waveforms' in sorting.get_shared_unit_spike_feature_names():
             unit_ids = sorting.get_unit_ids()
@@ -1596,7 +1603,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
             else:
                 recompute_info = False
 
-        print("Recomputing info")
+        if recompute_info:
+            print("Recomputing waveforms")
 
         waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
                                                                              max_spikes_per_unit=max_spikes_per_unit,
@@ -1616,6 +1624,17 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         waveforms, spike_index_list, channel_index_list = None, None, None
 
     if compute_pc_features:
+        # check if recomputation is needed
+        if 'pca_scores' in sorting.get_shared_unit_spike_feature_names():
+            unit_ids = sorting.get_unit_ids()
+            spike_times = sorting.get_units_spike_train(unit_ids)
+            pca_scores = [sorting.get_unit_spike_features(u, 'pca_scores') for u in unit_ids]
+
+            if np.any([len(pc) < len(times) for (pc, times) in zip(pca_scores, spike_times)]):
+                recompute_info = True
+            else:
+                recompute_info = False
+
         # pca scores
         if recompute_info:
             sorting.clear_units_spike_features(feature_name='pca_scores')
@@ -1636,6 +1655,19 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
         pc_list, pca_idxs, pc_ind, pc_shape = None, None, None, None
 
     if compute_amplitudes:
+        max_spikes_for_amplitudes = None
+
+        # check if recomputation is needed
+        if 'amplitudes' in sorting.get_shared_unit_spike_feature_names():
+            unit_ids = sorting.get_unit_ids()
+            spike_times = sorting.get_units_spike_train(unit_ids)
+            amplitudes = [sorting.get_unit_spike_features(u, 'amplitudes') for u in unit_ids]
+
+            if np.any([len(amp) < len(times) for (amp, times) in zip(amplitudes, spike_times)]):
+                recompute_info = True
+            else:
+                recompute_info = False
+
         # amplitudes
         if recompute_info:
             sorting.clear_units_spike_features(feature_name='amplitudes')

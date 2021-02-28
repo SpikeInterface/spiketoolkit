@@ -18,8 +18,9 @@ class RemoveBadChannelsRecording(BasePreprocessorRecordingExtractor):
                         'bad_threshold': bad_threshold, 'seconds': seconds, 'verbose': verbose}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        traces = self._subrecording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        traces = self._subrecording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame,
+                                               return_scaled=return_scaled)
         return traces
 
     def _initialize_subrecording_extractor(self, recording):

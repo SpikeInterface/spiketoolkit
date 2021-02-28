@@ -13,7 +13,14 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
         self._recording = recording
         self.copy_channel_properties(recording)
         self.copy_epochs(recording)
-        self.is_filtered = self._recording.is_filtered
+        self.copy_timestamps(recording)
+        self.copy_timestamps(recording)
+
+        self.is_filtered = recording.is_filtered
+        if hasattr(recording, "has_unscaled"):
+            self.has_unscaled = recording.has_unscaled
+        else:
+            self.has_unscaled = False
 
     def get_channel_ids(self):
         return self._recording.get_channel_ids()
@@ -31,6 +38,6 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
         return self._recording.frame_to_time(frame)
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         raise NotImplementedError
 
