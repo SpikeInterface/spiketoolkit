@@ -1,7 +1,7 @@
 import spikeextractors as se
 import numpy as np
 import shutil
-from spikeextractors.tests.utils import check_dumping
+from spikeextractors.testing import check_dumping
 
 from spiketoolkit.curation import (
     threshold_snrs,

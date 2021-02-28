@@ -30,10 +30,11 @@ class NormalizeByQuantileRecording(BasePreprocessorRecordingExtractor):
         return np.concatenate(chunk_list, axis=1)
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
-                                            end_frame=end_frame)
+                                            end_frame=end_frame,
+                                            return_scaled=True)
         return traces * self._scalar + self._offset
 
 

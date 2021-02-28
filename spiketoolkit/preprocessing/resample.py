@@ -34,7 +34,7 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
         return self._dtype
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         start_frame_not_sampled = int(start_frame / self.get_sampling_frequency() *
                                       self._recording.get_sampling_frequency())
         start_frame_sampled = start_frame
@@ -43,9 +43,10 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
         end_frame_sampled = end_frame
         traces = self._recording.get_traces(start_frame=start_frame_not_sampled,
                                             end_frame=end_frame_not_sampled,
-                                            channel_ids=channel_ids)
+                                            channel_ids=channel_ids,
+                                            return_scaled=return_scaled)
         traces_resampled = signal.resample(traces, int(end_frame_sampled - start_frame_sampled), axis=1)
-        
+
         return traces_resampled.astype(self._dtype)
 
 

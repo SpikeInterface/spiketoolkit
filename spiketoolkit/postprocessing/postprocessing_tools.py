@@ -1278,6 +1278,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
                 Random seed for extracting random waveforms
             memmap: bool
                 If True, waveforms are saved as memmap object (recommended for long recordings with many channels)
+            filter_flag: bool
+                If False, will not display the warning on non-filtered recording. Default is True.
 
     '''
     if not isinstance(recording, se.RecordingExtractor) or not isinstance(sorting, se.SortingExtractor):
@@ -1292,7 +1294,8 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
         print('Warning: empty units have been removed when being exported to Phy')
         sorting = st.curation.threshold_num_spikes(sorting, 1, "less")
 
-    if not recording.is_filtered:
+    filter_flag = True if not "filter_flag" in kwargs else kwargs['filter_flag']
+    if not recording.is_filtered and filter_flag:
         print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy.\n"
               "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
 
