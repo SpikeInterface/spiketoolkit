@@ -87,7 +87,7 @@ def _create_filter_kernel(N, sampling_frequency, freq_min, freq_wid=1000):
 
 
 def highpass_filter(recording, freq_min=300, freq_wid=1000, filter_type='butter', order=1,
-                    chunk_size=30000, cache_to_file=False, cache_chunks=False, dtype=None):
+                    chunk_size=30000, cache_chunks=False, dtype=None):
     '''
     Performs a lazy filter on the recording extractor traces.
 
@@ -97,8 +97,6 @@ def highpass_filter(recording, freq_min=300, freq_wid=1000, filter_type='butter'
         The recording extractor to be filtered.
     freq_min: int or float
         High-pass cutoff frequency.
-    freq_max: int or float
-        Low-pass cutoff frequency.
     freq_wid: int or float
         Width of the filter (when type is 'fft').
     filter_type: str
@@ -108,8 +106,6 @@ def highpass_filter(recording, freq_min=300, freq_wid=1000, filter_type='butter'
         Order of the filter (if 'butter').
     chunk_size: int
         The chunk size to be used for the filtering.
-    cache_to_file: bool (default False).
-        If True, filtered traces are computed and cached all at once on disk in temp file 
     cache_chunks: bool (default False).
         If True then each chunk is cached in memory (in a dict)
     dtype: dtype
@@ -120,10 +116,7 @@ def highpass_filter(recording, freq_min=300, freq_wid=1000, filter_type='butter'
     filter_recording: HighpassFilterRecording
         The filtered recording extractor object
     '''
-    if cache_to_file:
-        assert not cache_chunks, 'if cache_to_file cache_chunks should be False'
-    
-    bpf_recording = HighpassFilterRecording(
+    hp_recording = HighpassFilterRecording(
         recording=recording,
         freq_min=freq_min,
         freq_wid=freq_wid,
@@ -133,7 +126,4 @@ def highpass_filter(recording, freq_min=300, freq_wid=1000, filter_type='butter'
         cache_chunks=cache_chunks,
         dtype=dtype
     )
-    if cache_to_file:
-        return se.CacheRecordingExtractor(bpf_recording, chunk_size=chunk_size)
-    else:
-        return bpf_recording
+    return hp_recording
