@@ -12,6 +12,7 @@ from .normalize_by_quantile import normalize_by_quantile, NormalizeByQuantileRec
 from .clip import clip, ClipRecording
 from .blank_saturation import blank_saturation, BlankSaturationRecording
 from .center import center, CenterRecording
+from .mask import mask, MaskRecording
 
 preprocessers_full_list = [
     HighpassFilterRecording,
@@ -27,7 +28,8 @@ preprocessers_full_list = [
     NormalizeByQuantileRecording,
     ClipRecording,
     BlankSaturationRecording,
-    CenterRecording
+    CenterRecording,
+    MaskRecording
 ]
 
 installed_preprocessers_list = [pp for pp in preprocessers_full_list if pp.installed]

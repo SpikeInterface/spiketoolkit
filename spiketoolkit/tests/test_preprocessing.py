@@ -5,7 +5,7 @@ import shutil
 from spiketoolkit.tests.utils import check_signal_power_signal1_below_signal2
 from spiketoolkit.preprocessing import bandpass_filter, blank_saturation, center, clip, common_reference, \
     highpass_filter, normalize_by_quantile, notch_filter, rectify, remove_artifacts, remove_bad_channels, resample, \
-    transform, whiten
+    mask, transform, whiten
 from spikeextractors.testing import check_dumping
 
 
@@ -127,6 +127,23 @@ def test_common_reference():
     check_dumping(rec_cmr_int16)
     shutil.rmtree('test')
 
+@pytest.mark.implemented
+def test_mask():
+    rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
+    bool_mask = np.ones(rec.get_num_frames()).astype(bool)
+
+    bool_mask[100:200] = False
+    bool_mask[300:400] = False
+    rec_mask = mask(rec, bool_mask=bool_mask)
+
+    traces = rec_mask.get_traces()
+    assert np.allclose(traces[:, 100:200], 0) and np.allclose(traces[:, 300:400], 0)
+
+    traces_zeros = rec_mask.get_traces(start_frame=300, end_frame=400)
+    assert np.allclose(traces_zeros, 0)
+
+    shutil.rmtree('test')
+
 
 @pytest.mark.implemented
 def test_highpass_filter():
@@ -192,9 +209,6 @@ def test_remove_artifacts():
     ms = 10
     ms_frames = int(ms * rec.get_sampling_frequency() / 1000)
 
-    traces_all_0_clean = rec.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
-    traces_all_1_clean = rec.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
-
     rec_rmart = remove_artifacts(rec, triggers, ms_before=10, ms_after=10)
     traces_all_0 = rec_rmart.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
     traces_short_0 = rec_rmart.get_traces(start_frame=triggers[0] - 10, end_frame=triggers[0] + 10)
@@ -205,19 +219,6 @@ def test_remove_artifacts():
     assert not np.any(traces_all_1)
     assert not np.any(traces_short_0)
     assert not np.any(traces_short_1)
-
-    rec_rmart_lin = remove_artifacts(rec, triggers, ms_before=10, ms_after=10, mode="linear")
-    traces_all_0 = rec_rmart_lin.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
-    traces_all_1 = rec_rmart_lin.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
-    assert not np.allclose(traces_all_0, traces_all_0_clean)
-    assert not np.allclose(traces_all_1, traces_all_1_clean)
-
-    rec_rmart_cub = remove_artifacts(rec, triggers, ms_before=10, ms_after=10, mode="cubic")
-    traces_all_0 = rec_rmart_cub.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
-    traces_all_1 = rec_rmart_cub.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
-
-    assert not np.allclose(traces_all_0, traces_all_0_clean)
-    assert not np.allclose(traces_all_1, traces_all_1_clean)
 
     check_dumping(rec_rmart)
     shutil.rmtree('test')
@@ -315,8 +316,6 @@ def test_whiten():
 if __name__ == '__main__':
     print("bandpass")
     test_bandpass_filter()
-    print("bandpass cache")
-    test_bandpass_filter_with_cache()
     print("blank saturation")
     test_blank_saturation()
     print("clip")
@@ -325,6 +324,8 @@ if __name__ == '__main__':
     test_center()
     print("cmr")
     test_common_reference()
+    print("mask")
+    test_mask()
     print("norm by quantile")
     test_norm_by_quantile()
     print("notch")
