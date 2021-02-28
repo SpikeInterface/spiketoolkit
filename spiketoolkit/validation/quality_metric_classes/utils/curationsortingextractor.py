@@ -12,6 +12,7 @@ class CurationSortingExtractor(SortingExtractor):
         self._original_unit_ids = list(np.copy(parent_sorting.get_unit_ids()))
         self._all_ids = list(np.copy(parent_sorting.get_unit_ids()))
         self._sampling_frequency = parent_sorting.get_sampling_frequency()
+        self.set_tmp_folder(parent_sorting.get_tmp_folder())
 
         # Create and store roots with original unit ids and cached spiketrains
         self._roots = []
