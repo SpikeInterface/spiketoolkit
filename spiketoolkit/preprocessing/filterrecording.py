@@ -34,11 +34,11 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
         BasePreprocessorRecordingExtractor.__init__(self, recording_base)
 
     # avoid filtering one sample
-    def get_dtype(self):
+    def get_dtype(self, return_scaled=True):
         return self._dtype
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         if self._chunk_size is not None:
             ich1 = int(start_frame / self._chunk_size)
             ich2 = int((end_frame - 1) / self._chunk_size)

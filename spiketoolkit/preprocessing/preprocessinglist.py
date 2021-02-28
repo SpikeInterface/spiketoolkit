@@ -1,3 +1,4 @@
+from .highpass_filter import highpass_filter, HighpassFilterRecording
 from .bandpass_filter import bandpass_filter, BandpassFilterRecording
 from .notch_filter import notch_filter, NotchFilterRecording
 from .whiten import whiten, WhitenRecording
@@ -14,6 +15,7 @@ from .center import center, CenterRecording
 from .mask import mask, MaskRecording
 
 preprocessers_full_list = [
+    HighpassFilterRecording,
     BandpassFilterRecording,
     NotchFilterRecording,
     WhitenRecording,

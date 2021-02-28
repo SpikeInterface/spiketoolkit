@@ -1,19 +1,7 @@
 import numpy as np
-import os, sys
-import unittest
-import tempfile
-import shutil
-#
-#
-# def append_to_path(dir0):  # A convenience function
-#     if dir0 not in sys.path:
-#         sys.path.append(dir0)
-#
-#
-# append_to_path(os.getcwd() + '/..')
 import spikeextractors as se
 import spiketoolkit as st
-from spikeextractors.tests.utils import check_dumping
+from spikeextractors.testing import check_dumping
 
 
 def test_curation_sorting_extractor():

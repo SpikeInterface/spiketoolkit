@@ -19,10 +19,11 @@ class MaskRecording(BasePreprocessorRecordingExtractor):
         self._kwargs = {'recording': recording.make_serialized_dict(), 'bool_mask': bool_mask}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
-                                            end_frame=end_frame)
+                                            end_frame=end_frame,
+                                            return_scaled=True)
 
         traces = traces.copy()  # takes care of memmap objects
         traces[:, ~self._mask[start_frame:end_frame]] = 0.0
@@ -31,7 +32,7 @@ class MaskRecording(BasePreprocessorRecordingExtractor):
 
 def mask(recording, bool_mask):
     '''
-    Apply a boolean mask to the recording, where False elements of the mask case the associated recording frames to
+    Apply a boolean mask to the recording, where False elements of the mask cause the associated recording frames to
     be set to 0
 
     Parameters

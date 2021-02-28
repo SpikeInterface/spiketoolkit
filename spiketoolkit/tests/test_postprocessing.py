@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from spiketoolkit.tests.utils import create_signal_with_known_waveforms
+from spiketoolkit.tests.utils import create_signal_with_known_waveforms, create_dumpable_extractors_from_existing
 import spikeextractors as se
 from spiketoolkit.postprocessing import get_unit_waveforms, get_unit_templates, get_unit_amplitudes, \
     get_unit_max_channels, set_unit_properties_by_max_channel_properties, compute_unit_pca_scores, export_to_phy, \
@@ -10,7 +10,6 @@ import pandas
 import os
 import shutil
 from pathlib import Path
-from spiketoolkit.tests.utils import create_dumpable_extractors_from_existing
 import sys
 
 if sys.platform == "win32":
@@ -325,13 +324,11 @@ def test_export_to_phy():
     assert not (Path('phy_no_amp_feat') / 'pc_features.npy').is_file()
     assert not (Path('phy_no_amp_feat') / 'pc_feature_ind.npy').is_file()
 
-    sort_phy = se.PhySortingExtractor('phy', load_waveforms=True)
-    sort_phyg = se.PhySortingExtractor('phy_group', load_waveforms=True)
+    sort_phy = se.PhySortingExtractor('phy')
+    sort_phyg = se.PhySortingExtractor('phy_group')
 
     assert np.allclose(sort_phy.get_unit_spike_train(0), sort.get_unit_spike_train(sort.get_unit_ids()[0]))
     assert np.allclose(sort_phyg.get_unit_spike_train(2), sort.get_unit_spike_train(sort.get_unit_ids()[2]))
-    assert sort_phy.get_unit_spike_features(1, 'waveforms').shape[1] == 8
-    assert sort_phyg.get_unit_spike_features(3, 'waveforms').shape[1] == 4
 
     rec.set_channel_groups([0, 0, 0, 0, 1, 1, 1, 1])
     recrm = remove_bad_channels(rec, [1, 2, 5])
