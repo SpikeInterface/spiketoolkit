@@ -1297,7 +1297,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     filter_flag = True if not "filter_flag" in kwargs else kwargs['filter_flag']
     if not recording.is_filtered and filter_flag:
         print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy.\n"
-              "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
+              "You can run spiketoolkit.preprocessing.bandpass_filter(recording)")
 
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No non-empty units in the sorting result, can't save to phy.")
