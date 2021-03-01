@@ -146,7 +146,6 @@ class MetricData:
                 recording=recording,
                 freq_min=freq_min,
                 freq_max=freq_max,
-                cache_to_file=True,
             )
         else:
             recording_filter = recording

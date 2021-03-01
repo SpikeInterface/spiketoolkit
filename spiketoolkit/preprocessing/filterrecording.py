@@ -34,7 +34,7 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
         BasePreprocessorRecordingExtractor.__init__(self, recording_base)
 
     # avoid filtering one sample
-    def get_dtype(self):
+    def get_dtype(self, return_scaled=True):
         return self._dtype
 
     @check_get_traces_args
