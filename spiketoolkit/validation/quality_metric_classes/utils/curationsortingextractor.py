@@ -28,7 +28,7 @@ class CurationSortingExtractor(SortingExtractor):
         self.copy_unit_properties(parent_sorting)
         self.copy_unit_spike_features(parent_sorting)
         self.copy_epochs(parent_sorting)
-        self.copy_timestamps(parent_sorting)
+        self.copy_times(parent_sorting)
 
         self.curation_steps = curation_steps
         self._kwargs = {'parent_sorting': parent_sorting.make_serialized_dict(), 'curation_steps': self.curation_steps}

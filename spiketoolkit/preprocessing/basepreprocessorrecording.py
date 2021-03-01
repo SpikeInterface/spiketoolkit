@@ -13,8 +13,7 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
         self._recording = recording
         self.copy_channel_properties(recording)
         self.copy_epochs(recording)
-        self.copy_timestamps(recording)
-        self.copy_timestamps(recording)
+        self.copy_times(recording)
 
         self.is_filtered = recording.is_filtered
         if hasattr(recording, "has_unscaled"):
