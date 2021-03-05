@@ -10,7 +10,7 @@ amplitudes_params_dict = OrderedDict([('method', 'absolute'), ('peak', 'both'), 
                                       ('frames_after', 3)])
 
 pca_params_dict = OrderedDict([('n_comp', 3), ('by_electrode', True), ('max_spikes_for_pca', 10000),
-                               ('whiten', False)])
+                               ('max_spikes_for_pca_fit', 5000), ('whiten', False)])
 
 common_params_dict = OrderedDict([('max_spikes_per_unit', 300), ('recompute_info', False),
                                   ('save_property_or_features', True), ('memmap', True), ('seed', 0),
