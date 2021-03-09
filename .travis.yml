@@ -23,7 +23,7 @@ jobs:
 
 install:
 # spikeextractors is taken from github to get latest version
-- pip install https://github.com/SpikeInterface/spikeextractors/archive/return_scaled.zip
+- pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
 - pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
 - pip install https://github.com/SpikeInterface/spikefeatures/archive/master.zip
 - pip install .
