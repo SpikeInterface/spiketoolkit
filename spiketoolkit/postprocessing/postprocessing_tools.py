@@ -269,7 +269,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
             unit_waveforms = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                 delayed(_extract_waveforms_one_chunk)(ii, rec_arg, chunks, unit_ids, n_pad,
                                                       times_in_all_chunks, start_spike_idxs,
-                                                      all_unit_waveforms, memmap, dtype, verbose,)
+                                                      all_unit_waveforms, memmap, dtype, verbose, )
                 for ii in chunk_iter)
 
             if not memmap:
@@ -342,7 +342,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
                     memmap_array = np.memmap(memmap_file, mode='w+', shape=waveform.shape,
                                              dtype=waveform.dtype)
                     memmap_array[:] = waveform
-                    del(waveform)
+                    del (waveform)
                     waveforms_reduced_channels.append(memmap_array)
                 else:
                     waveforms_reduced_channels.append(waveform)
@@ -918,7 +918,6 @@ def compute_unit_centers_of_mass(recording, sorting, unit_ids=None, num_channels
         elif peak == 'pos':
             amps = np.max(template, 1)
 
-
         idxs = np.argsort(amps)[::-1][:num_channels]
         com = np.array([np.sum((amps[idxs] * locations[idxs, 0])) / np.sum(amps[idxs]),
                         np.sum((amps[idxs] * locations[idxs, 1])) / np.sum(amps[idxs])])
@@ -962,7 +961,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             by_electrode: bool
                 If True, PCA scores are computed electrode-wise (channel by channel)
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+                The maximum number of spike per unit to use to fit the PCA.
             whiten: bool
                 If True, PCA is run with whiten equal True
             grouping_property: str
@@ -1011,7 +1010,7 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
         raise Exception("unit_ids is not a valid in valid")
     assert np.all([u in sorting.get_unit_ids() for u in unit_ids]), "Invalid unit_ids"
     unit_ids = list(unit_ids)
-    
+
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     max_spikes_for_pca = params_dict['max_spikes_for_pca']
     save_property_or_features = params_dict['save_property_or_features']
@@ -1037,9 +1036,6 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
             spike_index_list.append(indexes)
             channel_index_list.append(channel_idxs)
     else:
-        if max_spikes_for_pca is None:
-            max_spikes_for_pca = np.inf
-
         nspikes = []
         if _waveforms is None:
             if verbose:
@@ -1057,9 +1053,14 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
 
         # compute len of all waveforms (computed for all units)
         n_waveforms = 0
+        n_waveforms_fit = 0
         for wf in waveforms:
             n_spikes = len(wf)
             n_waveforms += n_spikes
+            if max_spikes_for_pca is not None:
+                n_waveforms_fit += min(n_spikes, max_spikes_for_pca)
+            else:
+                n_waveforms_fit += n_spikes
         wf_shape = waveforms[0].shape
 
         memmap = params_dict['memmap']
@@ -1070,11 +1071,13 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
         dtype = recording.get_dtype()
         # prepare all waveforms
         if by_electrode:
-            all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
-                                                   shape=(n_waveforms * wf_shape[1], wf_shape[2]), memmap=memmap)
+            waveforms_pca_fit = sorting.allocate_array(name='waveforms_pca_fit.raw', dtype=dtype,
+                                                       shape=(n_waveforms_fit * wf_shape[1], wf_shape[2]),
+                                                       memmap=memmap)
         else:
-            all_waveforms = sorting.allocate_array(name='all_waveforms.raw', dtype=dtype,
-                                                   shape=(n_waveforms, wf_shape[1] * wf_shape[2]), memmap=memmap)
+            waveforms_pca_fit = sorting.allocate_array(name='waveforms_pca_fit.raw', dtype=dtype,
+                                                       shape=(n_waveforms_fit, wf_shape[1] * wf_shape[2]),
+                                                       memmap=memmap)
 
         # concatenate all waveforms
         if not isinstance(waveforms, list):
@@ -1084,22 +1087,27 @@ def compute_unit_pca_scores(recording, sorting, unit_ids=None, channel_ids=None,
 
         i_start = 0
         for i_w, wf in enumerate(waveforms):
+            if max_spikes_for_pca is not None:
+                idxs = np.random.choice(np.arange(wf.shape[0]), min(max_spikes_for_pca, wf.shape[0]), replace=False)
+            else:
+                idxs = np.arange(wf.shape[0])
+
+
             if by_electrode:
-                wf_reshaped = wf.reshape((wf.shape[0] * wf.shape[1], wf.shape[2]))
+                wf_reshaped = wf[idxs].reshape((len(idxs) * wf.shape[1], wf.shape[2]))
                 nspikes.append(len(wf) * recording.get_num_channels())
             else:
-                wf_reshaped = wf.reshape((wf.shape[0], wf.shape[1] * wf.shape[2]))
+                wf_reshaped = wf[idxs].reshape((len(idxs), wf.shape[1] * wf.shape[2]))
                 nspikes.append(len(wf))
-            all_waveforms[i_start:i_start + wf_reshaped.shape[0]] = wf_reshaped
+            waveforms_pca_fit[i_start:i_start + wf_reshaped.shape[0]] = wf_reshaped
             i_start += wf_reshaped.shape[0]
 
         pca = PCA(n_components=n_comp, whiten=whiten, random_state=seed)
-        if len(all_waveforms) < max_spikes_for_pca:
-            max_spikes_for_pca = n_waveforms
-        max_spikes_for_pca = int(max_spikes_for_pca)
+
         if verbose:
-            print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, max_spikes_for_pca))
-        pca.fit(all_waveforms[np.random.RandomState(seed=seed).permutation(len(all_waveforms))[:max_spikes_for_pca]])
+            print("Fitting PCA of %d dimensions on %d waveforms" % (n_comp, n_waveforms_fit))
+        pca.fit(
+            waveforms_pca_fit[np.random.RandomState(seed=seed).permutation(len(waveforms_pca_fit))[:n_waveforms_fit]])
 
         if verbose:
             print("Projecting waveforms on PC")
@@ -1237,7 +1245,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
             n_comp: int
                 Number of PCA components (default 3)
             max_spikes_for_pca: int
-                The maximum number of spikes to use to compute PCA
+                The maximum number of spikes per unit to use to fit the PCA.
             whiten: bool
                 If True, PCA is run with whiten equal True
             grouping_property: str
@@ -1297,7 +1305,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     filter_flag = True if not "filter_flag" in kwargs else kwargs['filter_flag']
     if not recording.is_filtered and filter_flag:
         print("Warning: recording is not filtered! It's recommended to filter the recording before exporting to phy.\n"
-              "You can run spiketoolkit.preprocessing.bandpass_filter(recording, cache_to_file=True)")
+              "You can run spiketoolkit.preprocessing.bandpass_filter(recording)")
 
     if len(sorting.get_unit_ids()) == 0:
         raise Exception("No non-empty units in the sorting result, can't save to phy.")
@@ -1324,7 +1332,7 @@ def export_to_phy(recording, sorting, output_folder, compute_pc_features=True,
     elif isinstance(recording, se.BinDatRecordingExtractor):
         rec_path = str(Path(recording._datfile).absolute())
         dtype = recording.get_dtype()
-    else: # don't save recording.dat
+    else:  # don't save recording.dat
         rec_path = 'None'
 
     dtype = np.dtype(dtype).name
@@ -1581,9 +1589,9 @@ def _get_pca_metric_data(recording, sorting, **kwargs):
 
 def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dtype, amp_method, amp_peak,
                              amp_frames_before, amp_frames_after, max_spikes_per_unit, max_spikes_for_amplitudes,
-                             max_spikes_for_pca, recompute_info, max_channels_per_waveforms, save_property_or_features,
-                             n_jobs, joblib_backend, verbose, seed, memmap, compute_pc_features=True,
-                             compute_amplitudes=True):
+                             max_spikes_for_pca, recompute_info, max_channels_per_waveforms,
+                             save_property_or_features, n_jobs, joblib_backend, verbose, seed, memmap,
+                             compute_pc_features=True, compute_amplitudes=True):
     if recompute_info:
         sorting.clear_units_spike_features(feature_name='waveforms')
         sorting.clear_units_spike_features(feature_name='amplitudes')
@@ -1644,7 +1652,8 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                                             ms_before=ms_before,
                                                             ms_after=ms_after, dtype=dtype,
                                                             save_property_or_features=save_property_or_features,
-                                                            max_spikes_for_pca=max_spikes_for_pca, verbose=verbose,
+                                                            max_spikes_for_pca=max_spikes_for_pca,
+                                                            verbose=verbose,
                                                             seed=seed,
                                                             memmap=memmap, return_idxs=True,
                                                             max_channels_per_waveforms=max_channels_per_waveforms,
@@ -1858,8 +1867,9 @@ def _get_phy_data(recording, sorting, compute_pc_features, compute_amplitudes,
                                    amp_frames_before=amp_frames_before,
                                    amp_frames_after=amp_frames_after, max_spikes_per_unit=max_spikes_per_unit_wf,
                                    max_spikes_for_amplitudes=max_spikes_per_unit_amp,
-                                   max_spikes_for_pca=max_spikes_for_pca, n_jobs=n_jobs, joblib_backend=joblib_backend,
-                                   recompute_info=recompute_info, max_channels_per_waveforms=max_channels_per_template,
+                                   max_spikes_for_pca=max_spikes_for_pca,
+                                   n_jobs=n_jobs, joblib_backend=joblib_backend, recompute_info=recompute_info,
+                                   max_channels_per_waveforms=max_channels_per_template,
                                    save_property_or_features=save_property_or_features, verbose=verbose, memmap=memmap,
                                    seed=seed, compute_pc_features=compute_pc_features,
                                    compute_amplitudes=compute_amplitudes)
@@ -1960,7 +1970,7 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
     n_spikes = cumulative_n_spikes[i]
 
     if verbose:
-        print(f"Chunk {i+1}: extracting waveforms")
+        print(f"Chunk {i + 1}: extracting waveforms")
     if isinstance(rec_arg, dict):
         recording = se.load_extractor_from_dict(rec_arg)
     else:
@@ -1983,7 +1993,7 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
     )
     t_stop = time.perf_counter()
     if verbose:
-        print(f"Chunk {i+1}: waveforms extracted in {t_stop - t_start}s")
+        print(f"Chunk {i + 1}: waveforms extracted in {t_stop - t_start}s")
 
     if memmap:
         for i_unit, unit in enumerate(unit_ids):
