@@ -213,7 +213,7 @@ class MetricData:
         recompute_info: bool
             If True, will always re-extract waveforms.
         max_spikes_for_pca: int
-            The maximum number of spikes to use to compute PCA.
+            The maximum number of spikes per unit to use to compute PCA.
         save_property_or_features: bool
             If true, it will save amplitudes in the sorting extractor.
         seed: int
