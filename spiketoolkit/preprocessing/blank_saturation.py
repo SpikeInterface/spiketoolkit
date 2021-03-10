@@ -33,13 +33,13 @@ class BlankSaturationRecording(BasePreprocessorRecordingExtractor):
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'threshold': threshold, 'seed': seed}
 
-    def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0, return_scaled=True):
+    def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
         N = self._recording.get_num_frames()
         random_ints = np.random.RandomState(seed=seed).randint(0, N - chunk_size, size=num_chunks)
         chunk_list = []
         for ff in random_ints:
             chunk = self._recording.get_traces(start_frame=ff,
-                                               end_frame=ff + chunk_size, return_scaled=return_scaled)
+                                               end_frame=ff + chunk_size)
             chunk_list.append(chunk)
         return np.concatenate(chunk_list, axis=1)
 
