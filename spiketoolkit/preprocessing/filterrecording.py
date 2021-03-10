@@ -46,7 +46,7 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
             filtered_chunk = np.zeros((len(channel_ids), int(end_frame-start_frame)), dtype=dt)
             pos = 0
             for ich in range(ich1, ich2 + 1):
-                filtered_chunk0 = self._get_filtered_chunk(ich, channel_ids)
+                filtered_chunk0 = self._get_filtered_chunk(ich, channel_ids, return_scaled)
                 if ich == ich1:
                     start0 = start_frame - ich * self._chunk_size
                 else:
@@ -81,7 +81,7 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
 
         return chunk
 
-    def _get_filtered_chunk(self, ind, channel_ids):
+    def _get_filtered_chunk(self, ind, channel_ids, return_scaled):
         if self._cache_chunks:
             code = str(ind)
             chunk0 = self._filtered_cache_chunks.get(code)
@@ -106,7 +106,8 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
             chunk1 = chunk1[channel_idxs]
         else:
             # otherwise, only filter requested channels
-            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids)
+            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids,
+                                       return_scaled=return_scaled)
 
         return chunk1
             
