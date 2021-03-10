@@ -23,7 +23,7 @@ class MaskRecording(BasePreprocessorRecordingExtractor):
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame,
-                                            return_scaled=True)
+                                            return_scaled=return_scaled)
 
         traces = traces.copy()  # takes care of memmap objects
         traces[:, ~self._mask[start_frame:end_frame]] = 0.0

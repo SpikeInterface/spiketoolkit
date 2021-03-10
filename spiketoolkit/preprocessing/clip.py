@@ -14,10 +14,13 @@ class ClipRecording(BasePreprocessorRecordingExtractor):
         self._a_min = a_min
         self._a_max = a_max
         BasePreprocessorRecordingExtractor.__init__(self, recording)
+        self.has_unscaled = False
         self._kwargs = {'recording': recording.make_serialized_dict(), 'a_min': a_min, 'a_max': a_max}
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        assert return_scaled, "'clip' only supports return_scaled=True"
+
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame,

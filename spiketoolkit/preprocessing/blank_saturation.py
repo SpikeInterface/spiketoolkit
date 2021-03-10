@@ -29,6 +29,8 @@ class BlankSaturationRecording(BasePreprocessorRecordingExtractor):
                 self._lower = False
             else:
                 self._lower = True
+        self.has_unscaled = False
+
         self._kwargs = {'recording': recording.make_serialized_dict(), 'threshold': threshold, 'seed': seed}
 
     def _get_random_data_for_scaling(self, num_chunks=50, chunk_size=500, seed=0):
@@ -43,6 +45,8 @@ class BlankSaturationRecording(BasePreprocessorRecordingExtractor):
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        assert return_scaled, "'blank_saturation' only supports return_scaled=True"
+
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame,

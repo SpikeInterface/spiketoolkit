@@ -8,6 +8,7 @@ class WhitenRecording(FilterRecording):
     def __init__(self, recording, chunk_size=30000, cache_chunks=False, seed=0):
         FilterRecording.__init__(self, recording=recording, chunk_size=chunk_size, cache_chunks=cache_chunks)
         self._whitening_matrix = self._compute_whitening_matrix(seed=seed)
+        self.has_unscaled = False
         self._kwargs = {'recording': recording.make_serialized_dict(), 'chunk_size': chunk_size,
                         'cache_chunks': cache_chunks, 'seed': seed}
 
@@ -35,9 +36,11 @@ class WhitenRecording(FilterRecording):
         
         return W
 
-    def filter_chunk(self, *, start_frame, end_frame, channel_ids):
+    def filter_chunk(self, start_frame, end_frame, channel_ids, return_scaled):
+        assert return_scaled, "'whiten' only supports return_scaled=True"
+
         chan_idxs = np.array([self.get_channel_ids().index(chan) for chan in channel_ids])
-        chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame)
+        chunk = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled)
         chunk = chunk - np.mean(chunk, axis=1, keepdims=True)
         chunk2 = self._whitening_matrix @ chunk
         return chunk2[chan_idxs]

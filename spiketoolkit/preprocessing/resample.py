@@ -30,7 +30,7 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
         return int(self._recording.get_num_frames() / self._recording.get_sampling_frequency() * self._resample_rate)
 
     # avoid filtering one sample
-    def get_dtype(self):
+    def get_dtype(self, return_scaled=True):
         return self._dtype
 
     @check_get_traces_args

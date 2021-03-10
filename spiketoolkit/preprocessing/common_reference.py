@@ -42,7 +42,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
             if self._groups is None:
                 if self.verbose:
                     print('Common median reference using all channels')
-                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled)
+                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame,
+                                                    return_scaled=return_scaled)
                 traces = traces - np.median(traces, axis=0, keepdims=True)
                 return traces[channel_idxs].astype(self._dtype)
             else:
@@ -68,7 +69,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
             if self.verbose:
                 print('Common average reference using all channels')
             if self._groups is None:
-                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled)
+                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame,
+                                                    return_scaled=return_scaled)
                 traces = traces - np.mean(traces, axis=0, keepdims=True)
                 return traces[channel_idxs].astype(self._dtype)
             else:
