@@ -16,6 +16,7 @@ class NormalizeByQuantileRecording(BasePreprocessorRecordingExtractor):
 
         self._scalar = scale / pre_scale
         self._offset = median - pre_median * self._scalar
+        self.has_unscaled = False
         self._kwargs = {'recording': recording.make_serialized_dict(), 'scale': scale, 'median': median,
                         'q1': q1, 'q2': q2, 'seed': seed}
 
@@ -31,10 +32,12 @@ class NormalizeByQuantileRecording(BasePreprocessorRecordingExtractor):
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        assert return_scaled, "'normalize_by_quantile' only supports return_scaled=True"
+
         traces = self._recording.get_traces(channel_ids=channel_ids,
                                             start_frame=start_frame,
                                             end_frame=end_frame,
-                                            return_scaled=True)
+                                            return_scaled=return_scaled)
         return traces * self._scalar + self._offset
 
 

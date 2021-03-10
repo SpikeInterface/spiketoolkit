@@ -42,11 +42,11 @@ class HighpassFilterRecording(FilterRecording):
                         'freq_wid': freq_wid, 'filter_type': filter_type, 'order': order,
                         'chunk_size': chunk_size, 'cache_chunks': cache_chunks}
 
-    def filter_chunk(self, *, start_frame, end_frame, channel_ids):
+    def filter_chunk(self, *, start_frame, end_frame, channel_ids, return_scaled):
         padding = 3000
         i1 = start_frame - self._padding
         i2 = end_frame + self._padding
-        padded_chunk = self._read_chunk(i1, i2, channel_ids)
+        padded_chunk = self._read_chunk(i1, i2, channel_ids, return_scaled)
         filtered_padded_chunk = self._do_filter(padded_chunk)
         return filtered_padded_chunk[:, start_frame - i1:end_frame - i1]
 

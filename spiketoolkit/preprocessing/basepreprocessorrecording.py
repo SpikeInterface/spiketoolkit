@@ -14,6 +14,9 @@ class BasePreprocessorRecordingExtractor(RecordingExtractor):
         self.copy_epochs(recording)
         self.copy_times(recording)
 
+        # avoid rescaling twice
+        self.set_channel_gains(1)
+        self.set_channel_offsets(0)
 
         self.is_filtered = recording.is_filtered
         if hasattr(recording, "has_unscaled"):
