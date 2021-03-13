@@ -580,7 +580,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                 else:
                     raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
                 if grouping_property is not None:
-                    assert 'group' in sorting.get_unit_property_names(unit_id)
+                    assert 'group' in sorting.get_unit_property_names(unit_id), f"Unit {unit_id} does not have the " \
+                                                                                f"'group' property "
                     unit_group = sorting.get_unit_property(unit_id, "group")
                     subrecs = se.get_sub_extractors_by_property(recording, "group")
                     subrec_groups = [np.unique(subrec.get_channel_groups()) for subrec in subrecs]
@@ -605,7 +606,8 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                 else:
                     raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
                 if grouping_property is not None:
-                    assert 'group' in sorting.get_unit_property_names(unit_id)
+                    assert 'group' in sorting.get_unit_property_names(unit_id), f"Unit {unit_id} does not have the " \
+                                                                                f"'group' property "
                     unit_group = sorting.get_unit_property(unit_id, "group")
                     subrecs = se.get_sub_extractors_by_property(recording, "group")
                     subrec_groups = [np.unique(subrec.get_channel_groups()) for subrec in subrecs]
@@ -840,6 +842,7 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
                                                          detect_threshold=detect_threshold, detect_sign=detect_sign,
                                                          n_jobs=n_jobs, joblib_backend=joblib_backend,
                                                          start_frame=start_frame, end_frame=end_frame,
+                                                         chunk_size=chunk_size, chunk_mb=chunk_mb,
                                                          verbose=verbose)
 
         for i, unit in enumerate(sort_detect.get_unit_ids()):
