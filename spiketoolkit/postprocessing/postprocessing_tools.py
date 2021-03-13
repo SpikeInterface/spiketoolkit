@@ -484,7 +484,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                           max_channels=1, peak='both', mode='median', **kwargs):
     '''
     Computes the spike maximum channels from a recording and sorting extractor. If templates are not found as property,
-    they are computed.
+    they are computed. If templates are computed by group, the max channels refer to the overall channel ids.
 
     Parameters
     ----------
@@ -551,6 +551,7 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
 
     params_dict = update_all_param_dicts_with_kwargs(kwargs)
     recompute_info = params_dict['recompute_info']
+    grouping_property = params_dict['grouping_property']
     save_property_or_features = params_dict['save_property_or_features']
 
     max_list = []
@@ -578,7 +579,16 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                                                         template.shape)[0]
                 else:
                     raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
-                max_channel = channel_ids[max_channel_idxs]
+                if grouping_property is not None:
+                    assert 'group' in sorting.get_unit_property_names(unit_id), f"Unit {unit_id} does not have the " \
+                                                                                f"'group' property "
+                    unit_group = sorting.get_unit_property(unit_id, "group")
+                    subrecs = se.get_sub_extractors_by_property(recording, "group")
+                    subrec_groups = [np.unique(subrec.get_channel_groups()) for subrec in subrecs]
+                    subrec_with_unit = subrecs[subrec_groups.index(unit_group)]
+                    max_channel = subrec_with_unit.get_channel_ids()[max_channel_idxs]
+                else:
+                    max_channel = channel_ids[max_channel_idxs]
             else:
                 # find peak time
                 if peak == 'both':
@@ -595,7 +605,16 @@ def get_unit_max_channels(recording, sorting, unit_ids=None, channel_ids=None,
                     max_channel_idxs = np.argsort(template[:, peak_idx])[::-1][:max_channels]
                 else:
                     raise ValueError("'peak' can be 'both' (default), 'pos', or 'neg'")
-                max_channel = list(np.array(channel_ids)[max_channel_idxs])
+                if grouping_property is not None:
+                    assert 'group' in sorting.get_unit_property_names(unit_id), f"Unit {unit_id} does not have the " \
+                                                                                f"'group' property "
+                    unit_group = sorting.get_unit_property(unit_id, "group")
+                    subrecs = se.get_sub_extractors_by_property(recording, "group")
+                    subrec_groups = [np.unique(subrec.get_channel_groups()) for subrec in subrecs]
+                    subrec_with_unit = subrecs[subrec_groups.index(unit_group)]
+                    max_channel = list(np.array(subrec_with_unit.get_channel_ids())[max_channel_idxs])
+                else:
+                    max_channel = list(np.array(channel_ids)[max_channel_idxs])
 
             if save_property_or_features:
                 sorting.set_unit_property(unit_id, 'max_channel', max_channel)
@@ -823,6 +842,7 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
                                                          detect_threshold=detect_threshold, detect_sign=detect_sign,
                                                          n_jobs=n_jobs, joblib_backend=joblib_backend,
                                                          start_frame=start_frame, end_frame=end_frame,
+                                                         chunk_size=chunk_size, chunk_mb=chunk_mb,
                                                          verbose=verbose)
 
         for i, unit in enumerate(sort_detect.get_unit_ids()):
@@ -1606,13 +1626,16 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
             spike_times = sorting.get_units_spike_train(unit_ids)
             waveforms = [sorting.get_unit_spike_features(u, 'waveforms') for u in unit_ids]
 
+            recompute_info = False
             if np.any([len(wf) < len(times) for (wf, times) in zip(waveforms, spike_times)]):
+                print("Recomputing waveforms on all spikes")
                 recompute_info = True
-            else:
-                recompute_info = False
+            if waveforms[0].shape[1] < recording.get_num_channels():
+                print("Recomputing waveforms on all channels")
+                recompute_info = True
 
         if recompute_info:
-            print("Recomputing waveforms")
+            sorting.clear_units_property("template")
 
         waveforms, spike_index_list, channel_index_list = get_unit_waveforms(recording, sorting,
                                                                              max_spikes_per_unit=max_spikes_per_unit,
