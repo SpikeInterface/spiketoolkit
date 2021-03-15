@@ -3,15 +3,20 @@ import numpy as np
 from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
 
+from ..utils import get_closest_channels
+
 
 class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
 
-    def __init__(self, recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
+    def __init__(self, recording, reference='median', groups=None, ref_channels=None,
+                                  num_local_channels= 4, local_radius=4,
+                                  dtype=None, verbose=False):
+
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
-        if reference != 'median' and reference != 'average' and reference != 'single':
-            raise ValueError("'reference' must be either 'median' or 'average'")
+        if reference not in ['median', 'average', 'single', 'local']:
+            raise ValueError("'reference' must be either 'median', 'average', 'single' or 'local'")
         self._ref = reference
         self._groups = groups
         if self._ref == 'single':
@@ -33,7 +38,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
         self.verbose = verbose
         BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'reference': reference, 'groups': groups,
-                        'ref_channels': ref_channels, 'dtype': dtype, 'verbose': verbose}
+                        'ref_channels': ref_channels,  'num_local_channels':num_local_channels, 'local_radius': local_radius,
+                        'dtype': dtype, 'verbose': verbose}
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
@@ -119,9 +125,25 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                                                                           return_scaled=return_scaled)
                                              for (split_group, ref) in zip(new_groups, self._ref_channel)]))
                 return traces[channel_idxs].astype(self._dtype)
+        elif self._ref == 'local':
+            if self.verbose:
+                print('Local Common average reference using ', self._kwargs["num_local_channels"], 'for averaging '
+                      'selected outside of a', self._kwargs["local_radius"], 'radius around each electrode.')
+            neighrest_id, distances = get_closest_channels(self._recording, channel_ids, self._kwargs["local_radius"]*2 + self._kwargs["num_local_channels"])
+
+            traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
+                                                              end_frame=end_frame, return_scaled=return_scaled) \
+                    - np.vstack(np.array([np.average(self._recording.get_traces(
+                                                                channel_ids=neighrest_id[id, distances[id] > self._kwargs["local_radius"]]
+                                                                [:min(self._kwargs["num_local_channels"],
+                                                                      len(neighrest_id[id, distances[id] > self._kwargs["local_radius"]]))],
+                                                                start_frame=start_frame, end_frame=end_frame,
+                                                                return_scaled=return_scaled), axis=0) for id in range(len(channel_ids))]))
+            return np.array(traces).astype(self._dtype)
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, dtype=None, verbose=False):
+
+def common_reference(recording, reference='median', groups=None, ref_channels=None, num_local_channels= 4, local_radius=4, dtype=None, verbose=False):
     '''
     Re-references the recording extractor traces.
 
@@ -130,12 +152,13 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
     recording: RecordingExtractor
         The recording extractor to be re-referenced
     reference: str
-        'median', 'average', or 'single'.
+        'median', 'average', 'single' or 'local'
         If 'median', common median reference (CMR) is implemented (the median of
         the selected channels is removed for each timestamp).
         If 'average', common average reference (CAR) is implemented (the mean of the selected channels is removed
         for each timestamp).
         If 'single', the selected channel(s) is remove from all channels.
+        If 'local', an average CAR is implemented with only k channels selected the nearest outside of a radius around each channel
     groups: list
         List of lists containins the channels for splitting the reference. The CMR, CAR, or referencing with respect to
         single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple
@@ -144,6 +167,10 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         If no 'groups' are specified, all channels are referenced to 'ref_channels'. If 'groups' is provided, then a
         list of channels to be applied to each group is expected. If 'single' reference, a list of one channel  or an
         int is expected.
+    num_local_channels: int
+        Use in the local implementation, as the number of channel used to do the local average
+    local_radius: int
+        Use in the local implementation as the no-selecting radius zone around the channel.
     dtype: str
         dtype of the returned traces. If None, dtype is maintained
     verbose: bool
@@ -155,5 +182,6 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         The re-referenced recording extractor object
     '''
     return CommonReferenceRecording(
-        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels, dtype=dtype, verbose=verbose
+        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels,  num_local_channels= num_local_channels,
+        local_radius=local_radius, dtype=dtype, verbose=verbose
     )

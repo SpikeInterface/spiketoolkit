@@ -94,6 +94,7 @@ def test_common_reference():
     rec_cmr = common_reference(rec, reference='median')
     rec_car = common_reference(rec, reference='average')
     rec_sin = common_reference(rec, reference='single', ref_channels=0)
+    rec_local_car = common_reference(rec, reference='local', local_radius=1, num_local_channels=2)
     rec_cmr_int16 = common_reference(rec, dtype='int16')
 
     traces = rec.get_traces()
@@ -101,6 +102,12 @@ def test_common_reference():
     assert np.allclose(traces, rec_car.get_traces() + np.mean(traces, axis=0, keepdims=True), atol=0.01)
     assert not np.all(rec_sin.get_traces()[0])
     assert np.allclose(rec_sin.get_traces()[1], traces[1] - traces[0])
+
+    assert np.allclose(traces[2], rec_local_car.get_traces()[2] + np.mean(traces[[0]], axis=0, keepdims=True), atol=0.01)
+    assert np.allclose(traces[0], rec_local_car.get_traces()[0] + np.mean(traces[[2,3]], axis=0, keepdims=True), atol=0.01)
+    assert np.allclose(traces[1], rec_local_car.get_traces()[1] + np.mean(traces[[3]], axis=0, keepdims=True), atol=0.01)
+    assert np.allclose(traces[3], rec_local_car.get_traces()[3] + np.mean(traces[[0,1]], axis=0, keepdims=True), atol=0.01)
+
     assert 'int16' in str(rec_cmr_int16.get_dtype())
 
     # test groups
@@ -115,6 +122,7 @@ def test_common_reference():
     assert np.allclose(traces[2:], rec_cmr_g.get_traces()[2:] + np.median(traces[2:], axis=0, keepdims=True), atol=0.01)
     assert np.allclose(traces[:2], rec_car_g.get_traces()[:2] + np.mean(traces[:2], axis=0, keepdims=True), atol=0.01)
     assert np.allclose(traces[2:], rec_car_g.get_traces()[2:] + np.mean(traces[2:], axis=0, keepdims=True), atol=0.01)
+
     assert not np.all(rec_sin_g.get_traces()[0])
     assert np.allclose(rec_sin_g.get_traces()[1], traces[1] - traces[0])
     assert not np.all(rec_sin_g.get_traces()[2])
@@ -125,6 +133,14 @@ def test_common_reference():
     check_dumping(rec_car)
     check_dumping(rec_sin)
     check_dumping(rec_cmr_int16)
+    check_dumping(rec_local_car)
+
+    # Add test on a higher probes
+    rec2, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=8, seed=0)
+    rec_local_car2 = common_reference(rec2, reference='local', local_radius=2, num_local_channels=2)
+    traces = rec2.get_traces()
+    assert np.allclose(traces[3], rec_local_car2.get_traces()[3] + np.mean(traces[[0, 6]], axis=0, keepdims=True), atol=0.01)
+
     shutil.rmtree('test')
 
 @pytest.mark.implemented
