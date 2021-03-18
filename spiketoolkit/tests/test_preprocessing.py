@@ -94,7 +94,7 @@ def test_common_reference():
     rec_cmr = common_reference(rec, reference='median')
     rec_car = common_reference(rec, reference='average')
     rec_sin = common_reference(rec, reference='single', ref_channels=0)
-    rec_local_car = common_reference(rec, reference='local', local_radius=1, num_local_channels=2)
+    rec_local_car = common_reference(rec, reference='local', local_radius=(1,3))
     rec_cmr_int16 = common_reference(rec, dtype='int16')
 
     traces = rec.get_traces()
@@ -103,10 +103,8 @@ def test_common_reference():
     assert not np.all(rec_sin.get_traces()[0])
     assert np.allclose(rec_sin.get_traces()[1], traces[1] - traces[0])
 
-    assert np.allclose(traces[2], rec_local_car.get_traces()[2] + np.mean(traces[[0]], axis=0, keepdims=True), atol=0.01)
     assert np.allclose(traces[0], rec_local_car.get_traces()[0] + np.mean(traces[[2,3]], axis=0, keepdims=True), atol=0.01)
     assert np.allclose(traces[1], rec_local_car.get_traces()[1] + np.mean(traces[[3]], axis=0, keepdims=True), atol=0.01)
-    assert np.allclose(traces[3], rec_local_car.get_traces()[3] + np.mean(traces[[0,1]], axis=0, keepdims=True), atol=0.01)
 
     assert 'int16' in str(rec_cmr_int16.get_dtype())
 
@@ -137,9 +135,9 @@ def test_common_reference():
 
     # Add test on a higher probes
     rec2, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=8, seed=0)
-    rec_local_car2 = common_reference(rec2, reference='local', local_radius=2, num_local_channels=2)
+    rec_local_car2 = common_reference(rec2, reference='local', local_radius=(2,4))
     traces = rec2.get_traces()
-    assert np.allclose(traces[3], rec_local_car2.get_traces()[3] + np.mean(traces[[0, 6]], axis=0, keepdims=True), atol=0.01)
+    assert np.allclose(traces[3], rec_local_car2.get_traces()[3] + np.mean(traces[[0, 6,7]], axis=0, keepdims=True), atol=0.01)
 
     shutil.rmtree('test')
 

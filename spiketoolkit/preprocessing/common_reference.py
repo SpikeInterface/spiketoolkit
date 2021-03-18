@@ -10,7 +10,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None,
-                                  num_local_channels= 4, local_radius=4,
+                                  local_radius=(2,8),
                                   dtype=None, verbose=False):
 
         if not isinstance(recording, RecordingExtractor):
@@ -31,6 +31,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                     assert isinstance(ref_channels, (int, np.integer)), "'ref_channels' must be int"
                     ref_channels = [ref_channels]
         self._ref_channel = ref_channels
+        self._local_radius = local_radius
         if dtype is None:
             self._dtype = recording.get_dtype()
         else:
@@ -38,7 +39,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
         self.verbose = verbose
         BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'reference': reference, 'groups': groups,
-                        'ref_channels': ref_channels,  'num_local_channels':num_local_channels, 'local_radius': local_radius,
+                        'ref_channels': ref_channels, 'local_radius': local_radius,
                         'dtype': dtype, 'verbose': verbose}
 
     @check_get_traces_args
@@ -127,23 +128,21 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'local':
             if self.verbose:
-                print('Local Common average reference using ', self._kwargs["num_local_channels"], 'for averaging '
-                      'selected outside of a', self._kwargs["local_radius"], 'radius around each electrode.')
-            neighrest_id, distances = get_closest_channels(self._recording, channel_ids, self._kwargs["local_radius"]*2 + self._kwargs["num_local_channels"])
+                print('Local Common average using as channels in a ring-shape region with radius: '+ self._local_radius + 'around each electrods.')
+            neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
 
             traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                              end_frame=end_frame, return_scaled=return_scaled) \
+                                                end_frame=end_frame, return_scaled=return_scaled) \
                     - np.vstack(np.array([np.average(self._recording.get_traces(
-                                                                channel_ids=neighrest_id[id, distances[id] > self._kwargs["local_radius"]]
-                                                                [:min(self._kwargs["num_local_channels"],
-                                                                      len(neighrest_id[id, distances[id] > self._kwargs["local_radius"]]))],
+                                                                channel_ids=neighrest_id[id, np.logical_and( self._local_radius[0] < distances[id],
+                                                                                                          distances[id] <= self._local_radius[1])],
                                                                 start_frame=start_frame, end_frame=end_frame,
                                                                 return_scaled=return_scaled), axis=0) for id in range(len(channel_ids))]))
             return np.array(traces).astype(self._dtype)
 
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, num_local_channels= 4, local_radius=4, dtype=None, verbose=False):
+def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius= (2,8), dtype=None, verbose=False):
     '''
     Re-references the recording extractor traces.
 
@@ -167,10 +166,8 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         If no 'groups' are specified, all channels are referenced to 'ref_channels'. If 'groups' is provided, then a
         list of channels to be applied to each group is expected. If 'single' reference, a list of one channel  or an
         int is expected.
-    num_local_channels: int
-        Use in the local implementation, as the number of channel used to do the local average
-    local_radius: int
-        Use in the local implementation as the no-selecting radius zone around the channel.
+    local_radius: tuple(int, int)
+        Use in the local CAR implementation as the selecting annulus (exclude radius, include radius)
     dtype: str
         dtype of the returned traces. If None, dtype is maintained
     verbose: bool
@@ -182,6 +179,5 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         The re-referenced recording extractor object
     '''
     return CommonReferenceRecording(
-        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels,  num_local_channels= num_local_channels,
-        local_radius=local_radius, dtype=dtype, verbose=verbose
+        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels,  local_radius=local_radius, dtype=dtype, verbose=verbose
     )
