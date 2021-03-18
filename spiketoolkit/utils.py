@@ -1,6 +1,24 @@
 import numpy as np
 
 def get_closest_channels(recording, channel_ids, num_channels=None):
+    """Get closest channels + distances
+
+    Parameters
+    ----------
+    recording: RecordingExtractor
+        The recording extractor to be re-referenced
+    channel_ids: list or int
+        list of channels id to compute there near neighborhood
+    num_channels: int, optional
+        Maximum number of neighborhood channel to return
+
+    Returns
+    -------
+    : array (2d)
+        closest channel ids in ascending order for each channel id given in input
+    : array (2d)
+        distance in ascending order for each channel id given in input
+    """
     closest_channels_id = []
     dist = []
 

@@ -128,7 +128,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'local':
             if self.verbose:
-                print('Local Common average using as channels in a ring-shape region with radius: '+ self._local_radius + 'around each electrods.')
+                print('Local Common average using as reference channels in a ring-shape region with radius: '+ self._local_radius)
             neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
 
             traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
