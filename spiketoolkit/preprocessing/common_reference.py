@@ -30,6 +30,9 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 else:
                     assert isinstance(ref_channels, (int, np.integer)), "'ref_channels' must be int"
                     ref_channels = [ref_channels]
+        elif self._ref == 'local':
+            assert groups is None, "With 'local' CAR, the group option should not be used."
+
         self._ref_channel = ref_channels
         self._local_radius = local_radius
         if dtype is None:
@@ -44,102 +47,88 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+
         channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
+        traces = None
         if self._ref == 'median':
-            if self._groups is None:
-                if self.verbose:
-                    print('Common median reference using all channels')
-                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame,
-                                                    return_scaled=return_scaled)
-                traces = traces - np.median(traces, axis=0, keepdims=True)
-                return traces[channel_idxs].astype(self._dtype)
-            else:
-                new_groups = []
-                for g in self._groups:
-                    new_chans = []
-                    for chan in g:
-                        if chan in self._recording.get_channel_ids():
-                            new_chans.append(chan)
-                    new_groups.append(new_chans)
-                if self.verbose:
-                    print('Common median in groups: ', new_groups)
-                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame,
-                                                                        return_scaled=return_scaled)
-                                             - np.median(self._recording.get_traces(channel_ids=split_group,
-                                                                                    start_frame=start_frame,
-                                                                                    end_frame=end_frame,
-                                                                                    return_scaled=return_scaled),
-                                                         axis=0, keepdims=True) for split_group in new_groups]))
-                return traces[channel_idxs].astype(self._dtype)
-        elif self._ref == 'average':
+            new_groups = self._create_channel_groups()
+
             if self.verbose:
-                print('Common average reference using all channels')
-            if self._groups is None:
-                traces = self._recording.get_traces(start_frame=start_frame, end_frame=end_frame,
-                                                    return_scaled=return_scaled)
-                traces = traces - np.mean(traces, axis=0, keepdims=True)
-                return traces[channel_idxs].astype(self._dtype)
-            else:
-                new_groups = []
-                for g in self._groups:
-                    new_chans = []
-                    for chan in g:
-                        if chan in self._recording.get_channel_ids():
-                            new_chans.append(chan)
-                    new_groups.append(new_chans)
-                if self.verbose:
+                if self._groups is None:
+                    print('Common median reference using all channels')
+                else:
+                    print('Common median in groups: ', new_groups)
+
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                                                                    start_frame=start_frame, end_frame=end_frame,
+                                                                    return_scaled=return_scaled)
+                                          - np.median(self._recording.get_traces(channel_ids=split_group,
+                                                                                start_frame=start_frame,
+                                                                                end_frame=end_frame,
+                                                                                return_scaled=return_scaled),
+                                                         axis=0, keepdims=True) for split_group in new_groups]))
+        elif self._ref == 'average':
+            new_groups = self._create_channel_groups()
+            if self.verbose:
+                if self._groups is None:
+                    print('Common average reference using all channels')
+                else:
                     print('Common average in groups: ', new_groups)
-                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame,
-                                                                        return_scaled=return_scaled)
+
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                                                                    start_frame=start_frame,
+                                                                    end_frame=end_frame,
+                                                                    return_scaled=return_scaled)
                                              - np.mean(self._recording.get_traces(channel_ids=split_group,
                                                                                   start_frame=start_frame,
                                                                                   end_frame=end_frame,
                                                                                   return_scaled=return_scaled),
                                                        axis=0, keepdims=True) for split_group in new_groups]))
-                return traces[channel_idxs].astype(self._dtype)
         elif self._ref == 'single':
-            if self._groups is None:
-                if self.verbose:
+            new_groups = self._create_channel_groups()
+            if self.verbose:
+                if self._groups is None:
                     print('Reference to channel', self._ref_channel)
-                traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                    end_frame=end_frame, return_scaled=return_scaled) \
-                         - self._recording.get_traces(channel_ids=self._ref_channel, start_frame=start_frame,
-                                                      end_frame=end_frame, return_scaled=return_scaled)
-                return traces.astype(self._dtype)
-            else:
-                new_groups = []
-                for g in self._groups:
-                    new_chans = []
-                    for chan in g:
-                        if chan in self._recording.get_channel_ids():
-                            new_chans.append(chan)
-                    new_groups.append(new_chans)
-                if self.verbose:
+                else:
                     print('Reference', new_groups, 'to channels', self._ref_channel)
-                traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
-                                                                        start_frame=start_frame, end_frame=end_frame,
-                                                                        return_scaled=return_scaled)
+
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+                                                                    start_frame=start_frame, end_frame=end_frame,
+                                                                    return_scaled=return_scaled)
                                              - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
                                                                           end_frame=end_frame,
                                                                           return_scaled=return_scaled)
                                              for (split_group, ref) in zip(new_groups, self._ref_channel)]))
-                return traces[channel_idxs].astype(self._dtype)
+
         elif self._ref == 'local':
             if self.verbose:
-                print('Local Common average using as reference channels in a ring-shape region with radius: '+ self._local_radius)
-            neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
+               print('Local Common average using as reference channels in a ring-shape region with radius: '+ self._local_radius)
 
-            traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
-                                                end_frame=end_frame, return_scaled=return_scaled) \
-                    - np.vstack(np.array([np.average(self._recording.get_traces(
-                                                                channel_ids=neighrest_id[id, np.logical_and( self._local_radius[0] < distances[id],
-                                                                                                          distances[id] <= self._local_radius[1])],
-                                                                start_frame=start_frame, end_frame=end_frame,
-                                                                return_scaled=return_scaled), axis=0) for id in range(len(channel_ids))]))
-            return np.array(traces).astype(self._dtype)
+            neighrest_id, distances = get_closest_channels(self._recording, self._recording.get_channel_ids())
+            traces = self._recording.get_traces(start_frame=start_frame,
+                                                end_frame=end_frame,
+                                                return_scaled=return_scaled) \
+                         - np.vstack(np.array([np.average(
+                                               self._recording.get_traces(
+                                                   channel_ids=neighrest_id[id,np.logical_and(self._local_radius[0] < distances[id],
+                                                                                   distances[id] <= self._local_radius[1])],
+                                                   start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
+                                     for id in range(len(self._recording.get_channel_ids()))]))
 
+        return np.array(traces[channel_idxs]).astype(self._dtype)
+
+    def _create_channel_groups(self):
+        new_groups = []
+        if self._groups:
+            for g in self._groups:
+                new_chans = []
+                for chan in g:
+                    if chan in self._recording.get_channel_ids():
+                        new_chans.append(chan)
+                new_groups.append(new_chans)
+        else:
+            new_groups = [self._recording.get_channel_ids()]
+        return new_groups
 
 
 def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius= (2,8), dtype=None, verbose=False):
@@ -159,9 +148,9 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         If 'single', the selected channel(s) is remove from all channels.
         If 'local', an average CAR is implemented with only k channels selected the nearest outside of a radius around each channel
     groups: list
-        List of lists containins the channels for splitting the reference. The CMR, CAR, or referencing with respect to
-        single channels are applied group-wise. It is useful when dealing with different channel groups, e.g. multiple
-        tetrodes.
+        List of lists containing the channels for splitting the reference. The CMR, CAR, or referencing with respect to
+        single channels are applied group-wise. However, this is not applied for the local CAR.
+        It is useful when dealing with different channel groups, e.g. multiple tetrodes.
     ref_channels: list or int
         If no 'groups' are specified, all channels are referenced to 'ref_channels'. If 'groups' is provided, then a
         list of channels to be applied to each group is expected. If 'single' reference, a list of one channel  or an
