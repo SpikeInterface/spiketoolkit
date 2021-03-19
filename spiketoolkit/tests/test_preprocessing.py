@@ -19,12 +19,24 @@ def test_bandpass_filter():
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(), rec.get_traces(), freq_range=[10000, 15000],
                                                     fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 5000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[10000, 15000],
+                                                    fs=rec.get_sampling_frequency())
 
     rec_sci = bandpass_filter(rec, freq_min=3000, freq_max=6000, filter_type='butter', order=3)
 
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 3000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
 
     traces = rec.get_traces().astype('uint16')
