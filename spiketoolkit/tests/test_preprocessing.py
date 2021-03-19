@@ -19,6 +19,13 @@ def test_bandpass_filter():
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(), rec.get_traces(), freq_range=[10000, 15000],
                                                     fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 5000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[10000, 15000],
+                                                    fs=rec.get_sampling_frequency())
+    check_dumping(rec_fft)
 
     rec_sci = bandpass_filter(rec, freq_min=3000, freq_max=6000, filter_type='butter', order=3)
 
@@ -26,6 +33,13 @@ def test_bandpass_filter():
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
                                                     fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 3000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[6000, 10000],
+                                                    fs=rec.get_sampling_frequency())
+    check_dumping(rec_sci)
 
     traces = rec.get_traces().astype('uint16')
     rec_u = se.NumpyRecordingExtractor(traces, sampling_frequency=rec.get_sampling_frequency())
@@ -35,9 +49,27 @@ def test_bandpass_filter():
                                                     fs=rec.get_sampling_frequency())
     assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(), rec_u.get_traces(), freq_range=[10000, 15000],
                                                     fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(end_frame=30000),
+                                                    rec_u.get_traces(end_frame=30000), freq_range=[1000, 5000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(end_frame=30000),
+                                                    rec_u.get_traces(end_frame=30000), freq_range=[10000, 15000],
+                                                    fs=rec.get_sampling_frequency())
     assert not str(rec_fu.get_dtype()).startswith('u')
 
-    check_dumping(rec_fft)
+    # no chunking
+    rec_no_chunk = bandpass_filter(rec, freq_min=3000, freq_max=6000, chunk_size=None)
+    assert check_signal_power_signal1_below_signal2(rec_no_chunk.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_no_chunk.get_traces(), rec.get_traces(), freq_range=[6000, 10000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_no_chunk.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 3000],
+                                                    fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_no_chunk.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[6000, 10000],
+                                                    fs=rec.get_sampling_frequency())
+    check_dumping(rec_no_chunk)
     shutil.rmtree('test')
 
 
@@ -153,21 +185,9 @@ def test_highpass_filter():
 
     assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(), rec.get_traces(), freq_range=[1000, 5000],
                                                     fs=rec.get_sampling_frequency())
-
-    rec_sci = bandpass_filter(rec, freq_min=3000, freq_max=6000, filter_type='butter', order=3)
-
-    assert check_signal_power_signal1_below_signal2(rec_sci.get_traces(), rec.get_traces(), freq_range=[1000, 3000],
+    assert check_signal_power_signal1_below_signal2(rec_fft.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[1000, 5000],
                                                     fs=rec.get_sampling_frequency())
-
-    traces = rec.get_traces().astype('uint16')
-    rec_u = se.NumpyRecordingExtractor(traces, sampling_frequency=rec.get_sampling_frequency())
-    rec_fu = bandpass_filter(rec_u, freq_min=5000, freq_max=10000, filter_type='fft')
-
-    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(), rec_u.get_traces(), freq_range=[1000, 5000],
-                                                    fs=rec.get_sampling_frequency())
-    assert check_signal_power_signal1_below_signal2(rec_fu.get_traces(), rec_u.get_traces(), freq_range=[10000, 15000],
-                                                    fs=rec.get_sampling_frequency())
-    assert not str(rec_fu.get_dtype()).startswith('u')
 
     check_dumping(rec_fft)
     shutil.rmtree('test')
@@ -185,6 +205,9 @@ def test_notch_filter():
 
     assert check_signal_power_signal1_below_signal2(rec_n.get_traces(), rec.get_traces(), freq_range=[2900, 3100],
                                                     fs=rec.get_sampling_frequency())
+    assert check_signal_power_signal1_below_signal2(rec_n.get_traces(end_frame=30000),
+                                                    rec.get_traces(end_frame=30000), freq_range=[2900, 3100],
+                                                    fs=rec.get_sampling_frequency())
 
     check_dumping(rec_n)
     shutil.rmtree('test')
@@ -201,13 +224,15 @@ def test_rectify():
     check_dumping(rec_rect)
     shutil.rmtree('test')
 
-
 @pytest.mark.implemented
 def test_remove_artifacts():
     rec, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=4, seed=0)
     triggers = [15000, 30000]
     ms = 10
     ms_frames = int(ms * rec.get_sampling_frequency() / 1000)
+
+    traces_all_0_clean = rec.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
+    traces_all_1_clean = rec.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
 
     rec_rmart = remove_artifacts(rec, triggers, ms_before=10, ms_after=10)
     traces_all_0 = rec_rmart.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
@@ -219,6 +244,19 @@ def test_remove_artifacts():
     assert not np.any(traces_all_1)
     assert not np.any(traces_short_0)
     assert not np.any(traces_short_1)
+
+    rec_rmart_lin = remove_artifacts(rec, triggers, ms_before=10, ms_after=10, mode="linear")
+    traces_all_0 = rec_rmart_lin.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
+    traces_all_1 = rec_rmart_lin.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
+    assert not np.allclose(traces_all_0, traces_all_0_clean)
+    assert not np.allclose(traces_all_1, traces_all_1_clean)
+
+    rec_rmart_cub = remove_artifacts(rec, triggers, ms_before=10, ms_after=10, mode="cubic")
+    traces_all_0 = rec_rmart_cub.get_traces(start_frame=triggers[0] - ms_frames, end_frame=triggers[0] + ms_frames)
+    traces_all_1 = rec_rmart_cub.get_traces(start_frame=triggers[1] - ms_frames, end_frame=triggers[1] + ms_frames)
+
+    assert not np.allclose(traces_all_0, traces_all_0_clean)
+    assert not np.allclose(traces_all_1, traces_all_1_clean)
 
     check_dumping(rec_rmart)
     shutil.rmtree('test')
