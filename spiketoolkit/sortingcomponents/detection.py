@@ -220,7 +220,7 @@ def _detect_and_align_peaks_chunk(ii, rec_arg, chunks, channel_ids, thresholds, 
 
     for ch in range(len(channel_ids)):
         peak_times = peak_sample_ind[np.where(peak_chan_ind == ch)]
-        sp_times.append(peak_sample_ind[np.where(peak_chan_ind == ch)])
+        sp_times.append(peak_sample_ind[np.where(peak_chan_ind == ch)] + chunk['istart'])
         sp_amplitudes.append(traces[ch, peak_times])
 
     return sp_times, sp_amplitudes
