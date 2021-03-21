@@ -48,87 +48,87 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
 
-        channel_idxs = np.array([self.get_channel_ids().index(ch) for ch in channel_ids])
+        selected_groups, selected_channels = self._create_channel_groups(channel_ids)
         traces = None
-        if self._ref == 'median':
-            new_groups = self._create_channel_groups()
 
+        if self._ref == 'median':
             if self.verbose:
                 if self._groups is None:
                     print('Common median reference using all channels')
                 else:
-                    print('Common median in groups: ', new_groups)
+                    print('Common median in groups: ', selected_groups)
 
-            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_channel,
                                                                     start_frame=start_frame, end_frame=end_frame,
                                                                     return_scaled=return_scaled)
-                                          - np.median(self._recording.get_traces(channel_ids=split_group,
+                                         - np.median(self._recording.get_traces(channel_ids=split_group,
                                                                                 start_frame=start_frame,
                                                                                 end_frame=end_frame,
                                                                                 return_scaled=return_scaled),
-                                                         axis=0, keepdims=True) for split_group in new_groups]))
+                                                         axis=0, keepdims=True) for (split_channel, split_group) in zip(selected_channels, selected_groups)]))
         elif self._ref == 'average':
-            new_groups = self._create_channel_groups()
             if self.verbose:
                 if self._groups is None:
                     print('Common average reference using all channels')
                 else:
-                    print('Common average in groups: ', new_groups)
+                    print('Common average in groups: ', selected_groups)
 
-            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_channel,
                                                                     start_frame=start_frame,
                                                                     end_frame=end_frame,
                                                                     return_scaled=return_scaled)
-                                             - np.mean(self._recording.get_traces(channel_ids=split_group,
-                                                                                  start_frame=start_frame,
-                                                                                  end_frame=end_frame,
-                                                                                  return_scaled=return_scaled),
-                                                       axis=0, keepdims=True) for split_group in new_groups]))
+                                         - np.mean(self._recording.get_traces(channel_ids=split_group,
+                                                                              start_frame=start_frame,
+                                                                              end_frame=end_frame,
+                                                                              return_scaled=return_scaled),
+                                                       axis=0, keepdims=True) for (split_channel, split_group) in zip(selected_channels, selected_groups)]))
         elif self._ref == 'single':
-            new_groups = self._create_channel_groups()
             if self.verbose:
                 if self._groups is None:
                     print('Reference to channel', self._ref_channel)
                 else:
-                    print('Reference', new_groups, 'to channels', self._ref_channel)
+                    print('Reference', selected_groups, 'to channels', self._ref_channel)
 
-            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_group,
+            traces = np.vstack(np.array([self._recording.get_traces(channel_ids=split_channel,
                                                                     start_frame=start_frame, end_frame=end_frame,
                                                                     return_scaled=return_scaled)
-                                             - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
-                                                                          end_frame=end_frame,
-                                                                          return_scaled=return_scaled)
-                                             for (split_group, ref) in zip(new_groups, self._ref_channel)]))
+                                         - self._recording.get_traces(channel_ids=[ref], start_frame=start_frame,
+                                                                      end_frame=end_frame,
+                                                                      return_scaled=return_scaled)
+                                         for (split_channel, ref) in zip(selected_channels, self._ref_channel)]))
 
         elif self._ref == 'local':
             if self.verbose:
                print('Local Common average using as reference channels in a ring-shape region with radius: '+ self._local_radius)
 
-            neighrest_id, distances = get_closest_channels(self._recording, self._recording.get_channel_ids())
-            traces = self._recording.get_traces(start_frame=start_frame,
+            neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
+            traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
                                                 end_frame=end_frame,
                                                 return_scaled=return_scaled) \
                          - np.vstack(np.array([np.average(
                                                self._recording.get_traces(
-                                                   channel_ids=neighrest_id[id,np.logical_and(self._local_radius[0] < distances[id],
-                                                                                   distances[id] <= self._local_radius[1])],
+                                                   channel_ids=neighrest_id[id, np.logical_and(self._local_radius[0] < distances[id],
+                                                                                                     distances[id] <= self._local_radius[1])],
                                                    start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
-                                     for id in range(len(self._recording.get_channel_ids()))]))
+                                     for id in range(len(channel_ids))]))
 
-        return np.array(traces[channel_idxs]).astype(self._dtype)
+        return np.array(traces).astype(self._dtype)
 
-    def _create_channel_groups(self):
-        new_groups = []
+    def _create_channel_groups(self, channel_ids):
+        selected_groups = []
+        selected_channels = []
         if self._groups:
             for g in self._groups:
                 new_chans = []
                 for chan in g:
                     if chan in self._recording.get_channel_ids():
                         new_chans.append(chan)
-                new_groups.append(new_chans)
+                selected_groups.append(new_chans)
+                selected_channels.append([ch for ch in channel_ids if ch in new_chans])
         else:
-            new_groups = [self._recording.get_channel_ids()]
-        return new_groups
+            selected_groups = [self._recording.get_channel_ids()]
+            selected_channels = [channel_ids]
+        return selected_groups, selected_channels
 
 
 def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius= (2,8), dtype=None, verbose=False):

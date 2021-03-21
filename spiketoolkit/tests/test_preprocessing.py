@@ -133,6 +133,11 @@ def test_common_reference():
     check_dumping(rec_cmr_int16)
     check_dumping(rec_local_car)
 
+    # test with channels_ids
+    channels_ids = np.arange(0,2)
+    assert np.allclose(traces[channels_ids], rec_car.get_traces(channel_ids=channels_ids) + np.mean(traces, axis=0, keepdims=True), atol=0.01)
+    assert np.allclose(traces[channels_ids], rec_cmr_g.get_traces(channel_ids=channels_ids) + np.median(traces[[0, 1]], axis=0, keepdims=True), atol=0.01)
+
     # Add test on a higher probes
     rec2, sort = se.example_datasets.toy_example(dump_folder='test', dumpable=True, duration=2, num_channels=8, seed=0)
     rec_local_car2 = common_reference(rec2, reference='local', local_radius=(2,4))
