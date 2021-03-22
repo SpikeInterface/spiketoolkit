@@ -10,8 +10,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None,
-                                  local_radius=(2,8),
-                                  dtype=None, verbose=False):
+                 local_radius=(2, 8), dtype=None, verbose=False):
 
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -65,7 +64,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                                                                                 start_frame=start_frame,
                                                                                 end_frame=end_frame,
                                                                                 return_scaled=return_scaled),
-                                                         axis=0, keepdims=True) for (split_channel, split_group) in zip(selected_channels, selected_groups)]))
+                                                     axis=0, keepdims=True) for (split_channel, split_group) in
+                                         zip(selected_channels, selected_groups)]))
         elif self._ref == 'average':
             if self.verbose:
                 if self._groups is None:
@@ -81,7 +81,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                                                                               start_frame=start_frame,
                                                                               end_frame=end_frame,
                                                                               return_scaled=return_scaled),
-                                                       axis=0, keepdims=True) for (split_channel, split_group) in zip(selected_channels, selected_groups)]))
+                                                   axis=0, keepdims=True) for (split_channel, split_group) in
+                                         zip(selected_channels, selected_groups)]))
         elif self._ref == 'single':
             if self.verbose:
                 if self._groups is None:
@@ -99,18 +100,19 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
 
         elif self._ref == 'local':
             if self.verbose:
-               print('Local Common average using as reference channels in a ring-shape region with radius: '+ self._local_radius)
+                print(
+                    'Local Common average using as reference channels in a ring-shape region with radius: ' + self._local_radius)
 
             neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
             traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
                                                 end_frame=end_frame,
                                                 return_scaled=return_scaled) \
-                         - np.vstack(np.array([np.average(
-                                               self._recording.get_traces(
-                                                   channel_ids=neighrest_id[id, np.logical_and(self._local_radius[0] < distances[id],
-                                                                                                     distances[id] <= self._local_radius[1])],
-                                                   start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
-                                     for id in range(len(channel_ids))]))
+                     - np.vstack(np.array([np.average(
+                self._recording.get_traces(
+                    channel_ids=neighrest_id[id, np.logical_and(self._local_radius[0] < distances[id],
+                                                                distances[id] <= self._local_radius[1])],
+                    start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
+                for id in range(len(channel_ids))]))
 
         return np.array(traces).astype(self._dtype)
 
@@ -131,7 +133,8 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
         return selected_groups, selected_channels
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius= (2,8), dtype=None, verbose=False):
+def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius=(2, 8), dtype=None,
+                     verbose=False):
     '''
     Re-references the recording extractor traces.
 
@@ -168,5 +171,6 @@ def common_reference(recording, reference='median', groups=None, ref_channels=No
         The re-referenced recording extractor object
     '''
     return CommonReferenceRecording(
-        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels,  local_radius=local_radius, dtype=dtype, verbose=verbose
+        recording=recording, reference=reference, groups=groups, ref_channels=ref_channels, local_radius=local_radius,
+        dtype=dtype, verbose=verbose
     )

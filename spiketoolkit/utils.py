@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def get_closest_channels(recording, channel_ids, num_channels=None):
     """Get closest channels + distances
 
@@ -23,7 +24,7 @@ def get_closest_channels(recording, channel_ids, num_channels=None):
     dist = []
 
     if num_channels:
-        num_channels = min(num_channels+1, len(recording.get_channel_locations()))
+        num_channels = min(num_channels + 1, len(recording.get_channel_locations()))
     else:
         num_channels = len(recording.get_channel_locations())
 
@@ -36,5 +37,4 @@ def get_closest_channels(recording, channel_ids, num_channels=None):
         closest_channels_id.append(np.argsort(distances)[1:num_channels])
         dist.append(np.sort(distances)[1:num_channels])
 
-
-    return np.array(closest_channels_id),np.array(dist)
+    return np.array(closest_channels_id), np.array(dist)
