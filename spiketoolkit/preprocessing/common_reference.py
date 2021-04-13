@@ -10,7 +10,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None,
-                 local_radius=(2, 8), dtype=None, verbose=False):
+                 local_radius=(30, 55), dtype=None, verbose=False):
 
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -136,7 +136,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
         return selected_groups, selected_channels
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius=(2, 8), dtype=None,
+def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius=(30, 55), dtype=None,
                      verbose=False):
     '''
     Re-references the recording extractor traces.
