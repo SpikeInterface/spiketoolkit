@@ -128,8 +128,10 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                 for chan in g:
                     if chan in self._recording.get_channel_ids():
                         new_chans.append(chan)
-                selected_groups.append(new_chans)
-                selected_channels.append([ch for ch in channel_ids if ch in new_chans])
+                selected_channel_for_group = [ch for ch in channel_ids if ch in new_chans]
+                if len(selected_channel_for_group) > 0:
+                    selected_groups.append(new_chans)
+                    selected_channels.append(selected_channel_for_group)
         else:
             selected_groups = [self._recording.get_channel_ids()]
             selected_channels = [channel_ids]
