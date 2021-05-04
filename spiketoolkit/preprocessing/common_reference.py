@@ -10,7 +10,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
     preprocessor_name = 'CommonReference'
 
     def __init__(self, recording, reference='median', groups=None, ref_channels=None,
-                 local_radius=(2, 8), dtype=None, verbose=False):
+                 local_radius=(30, 55), dtype=None, verbose=False):
 
         if not isinstance(recording, RecordingExtractor):
             raise ValueError("'recording' must be a RecordingExtractor")
@@ -31,6 +31,13 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
                     ref_channels = [ref_channels]
         elif self._ref == 'local':
             assert groups is None, "With 'local' CAR, the group option should not be used."
+            closest_inds, dist = get_closest_channels(recording, recording.get_channel_ids())
+
+            self.neighbors = {}
+            for i in range(recording.get_num_channels()):
+                mask = (dist[i, :] > local_radius[0]) & (dist[i, :] <= local_radius[1])
+                self.neighbors[i] = closest_inds[i, mask]
+                assert len(self.neighbors[i]) > 0, "No reference channels are inside the local annulus chosen for reference selection."
 
         self._ref_channel = ref_channels
         self._local_radius = local_radius
@@ -100,19 +107,15 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
 
         elif self._ref == 'local':
             if self.verbose:
-                print(
-                    'Local Common average using as reference channels in a ring-shape region with radius: ' + self._local_radius)
-
-            neighrest_id, distances = get_closest_channels(self._recording, channel_ids)
+                print('Local Common average using as reference channels in a ring-shape region with radius: ' + str(self._local_radius))
             traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame,
                                                 end_frame=end_frame,
                                                 return_scaled=return_scaled) \
                      - np.vstack(np.array([np.average(
                 self._recording.get_traces(
-                    channel_ids=neighrest_id[id, np.logical_and(self._local_radius[0] < distances[id],
-                                                                distances[id] <= self._local_radius[1])],
-                    start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
-                for id in range(len(channel_ids))]))
+                     channel_ids=self.neighbors[self._recording.get_channel_ids().index(id)],
+                     start_frame=start_frame, end_frame=end_frame, return_scaled=return_scaled), axis=0)
+                for id in channel_ids]))
 
         return np.array(traces).astype(self._dtype)
 
@@ -135,7 +138,7 @@ class CommonReferenceRecording(BasePreprocessorRecordingExtractor):
         return selected_groups, selected_channels
 
 
-def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius=(2, 8), dtype=None,
+def common_reference(recording, reference='median', groups=None, ref_channels=None, local_radius=(30, 55), dtype=None,
                      verbose=False):
     '''
     Re-references the recording extractor traces.
