@@ -845,9 +845,11 @@ def compute_channel_spiking_activity(recording, channel_ids=None, detect_thresho
                                                          chunk_size=chunk_size, chunk_mb=chunk_mb,
                                                          verbose=verbose)
 
-        for i, unit in enumerate(sort_detect.get_unit_ids()):
-            spike_rates[i] = sort_detect.get_unit_property(unit, 'spike_rate')
-            spike_amplitudes[i] = sort_detect.get_unit_property(unit, 'spike_amplitude')
+        for channel in recording.get_channel_ids():
+            channel_idx = recording.get_channel_ids().index(channel)
+            if channel in sort_detect.get_unit_ids():
+                spike_rates[channel_idx] = sort_detect.get_unit_property(channel, 'spike_rate')
+                spike_amplitudes[channel_idx] = sort_detect.get_unit_property(channel, 'spike_amplitude')
 
         if save_property_or_features:
             for i, ch in enumerate(recording.get_channel_ids()):
