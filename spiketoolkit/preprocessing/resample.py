@@ -41,6 +41,19 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
     def get_dtype(self, return_scaled=True):
         return self._dtype
 
+    # need to override frame_to_time and time_to_frame because self._recording might not have "times"
+    def frame_to_time(self, frames):
+        if self._times is not None:
+            return np.round(frames / self.get_sampling_frequency(), 6)
+        else:
+            return self._recording.time_to_frame(frames)
+
+    def time_to_frame(self, times):
+        if self._times is not None:
+            return np.round(times * self.get_sampling_frequency()).astype('int64')
+        else:
+            return self._recording.time_to_frame(times)
+
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
