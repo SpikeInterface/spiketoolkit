@@ -335,6 +335,18 @@ def test_resample():
     assert rec_rsl.get_num_frames() == int(rec.get_num_frames() * 0.1)
     assert rec_rsh.get_num_frames() == int(rec.get_num_frames() * 2)
 
+    # with times
+
+    times = rec.frame_to_time(np.arange(rec.get_num_frames())) - 10
+    times[1000:] += 0.5
+    rec.set_times(times)
+
+    rec_rsl = resample(rec, resample_rate_low)
+    rec_rsh = resample(rec, resample_rate_high)
+
+    assert rec_rsl.get_num_frames() == int(rec.get_num_frames() * 0.1)
+    assert rec_rsh.get_num_frames() == int(rec.get_num_frames() * 2)
+
     check_dumping(rec_rsl)
     check_dumping(rec_rsh)
     shutil.rmtree('test')
