@@ -2,6 +2,7 @@ from spikeextractors import RecordingExtractor
 from spikeextractors.extraction_tools import check_get_traces_args
 from .basepreprocessorrecording import BasePreprocessorRecordingExtractor
 import numpy as np
+from warnings import warn
 
 try:
     from scipy import special, signal
@@ -19,8 +20,15 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
     def __init__(self, recording, resample_rate):
         assert HAVE_RR, "To use the ResampleRecording, install scipy: \n\n pip install scipy\n\n"
         self._resample_rate = resample_rate
-        BasePreprocessorRecordingExtractor.__init__(self, recording)
+        BasePreprocessorRecordingExtractor.__init__(self, recording, copy_times=False)
         self._dtype = recording.get_dtype()
+
+        if recording._times is not None:
+            # resample timestamps uniformly
+            warn("Timestamps will be resampled uniformly. Non-uniform timestamps will be lost due to resampling.")
+            resampled_times = np.linspace(recording._times[0], recording._times[-1], self.get_num_frames())
+            self.set_times(resampled_times)
+
         self._kwargs = {'recording': recording.make_serialized_dict(), 'resample_rate': resample_rate}
 
     def get_sampling_frequency(self):
@@ -32,6 +40,20 @@ class ResampleRecording(BasePreprocessorRecordingExtractor):
     # avoid filtering one sample
     def get_dtype(self, return_scaled=True):
         return self._dtype
+
+    # need to override frame_to_time and time_to_frame because self._recording might not have "times"
+    def frame_to_time(self, frames):
+        if self._times is not None:
+            return np.round(frames / self.get_sampling_frequency(), 6)
+        else:
+            return self._recording.time_to_frame(frames)
+
+    def time_to_frame(self, times):
+        if self._times is not None:
+            return np.round(times * self.get_sampling_frequency()).astype('int64')
+        else:
+            return self._recording.time_to_frame(times)
+
 
     @check_get_traces_args
     def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
