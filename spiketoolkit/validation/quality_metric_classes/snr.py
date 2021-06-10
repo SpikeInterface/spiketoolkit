@@ -85,7 +85,8 @@ def _compute_template_SNR(template, channel_noise_levels, max_channel_idx):
     snr: float
         Signal-to-noise ratio for the template
     """
-    snr = np.max(np.abs(template[max_channel_idx]))/ channel_noise_levels[max_channel_idx]
+    max_template_channel = np.unravel_index(np.argmax(np.abs(template)), template.shape)[0]
+    snr = np.max(np.abs(template[max_template_channel])) / channel_noise_levels[max_channel_idx]
     return snr
 
 

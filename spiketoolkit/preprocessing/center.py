@@ -33,12 +33,8 @@ class CenterRecording(TransformRecording):
             self._offset = -np.mean(traces, axis=1)
         else:
             self._offset = -np.median(traces, axis=1)
-        dtype = str(recording.get_dtype())
+        dtype = np.dtype(recording.get_dtype()).name
         if 'uint' in dtype:
-            if 'numpy' in dtype:
-                dtype = str(dtype).replace("<class '", "").replace("'>", "")
-                # drop 'numpy'
-                dtype = dtype.split('.')[1]
             dtype = dtype[1:]
         TransformRecording.__init__(self, recording, scalar=self._scalar, offset=self._offset, dtype=dtype)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'mode': mode, 'seconds': seconds,

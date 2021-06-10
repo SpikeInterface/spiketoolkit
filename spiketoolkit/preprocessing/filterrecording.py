@@ -34,11 +34,11 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
         BasePreprocessorRecordingExtractor.__init__(self, recording_base)
 
     # avoid filtering one sample
-    def get_dtype(self):
+    def get_dtype(self, return_scaled=True):
         return self._dtype
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
         if self._chunk_size is not None:
             ich1 = int(start_frame / self._chunk_size)
             ich2 = int((end_frame - 1) / self._chunk_size)
@@ -46,7 +46,7 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
             filtered_chunk = np.zeros((len(channel_ids), int(end_frame-start_frame)), dtype=dt)
             pos = 0
             for ich in range(ich1, ich2 + 1):
-                filtered_chunk0 = self._get_filtered_chunk(ich, channel_ids)
+                filtered_chunk0 = self._get_filtered_chunk(ich, channel_ids, return_scaled)
                 if ich == ich1:
                     start0 = start_frame - ich * self._chunk_size
                 else:
@@ -58,14 +58,15 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
                 filtered_chunk[:, pos:pos+end0-start0] = filtered_chunk0[:, start0:end0]
                 pos += (end0-start0)
         else:
-            filtered_chunk = self.filter_chunk(start_frame=start_frame, end_frame=end_frame, channel_ids=channel_ids)
+            filtered_chunk = self.filter_chunk(start_frame=start_frame, end_frame=end_frame, channel_ids=channel_ids,
+                                               return_scaled=return_scaled)
         return filtered_chunk.astype(self._dtype)
 
     @abstractmethod
-    def filter_chunk(self, *, start_frame, end_frame, channel_ids):
+    def filter_chunk(self, *, start_frame, end_frame, channel_ids, return_scaled):
         raise NotImplementedError('filter_chunk not implemented')
 
-    def _read_chunk(self, i1, i2, channel_ids):
+    def _read_chunk(self, i1, i2, channel_ids, return_scaled=True):
         num_frames = self._recording.get_num_frames()
         if i1 < 0:
             i1b = 0
@@ -77,11 +78,11 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
             i2b = i2
         chunk = np.zeros((len(channel_ids), i2 - i1))
         chunk[:, i1b - i1:i2b - i1] = self._recording.get_traces(start_frame=i1b, end_frame=i2b,
-                                                                 channel_ids=channel_ids)
+                                                                 channel_ids=channel_ids, return_scaled=return_scaled)
 
         return chunk
 
-    def _get_filtered_chunk(self, ind, channel_ids):
+    def _get_filtered_chunk(self, ind, channel_ids, return_scaled):
         if self._cache_chunks:
             code = str(ind)
             chunk0 = self._filtered_cache_chunks.get(code)
@@ -106,7 +107,8 @@ class FilterRecording(BasePreprocessorRecordingExtractor):
             chunk1 = chunk1[channel_idxs]
         else:
             # otherwise, only filter requested channels
-            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids)
+            chunk1 = self.filter_chunk(start_frame=start0, end_frame=end0, channel_ids=channel_ids,
+                                       return_scaled=return_scaled)
 
         return chunk1
             

@@ -22,7 +22,8 @@ jobs:
       env: PATH=/c/Python37:/c/Python37/Scripts:$PATH
 
 install:
-# spikeextractors is taken from github to get latest version
+- pip install numpy>=1.20
+- pip install pandas>=1.2
 - pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
 - pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
 - pip install https://github.com/SpikeInterface/spikefeatures/archive/master.zip

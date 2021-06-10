@@ -17,13 +17,17 @@ class TransformRecording(BasePreprocessorRecordingExtractor):
         else:
             self._dtype = dtype
         BasePreprocessorRecordingExtractor.__init__(self, recording)
+        self.has_unscaled = False
 
         self._kwargs = {'recording': recording.make_serialized_dict(), 'scalar': scalar, 'offset': offset,
                         'dtype': dtype}
 
     @check_get_traces_args
-    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None):
-        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame)
+    def get_traces(self, channel_ids=None, start_frame=None, end_frame=None, return_scaled=True):
+        assert return_scaled, "'transform' only supports return_scaled=True"
+
+        traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame,
+                                            return_scaled=return_scaled)
         if isinstance(self._scalar, (int, float, np.integer, np.float)):
             traces = traces*self._scalar
         else:
