@@ -148,9 +148,10 @@ def get_unit_waveforms_for_chunk(
         unit_ids,
         snippet_len,
         times_in_chunk,
+        return_scaled=True
 ):
     # chunks are chosen small enough so that all traces can be loaded into memory
-    traces = recording.get_traces()
+    traces = recording.get_traces(return_scaled=return_scaled)
     frame_offset = chunk['istart'] - chunk['istart_with_padding']
 
     unit_waveforms = []
