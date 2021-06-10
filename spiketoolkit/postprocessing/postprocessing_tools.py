@@ -1954,7 +1954,7 @@ def _template_descending_order(recording, templates, templates_ind):
 
 
 def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_chunk, cumulative_n_spikes,
-                                 waveforms_file, memmap, dtype, verbose):
+                                 waveforms_file, memmap, dtype, verbose, return_scaled=False):
     chunk = chunks[i]
     times_this_chunk = times_in_chunk[i]
     n_spikes = cumulative_n_spikes[i]
@@ -1979,7 +1979,8 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
         chunk=chunk,
         unit_ids=unit_ids,
         snippet_len=n_pad,
-        times_in_chunk=times_this_chunk
+        times_in_chunk=times_this_chunk,
+        return_scaled=return_scaled
     )
     t_stop = time.perf_counter()
     if verbose:
