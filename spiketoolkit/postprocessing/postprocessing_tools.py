@@ -1711,6 +1711,7 @@ def _get_quality_metric_data(recording, sorting, n_comp, ms_before, ms_after, dt
                                                         peak=amp_peak, max_spikes_per_unit=max_spikes_for_amplitudes,
                                                         frames_before=amp_frames_before, frames_after=amp_frames_after,
                                                         seed=seed, memmap=memmap, n_jobs=n_jobs,
+                                                        ms_before=ms_before, ms_after=ms_after,
                                                         joblib_backend=joblib_backend, return_idxs=True)
     else:
         amplitudes_list, amp_idxs = None, None
