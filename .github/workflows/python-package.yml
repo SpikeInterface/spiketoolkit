@@ -1,0 +1,31 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-and-test:
+    name: Test on (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+        with:
+          python-version: 3.8
+      - name: Which python
+        run: |
+          conda --version
+          which python
+      - name: Install dependencies
+        run: |
+          pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+          pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
+          pip install https://github.com/SpikeInterface/spikefeatures/archive/master.zip
+          pip install -e .
+          pip install pytest
+      - name: Test with pytest and build coverage report
+        run: |
+          pytest
