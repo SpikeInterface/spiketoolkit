@@ -1,0 +1,39 @@
+name: Python Package using Conda
+
+on: [push]
+
+jobs:
+  build-and-test:
+    name: Test on (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+    steps:
+      - uses: actions/checkout@v2
+      - uses: s-weigand/setup-conda@v1
+        with:
+          python-version: 3.8
+      - name: Which python
+        run: |
+          conda --version
+          which python
+      - name: Install dependencies
+        run: |
+          pip install numpy>=1.20
+          pip install pandas>=1.2
+          pip install https://github.com/SpikeInterface/spikeextractors/archive/master.zip
+          pip install https://github.com/SpikeInterface/spikemetrics/archive/master.zip
+          pip install https://github.com/SpikeInterface/spikefeatures/archive/master.zip
+          pip install -e .
+          pip install pytest==4.3
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+          flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+      - name: Test with pytest and build coverage report
+        run: |
+          pytest
