@@ -13,7 +13,7 @@ class MaskRecording(BasePreprocessorRecordingExtractor):
         self._mask = bool_mask
         assert len(bool_mask) == recording.get_num_frames(), "'bool_mask' should be a boolean array with length of " \
                                                              "number of frames"
-        assert np.array(bool_mask).dtype in (bool, np.bool), "'bool_mask' should be a boolean array"
+        assert np.array(bool_mask).dtype == bool, "'bool_mask' should be a boolean array"
         self.is_dumpable = False
         BasePreprocessorRecordingExtractor.__init__(self, recording)
         self._kwargs = {'recording': recording.make_serialized_dict(), 'bool_mask': bool_mask}

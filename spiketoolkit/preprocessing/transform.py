@@ -28,7 +28,7 @@ class TransformRecording(BasePreprocessorRecordingExtractor):
 
         traces = self._recording.get_traces(channel_ids=channel_ids, start_frame=start_frame, end_frame=end_frame,
                                             return_scaled=return_scaled)
-        if isinstance(self._scalar, (int, float, np.integer, np.float)):
+        if isinstance(self._scalar, (int, float, np.integer)):
             traces = traces*self._scalar
         else:
             if len(self._scalar) == len(channel_ids):
@@ -37,7 +37,7 @@ class TransformRecording(BasePreprocessorRecordingExtractor):
                 channel_idxs = np.array([self._recording.get_channel_ids().index(ch) for ch in channel_ids])
                 scalar = np.array(self._scalar)[channel_idxs]
             traces = traces * scalar[:, np.newaxis]
-        if isinstance(self._offset, (int, float, np.integer, np.float)):
+        if isinstance(self._offset, (int, float, np.integer)):
             traces = traces + self._offset
         else:
             if len(self._offset) == len(channel_ids):
