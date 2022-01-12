@@ -51,6 +51,25 @@ def test_waveforms():
             for (w, w_gt) in zip(wav, waveforms):
                 assert np.allclose(w, w_gt)
             assert 'waveforms' not in sort.get_shared_unit_spike_feature_names()
+            
+            # return_scaled
+            gain = 0.1
+            rec_sc, sort_sc = se.example_datasets.toy_example()
+            rec_sc.set_channel_gains(gain)
+            rec_sc.has_unscaled = True
+            rec_cache = se.CacheRecordingExtractor(rec_sc, return_scaled=False, save_path='rec.dat')
+            wav_unscaled = get_unit_waveforms(rec_cache, sort_sc, ms_before=ms_cut, ms_after=ms_cut, 
+                                              save_property_or_features=False,
+                                              n_jobs=n, memmap=m, return_scaled=False, recompute_info=True)
+            wav_unscaled = [np.array(wf) for wf in wav_unscaled]
+            wav_scaled = get_unit_waveforms(rec_cache, sort_sc, ms_before=ms_cut, ms_after=ms_cut, 
+                                            save_property_or_features=False,
+                                            n_jobs=n, memmap=m, return_scaled=True, recompute_info=True)
+            wav_scaled = [np.array(wf) for wf in wav_scaled]
+
+            for (w_unscaled, w_scaled) in zip(wav_unscaled, wav_scaled):
+                assert np.allclose(w_unscaled * gain, w_scaled)
+
 
             # change cut ms
             wav = get_unit_waveforms(rec, sort, ms_before=2, ms_after=2, save_property_or_features=True, n_jobs=n,
@@ -399,4 +418,4 @@ def test_compute_features():
 
 
 if __name__ == '__main__':
-    test_spiking_activity()
+    test_waveforms()
