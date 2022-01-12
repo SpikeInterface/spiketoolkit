@@ -57,7 +57,7 @@ def test_waveforms():
             rec_sc, sort_sc = se.example_datasets.toy_example()
             rec_sc.set_channel_gains(gain)
             rec_sc.has_unscaled = True
-            rec_cache = se.CacheRecordingExtractor(rec_sc, return_scaled=False, save_path='rec.dat')
+            rec_cache = se.CacheRecordingExtractor(rec_sc, return_scaled=False)
             wav_unscaled = get_unit_waveforms(rec_cache, sort_sc, ms_before=ms_cut, ms_after=ms_cut, 
                                               save_property_or_features=False,
                                               n_jobs=n, memmap=m, return_scaled=False, recompute_info=True)
