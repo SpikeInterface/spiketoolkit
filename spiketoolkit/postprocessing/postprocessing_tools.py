@@ -18,7 +18,7 @@ from .utils import update_all_param_dicts_with_kwargs, select_max_channels_from_
 
 
 def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, return_idxs=False, chunk_size=None,
-                       chunk_mb=500, **kwargs):
+                       chunk_mb=500, return_scaled=True, **kwargs):
     """
     Computes the spike waveforms from a recording and sorting extractor.
     The recording is split in chunks (the size in Mb is set with the chunk_mb argument) and all waveforms are extracted
@@ -41,6 +41,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
         Size of chunks in number of samples. If None, it is automatically calculated
     chunk_mb: int
         Size of chunks in Mb (default 500 Mb)
+    return_scaled: bool
+        If True, waveforms are scaled to uV
     **kwargs: Keyword arguments
         A dictionary with default values can be retrieved with:
         st.postprocessing.get_waveforms_params():
@@ -136,7 +138,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
             channel_index_list.append(channel_idxs)
     else:
         if dtype is None:
-            dtype = recording.get_dtype()
+            dtype = recording.get_dtype(return_scaled=return_scaled)
 
         if n_jobs is None:
             n_jobs = 1
@@ -155,7 +157,7 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
         if chunk_size is not None:
             chunk_size = int(chunk_size)
         elif chunk_mb is not None:
-            n_bytes = np.dtype(recording.get_dtype()).itemsize
+            n_bytes = np.dtype(recording.get_dtype(return_scaled=return_scaled)).itemsize
             max_size = int(chunk_mb * 1e6)  # set Mb per chunk
             chunk_size = max_size // (recording.get_num_channels() * n_bytes)
 
@@ -256,7 +258,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
             for ii in chunk_iter:
                 unit_waveforms = _extract_waveforms_one_chunk(ii, recording, chunks, unit_ids, n_pad,
                                                               times_in_all_chunks, start_spike_idxs,
-                                                              all_unit_waveforms, memmap, dtype, False)
+                                                              all_unit_waveforms, memmap, dtype, False,
+                                                              return_scaled)
 
                 if not memmap:
                     for i_unit, unit in enumerate(unit_ids):
@@ -269,7 +272,8 @@ def get_unit_waveforms(recording, sorting, unit_ids=None, channel_ids=None, retu
             unit_waveforms = Parallel(n_jobs=n_jobs, backend=joblib_backend)(
                 delayed(_extract_waveforms_one_chunk)(ii, rec_arg, chunks, unit_ids, n_pad,
                                                       times_in_all_chunks, start_spike_idxs,
-                                                      all_unit_waveforms, memmap, dtype, verbose, )
+                                                      all_unit_waveforms, memmap, dtype, verbose, 
+                                                      return_scaled)
                 for ii in chunk_iter)
 
             if not memmap:
@@ -1999,6 +2003,8 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
         print(f"Chunk {i + 1}: extracting waveforms")
     if isinstance(rec_arg, dict):
         recording = se.load_extractor_from_dict(rec_arg)
+        if np.any(recording.get_channel_gains() != 1):
+            recording.has_unscaled = True
     else:
         recording = rec_arg
     t_start = time.perf_counter()
@@ -2008,7 +2014,7 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
         start_frame=chunk['istart_with_padding'],
         end_frame=chunk['iend_with_padding']
     )
-
+    
     # num_events_in_chunk x num_channels_in_nbhd[unit_id] x len_of_one_snippet
     unit_waveforms = get_unit_waveforms_for_chunk(
         recording=recording_chunk,
@@ -2021,7 +2027,7 @@ def _extract_waveforms_one_chunk(i, rec_arg, chunks, unit_ids, n_pad, times_in_c
     t_stop = time.perf_counter()
     if verbose:
         print(f"Chunk {i + 1}: waveforms extracted in {t_stop - t_start}s")
-
+        
     if memmap:
         for i_unit, unit in enumerate(unit_ids):
             wf = unit_waveforms[i_unit]
